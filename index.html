@@ -1,0 +1,2792 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Gumax Skins | Marketplace CS2</title>
+<link rel="icon" href="https://static.wixstatic.com/media/874864_b598e856481740e7ae752771a661c242~mv2.png/v1/fill/w_64,h_64,al_c,q_85,enc_auto/874864_b598e856481740e7ae752771a661c242~mv2.png">
+<link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800;900&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<script src="https://www.gstatic.com/firebasejs/10.5.0/firebase-app.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.5.0/firebase-auth.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.5.0/firebase-firestore.js"></script>
+
+<style>
+* {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+:root {
+  --bg: #08060e;
+  --bg-card: #110e1a;
+  --bg-elevated: #1a1528;
+  --bg-input: #13101e;
+  --text-primary: #ece8f4;
+  --text-secondary: #9890a8;
+  --text-muted: #5e5670;
+  --border: #241e35;
+  --primary: #8B5CF6;
+  --primary-dark: #7C3AED;
+  --primary-deeper: #6D28D9;
+  --primary-light: #A78BFA;
+  --accent-yellow: #FACC15;
+  --covert: #eb4b4b;
+  --classified: #d32ce6;
+  --restricted: #8847ff;
+  --mil-spec: #4b69ff;
+  --contraband: #e4ae39;
+}
+
+html {
+  scroll-behavior: smooth;
+}
+
+body {
+  background: var(--bg);
+  color: var(--text-primary);
+  font-family: 'Outfit', 'Segoe UI', sans-serif;
+  overflow-x: hidden;
+  line-height: 1.5;
+}
+
+::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+::-webkit-scrollbar-track {
+  background: var(--bg);
+}
+
+::-webkit-scrollbar-thumb {
+  background: var(--border);
+  border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: var(--text-muted);
+}
+
+/* ANIMATIONS */
+@keyframes fadeUp {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+@keyframes slideDown {
+  from {
+    opacity: 0;
+    transform: translateY(-10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes slideIn {
+  from {
+    transform: translateX(100%);
+  }
+  to {
+    transform: translateX(0);
+  }
+}
+
+@keyframes slideOut {
+  from {
+    transform: translateX(0);
+  }
+  to {
+    transform: translateX(100%);
+  }
+}
+
+@keyframes pulse {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.6; }
+}
+
+@keyframes glow {
+  0%, 100% { box-shadow: 0 0 15px rgba(139, 92, 246, 0.15); }
+  50% { box-shadow: 0 0 30px rgba(139, 92, 246, 0.25); }
+}
+
+@keyframes shimmer {
+  0% { background-position: -200% 0; }
+  100% { background-position: 200% 0; }
+}
+
+@keyframes spin {
+  from { transform: rotate(0deg); }
+  to { transform: rotate(360deg); }
+}
+
+@keyframes countdownPulse {
+  0%, 100% { transform: scale(1); }
+  50% { transform: scale(1.1); }
+}
+
+/* HEADER */
+header {
+  position: sticky;
+  top: 0;
+  z-index: 100;
+  background: rgba(8, 6, 14, 0.95);
+  backdrop-filter: blur(20px);
+  border-bottom: 1px solid var(--border);
+  padding: 0 24px;
+}
+
+.header-content {
+  max-width: 1280px;
+  margin: 0 auto;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  height: 72px;
+}
+
+.logo {
+  height: 44px;
+  object-fit: contain;
+  cursor: pointer;
+}
+
+nav {
+  display: flex;
+  gap: 32px;
+  flex: 1;
+  margin-left: 48px;
+}
+
+.nav-link {
+  font-size: 14px;
+  font-weight: 500;
+  color: var(--text-secondary);
+  cursor: pointer;
+  transition: color 0.2s;
+  white-space: nowrap;
+}
+
+.nav-link:hover {
+  color: var(--accent-yellow);
+}
+
+.header-actions {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+}
+
+.cart-icon {
+  position: relative;
+  cursor: pointer;
+  color: var(--text-secondary);
+  width: 24px;
+  height: 24px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: color 0.2s;
+}
+
+.cart-icon:hover {
+  color: var(--accent-yellow);
+}
+
+.cart-badge {
+  position: absolute;
+  top: -8px;
+  right: -8px;
+  width: 18px;
+  height: 18px;
+  border-radius: 50%;
+  background: var(--primary);
+  color: #fff;
+  font-size: 10px;
+  font-weight: 700;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+/* BUTTONS */
+.btn {
+  border: none;
+  border-radius: 10px;
+  padding: 10px 20px;
+  font-family: inherit;
+  font-weight: 600;
+  font-size: 13px;
+  cursor: pointer;
+  transition: all 0.25s;
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  white-space: nowrap;
+}
+
+.btn-primary {
+  background: linear-gradient(135deg, var(--primary), var(--primary-darker));
+  color: #fff;
+}
+
+.btn-primary:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 8px 24px rgba(139, 92, 246, 0.4);
+  filter: brightness(1.1);
+}
+
+.btn-secondary {
+  background: transparent;
+  border: 1px solid var(--border);
+  color: var(--text-primary);
+  transition: all 0.2s;
+}
+
+.btn-secondary:hover {
+  background: var(--bg-elevated);
+  border-color: rgba(139, 92, 246, 0.3);
+}
+
+.btn-small {
+  padding: 8px 16px;
+  font-size: 12px;
+}
+
+.btn-icon {
+  width: 38px;
+  height: 38px;
+  padding: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 10px;
+  font-size: 20px;
+}
+
+/* HERO SECTION */
+.hero {
+  max-width: 1280px;
+  margin: 0 auto;
+  padding: 72px 24px 56px;
+  position: relative;
+  z-index: 1;
+  display: flex;
+  align-items: center;
+  gap: 40px;
+}
+
+.hero-left {
+  flex: 1;
+  max-width: 620px;
+}
+
+.hero-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  background: rgba(250, 204, 21, 0.1);
+  border: 1px solid rgba(250, 204, 21, 0.2);
+  border-radius: 100px;
+  padding: 6px 16px;
+  margin-bottom: 24px;
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--accent-yellow);
+  animation: fadeUp 0.5s ease both;
+}
+
+.hero-title {
+  font-size: 52px;
+  font-weight: 900;
+  line-height: 1.08;
+  letter-spacing: -2px;
+  margin-bottom: 20px;
+  animation: fadeUp 0.5s ease 0.1s both;
+}
+
+.hero-title-gradient {
+  background: linear-gradient(135deg, var(--primary-light), var(--accent-yellow));
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+.hero-description {
+  font-size: 16px;
+  color: var(--text-secondary);
+  line-height: 1.7;
+  max-width: 520px;
+  margin-bottom: 36px;
+  animation: fadeUp 0.5s ease 0.2s both;
+}
+
+.hero-buttons {
+  display: flex;
+  gap: 12px;
+  animation: fadeUp 0.5s ease 0.3s both;
+  flex-wrap: wrap;
+}
+
+.hero-stats {
+  display: flex;
+  gap: 40px;
+  margin-top: 48px;
+  animation: fadeUp 0.5s ease 0.4s both;
+  flex-wrap: wrap;
+}
+
+.stat-item {
+  display: flex;
+  flex-direction: column;
+}
+
+.stat-value {
+  font-size: 26px;
+  font-weight: 800;
+  letter-spacing: -1px;
+}
+
+.stat-label {
+  font-size: 12px;
+  color: var(--text-muted);
+  font-weight: 500;
+  margin-top: 4px;
+}
+
+.hero-right {
+  flex: 1;
+  display: flex;
+  justify-content: flex-end;
+  animation: fadeUp 0.8s ease 0.2s both;
+}
+
+.hero-image {
+  max-width: 100%;
+  max-height: 500px;
+  object-fit: contain;
+  border-radius: 20px;
+  filter: drop-shadow(0 20px 60px rgba(124, 58, 237, 0.35));
+}
+
+/* DELIVERY BANNERS */
+.delivery-section {
+  max-width: 1280px;
+  margin: 0 auto;
+  padding: 0 24px 40px;
+  display: flex;
+  gap: 16px;
+  position: relative;
+  z-index: 1;
+  flex-wrap: wrap;
+}
+
+.delivery-card {
+  flex: 1;
+  min-width: 280px;
+  padding: 20px 24px;
+  border-radius: 16px;
+  border: 1px solid var(--border);
+  display: flex;
+  align-items: center;
+  gap: 16px;
+}
+
+.delivery-card.full {
+  background: linear-gradient(135deg, var(--bg-card), var(--bg-elevated));
+  border-color: rgba(250, 204, 21, 0.15);
+  animation: glow 3s ease-in-out infinite;
+}
+
+.delivery-card.normal {
+  background: var(--bg-card);
+}
+
+.delivery-icon {
+  width: 48px;
+  height: 48px;
+  border-radius: 12px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 24px;
+  flex-shrink: 0;
+}
+
+.delivery-card.full .delivery-icon {
+  background: rgba(250, 204, 21, 0.15);
+}
+
+.delivery-card.normal .delivery-icon {
+  background: rgba(139, 92, 246, 0.15);
+  color: var(--primary-light);
+}
+
+.delivery-content div:first-child {
+  font-weight: 700;
+  font-size: 15px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 4px;
+}
+
+.delivery-content div:last-child {
+  font-size: 13px;
+  color: var(--text-secondary);
+}
+
+.delivery-content strong {
+  color: var(--accent-yellow);
+}
+
+.delivery-card.normal .delivery-content strong {
+  color: var(--primary-light);
+}
+
+/* SEARCH & FILTERS */
+.search-section {
+  max-width: 1280px;
+  margin: 0 auto;
+  padding: 0 24px 20px;
+  position: relative;
+  z-index: 1;
+}
+
+.search-bar {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  background: var(--bg-input);
+  border: 1px solid var(--border);
+  border-radius: 14px;
+  padding: 0 20px;
+  height: 50px;
+  margin-bottom: 16px;
+  width: 100%;
+}
+
+.search-icon {
+  color: var(--text-secondary);
+  width: 18px;
+  height: 18px;
+  flex-shrink: 0;
+}
+
+.search-input {
+  flex: 1;
+  background: transparent;
+  border: none;
+  outline: none;
+  color: var(--text-primary);
+  font-size: 14px;
+  font-family: inherit;
+}
+
+.search-input::placeholder {
+  color: var(--text-muted);
+}
+
+.search-clear {
+  cursor: pointer;
+  color: var(--text-muted);
+  font-size: 18px;
+  transition: color 0.2s;
+}
+
+.search-clear:hover {
+  color: var(--text-secondary);
+}
+
+.filters-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 8px;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+
+.category-buttons {
+  display: flex;
+  gap: 6px;
+  flex-wrap: wrap;
+}
+
+.cat-btn {
+  background: transparent;
+  border: 1px solid transparent;
+  border-radius: 10px;
+  padding: 8px 18px;
+  color: var(--text-secondary);
+  font-size: 13px;
+  font-weight: 600;
+  font-family: inherit;
+  cursor: pointer;
+  transition: all 0.2s;
+  white-space: nowrap;
+}
+
+.cat-btn.active {
+  background: rgba(139, 92, 246, 0.1);
+  border-color: rgba(139, 92, 246, 0.25);
+  color: var(--primary-light);
+}
+
+.cat-btn:hover {
+  color: var(--primary-light);
+  background: rgba(139, 92, 246, 0.08);
+}
+
+.delivery-filter {
+  display: flex;
+  gap: 6px;
+  flex-wrap: wrap;
+}
+
+.delivery-btn {
+  background: transparent;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 6px 14px;
+  color: var(--text-muted);
+  font-size: 12px;
+  font-weight: 600;
+  font-family: inherit;
+  cursor: pointer;
+  transition: all 0.2s;
+  white-space: nowrap;
+}
+
+.delivery-btn.active {
+  border-color: rgba(139, 92, 246, 0.25);
+  color: var(--primary-light);
+  background: rgba(139, 92, 246, 0.1);
+}
+
+.delivery-btn.active.yellow {
+  border-color: rgba(250, 204, 21, 0.25);
+  color: var(--accent-yellow);
+  background: rgba(250, 204, 21, 0.1);
+}
+
+.results-count {
+  font-size: 13px;
+  color: var(--text-muted);
+  margin-bottom: 16px;
+}
+
+.results-count strong {
+  color: var(--text-secondary);
+}
+
+/* SKIN GRID */
+.grid-section {
+  max-width: 1280px;
+  margin: 0 auto;
+  padding: 0 24px 72px;
+  position: relative;
+  z-index: 1;
+}
+
+.skin-grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 16px;
+  margin-bottom: 48px;
+}
+
+.skin-card {
+  background: var(--bg-card);
+  border-radius: 16px;
+  border: 1px solid var(--border);
+  overflow: hidden;
+  animation: fadeUp 0.5s ease both;
+  cursor: pointer;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+}
+
+.skin-card:hover {
+  transform: translateY(-6px) scale(1.02);
+  box-shadow: 0 20px 50px rgba(139, 92, 246, 0.2);
+}
+
+.skin-card:hover .skin-image img {
+  transform: scale(1.08);
+}
+
+.skin-rarity-bar {
+  height: 3px;
+  background: linear-gradient(90deg, currentColor 60%, transparent);
+}
+
+.skin-badges {
+  position: absolute;
+  top: 14px;
+  left: 14px;
+  right: 14px;
+  display: flex;
+  justify-content: space-between;
+  z-index: 2;
+  gap: 8px;
+}
+
+.delivery-badge {
+  background: rgba(139, 92, 246, 0.2);
+  border: 1px solid rgba(139, 92, 246, 0.3);
+  border-radius: 8px;
+  padding: 4px 10px;
+  font-size: 10px;
+  font-weight: 600;
+  color: var(--primary-light);
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  white-space: nowrap;
+}
+
+.delivery-badge.full {
+  background: rgba(250, 204, 21, 0.15);
+  border-color: rgba(250, 204, 21, 0.3);
+  color: var(--accent-yellow);
+  animation: pulse 2s ease-in-out infinite;
+}
+
+.discount-badge {
+  background: rgba(139, 92, 246, 0.25);
+  border-radius: 8px;
+  padding: 4px 8px;
+  font-size: 11px;
+  font-weight: 700;
+  color: var(--primary-light);
+  margin-left: auto;
+}
+
+.skin-image {
+  height: 170px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: radial-gradient(circle at 50% 60%, rgba(139, 92, 246, 0.05), transparent 70%);
+  overflow: hidden;
+  flex-shrink: 0;
+}
+
+.skin-image img {
+  height: 110px;
+  object-fit: contain;
+  filter: drop-shadow(0 4px 12px rgba(0, 0, 0, 0.4));
+  transition: transform 0.3s ease;
+}
+
+.skin-shimmer {
+  width: 120px;
+  height: 80px;
+  border-radius: 8px;
+  background: linear-gradient(90deg, transparent, rgba(36, 30, 53, 0.3), transparent);
+  background-size: 200% 100%;
+  animation: shimmer 1.5s infinite;
+}
+
+.skin-info {
+  padding: 0 16px 16px;
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+}
+
+.skin-rarity {
+  font-size: 10px;
+  font-weight: 600;
+  margin-bottom: 4px;
+  letter-spacing: 0.5px;
+  text-transform: uppercase;
+  opacity: 0.8;
+}
+
+.skin-name {
+  font-size: 14px;
+  font-weight: 700;
+  margin-bottom: 2px;
+  line-height: 1.3;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.skin-meta {
+  font-size: 11px;
+  color: var(--text-muted);
+  margin-bottom: 12px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.skin-float {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 10px;
+}
+
+.skin-footer {
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: 12px;
+  margin-top: auto;
+}
+
+.skin-pricing {
+  flex: 1;
+}
+
+.skin-original-price {
+  font-size: 10px;
+  color: var(--text-muted);
+  text-decoration: line-through;
+  margin-bottom: 2px;
+}
+
+.skin-sale-price {
+  font-size: 20px;
+  font-weight: 800;
+  color: var(--accent-yellow);
+  letter-spacing: -1px;
+  line-height: 1;
+  font-family: 'JetBrains Mono', monospace;
+}
+
+.skin-add-cart {
+  width: 38px;
+  height: 38px;
+  flex-shrink: 0;
+}
+
+.load-more {
+  display: block;
+  margin: 0 auto;
+  padding: 14px 48px;
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: 14px;
+  color: var(--text-secondary);
+  font-size: 14px;
+  font-weight: 600;
+  font-family: inherit;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.load-more:hover {
+  background: var(--bg-elevated);
+  border-color: rgba(139, 92, 246, 0.3);
+}
+
+/* HOW IT WORKS */
+.how-section {
+  max-width: 1280px;
+  margin: 0 auto;
+  padding: 72px 24px;
+  border-top: 1px solid var(--border);
+  position: relative;
+  z-index: 1;
+}
+
+.section-header {
+  text-align: center;
+  margin-bottom: 48px;
+}
+
+.section-title {
+  font-size: 34px;
+  font-weight: 800;
+  letter-spacing: -1.5px;
+  margin-bottom: 12px;
+}
+
+.section-title-highlight {
+  color: var(--primary-light);
+}
+
+.section-description {
+  font-size: 15px;
+  color: var(--text-secondary);
+  max-width: 480px;
+  margin: 0 auto;
+}
+
+.steps-grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 20px;
+}
+
+.step-card {
+  background: var(--bg-card);
+  border-radius: 20px;
+  border: 1px solid var(--border);
+  padding: 32px 24px;
+  text-align: center;
+  position: relative;
+  transition: all 0.3s;
+}
+
+.step-card:hover {
+  transform: translateY(-4px);
+  border-color: rgba(167, 139, 250, 0.3);
+}
+
+.step-number {
+  position: absolute;
+  top: 16px;
+  right: 20px;
+  font-size: 44px;
+  font-weight: 900;
+  color: rgba(139, 92, 246, 0.1);
+  font-family: 'JetBrains Mono', monospace;
+}
+
+.step-emoji {
+  font-size: 36px;
+  margin-bottom: 14px;
+}
+
+.step-title {
+  font-size: 16px;
+  font-weight: 700;
+  margin-bottom: 8px;
+}
+
+.step-description {
+  font-size: 13px;
+  color: var(--text-secondary);
+  line-height: 1.6;
+}
+
+/* TRUST BADGES */
+.trust-section {
+  max-width: 1280px;
+  margin: 0 auto;
+  padding: 0 24px 72px;
+  position: relative;
+  z-index: 1;
+}
+
+.badges-row {
+  display: flex;
+  gap: 16px;
+  justify-content: center;
+  flex-wrap: wrap;
+}
+
+.badge-item {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  background: var(--bg-card);
+  border-radius: 12px;
+  border: 1px solid var(--border);
+  padding: 12px 20px;
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--text-secondary);
+}
+
+.badge-icon {
+  font-size: 16px;
+  flex-shrink: 0;
+}
+
+/* FOOTER */
+footer {
+  border-top: 1px solid var(--border);
+  padding: 48px 24px;
+  position: relative;
+  z-index: 1;
+}
+
+.footer-content {
+  max-width: 1280px;
+  margin: 0 auto;
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 48px;
+  margin-bottom: 32px;
+}
+
+.footer-brand {
+  flex: 0 0 auto;
+}
+
+.footer-logo {
+  height: 36px;
+  margin-bottom: 16px;
+}
+
+.footer-description {
+  font-size: 13px;
+  color: var(--text-muted);
+  max-width: 300px;
+  line-height: 1.6;
+}
+
+.footer-columns {
+  display: flex;
+  gap: 56px;
+  flex: 1;
+}
+
+.footer-column {
+  display: flex;
+  flex-direction: column;
+}
+
+.footer-title {
+  font-size: 12px;
+  font-weight: 700;
+  color: var(--text-muted);
+  margin-bottom: 16px;
+  letter-spacing: 1px;
+  text-transform: uppercase;
+}
+
+.footer-link {
+  font-size: 13px;
+  color: var(--text-secondary);
+  margin-bottom: 10px;
+  cursor: pointer;
+  transition: color 0.2s;
+}
+
+.footer-link:hover {
+  color: var(--accent-yellow);
+}
+
+.social-link {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 13px;
+  color: var(--text-secondary);
+  text-decoration: none;
+  transition: color 0.2s;
+}
+
+.social-link:hover {
+  color: var(--accent-yellow);
+}
+
+.footer-bottom {
+  max-width: 1280px;
+  margin: 0 auto;
+  padding-top: 24px;
+  border-top: 1px solid var(--border);
+  display: flex;
+  justify-content: space-between;
+  font-size: 12px;
+  color: var(--text-muted);
+}
+
+/* MODALS */
+.modal-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 200;
+  background: rgba(0, 0, 0, 0.75);
+  backdrop-filter: blur(8px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 24px;
+  animation: fadeIn 0.2s;
+}
+
+.modal-overlay.hidden {
+  display: none;
+}
+
+.modal-box {
+  background: var(--bg-card);
+  border-radius: 24px;
+  border: 1px solid var(--border);
+  max-width: 580px;
+  width: 100%;
+  max-height: 90vh;
+  overflow-y: auto;
+  animation: slideDown 0.3s;
+}
+
+.modal-header-bar {
+  height: 4px;
+  background: linear-gradient(90deg, currentColor 60%, transparent);
+}
+
+.modal-content {
+  padding: 32px;
+}
+
+.modal-top {
+  display: flex;
+  justify-content: space-between;
+  margin-bottom: 20px;
+}
+
+.modal-left {
+  flex: 1;
+}
+
+.modal-title {
+  font-size: 22px;
+  font-weight: 800;
+}
+
+.modal-meta {
+  display: flex;
+  gap: 12px;
+  margin-top: 8px;
+  font-size: 12px;
+  color: var(--text-secondary);
+}
+
+.modal-close {
+  background: var(--bg-elevated);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  width: 36px;
+  height: 36px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--text-muted);
+  font-size: 18px;
+  cursor: pointer;
+  flex-shrink: 0;
+  transition: all 0.2s;
+}
+
+.modal-close:hover {
+  background: var(--border);
+  color: var(--text-primary);
+}
+
+.modal-image {
+  height: 200px;
+  border-radius: 16px;
+  background: radial-gradient(circle, rgba(139, 92, 246, 0.1), var(--bg-elevated));
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-bottom: 24px;
+  border: 1px solid var(--border);
+  overflow: hidden;
+}
+
+.modal-image img {
+  height: 140px;
+  object-fit: contain;
+  filter: drop-shadow(0 6px 20px rgba(0, 0, 0, 0.5));
+}
+
+.modal-price-section {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  background: var(--bg-input);
+  border-radius: 16px;
+  border: 1px solid var(--border);
+  padding: 20px 24px;
+  gap: 16px;
+}
+
+.price-info div:first-child {
+  font-size: 12px;
+  color: var(--text-muted);
+  margin-bottom: 4px;
+}
+
+.price-display {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.original-price {
+  font-size: 14px;
+  color: var(--text-muted);
+  text-decoration: line-through;
+}
+
+.sale-price {
+  font-size: 30px;
+  font-weight: 900;
+  color: var(--accent-yellow);
+  font-family: 'JetBrains Mono', monospace;
+  letter-spacing: -1.5px;
+}
+
+.discount-tag {
+  background: rgba(139, 92, 246, 0.25);
+  border-radius: 6px;
+  padding: 3px 8px;
+  font-size: 12px;
+  font-weight: 700;
+  color: var(--primary-light);
+}
+
+.buy-button {
+  padding: 16px 32px;
+  border-radius: 14px;
+  font-weight: 800;
+  font-size: 15px;
+}
+
+/* CART SIDEBAR */
+.cart-sidebar {
+  position: fixed;
+  right: 0;
+  top: 0;
+  z-index: 150;
+  width: 400px;
+  height: 100vh;
+  background: var(--bg);
+  border-left: 1px solid var(--border);
+  display: flex;
+  flex-direction: column;
+  animation: slideIn 0.3s ease;
+}
+
+.cart-sidebar.hidden {
+  display: none;
+}
+
+.cart-header {
+  padding: 24px;
+  border-bottom: 1px solid var(--border);
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.cart-title {
+  font-size: 18px;
+  font-weight: 700;
+}
+
+.cart-list {
+  flex: 1;
+  overflow-y: auto;
+  padding: 24px;
+}
+
+.cart-empty {
+  text-align: center;
+  padding: 48px 24px;
+  color: var(--text-muted);
+}
+
+.cart-item {
+  margin-bottom: 16px;
+  padding: 16px;
+  background: var(--bg-card);
+  border-radius: 12px;
+  border: 1px solid var(--border);
+  display: flex;
+  gap: 12px;
+}
+
+.cart-item-image {
+  width: 60px;
+  height: 60px;
+  background: var(--bg-elevated);
+  border-radius: 8px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  overflow: hidden;
+}
+
+.cart-item-image img {
+  height: 50px;
+  object-fit: contain;
+}
+
+.cart-item-details {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+}
+
+.cart-item-name {
+  font-size: 12px;
+  font-weight: 600;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.cart-item-price {
+  font-size: 14px;
+  font-weight: 700;
+  color: var(--accent-yellow);
+  font-family: 'JetBrains Mono', monospace;
+}
+
+.cart-item-controls {
+  display: flex;
+  gap: 6px;
+  align-items: center;
+}
+
+.qty-button {
+  width: 24px;
+  height: 24px;
+  border-radius: 6px;
+  border: none;
+  background: var(--bg-elevated);
+  color: var(--text-primary);
+  cursor: pointer;
+  font-size: 12px;
+  font-weight: 600;
+  transition: all 0.2s;
+}
+
+.qty-button:hover {
+  background: var(--primary);
+  color: #fff;
+}
+
+.qty-display {
+  min-width: 30px;
+  text-align: center;
+  font-size: 12px;
+  font-weight: 600;
+}
+
+.cart-item-remove {
+  width: 24px;
+  height: 24px;
+  border-radius: 6px;
+  border: none;
+  background: transparent;
+  color: var(--text-muted);
+  cursor: pointer;
+  font-size: 14px;
+  transition: all 0.2s;
+}
+
+.cart-item-remove:hover {
+  color: #ff6b6b;
+  background: rgba(255, 107, 107, 0.1);
+}
+
+.cart-footer {
+  padding: 24px;
+  border-top: 1px solid var(--border);
+}
+
+.cart-subtotal {
+  display: flex;
+  justify-content: space-between;
+  font-size: 14px;
+  margin-bottom: 16px;
+  padding-bottom: 16px;
+  border-bottom: 1px solid var(--border);
+}
+
+.cart-subtotal-label {
+  color: var(--text-secondary);
+  font-weight: 600;
+}
+
+.cart-subtotal-value {
+  font-weight: 700;
+  color: var(--accent-yellow);
+  font-family: 'JetBrains Mono', monospace;
+}
+
+.checkout-button {
+  width: 100%;
+  padding: 16px;
+  background: linear-gradient(135deg, var(--primary), var(--primary-darker));
+  color: #fff;
+  border: none;
+  border-radius: 12px;
+  font-weight: 800;
+  font-size: 14px;
+  font-family: inherit;
+  cursor: pointer;
+  transition: all 0.25s;
+}
+
+.checkout-button:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 8px 24px rgba(139, 92, 246, 0.4);
+  filter: brightness(1.1);
+}
+
+/* CHECKOUT FLOW */
+.checkout-container {
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+}
+
+.checkout-step {
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: 16px;
+  padding: 24px;
+}
+
+.checkout-step-title {
+  font-size: 16px;
+  font-weight: 700;
+  margin-bottom: 16px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.step-number-badge {
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  background: var(--primary);
+  color: #fff;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 700;
+  font-size: 12px;
+}
+
+.qr-container {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 24px;
+  padding: 24px 0;
+}
+
+.qr-code {
+  width: 220px;
+  height: 220px;
+  background: #fff;
+  border-radius: 12px;
+  padding: 12px;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.3);
+}
+
+.qr-code img {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+}
+
+.pix-code-container {
+  width: 100%;
+  background: var(--bg-elevated);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  padding: 16px;
+  display: flex;
+  gap: 12px;
+  align-items: center;
+}
+
+.pix-code {
+  flex: 1;
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 12px;
+  word-break: break-all;
+  color: var(--text-secondary);
+  background: var(--bg-input);
+  padding: 8px;
+  border-radius: 8px;
+  border: 1px solid var(--border);
+}
+
+.copy-button {
+  padding: 8px 16px;
+  background: var(--primary);
+  color: #fff;
+  border: none;
+  border-radius: 8px;
+  font-weight: 600;
+  font-size: 12px;
+  font-family: inherit;
+  cursor: pointer;
+  transition: all 0.2s;
+  white-space: nowrap;
+}
+
+.copy-button:hover {
+  background: var(--primary-dark);
+}
+
+.countdown {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  font-size: 14px;
+  color: var(--text-secondary);
+  padding: 12px 16px;
+  background: var(--bg-elevated);
+  border-radius: 8px;
+}
+
+.countdown-timer {
+  font-weight: 700;
+  color: var(--accent-yellow);
+  font-family: 'JetBrains Mono', monospace;
+  animation: countdownPulse 1s ease-in-out infinite;
+}
+
+.form-group {
+  margin-bottom: 16px;
+}
+
+.form-group label {
+  display: block;
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--text-secondary);
+  margin-bottom: 6px;
+}
+
+.form-group input {
+  width: 100%;
+  background: var(--bg-input);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  padding: 12px 14px;
+  color: var(--text-primary);
+  font-size: 13px;
+  font-family: inherit;
+  outline: none;
+  transition: all 0.2s;
+}
+
+.form-group input:focus {
+  border-color: var(--primary);
+  box-shadow: 0 0 0 3px rgba(139, 92, 246, 0.1);
+}
+
+.form-group input::placeholder {
+  color: var(--text-muted);
+}
+
+.success-message {
+  text-align: center;
+  padding: 48px 24px;
+}
+
+.success-icon {
+  font-size: 64px;
+  margin-bottom: 24px;
+}
+
+.success-title {
+  font-size: 24px;
+  font-weight: 800;
+  margin-bottom: 8px;
+}
+
+.success-description {
+  font-size: 14px;
+  color: var(--text-secondary);
+  margin-bottom: 24px;
+}
+
+.order-details {
+  background: var(--bg-elevated);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  padding: 20px;
+  margin-bottom: 24px;
+  text-align: left;
+}
+
+.detail-row {
+  display: flex;
+  justify-content: space-between;
+  font-size: 13px;
+  padding: 8px 0;
+  border-bottom: 1px solid var(--border);
+}
+
+.detail-row:last-child {
+  border-bottom: none;
+}
+
+.detail-label {
+  color: var(--text-muted);
+}
+
+.detail-value {
+  font-weight: 600;
+  color: var(--text-primary);
+  font-family: 'JetBrains Mono', monospace;
+}
+
+/* TOAST */
+.toast {
+  position: fixed;
+  bottom: 24px;
+  right: 24px;
+  z-index: 300;
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  padding: 16px 24px;
+  font-size: 14px;
+  color: var(--text-primary);
+  max-width: 400px;
+  animation: slideDown 0.3s ease;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.3);
+  opacity: 0;
+  visibility: hidden;
+  transition: all 0.3s;
+}
+
+.toast.show {
+  opacity: 1;
+  visibility: visible;
+}
+
+.toast.success {
+  border-color: #22c55e;
+  background: rgba(34, 197, 94, 0.1);
+  color: #22c55e;
+}
+
+.toast.error {
+  border-color: #ef4444;
+  background: rgba(239, 68, 68, 0.1);
+  color: #ef4444;
+}
+
+/* BACKGROUND ELEMENTS */
+.bg-blur-1 {
+  position: absolute;
+  width: 600px;
+  height: 600px;
+  top: -200px;
+  left: -100px;
+  border-radius: 50%;
+  filter: blur(120px);
+  background: var(--primary);
+  opacity: 0.1;
+  pointer-events: none;
+  z-index: 0;
+}
+
+.bg-blur-2 {
+  position: absolute;
+  width: 500px;
+  height: 500px;
+  top: 200px;
+  right: -200px;
+  border-radius: 50%;
+  filter: blur(120px);
+  background: var(--accent-yellow);
+  opacity: 0.04;
+  pointer-events: none;
+  z-index: 0;
+}
+
+.bg-grid {
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+  z-index: 0;
+  background-image: radial-gradient(var(--border) 50%, transparent 50%);
+  background-size: 40px 40px;
+  opacity: 0.3;
+}
+
+/* RESPONSIVE */
+@media (max-width: 1024px) {
+  .skin-grid {
+    grid-template-columns: repeat(3, 1fr);
+  }
+
+  .steps-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+
+  nav {
+    gap: 24px;
+  }
+
+  .hero {
+    flex-direction: column;
+    gap: 24px;
+  }
+
+  .hero-right {
+    justify-content: center;
+  }
+
+  .cart-sidebar {
+    width: 100%;
+    max-width: 500px;
+  }
+}
+
+@media (max-width: 768px) {
+  .skin-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+
+  .steps-grid {
+    grid-template-columns: 1fr;
+  }
+
+  nav {
+    display: none;
+  }
+
+  .header-content {
+    height: 56px;
+  }
+
+  .hero {
+    padding: 48px 16px 40px;
+    gap: 20px;
+  }
+
+  .hero-title {
+    font-size: 36px;
+  }
+
+  .hero-description {
+    font-size: 14px;
+  }
+
+  .hero-stats {
+    gap: 24px;
+  }
+
+  .delivery-section {
+    padding: 0 16px 32px;
+  }
+
+  .search-section {
+    padding: 0 16px 16px;
+  }
+
+  .grid-section {
+    padding: 0 16px 48px;
+  }
+
+  .how-section {
+    padding: 48px 16px;
+  }
+
+  .trust-section {
+    padding: 0 16px 48px;
+  }
+
+  .section-title {
+    font-size: 24px;
+  }
+
+  footer {
+    padding: 32px 16px;
+  }
+
+  .footer-content {
+    flex-direction: column;
+    gap: 32px;
+  }
+
+  .footer-columns {
+    gap: 32px;
+  }
+
+  .footer-bottom {
+    flex-direction: column;
+    gap: 12px;
+  }
+
+  .cart-sidebar {
+    width: 100%;
+    max-width: 100%;
+  }
+
+  .modal-overlay {
+    align-items: flex-end;
+  }
+
+  .modal-box {
+    border-radius: 24px 24px 0 0;
+    max-height: 90vh;
+  }
+
+  .filters-row {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .category-buttons {
+    width: 100%;
+    overflow-x: auto;
+    padding-bottom: 8px;
+  }
+
+  .delivery-filter {
+    width: 100%;
+  }
+
+  .hero-buttons {
+    flex-direction: column;
+  }
+
+  .hero-buttons .btn {
+    width: 100%;
+    justify-content: center;
+  }
+}
+
+@media (max-width: 480px) {
+  .skin-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .header-content {
+    gap: 12px;
+  }
+
+  .logo {
+    height: 32px;
+  }
+
+  .hero-title {
+    font-size: 28px;
+  }
+
+  .hero-stats {
+    flex-direction: column;
+    gap: 16px;
+  }
+
+  .modal-content {
+    padding: 20px;
+  }
+
+  .modal-price-section {
+    flex-direction: column;
+  }
+
+  .buy-button {
+    width: 100%;
+  }
+
+  .badges-row {
+    gap: 8px;
+  }
+
+  .badge-item {
+    padding: 10px 14px;
+    font-size: 12px;
+  }
+}
+</style>
+</head>
+<body>
+
+<!-- BACKGROUND ELEMENTS -->
+<div class="bg-blur-1"></div>
+<div class="bg-blur-2"></div>
+<div class="bg-grid"></div>
+
+<!-- HEADER -->
+<header>
+  <div class="header-content">
+    <img src="https://static.wixstatic.com/media/874864_b598e856481740e7ae752771a661c242~mv2.png/v1/fill/w_600,h_235,al_c,q_85,enc_auto/874864_b598e856481740e7ae752771a661c242~mv2.png" alt="Gumax Skins" class="logo" onclick="scrollToTop()">
+    <nav>
+      <span class="nav-link" onclick="scrollToSection('hero')">Início</span>
+      <span class="nav-link" onclick="scrollToSection('marketplace')">Loja</span>
+      <span class="nav-link" onclick="scrollToSection('how')">Como Funciona</span>
+      <span class="nav-link" onclick="scrollToSection('faq')">FAQ</span>
+    </nav>
+    <div class="header-actions">
+      <div class="cart-icon" onclick="toggleCart()">
+        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="9" cy="21" r="1"/><circle cx="20" cy="21" r="1"/><path d="M1 1h4l2.68 13.39a2 2 0 002 1.61h9.72a2 2 0 002-1.61L23 6H6"/></svg>
+        <div class="cart-badge" id="cartBadge" style="display: none;">0</div>
+      </div>
+      <button class="btn btn-primary btn-small" onclick="openSteamLogin()">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor"><path d="M11.979 0C5.678 0 .511 4.86.022 11.037l6.432 2.658c.545-.371 1.203-.59 1.912-.59.063 0 .125.004.188.006l2.861-4.142V8.91c0-2.495 2.028-4.524 4.524-4.524 2.494 0 4.524 2.031 4.524 4.527s-2.03 4.525-4.524 4.525h-.105l-4.076 2.911c0 .052.004.105.004.159 0 1.875-1.515 3.396-3.39 3.396-1.635 0-3.016-1.173-3.331-2.727L.436 15.27C1.862 20.307 6.486 24 11.979 24c6.627 0 11.999-5.373 11.999-12S18.605 0 11.979 0zM7.54 18.21l-1.473-.61c.262.543.714.999 1.314 1.25 1.297.539 2.793-.076 3.332-1.375.263-.63.264-1.322.005-1.955-.258-.632-.725-1.123-1.354-1.384a2.47 2.47 0 00-1.29-.211l1.523.63c.956.4 1.409 1.5 1.013 2.457-.397.96-1.494 1.412-2.45 1.013l-1.62-.815zm8.4-5.685c-1.665 0-3.023-1.358-3.023-3.025 0-1.665 1.358-3.024 3.023-3.024 1.665 0 3.024 1.359 3.024 3.024 0 1.667-1.359 3.025-3.024 3.025zm0-5.443c-1.336 0-2.42 1.084-2.42 2.42 0 1.334 1.084 2.418 2.42 2.418s2.42-1.084 2.42-2.418c0-1.336-1.084-2.42-2.42-2.42z"/></svg>
+        Entrar com Steam
+      </button>
+    </div>
+  </div>
+</header>
+
+<!-- HERO SECTION -->
+<section class="hero" id="hero">
+  <div class="hero-left">
+    <div class="hero-badge">
+      <svg width="14" height="14" viewBox="0 0 24 24"><path d="M13 2L3 14h9l-1 10 10-12h-9l1-10z" fill="currentColor"/></svg>
+      Skins com entrega em até 30 minutos
+    </div>
+    <h1 class="hero-title">Suas skins de CS2 <span class="hero-title-gradient">com o melhor preço</span> do mercado</h1>
+    <p class="hero-description">Compre skins com segurança, pagamento via PIX e entrega direta no seu inventário Steam. Milhares de skins disponíveis.</p>
+    <div class="hero-buttons">
+      <button class="btn btn-primary" onclick="scrollToSection('marketplace')">Explorar Skins</button>
+      <button class="btn btn-secondary" onclick="scrollToSection('how')">Como Funciona</button>
+    </div>
+    <div class="hero-stats">
+      <div class="stat-item">
+        <div class="stat-value">2.400+</div>
+        <div class="stat-label">Skins disponíveis</div>
+      </div>
+      <div class="stat-item">
+        <div class="stat-value">30min</div>
+        <div class="stat-label">Entrega Full</div>
+      </div>
+      <div class="stat-item">
+        <div class="stat-value">100%</div>
+        <div class="stat-label">Seguro</div>
+      </div>
+      <div class="stat-item">
+        <div class="stat-value">PIX</div>
+        <div class="stat-label">Pagamento instantâneo</div>
+      </div>
+    </div>
+  </div>
+  <div class="hero-right">
+    <img src="hero.png" alt="CS2" class="hero-image" onerror="this.style.display='none'">
+  </div>
+</section>
+
+<!-- DELIVERY BANNERS -->
+<section class="delivery-section">
+  <div class="delivery-card full">
+    <div class="delivery-icon">⚡</div>
+    <div class="delivery-content">
+      <div>⚡ ENTREGA FULL</div>
+      <div>Skins em estoque • Entrega em até <strong>30 minutos</strong></div>
+    </div>
+  </div>
+  <div class="delivery-card normal">
+    <div class="delivery-icon">🚚</div>
+    <div class="delivery-content">
+      <div>ENTREGA NORMAL</div>
+      <div>Catálogo completo • Entrega em até <strong>12 horas</strong></div>
+    </div>
+  </div>
+</section>
+
+<!-- SEARCH & FILTERS -->
+<section class="search-section" id="marketplace">
+  <div class="search-bar">
+    <svg class="search-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>
+    <input type="text" class="search-input" id="searchInput" placeholder="Buscar skins... Ex: AK-47 Redline, AWP Dragon Lore" onkeyup="filterSkins()">
+    <span class="search-clear" id="searchClear" style="display: none;" onclick="clearSearch()">×</span>
+  </div>
+
+  <div class="filters-row">
+    <div class="category-buttons" id="categoryButtons">
+      <!-- Generated by JS -->
+    </div>
+    <div class="delivery-filter" id="deliveryFilter">
+      <!-- Generated by JS -->
+    </div>
+  </div>
+
+  <div class="results-count">
+    Exibindo <strong id="resultCount">0</strong> skins
+  </div>
+</section>
+
+<!-- SKIN GRID -->
+<section class="grid-section">
+  <div class="skin-grid" id="skinGrid">
+    <!-- Generated by JS -->
+  </div>
+  <button class="load-more" onclick="loadMoreSkins()">Carregar mais skins</button>
+</section>
+
+<!-- HOW IT WORKS -->
+<section class="how-section" id="how">
+  <div class="section-header">
+    <h2 class="section-title">Como <span class="section-title-highlight">Funciona</span></h2>
+    <p class="section-description">Compre suas skins em 4 passos simples</p>
+  </div>
+  <div class="steps-grid">
+    <div class="step-card">
+      <div class="step-number">01</div>
+      <div class="step-emoji">🎮</div>
+      <div class="step-title">Conecte sua Steam</div>
+      <div class="step-description">Faça login seguro com sua conta Steam para vincular seu inventário.</div>
+    </div>
+    <div class="step-card">
+      <div class="step-number">02</div>
+      <div class="step-emoji">🛒</div>
+      <div class="step-title">Escolha suas Skins</div>
+      <div class="step-description">Navegue pelo catálogo, filtre por arma, preço e condição.</div>
+    </div>
+    <div class="step-card">
+      <div class="step-number">03</div>
+      <div class="step-emoji">💳</div>
+      <div class="step-title">Pague via PIX</div>
+      <div class="step-description">Pagamento instantâneo e seguro via PIX pelo Mercado Pago.</div>
+    </div>
+    <div class="step-card">
+      <div class="step-number">04</div>
+      <div class="step-emoji">🚀</div>
+      <div class="step-title">Receba a Skin</div>
+      <div class="step-description">Entrega Full em 30min ou Normal em até 12h direto no seu inventário.</div>
+    </div>
+  </div>
+</section>
+
+<!-- TRUST BADGES -->
+<section class="trust-section">
+  <div class="badges-row">
+    <div class="badge-item">
+      <svg class="badge-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
+      Compra 100% Segura
+    </div>
+    <div class="badge-item">
+      <span class="badge-icon">💰</span>
+      Melhores Preços
+    </div>
+    <div class="badge-item">
+      <span class="badge-icon">⚡</span>
+      Entrega Rápida
+    </div>
+    <div class="badge-item">
+      <span class="badge-icon">🔒</span>
+      Mercado Pago
+    </div>
+  </div>
+</section>
+
+<!-- FOOTER -->
+<footer>
+  <div class="footer-content">
+    <div class="footer-brand">
+      <img src="https://static.wixstatic.com/media/874864_b598e856481740e7ae752771a661c242~mv2.png/v1/fill/w_600,h_235,al_c,q_85,enc_auto/874864_b598e856481740e7ae752771a661c242~mv2.png" alt="Gumax" class="footer-logo">
+      <p class="footer-description">Sua loja de confiança para skins de CS2. Preços imbatíveis e entrega garantida.</p>
+    </div>
+    <div class="footer-columns">
+      <div class="footer-column">
+        <div class="footer-title">Navegação</div>
+        <a class="footer-link" onclick="scrollToSection('hero')">Início</a>
+        <a class="footer-link" onclick="scrollToSection('marketplace')">Loja</a>
+        <a class="footer-link" onclick="scrollToSection('how')">Como Funciona</a>
+        <a class="footer-link" onclick="scrollToSection('faq')">FAQ</a>
+      </div>
+      <div class="footer-column">
+        <div class="footer-title">Suporte</div>
+        <a class="footer-link">Termos de Uso</a>
+        <a class="footer-link">Privacidade</a>
+        <a class="footer-link">Contato</a>
+      </div>
+      <div class="footer-column">
+        <div class="footer-title">Redes Sociais</div>
+        <a class="social-link" href="https://www.instagram.com/gumax_skins/" target="_blank" rel="noopener noreferrer">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor"><path d="M12 2.163c3.204 0 3.584.012 4.85.07 3.252.148 4.771 1.691 4.919 4.919.058 1.265.069 1.645.069 4.849 0 3.205-.012 3.584-.069 4.849-.149 3.225-1.664 4.771-4.919 4.919-1.266.058-1.644.07-4.85.07-3.204 0-3.584-.012-4.849-.07-3.26-.149-4.771-1.699-4.919-4.92-.058-1.265-.07-1.644-.07-4.849 0-3.204.013-3.583.07-4.849.149-3.227 1.664-4.771 4.919-4.919 1.266-.057 1.645-.069 4.849-.069zm0-2.163c-3.259 0-3.667.014-4.947.072-4.358.2-6.78 2.618-6.98 6.98-.059 1.281-.073 1.689-.073 4.948 0 3.259.014 3.668.072 4.948.2 4.358 2.618 6.78 6.98 6.98 1.281.058 1.689.072 4.948.072 3.259 0 3.668-.014 4.948-.072 4.354-.2 6.782-2.618 6.979-6.98.059-1.28.073-1.689.073-4.948 0-3.259-.014-3.667-.072-4.947-.196-4.354-2.617-6.78-6.979-6.98-1.281-.059-1.69-.073-4.949-.073zm0 5.838c-3.403 0-6.162 2.759-6.162 6.162s2.759 6.163 6.162 6.163 6.162-2.759 6.162-6.163c0-3.403-2.759-6.162-6.162-6.162zm0 10.162c-2.209 0-4-1.79-4-4 0-2.209 1.791-4 4-4s4 1.791 4 4c0 2.21-1.791 4-4 4zm6.406-11.845c-.796 0-1.441.645-1.441 1.44s.645 1.44 1.441 1.44c.795 0 1.439-.645 1.439-1.44s-.644-1.44-1.439-1.44z"/></svg>
+          @gumax_skins
+        </a>
+      </div>
+    </div>
+  </div>
+  <div class="footer-bottom">
+    <span>© 2026 Gumax Skins. Todos os direitos reservados.</span>
+    <span>Este site não é afiliado à Valve Corporation.</span>
+  </div>
+</footer>
+
+<!-- SKIN DETAIL MODAL -->
+<div class="modal-overlay hidden" id="skinModal" onclick="closeSkinModal(event)">
+  <div class="modal-box" onclick="event.stopPropagation()">
+    <div class="modal-header-bar" id="modalRarityBar"></div>
+    <div class="modal-content">
+      <div class="modal-top">
+        <div class="modal-left">
+          <div id="deliveryBadgeModal"></div>
+          <h3 class="modal-title" id="modalSkinName"></h3>
+          <div class="modal-meta">
+            <span id="modalRarity"></span>
+            <span id="modalWear"></span>
+            <span id="modalFloat"></span>
+          </div>
+        </div>
+        <button class="modal-close" onclick="closeSkinModal()">×</button>
+      </div>
+      <div class="modal-image" id="modalImage"></div>
+      <div class="modal-price-section">
+        <div class="price-info">
+          <div>Preço</div>
+          <div class="price-display">
+            <span class="original-price" id="modalOriginalPrice"></span>
+            <span class="sale-price" id="modalSalePrice"></span>
+            <span class="discount-tag" id="modalDiscount"></span>
+          </div>
+        </div>
+        <button class="btn btn-primary buy-button" onclick="addToCartFromModal()">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="9" cy="21" r="1"/><circle cx="20" cy="21" r="1"/><path d="M1 1h4l2.68 13.39a2 2 0 002 1.61h9.72a2 2 0 002-1.61L23 6H6"/></svg>
+          Comprar
+        </button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- CART SIDEBAR -->
+<div class="cart-sidebar hidden" id="cartSidebar">
+  <div class="cart-header">
+    <h3 class="cart-title">Carrinho</h3>
+    <button class="modal-close" onclick="toggleCart()" style="margin: 0;">×</button>
+  </div>
+  <div class="cart-list" id="cartList">
+    <div class="cart-empty">Seu carrinho está vazio</div>
+  </div>
+  <div class="cart-footer">
+    <div class="cart-subtotal">
+      <span class="cart-subtotal-label">Subtotal:</span>
+      <span class="cart-subtotal-value" id="cartSubtotal">R$ 0,00</span>
+    </div>
+    <button class="checkout-button" onclick="startCheckout()">Finalizar Compra</button>
+  </div>
+</div>
+
+<!-- CHECKOUT MODAL -->
+<div class="modal-overlay hidden" id="checkoutModal" onclick="closeCheckout(event)">
+  <div class="modal-box" style="max-width: 600px;" onclick="event.stopPropagation()">
+    <div class="modal-content">
+      <div class="modal-top" style="margin-bottom: 24px;">
+        <div class="modal-left">
+          <h3 class="modal-title">Finalizar Compra</h3>
+        </div>
+        <button class="modal-close" onclick="closeCheckout()">×</button>
+      </div>
+
+      <div id="checkoutSteps" class="checkout-container">
+        <!-- Generated by JS -->
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- STEAM LOGIN MODAL -->
+<div class="modal-overlay hidden" id="steamLoginModal" onclick="closeSteamLogin(event)">
+  <div class="modal-box" style="max-width: 420px;" onclick="event.stopPropagation()">
+    <div class="modal-content">
+      <div style="text-align: center; margin-bottom: 28px;">
+        <div style="width: 60px; height: 60px; border-radius: 16px; margin: 0 auto 16px; background: linear-gradient(135deg, rgba(139, 92, 246, 0.2), rgba(139, 92, 246, 0.05)); border: 1px solid rgba(139, 92, 246, 0.3); display: flex; align-items: center; justify-content: center; font-size: 26px;">🎮</div>
+        <h3 class="modal-title" style="margin-bottom: 8px;">Conecte sua Steam</h3>
+        <p style="font-size: 13px; color: var(--text-secondary); line-height: 1.6;">Faça login com sua conta Steam para comprar skins e receber no seu inventário.</p>
+      </div>
+      <button class="btn btn-primary" style="width: 100%; padding: 16px; border-radius: 14px; background: #171a21; border: 1px solid #2a475e; color: #c7d5e0; margin-bottom: 20px;" onclick="redirectToSteamAuth()">
+        <svg width="22" height="22" viewBox="0 0 24 24" fill="currentColor"><path d="M11.979 0C5.678 0 .511 4.86.022 11.037l6.432 2.658c.545-.371 1.203-.59 1.912-.59.063 0 .125.004.188.006l2.861-4.142V8.91c0-2.495 2.028-4.524 4.524-4.524 2.494 0 4.524 2.031 4.524 4.527s-2.03 4.525-4.524 4.525h-.105l-4.076 2.911c0 .052.004.105.004.159 0 1.875-1.515 3.396-3.39 3.396-1.635 0-3.016-1.173-3.331-2.727L.436 15.27C1.862 20.307 6.486 24 11.979 24c6.627 0 11.999-5.373 11.999-12S18.605 0 11.979 0zM7.54 18.21l-1.473-.61c.262.543.714.999 1.314 1.25 1.297.539 2.793-.076 3.332-1.375.263-.63.264-1.322.005-1.955-.258-.632-.725-1.123-1.354-1.384a2.47 2.47 0 00-1.29-.211l1.523.63c.956.4 1.409 1.5 1.013 2.457-.397.96-1.494 1.412-2.45 1.013l-1.62-.815zm8.4-5.685c-1.665 0-3.023-1.358-3.023-3.025 0-1.665 1.358-3.024 3.023-3.024 1.665 0 3.024 1.359 3.024 3.024 0 1.667-1.359 3.025-3.024 3.025zm0-5.443c-1.336 0-2.42 1.084-2.42 2.42 0 1.334 1.084 2.418 2.42 2.418s2.42-1.084 2.42-2.418c0-1.336-1.084-2.42-2.42-2.42z"/></svg>
+        Entrar com Steam
+      </button>
+      <div style="background: var(--bg-input); border-radius: 14px; border: 1px solid var(--border); padding: 20px;">
+        <div style="font-size: 12px; font-weight: 700; color: var(--text-muted); margin-bottom: 16px; letter-spacing: 0.5px;">INFORMAÇÕES ADICIONAIS</div>
+        <div style="margin-bottom: 12px;">
+          <label style="font-size: 11px; font-weight: 600; color: var(--text-secondary); display: block; margin-bottom: 6px;">Nome completo</label>
+          <input type="text" id="steamName" placeholder="Seu nome" style="width: 100%; background: var(--bg); border: 1px solid var(--border); border-radius: 10px; padding: 12px 14px; color: var(--text-primary); font-size: 13px; font-family: inherit; outline: none;">
+        </div>
+        <div style="margin-bottom: 12px;">
+          <label style="font-size: 11px; font-weight: 600; color: var(--text-secondary); display: block; margin-bottom: 6px;">WhatsApp</label>
+          <input type="tel" id="steamWhatsapp" placeholder="(00) 00000-0000" style="width: 100%; background: var(--bg); border: 1px solid var(--border); border-radius: 10px; padding: 12px 14px; color: var(--text-primary); font-size: 13px; font-family: inherit; outline: none;">
+        </div>
+        <div>
+          <label style="font-size: 11px; font-weight: 600; color: var(--text-secondary); display: block; margin-bottom: 6px;">Trade Link</label>
+          <input type="url" id="steamTradeLink" placeholder="https://steamcommunity.com/tradeoffer/..." style="width: 100%; background: var(--bg); border: 1px solid var(--border); border-radius: 10px; padding: 12px 14px; color: var(--text-primary); font-size: 13px; font-family: inherit; outline: none;">
+        </div>
+      </div>
+      <div style="display: flex; gap: 8px; margin-top: 16px; font-size: 11px; color: var(--text-muted); align-items: flex-start;">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="margin-top: 2px; flex-shrink: 0;"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
+        <span>Seus dados são protegidos e nunca compartilhados. Login via API oficial da Valve.</span>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- TOAST NOTIFICATION -->
+<div class="toast" id="toast"></div>
+
+<script>
+// ============= FIREBASE INIT =============
+const firebaseConfig = {
+  apiKey: "AIzaSyCN0TV59kJNQMsaQ-5d9dSTowirxFcuHG0",
+  authDomain: "gumax-skins.firebaseapp.com",
+  projectId: "gumax-skins",
+  storageBucket: "gumax-skins.firebasestorage.app",
+  messagingSenderId: "678525908778",
+  appId: "1:678525908778:web:56ee6d6a809c013b341053"
+};
+firebase.initializeApp(firebaseConfig);
+const db = firebase.firestore();
+const auth = firebase.auth();
+
+// ============= CONSTANTS =============
+const API_BASE = 'https://gumax-backend-production.up.railway.app';
+
+const SKINS = [
+  {id:1,name:"AK-47 | Asiimov",wear:"FT",price:349.90,rarity:"Covert",inStock:true,float:0.25,discount:12},
+  {id:2,name:"AWP | Asiimov",wear:"FT",price:189.90,rarity:"Covert",inStock:true,float:0.31,discount:10},
+  {id:3,name:"M4A1-S | Printstream",wear:"FN",price:899.90,rarity:"Covert",inStock:false,float:0.03,discount:8},
+  {id:4,name:"Desert Eagle | Blaze",wear:"FN",price:520.00,rarity:"Restricted",inStock:true,float:0.01,discount:7},
+  {id:5,name:"AK-47 | Redline",wear:"FT",price:42.90,rarity:"Classified",inStock:true,float:0.31,discount:5},
+  {id:6,name:"USP-S | Kill Confirmed",wear:"MW",price:245.00,rarity:"Covert",inStock:false,float:0.12,discount:9},
+  {id:7,name:"AWP | Dragon Lore",wear:"BS",price:8499.90,rarity:"Covert",inStock:false,float:0.67,discount:15},
+  {id:8,name:"Glock-18 | Fade",wear:"FN",price:1890.00,rarity:"Restricted",inStock:true,float:0.009,discount:11},
+  {id:9,name:"M4A4 | Howl",wear:"FT",price:12800.00,rarity:"Contraband",inStock:false,float:0.22,discount:13},
+  {id:10,name:"AK-47 | Fire Serpent",wear:"FT",price:2150.00,rarity:"Covert",inStock:true,float:0.28,discount:10},
+  {id:11,name:"AWP | Hyper Beast",wear:"MW",price:89.90,rarity:"Covert",inStock:true,float:0.09,discount:10},
+  {id:12,name:"AK-47 | Vulcan",wear:"MW",price:159.90,rarity:"Covert",inStock:false,float:0.08,discount:8},
+  {id:13,name:"M9 Bayonet | Fade",wear:"FN",price:4200.00,rarity:"Covert",inStock:true,float:0.02,discount:12},
+  {id:14,name:"Karambit | Tiger Tooth",wear:"FN",price:3800.00,rarity:"Covert",inStock:false,float:0.01,discount:14},
+  {id:15,name:"Glock-18 | Twilight Galaxy",wear:"FT",price:899.90,rarity:"Classified",inStock:true,float:0.18,discount:8},
+  {id:16,name:"P250 | Mehndi",wear:"FN",price:156.00,rarity:"Mil-Spec",inStock:true,float:0.05,discount:6},
+  {id:17,name:"Five-SeveN | Neon Rider",wear:"FN",price:234.00,rarity:"Restricted",inStock:false,float:0.04,discount:9},
+  {id:18,name:"CZ75-Auto | Traction",wear:"MW",price:89.90,rarity:"Mil-Spec",inStock:true,float:0.11,discount:5},
+  {id:19,name:"MAC-10 | Gold DDpat",wear:"FT",price:120.00,rarity:"Mil-Spec",inStock:true,float:0.22,discount:7},
+  {id:20,name:"Sawed-Off | Sage Spray",wear:"FN",price:67.50,rarity:"Restricted",inStock:false,float:0.03,discount:6},
+];
+
+const RARITY_COLORS = {
+  Covert: "#eb4b4b",
+  Classified: "#d32ce6",
+  Restricted: "#8847ff",
+  "Mil-Spec": "#4b69ff",
+  Contraband: "#e4ae39",
+};
+
+const WEAR_LABELS = {
+  FN: "Factory New",
+  MW: "Minimal Wear",
+  FT: "Field-Tested",
+  WW: "Well-Worn",
+  BS: "Battle-Scarred",
+};
+
+const CATEGORIES = ["Todos", "Rifles", "Pistolas", "AWP", "Facas", "Luvas"];
+
+// ============= STATE =============
+let cart = [];
+let currentModal = null;
+let currentDeliveryFilter = "todos";
+let currentSearchQuery = "";
+let currentCategory = "Todos";
+let displayedSkins = [];
+let skinImages = {};
+
+// ============= INITIALIZATION =============
+document.addEventListener('DOMContentLoaded', function() {
+  initializeUI();
+  renderSkins();
+  loadSkinImages();
+
+  // Check Steam callback
+  const params = new URLSearchParams(window.location.search);
+  if (params.has('steam_id')) {
+    handleSteamCallback();
+  }
+});
+
+function initializeUI() {
+  // Category buttons
+  const catDiv = document.getElementById('categoryButtons');
+  CATEGORIES.forEach(cat => {
+    const btn = document.createElement('button');
+    btn.className = `cat-btn ${cat === currentCategory ? 'active' : ''}`;
+    btn.textContent = cat;
+    btn.onclick = () => selectCategory(cat);
+    catDiv.appendChild(btn);
+  });
+
+  // Delivery filter buttons
+  const delDiv = document.getElementById('deliveryFilter');
+  const filters = [
+    {key: 'todos', label: 'Todos'},
+    {key: 'full', label: '⚡ Full'},
+    {key: 'normal', label: 'Normal'},
+  ];
+  filters.forEach(f => {
+    const btn = document.createElement('button');
+    btn.className = `delivery-btn ${f.key === currentDeliveryFilter ? 'active' + (f.key === 'full' ? ' yellow' : '') : ''}`;
+    btn.textContent = f.label;
+    btn.onclick = () => selectDelivery(f.key);
+    delDiv.appendChild(btn);
+  });
+}
+
+function loadSkinImages() {
+  fetch('https://raw.githubusercontent.com/ByMykel/CSGO-API/main/public/api/en/skins.json')
+    .then(r => r.json())
+    .then(data => {
+      data.forEach(s => {
+        const matched = SKINS.find(skin => skin.name === s.name);
+        if (matched && s.image) {
+          skinImages[s.name] = s.image;
+        }
+      });
+      renderSkins();
+    })
+    .catch(e => console.log('Image load error'));
+}
+
+// ============= FILTERING & RENDERING =============
+function filterSkins() {
+  const query = document.getElementById('searchInput').value.toLowerCase();
+  currentSearchQuery = query;
+
+  const clearBtn = document.getElementById('searchClear');
+  if (query) clearBtn.style.display = 'block';
+  else clearBtn.style.display = 'none';
+
+  renderSkins();
+}
+
+function clearSearch() {
+  document.getElementById('searchInput').value = '';
+  currentSearchQuery = '';
+  document.getElementById('searchClear').style.display = 'none';
+  renderSkins();
+}
+
+function selectCategory(cat) {
+  currentCategory = cat;
+  document.querySelectorAll('.cat-btn').forEach(btn => {
+    btn.classList.remove('active');
+    if (btn.textContent === cat) btn.classList.add('active');
+  });
+  renderSkins();
+}
+
+function selectDelivery(key) {
+  currentDeliveryFilter = key;
+  document.querySelectorAll('.delivery-btn').forEach(btn => {
+    btn.classList.remove('active', 'yellow');
+    if (btn.textContent.includes(key === 'full' ? '⚡' : key === 'todos' ? 'Todos' : 'Normal')) {
+      btn.classList.add('active');
+      if (key === 'full') btn.classList.add('yellow');
+    }
+  });
+  renderSkins();
+}
+
+function getCategory(name) {
+  const lower = name.toLowerCase();
+  if (lower.includes('awp')) return 'AWP';
+  if (lower.includes('knife') || lower.includes('bayonet') || lower.includes('karambit')) return 'Facas';
+  if (lower.includes('glove')) return 'Luvas';
+  if (lower.includes('ak-47') || lower.includes('m4') || lower.includes('famas') || lower.includes('aug')) return 'Rifles';
+  if (lower.includes('glock') || lower.includes('usp') || lower.includes('p250') || lower.includes('deagle')) return 'Pistolas';
+  return 'Todos';
+}
+
+function renderSkins() {
+  const filtered = SKINS.filter(skin => {
+    // Delivery filter
+    if (currentDeliveryFilter === 'full' && !skin.inStock) return false;
+    if (currentDeliveryFilter === 'normal' && skin.inStock) return false;
+
+    // Search filter
+    if (currentSearchQuery && !skin.name.toLowerCase().includes(currentSearchQuery)) return false;
+
+    // Category filter
+    if (currentCategory !== 'Todos') {
+      const skinCat = getCategory(skin.name);
+      if (skinCat !== currentCategory) return false;
+    }
+
+    return true;
+  });
+
+  displayedSkins = filtered;
+  const grid = document.getElementById('skinGrid');
+  grid.innerHTML = '';
+
+  filtered.forEach((skin, i) => {
+    const card = createSkinCard(skin, i);
+    grid.appendChild(card);
+  });
+
+  document.getElementById('resultCount').textContent = filtered.length;
+}
+
+function createSkinCard(skin, index) {
+  const div = document.createElement('div');
+  div.className = 'skin-card';
+  div.style.animationDelay = (index * 0.05) + 's';
+  div.onclick = () => openSkinModal(skin);
+
+  const rarityColor = RARITY_COLORS[skin.rarity] || '#8847ff';
+  const originalPrice = (skin.price / (1 - skin.discount / 100)).toFixed(2);
+  const image = skinImages[skin.name];
+
+  div.innerHTML = `
+    <div class="skin-rarity-bar" style="color: ${rarityColor};"></div>
+    <div class="skin-badges">
+      <div class="delivery-badge ${skin.inStock ? 'full' : ''}">
+        ${skin.inStock ? '⚡ ENTREGA FULL' : 'ATÉ 12H'}
+      </div>
+      <div class="discount-badge">-${skin.discount}%</div>
+    </div>
+    <div class="skin-image">
+      ${image
+        ? `<img src="${image}" alt="${skin.name}">`
+        : `<div class="skin-shimmer"></div>`
+      }
+    </div>
+    <div class="skin-info">
+      <div class="skin-rarity" style="color: ${rarityColor};">${skin.rarity}</div>
+      <div class="skin-name">${skin.name}</div>
+      <div class="skin-meta">
+        <span>${WEAR_LABELS[skin.wear]}</span>
+        <span style="color: var(--border);">•</span>
+        <span class="skin-float">FV ${skin.float.toFixed(3)}</span>
+      </div>
+      <div class="skin-footer">
+        <div class="skin-pricing">
+          <div class="skin-original-price">R$ ${originalPrice.replace('.', ',')}</div>
+          <div class="skin-sale-price">R$ ${skin.price.toFixed(2).replace('.', ',')}</div>
+        </div>
+        <button class="btn btn-primary btn-icon skin-add-cart" onclick="addToCart(event, ${skin.id})">+</button>
+      </div>
+    </div>
+  `;
+
+  return div;
+}
+
+// ============= CART MANAGEMENT =============
+function addToCart(event, skinId) {
+  event.stopPropagation();
+  const skin = SKINS.find(s => s.id === skinId);
+  if (!skin) return;
+
+  const existing = cart.find(item => item.id === skinId);
+  if (existing) {
+    existing.qty++;
+  } else {
+    cart.push({...skin, qty: 1});
+  }
+
+  updateCartUI();
+  showToast('Skin adicionada ao carrinho');
+}
+
+function addToCartFromModal() {
+  if (!currentModal) return;
+  addToCart({stopPropagation: () => {}}, currentModal.id);
+  closeSkinModal();
+}
+
+function removeFromCart(skinId) {
+  cart = cart.filter(item => item.id !== skinId);
+  updateCartUI();
+}
+
+function updateCartQty(skinId, delta) {
+  const item = cart.find(s => s.id === skinId);
+  if (!item) return;
+  item.qty += delta;
+  if (item.qty <= 0) removeFromCart(skinId);
+  else updateCartUI();
+}
+
+function updateCartUI() {
+  const badge = document.getElementById('cartBadge');
+  const total = cart.reduce((sum, item) => sum + item.qty, 0);
+
+  if (total > 0) {
+    badge.style.display = 'flex';
+    badge.textContent = total;
+  } else {
+    badge.style.display = 'none';
+  }
+
+  // Render cart list
+  const list = document.getElementById('cartList');
+  if (cart.length === 0) {
+    list.innerHTML = '<div class="cart-empty">Seu carrinho está vazio</div>';
+  } else {
+    list.innerHTML = cart.map(item => {
+      const image = skinImages[item.name];
+      return `
+        <div class="cart-item">
+          <div class="cart-item-image">
+            ${image ? `<img src="${image}" alt="${item.name}">` : ''}
+          </div>
+          <div class="cart-item-details">
+            <div class="cart-item-name">${item.name}</div>
+            <div class="cart-item-price">R$ ${item.price.toFixed(2).replace('.', ',')}</div>
+            <div class="cart-item-controls">
+              <button class="qty-button" onclick="updateCartQty(${item.id}, -1)">−</button>
+              <div class="qty-display">${item.qty}</div>
+              <button class="qty-button" onclick="updateCartQty(${item.id}, 1)">+</button>
+              <button class="cart-item-remove" onclick="removeFromCart(${item.id})">✕</button>
+            </div>
+          </div>
+        </div>
+      `;
+    }).join('');
+  }
+
+  // Update subtotal
+  const subtotal = cart.reduce((sum, item) => sum + (item.price * item.qty), 0);
+  document.getElementById('cartSubtotal').textContent = fmtR(subtotal);
+}
+
+function toggleCart() {
+  const sidebar = document.getElementById('cartSidebar');
+  sidebar.classList.toggle('hidden');
+}
+
+function fmtR(n) {
+  return 'R$ ' + (n || 0).toFixed(2).replace('.', ',').replace(/\B(?=(\d{3})+(?!\d))/g, '.');
+}
+
+// ============= MODAL MANAGEMENT =============
+function openSkinModal(skin) {
+  currentModal = skin;
+  const rarityColor = RARITY_COLORS[skin.rarity] || '#8847ff';
+  const originalPrice = (skin.price / (1 - skin.discount / 100)).toFixed(2);
+  const image = skinImages[skin.name];
+
+  document.getElementById('modalRarityBar').style.color = rarityColor;
+  document.getElementById('modalSkinName').textContent = skin.name;
+  document.getElementById('modalRarity').innerHTML = `<span style="color: ${rarityColor}; font-weight: 600;">${skin.rarity}</span>`;
+  document.getElementById('modalWear').textContent = WEAR_LABELS[skin.wear];
+  document.getElementById('modalFloat').innerHTML = `<span style="font-family: 'JetBrains Mono', monospace;">Float: ${skin.float.toFixed(3)}</span>`;
+
+  const deliveryHtml = skin.inStock
+    ? `<div class="delivery-badge full" style="margin-bottom: 12px;"><svg width="12" height="12" viewBox="0 0 24 24"><path d="M13 2L3 14h9l-1 10 10-12h-9l1-10z" fill="currentColor"/></svg> ENTREGA FULL • ATÉ 30 MIN</div>`
+    : '';
+  document.getElementById('deliveryBadgeModal').innerHTML = deliveryHtml;
+
+  const imageHtml = image
+    ? `<img src="${image}" alt="${skin.name}">`
+    : `<div class="skin-shimmer" style="width: 160px; height: 100px;"></div>`;
+  document.getElementById('modalImage').innerHTML = imageHtml;
+
+  document.getElementById('modalOriginalPrice').textContent = `R$ ${originalPrice.replace('.', ',')}`;
+  document.getElementById('modalSalePrice').textContent = `R$ ${skin.price.toFixed(2).replace('.', ',')}`;
+  document.getElementById('modalDiscount').textContent = `-${skin.discount}%`;
+
+  document.getElementById('skinModal').classList.remove('hidden');
+}
+
+function closeSkinModal(event) {
+  if (event && event.target.id !== 'skinModal') return;
+  currentModal = null;
+  document.getElementById('skinModal').classList.add('hidden');
+}
+
+// ============= CHECKOUT FLOW =============
+function startCheckout() {
+  if (cart.length === 0) {
+    showToast('Carrinho vazio');
+    return;
+  }
+
+  const user = JSON.parse(localStorage.getItem('gumax_user') || '{}');
+  if (!user.steamId) {
+    showToast('Faça login com Steam primeiro');
+    closeSteamLogin();
+    return;
+  }
+
+  document.getElementById('checkoutModal').classList.remove('hidden');
+  renderCheckoutSteps();
+}
+
+function closeCheckout(event) {
+  if (event && event.target.id !== 'checkoutModal') return;
+  document.getElementById('checkoutModal').classList.add('hidden');
+}
+
+function renderCheckoutSteps() {
+  const container = document.getElementById('checkoutSteps');
+  const subtotal = cart.reduce((sum, item) => sum + (item.price * item.qty), 0);
+
+  let html = `
+    <div class="checkout-step">
+      <div class="checkout-step-title">
+        <span class="step-number-badge">1</span>
+        Confirmar Itens
+      </div>
+      <div style="max-height: 200px; overflow-y: auto;">
+  `;
+
+  cart.forEach(item => {
+    html += `
+      <div style="display: flex; justify-content: space-between; padding: 8px 0; border-bottom: 1px solid var(--border); font-size: 13px;">
+        <span>${item.name}</span>
+        <span style="color: var(--accent-yellow);">×${item.qty}</span>
+      </div>
+    `;
+  });
+
+  html += `
+      </div>
+      <div style="padding: 12px 0; border-top: 1px solid var(--border); margin-top: 12px; font-weight: 600;">
+        Total: <span style="color: var(--accent-yellow);">${fmtR(subtotal)}</span>
+      </div>
+    </div>
+
+    <div class="checkout-step">
+      <div class="checkout-step-title">
+        <span class="step-number-badge">2</span>
+        Gerar QR Code
+      </div>
+      <div class="qr-container">
+        <div id="qrCode" class="qr-code">
+          <div style="width: 100%; height: 100%; display: flex; align-items: center; justify-content: center; color: var(--text-muted);">
+            <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="1"/><path d="M12 1v6m0 6v6"/><path d="M4.22 4.22l4.24 4.24m3.08 3.08l4.24 4.24"/><path d="M1 12h6m6 0h6"/><path d="M4.22 19.78l4.24-4.24m3.08-3.08l4.24-4.24"/></svg>
+          </div>
+        </div>
+        <div class="pix-code-container">
+          <input type="text" class="pix-code" id="pixCode" readonly value="Gerando código PIX...">
+          <button class="copy-button" onclick="copyPixCode()">Copiar</button>
+        </div>
+        <div class="countdown">
+          ⏱️ Válido por: <span class="countdown-timer" id="countdown">10:00</span>
+        </div>
+      </div>
+    </div>
+
+    <div class="checkout-step">
+      <div class="checkout-step-title">
+        <span class="step-number-badge">3</span>
+        Aguardando Pagamento
+      </div>
+      <div style="text-align: center; padding: 24px 0;">
+        <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="margin: 0 auto 16px; animation: spin 2s linear infinite;"><circle cx="12" cy="12" r="10"/><path d="M12 6v6l4 2"/></svg>
+        <p style="color: var(--text-secondary); margin-bottom: 12px;">Verificando pagamento...</p>
+        <p style="font-size: 12px; color: var(--text-muted);">Confirmar pagamento pode levar até 1 minuto</p>
+      </div>
+    </div>
+  `;
+
+  container.innerHTML = html;
+
+  // Generate PIX
+  generatePixCode(subtotal);
+  startCountdown();
+  pollPaymentStatus();
+}
+
+function generatePixCode(amount) {
+  const orderId = 'order_' + Date.now();
+  const pixCode = Math.random().toString(36).substring(2, 15) + Math.random().toString(36).substring(2, 15);
+
+  localStorage.setItem('current_order', JSON.stringify({
+    id: orderId,
+    amount,
+    pixCode,
+    timestamp: Date.now(),
+    items: cart
+  }));
+
+  document.getElementById('pixCode').value = pixCode;
+
+  // In real implementation, generate QR from PIX code
+  generateQRCode(pixCode);
+}
+
+function generateQRCode(text) {
+  const qrDiv = document.getElementById('qrCode');
+  if (!qrDiv) return;
+
+  // Simple QR placeholder - in production use qrcode.js library
+  const svg = `
+    <svg viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg">
+      <rect width="100" height="100" fill="white"/>
+      <rect x="10" y="10" width="20" height="20" fill="black"/>
+      <rect x="70" y="10" width="20" height="20" fill="black"/>
+      <rect x="10" y="70" width="20" height="20" fill="black"/>
+      <rect x="35" y="35" width="30" height="30" fill="black" opacity="0.5"/>
+      <text x="50" y="80" text-anchor="middle" fill="black" font-size="8">${text.substring(0, 10)}</text>
+    </svg>
+  `;
+  qrDiv.innerHTML = svg;
+}
+
+function copyPixCode() {
+  const code = document.getElementById('pixCode').value;
+  navigator.clipboard.writeText(code);
+  showToast('Código PIX copiado!');
+}
+
+function startCountdown() {
+  let seconds = 600; // 10 minutes
+
+  const interval = setInterval(() => {
+    seconds--;
+    const mins = Math.floor(seconds / 60);
+    const secs = seconds % 60;
+    const timer = document.getElementById('countdown');
+    if (timer) {
+      timer.textContent = `${mins}:${secs.toString().padStart(2, '0')}`;
+    }
+
+    if (seconds <= 0) {
+      clearInterval(interval);
+      showToast('Código PIX expirado');
+    }
+  }, 1000);
+}
+
+function pollPaymentStatus() {
+  const checkInterval = setInterval(() => {
+    // In real implementation, call /api/check-pix
+    const order = JSON.parse(localStorage.getItem('current_order') || '{}');
+
+    // Simulate payment check (for demo, show success after 30 seconds)
+    if (Date.now() - order.timestamp > 30000) {
+      clearInterval(checkInterval);
+      showPaymentSuccess();
+    }
+  }, 5000);
+}
+
+function showPaymentSuccess() {
+  const container = document.getElementById('checkoutSteps');
+  const order = JSON.parse(localStorage.getItem('current_order') || '{}');
+
+  container.innerHTML = `
+    <div class="success-message">
+      <div class="success-icon">✅</div>
+      <h3 class="success-title">Pagamento Confirmado!</h3>
+      <p class="success-description">Seu pedido foi processado com sucesso. As skins serão entregues em breve.</p>
+
+      <div class="order-details">
+        <div class="detail-row">
+          <span class="detail-label">Pedido #</span>
+          <span class="detail-value">${order.id}</span>
+        </div>
+        <div class="detail-row">
+          <span class="detail-label">Valor Pago</span>
+          <span class="detail-value">${fmtR(order.amount)}</span>
+        </div>
+        <div class="detail-row">
+          <span class="detail-label">Skins</span>
+          <span class="detail-value">${order.items.length}</span>
+        </div>
+        <div class="detail-row">
+          <span class="detail-label">Status</span>
+          <span class="detail-value" style="color: #22c55e;">Processando</span>
+        </div>
+      </div>
+
+      <button class="btn btn-primary" style="width: 100%;" onclick="finishCheckout()">Voltar à Loja</button>
+    </div>
+  `;
+}
+
+function finishCheckout() {
+  cart = [];
+  updateCartUI();
+  closeCheckout();
+  showToast('Pedido concluído!');
+}
+
+// ============= STEAM LOGIN =============
+function openSteamLogin() {
+  document.getElementById('steamLoginModal').classList.remove('hidden');
+}
+
+function closeSteamLogin(event) {
+  if (event && event.target.id !== 'steamLoginModal') return;
+  document.getElementById('steamLoginModal').classList.add('hidden');
+}
+
+function redirectToSteamAuth() {
+  const name = document.getElementById('steamName').value;
+  const whatsapp = document.getElementById('steamWhatsapp').value;
+  const tradeLink = document.getElementById('steamTradeLink').value;
+
+  if (!name || !whatsapp || !tradeLink) {
+    showToast('Preencha todos os campos');
+    return;
+  }
+
+  // Save form data and redirect to Steam
+  localStorage.setItem('steam_form_data', JSON.stringify({name, whatsapp, tradeLink}));
+  window.location.href = `${API_BASE}/api/steam-auth?action=login&returnUrl=${encodeURIComponent(window.location.href)}`;
+}
+
+function handleSteamCallback() {
+  const params = new URLSearchParams(window.location.search);
+  const steamId = params.get('steam_id');
+  const steamName = params.get('steam_name');
+
+  if (steamId) {
+    const formData = JSON.parse(localStorage.getItem('steam_form_data') || '{}');
+    const userData = {
+      steamId,
+      steamName,
+      name: formData.name,
+      whatsapp: formData.whatsapp,
+      tradeLink: formData.tradeLink,
+      loginTime: new Date().toISOString()
+    };
+
+    localStorage.setItem('gumax_user', JSON.stringify(userData));
+    closeSteamLogin();
+    showToast(`Bem-vindo, ${steamName}!`);
+
+    // Clean up URL
+    window.history.replaceState({}, document.title, window.location.pathname);
+  }
+}
+
+// ============= UTILITIES =============
+function loadMoreSkins() {
+  // In production, load from API
+  showToast('Carregando mais skins...');
+}
+
+function scrollToSection(id) {
+  const element = document.getElementById(id);
+  if (element) {
+    element.scrollIntoView({behavior: 'smooth'});
+  }
+}
+
+function scrollToTop() {
+  window.scrollTo({top: 0, behavior: 'smooth'});
+}
+
+function showToast(msg, type = 'success') {
+  const toast = document.getElementById('toast');
+  toast.textContent = msg;
+  toast.className = `toast show ${type}`;
+  setTimeout(() => toast.classList.remove('show'), 3000);
+}
+</script>
+
+</body>
+</html>
