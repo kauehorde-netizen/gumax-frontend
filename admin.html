@@ -1,0 +1,1381 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Gumax Skins | Painel Admin</title>
+<link rel="icon" href="https://static.wixstatic.com/media/874864_b598e856481740e7ae752771a661c242~mv2.png/v1/fill/w_64,h_64,al_c,q_85,enc_auto/874864_b598e856481740e7ae752771a661c242~mv2.png">
+<link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800;900&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<script src="https://www.gstatic.com/firebasejs/10.5.0/firebase-app.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.5.0/firebase-auth.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.5.0/firebase-firestore.js"></script>
+
+<style>
+* { box-sizing: border-box; margin: 0; padding: 0; }
+
+:root {
+  --bg: #08060e;
+  --bg-card: #110e1a;
+  --bg-elevated: #1a1528;
+  --bg-input: #13101e;
+  --text-primary: #ece8f4;
+  --text-secondary: #9890a8;
+  --text-muted: #5e5670;
+  --border: #241e35;
+  --primary: #8B5CF6;
+  --primary-dark: #7C3AED;
+  --primary-light: #A78BFA;
+  --accent-yellow: #FACC15;
+  --success: #22c55e;
+  --danger: #ef4444;
+  --warning: #f59e0b;
+}
+
+body {
+  background: var(--bg);
+  background-image:
+    radial-gradient(ellipse at 50% 0%, rgba(139, 92, 246, .07) 0%, transparent 50%),
+    radial-gradient(ellipse at 80% 100%, rgba(250, 204, 21, .03) 0%, transparent 40%);
+  color: var(--text-primary);
+  font-family: 'Outfit', sans-serif;
+  min-height: 100vh;
+}
+
+/* LOGIN SCREEN */
+.login-screen {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 100vh;
+  padding: 20px;
+}
+
+.login-box {
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: 16px;
+  padding: 48px;
+  max-width: 420px;
+  width: 100%;
+  text-align: center;
+}
+
+.login-box img {
+  width: 180px;
+  margin-bottom: 24px;
+}
+
+.login-box h2 {
+  font-size: 22px;
+  margin-bottom: 8px;
+  color: var(--primary-light);
+}
+
+.login-box p {
+  color: var(--text-secondary);
+  font-size: 14px;
+  margin-bottom: 32px;
+}
+
+.login-input {
+  width: 100%;
+  padding: 14px 16px;
+  background: var(--bg-input);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  color: var(--text-primary);
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 16px;
+  margin-bottom: 16px;
+  outline: none;
+  transition: border-color .2s;
+}
+
+.login-input:focus {
+  border-color: var(--primary);
+}
+
+.login-error {
+  color: var(--danger);
+  font-size: 13px;
+  margin-bottom: 12px;
+  display: none;
+}
+
+/* DASHBOARD */
+.dashboard { display: none; }
+
+.sidebar {
+  position: fixed;
+  left: 0; top: 0; bottom: 0;
+  width: 240px;
+  background: var(--bg-card);
+  border-right: 1px solid var(--border);
+  padding: 24px 0;
+  z-index: 100;
+}
+
+.sidebar-logo {
+  padding: 0 24px 24px;
+  border-bottom: 1px solid var(--border);
+  margin-bottom: 12px;
+}
+
+.sidebar-logo img { width: 120px; }
+.sidebar-logo span { display: block; font-size: 11px; color: var(--primary-light); font-weight: 600; margin-top: 4px; letter-spacing: 1px; }
+
+.sidebar-nav { list-style: none; padding: 0; }
+
+.sidebar-nav li {
+  padding: 12px 24px;
+  cursor: pointer;
+  color: var(--text-secondary);
+  font-size: 14px;
+  font-weight: 500;
+  transition: all .2s;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.sidebar-nav li:hover { color: var(--text-primary); background: rgba(139, 92, 246, .05); }
+.sidebar-nav li.active { color: var(--primary-light); background: rgba(139, 92, 246, .1); border-right: 3px solid var(--primary); }
+
+.main-content {
+  margin-left: 240px;
+  padding: 32px;
+  min-height: 100vh;
+}
+
+.page-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 32px;
+}
+
+.page-header h1 { font-size: 28px; font-weight: 700; }
+.page-header .subtitle { color: var(--text-secondary); font-size: 14px; margin-top: 4px; }
+
+/* STATS CARDS */
+.stats-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  gap: 16px;
+  margin-bottom: 32px;
+}
+
+.stat-card {
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  padding: 20px;
+}
+
+.stat-card .stat-label { font-size: 12px; color: var(--text-muted); text-transform: uppercase; letter-spacing: 1px; margin-bottom: 8px; }
+.stat-card .stat-value { font-size: 28px; font-weight: 700; }
+.stat-card .stat-change { font-size: 12px; margin-top: 4px; }
+.stat-card .stat-change.up { color: var(--success); }
+.stat-card .stat-change.down { color: var(--danger); }
+
+/* BUTTONS */
+.btn {
+  padding: 10px 20px;
+  border: none;
+  border-radius: 8px;
+  font-family: 'Outfit', sans-serif;
+  font-weight: 600;
+  font-size: 14px;
+  cursor: pointer;
+  transition: all .2s;
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.btn-primary { background: var(--primary); color: white; }
+.btn-primary:hover { background: var(--primary-dark); }
+.btn-secondary { background: var(--bg-elevated); color: var(--text-primary); border: 1px solid var(--border); }
+.btn-secondary:hover { border-color: var(--primary); }
+.btn-danger { background: var(--danger); color: white; }
+.btn-danger:hover { opacity: .9; }
+.btn-success { background: var(--success); color: white; }
+.btn-small { padding: 6px 12px; font-size: 12px; }
+.btn-yellow { background: var(--accent-yellow); color: #000; }
+
+/* TABLE */
+.data-table-wrapper {
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  overflow: hidden;
+  margin-bottom: 24px;
+}
+
+.table-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 16px 20px;
+  border-bottom: 1px solid var(--border);
+}
+
+.table-header h3 { font-size: 16px; font-weight: 600; }
+
+.data-table {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+.data-table th {
+  padding: 12px 16px;
+  text-align: left;
+  font-size: 11px;
+  color: var(--text-muted);
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  border-bottom: 1px solid var(--border);
+  font-weight: 600;
+}
+
+.data-table td {
+  padding: 12px 16px;
+  font-size: 14px;
+  border-bottom: 1px solid rgba(36, 30, 53, .5);
+  vertical-align: middle;
+}
+
+.data-table tr:hover { background: rgba(139, 92, 246, .03); }
+
+.badge {
+  display: inline-block;
+  padding: 3px 10px;
+  border-radius: 20px;
+  font-size: 11px;
+  font-weight: 600;
+}
+
+.badge-full { background: rgba(250, 204, 21, .15); color: var(--accent-yellow); }
+.badge-normal { background: rgba(139, 92, 246, .15); color: var(--primary-light); }
+.badge-active { background: rgba(34, 197, 94, .15); color: var(--success); }
+.badge-pending { background: rgba(245, 158, 11, .15); color: var(--warning); }
+.badge-blocked { background: rgba(239, 68, 68, .15); color: var(--danger); }
+
+/* MODAL */
+.modal-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, .7);
+  backdrop-filter: blur(4px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity .2s;
+}
+
+.modal-overlay.show { opacity: 1; pointer-events: all; }
+
+.modal {
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: 16px;
+  padding: 32px;
+  max-width: 600px;
+  width: 90%;
+  max-height: 90vh;
+  overflow-y: auto;
+}
+
+.modal h2 { font-size: 20px; margin-bottom: 24px; }
+
+.form-group { margin-bottom: 16px; }
+.form-group label {
+  display: block;
+  font-size: 12px;
+  color: var(--text-secondary);
+  margin-bottom: 6px;
+  font-weight: 500;
+}
+
+.form-control {
+  width: 100%;
+  padding: 10px 14px;
+  background: var(--bg-input);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  color: var(--text-primary);
+  font-family: 'Outfit', sans-serif;
+  font-size: 14px;
+  outline: none;
+  transition: border-color .2s;
+}
+
+.form-control:focus { border-color: var(--primary); }
+
+select.form-control {
+  appearance: none;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' fill='%239890a8' viewBox='0 0 16 16'%3E%3Cpath d='M8 11L3 6h10z'/%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: right 12px center;
+  padding-right: 36px;
+}
+
+.form-row {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
+}
+
+.form-actions {
+  display: flex;
+  gap: 12px;
+  margin-top: 24px;
+  justify-content: flex-end;
+}
+
+/* TOAST */
+.toast {
+  position: fixed;
+  bottom: 24px;
+  right: 24px;
+  padding: 14px 24px;
+  background: var(--bg-elevated);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  font-size: 14px;
+  z-index: 9999;
+  transform: translateY(100px);
+  opacity: 0;
+  transition: all .3s;
+}
+
+.toast.show { transform: translateY(0); opacity: 1; }
+.toast.success { border-color: var(--success); }
+.toast.error { border-color: var(--danger); }
+
+/* SECTIONS */
+.section { display: none; }
+.section.active { display: block; }
+
+/* RESPONSIVE */
+@media (max-width: 768px) {
+  .sidebar { width: 60px; }
+  .sidebar-logo span, .sidebar-nav li span { display: none; }
+  .sidebar-nav li { justify-content: center; padding: 12px; }
+  .main-content { margin-left: 60px; padding: 16px; }
+  .stats-grid { grid-template-columns: 1fr 1fr; }
+  .form-row { grid-template-columns: 1fr; }
+}
+
+/* EMPTY STATE */
+.empty-state {
+  text-align: center;
+  padding: 60px 20px;
+  color: var(--text-muted);
+}
+.empty-state svg { margin-bottom: 16px; opacity: .5; }
+.empty-state p { font-size: 14px; }
+
+/* SEARCH */
+.search-bar {
+  display: flex;
+  gap: 12px;
+  margin-bottom: 20px;
+}
+
+.search-bar input {
+  flex: 1;
+  padding: 10px 16px;
+  background: var(--bg-input);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  color: var(--text-primary);
+  font-family: 'Outfit', sans-serif;
+  font-size: 14px;
+  outline: none;
+}
+
+.search-bar input:focus { border-color: var(--primary); }
+
+/* RESELLER BALANCE */
+.balance-display {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  background: var(--bg-elevated);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  padding: 16px 24px;
+  margin-bottom: 24px;
+}
+
+.balance-display .label { font-size: 12px; color: var(--text-muted); text-transform: uppercase; letter-spacing: 1px; }
+.balance-display .value { font-size: 24px; font-weight: 700; color: var(--accent-yellow); }
+</style>
+</head>
+<body>
+
+<!-- LOGIN SCREEN -->
+<div class="login-screen" id="loginScreen">
+  <div class="login-box">
+    <img src="https://static.wixstatic.com/media/874864_b598e856481740e7ae752771a661c242~mv2.png/v1/fill/w_600,h_235,al_c,q_85,enc_auto/874864_b598e856481740e7ae752771a661c242~mv2.png" alt="Gumax Skins">
+    <h2>Painel Administrativo</h2>
+    <p>Acesso restrito ao proprietário do site</p>
+    <input type="password" class="login-input" id="adminPassword" placeholder="Senha de administrador" onkeydown="if(event.key==='Enter')adminLogin()">
+    <div class="login-error" id="loginError">Senha incorreta</div>
+    <button class="btn btn-primary" style="width: 100%;" onclick="adminLogin()">Acessar Painel</button>
+    <br><br>
+    <a href="index.html" style="color: var(--text-muted); font-size: 13px; text-decoration: none;">← Voltar ao site</a>
+  </div>
+</div>
+
+<!-- DASHBOARD -->
+<div class="dashboard" id="dashboard">
+
+  <!-- SIDEBAR -->
+  <div class="sidebar">
+    <div class="sidebar-logo">
+      <img src="https://static.wixstatic.com/media/874864_b598e856481740e7ae752771a661c242~mv2.png/v1/fill/w_600,h_235,al_c,q_85,enc_auto/874864_b598e856481740e7ae752771a661c242~mv2.png" alt="Gumax">
+      <span>ADMIN PANEL</span>
+    </div>
+    <ul class="sidebar-nav">
+      <li class="active" onclick="switchSection('overview')">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/></svg>
+        <span>Visão Geral</span>
+      </li>
+      <li onclick="switchSection('skins')">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14.7 6.3a1 1 0 000 1.4l1.6 1.6a1 1 0 001.4 0l3.77-3.77a6 6 0 01-7.94 7.94l-6.91 6.91a2.12 2.12 0 01-3-3l6.91-6.91a6 6 0 017.94-7.94l-3.76 3.76z"/></svg>
+        <span>Minhas Skins</span>
+      </li>
+      <li onclick="switchSection('resellers')">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4-4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 00-3-3.87"/><path d="M16 3.13a4 4 0 010 7.75"/></svg>
+        <span>Revendedores</span>
+      </li>
+      <li onclick="switchSection('orders')">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 2L3 6v14a2 2 0 002 2h14a2 2 0 002-2V6l-3-4z"/><line x1="3" y1="6" x2="21" y2="6"/><path d="M16 10a4 4 0 01-8 0"/></svg>
+        <span>Pedidos</span>
+      </li>
+      <li onclick="switchSection('commissions')">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="1" x2="12" y2="23"/><path d="M17 5H9.5a3.5 3.5 0 000 7h5a3.5 3.5 0 010 7H6"/></svg>
+        <span>Comissões</span>
+      </li>
+      <li onclick="switchSection('settings')">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 00.33 1.82l.06.06a2 2 0 010 2.83 2 2 0 01-2.83 0l-.06-.06a1.65 1.65 0 00-1.82-.33 1.65 1.65 0 00-1 1.51V21a2 2 0 01-4 0v-.09A1.65 1.65 0 009 19.4a1.65 1.65 0 00-1.82.33l-.06.06a2 2 0 01-2.83-2.83l.06-.06A1.65 1.65 0 004.68 15a1.65 1.65 0 00-1.51-1H3a2 2 0 010-4h.09A1.65 1.65 0 004.6 9a1.65 1.65 0 00-.33-1.82l-.06-.06a2 2 0 012.83-2.83l.06.06A1.65 1.65 0 009 4.68a1.65 1.65 0 001-1.51V3a2 2 0 014 0v.09a1.65 1.65 0 001 1.51 1.65 1.65 0 001.82-.33l.06-.06a2 2 0 012.83 2.83l-.06.06A1.65 1.65 0 0019.4 9a1.65 1.65 0 001.51 1H21a2 2 0 010 4h-.09a1.65 1.65 0 00-1.51 1z"/></svg>
+        <span>Configurações</span>
+      </li>
+      <li style="margin-top: auto; border-top: 1px solid var(--border); padding-top: 16px;" onclick="adminLogout()">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 21H5a2 2 0 01-2-2V5a2 2 0 012-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>
+        <span>Sair</span>
+      </li>
+    </ul>
+  </div>
+
+  <!-- MAIN CONTENT -->
+  <div class="main-content">
+
+    <!-- OVERVIEW SECTION -->
+    <div class="section active" id="section-overview">
+      <div class="page-header">
+        <div>
+          <h1>Visão Geral</h1>
+          <div class="subtitle">Bem-vindo ao painel, Gu 👋</div>
+        </div>
+        <a href="index.html" class="btn btn-secondary" target="_blank">Ver Site →</a>
+      </div>
+
+      <div class="stats-grid" id="overviewStats">
+        <div class="stat-card">
+          <div class="stat-label">Total de Skins</div>
+          <div class="stat-value" id="statTotalSkins">0</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-label">Skins Entrega Full</div>
+          <div class="stat-value" id="statFullSkins">0</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-label">Revendedores Ativos</div>
+          <div class="stat-value" id="statResellers">0</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-label">Comissão Acumulada</div>
+          <div class="stat-value" id="statCommission">R$ 0</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-label">Pedidos Hoje</div>
+          <div class="stat-value" id="statOrdersToday">0</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-label">Faturamento Total</div>
+          <div class="stat-value" id="statRevenue">R$ 0</div>
+        </div>
+      </div>
+
+      <div class="data-table-wrapper">
+        <div class="table-header">
+          <h3>Últimos Pedidos</h3>
+        </div>
+        <table class="data-table">
+          <thead>
+            <tr>
+              <th>Pedido</th>
+              <th>Comprador</th>
+              <th>Skin</th>
+              <th>Valor</th>
+              <th>Entrega</th>
+              <th>Status</th>
+            </tr>
+          </thead>
+          <tbody id="recentOrdersTable">
+            <tr><td colspan="6" class="empty-state"><p>Nenhum pedido ainda</p></td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- SKINS SECTION -->
+    <div class="section" id="section-skins">
+      <div class="page-header">
+        <div>
+          <h1>Minhas Skins</h1>
+          <div class="subtitle">Gerencie suas skins e ofertas</div>
+        </div>
+        <div style="display: flex; gap: 8px;">
+          <button class="btn btn-yellow" onclick="openSkinModal('full')">⚡ Adicionar Full (30min)</button>
+          <button class="btn btn-primary" onclick="openSkinModal('normal')">+ Criar Oferta Normal (12h)</button>
+        </div>
+      </div>
+
+      <div class="search-bar">
+        <input type="text" placeholder="Buscar skins..." id="skinSearchInput" oninput="filterAdminSkins()">
+        <select class="form-control" style="width: 160px;" id="skinTypeFilter" onchange="filterAdminSkins()">
+          <option value="all">Todos</option>
+          <option value="full">⚡ Entrega Full</option>
+          <option value="normal">Normal (12h)</option>
+          <option value="reseller">De Revendedores</option>
+        </select>
+      </div>
+
+      <div class="data-table-wrapper">
+        <table class="data-table">
+          <thead>
+            <tr>
+              <th>Skin</th>
+              <th>Preço</th>
+              <th>Desconto</th>
+              <th>Float</th>
+              <th>Tipo</th>
+              <th>Vendedor</th>
+              <th>Status</th>
+              <th>Ações</th>
+            </tr>
+          </thead>
+          <tbody id="skinsTable">
+            <tr><td colspan="8" class="empty-state"><p>Carregando skins...</p></td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- RESELLERS SECTION -->
+    <div class="section" id="section-resellers">
+      <div class="page-header">
+        <div>
+          <h1>Revendedores</h1>
+          <div class="subtitle">Gerencie os revendedores cadastrados</div>
+        </div>
+      </div>
+
+      <div class="stats-grid">
+        <div class="stat-card">
+          <div class="stat-label">Revendedores Ativos</div>
+          <div class="stat-value" id="resellersActive">0</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-label">Skins de Revendedores</div>
+          <div class="stat-value" id="resellerSkins">0</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-label">Comissão Total (2%)</div>
+          <div class="stat-value" id="totalCommission">R$ 0</div>
+        </div>
+      </div>
+
+      <div class="data-table-wrapper">
+        <div class="table-header">
+          <h3>Lista de Revendedores</h3>
+        </div>
+        <table class="data-table">
+          <thead>
+            <tr>
+              <th>Steam</th>
+              <th>Nome</th>
+              <th>Skins Listadas</th>
+              <th>Vendas</th>
+              <th>Saldo</th>
+              <th>Comissão Devida</th>
+              <th>Status</th>
+              <th>Ações</th>
+            </tr>
+          </thead>
+          <tbody id="resellersTable">
+            <tr><td colspan="8" class="empty-state"><p>Nenhum revendedor cadastrado</p></td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- ORDERS SECTION -->
+    <div class="section" id="section-orders">
+      <div class="page-header">
+        <div>
+          <h1>Pedidos</h1>
+          <div class="subtitle">Todos os pedidos realizados</div>
+        </div>
+      </div>
+
+      <div class="search-bar">
+        <input type="text" placeholder="Buscar por pedido, comprador ou skin..." id="orderSearchInput" oninput="filterOrders()">
+        <select class="form-control" style="width: 160px;" id="orderStatusFilter" onchange="filterOrders()">
+          <option value="all">Todos</option>
+          <option value="pending">Pendente</option>
+          <option value="paid">Pago</option>
+          <option value="delivered">Entregue</option>
+          <option value="cancelled">Cancelado</option>
+        </select>
+      </div>
+
+      <div class="data-table-wrapper">
+        <table class="data-table">
+          <thead>
+            <tr>
+              <th>ID</th>
+              <th>Data</th>
+              <th>Comprador</th>
+              <th>Itens</th>
+              <th>Valor</th>
+              <th>Tipo</th>
+              <th>Status</th>
+              <th>Ações</th>
+            </tr>
+          </thead>
+          <tbody id="ordersTable">
+            <tr><td colspan="8" class="empty-state"><p>Nenhum pedido encontrado</p></td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- COMMISSIONS SECTION -->
+    <div class="section" id="section-commissions">
+      <div class="page-header">
+        <div>
+          <h1>Comissões</h1>
+          <div class="subtitle">Controle de comissões dos revendedores (2% por venda)</div>
+        </div>
+      </div>
+
+      <div class="stats-grid">
+        <div class="stat-card">
+          <div class="stat-label">Comissão Total Acumulada</div>
+          <div class="stat-value" id="commissionTotal">R$ 0,00</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-label">A Pagar Revendedores</div>
+          <div class="stat-value" id="commissionToPay">R$ 0,00</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-label">Já Pago</div>
+          <div class="stat-value" id="commissionPaid">R$ 0,00</div>
+        </div>
+      </div>
+
+      <div class="data-table-wrapper">
+        <div class="table-header">
+          <h3>Histórico de Comissões</h3>
+        </div>
+        <table class="data-table">
+          <thead>
+            <tr>
+              <th>Data</th>
+              <th>Revendedor</th>
+              <th>Venda</th>
+              <th>Valor Skin</th>
+              <th>Comissão (2%)</th>
+              <th>Revendedor Recebe</th>
+              <th>Status Pgto</th>
+              <th>Ações</th>
+            </tr>
+          </thead>
+          <tbody id="commissionsTable">
+            <tr><td colspan="8" class="empty-state"><p>Nenhuma comissão registrada</p></td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- SETTINGS SECTION -->
+    <div class="section" id="section-settings">
+      <div class="page-header">
+        <div>
+          <h1>Configurações</h1>
+          <div class="subtitle">Configurações gerais do marketplace</div>
+        </div>
+      </div>
+
+      <div class="data-table-wrapper" style="padding: 24px;">
+        <h3 style="margin-bottom: 20px;">Configurações do Site</h3>
+        <div class="form-group">
+          <label>Taxa de comissão dos revendedores (%)</label>
+          <input type="number" class="form-control" id="settingsCommission" value="2" min="0" max="100" step="0.5">
+        </div>
+        <div class="form-group">
+          <label>Aceitar novos revendedores</label>
+          <select class="form-control" id="settingsAcceptResellers">
+            <option value="true">Sim - Novos revendedores podem se cadastrar</option>
+            <option value="false">Não - Cadastro de revendedores fechado</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label>Chave PIX para recebimentos</label>
+          <input type="text" class="form-control" id="settingsPixKey" placeholder="Sua chave PIX">
+        </div>
+        <div class="form-group">
+          <label>Senha do painel admin</label>
+          <input type="password" class="form-control" id="settingsPassword" placeholder="Nova senha (deixe vazio para manter)">
+        </div>
+        <button class="btn btn-primary" onclick="saveSettings()">Salvar Configurações</button>
+      </div>
+
+      <div class="data-table-wrapper" style="padding: 24px; margin-top: 16px;">
+        <h3 style="margin-bottom: 20px;">Dados do Firebase</h3>
+        <p style="color: var(--text-secondary); font-size: 13px; margin-bottom: 12px;">
+          Projeto: gumax-skins<br>
+          Firestore: Ativo<br>
+          Auth: Steam Provider configurado
+        </p>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<!-- ADD/EDIT SKIN MODAL -->
+<div class="modal-overlay" id="skinModal" onclick="if(event.target===this)closeSkinModal()">
+  <div class="modal">
+    <h2 id="skinModalTitle">Adicionar Skin</h2>
+    <input type="hidden" id="skinEditId">
+
+    <div class="form-group">
+      <label>Nome da Skin</label>
+      <input type="text" class="form-control" id="skinName" placeholder="Ex: AK-47 | Asiimov">
+    </div>
+
+    <div class="form-row">
+      <div class="form-group">
+        <label>Preço (R$)</label>
+        <input type="number" class="form-control" id="skinPrice" placeholder="349.90" step="0.01">
+      </div>
+      <div class="form-group">
+        <label>Desconto (%)</label>
+        <input type="number" class="form-control" id="skinDiscount" placeholder="10" min="0" max="99">
+      </div>
+    </div>
+
+    <div class="form-row">
+      <div class="form-group">
+        <label>Float Value</label>
+        <input type="number" class="form-control" id="skinFloat" placeholder="0.25" step="0.001" min="0" max="1">
+      </div>
+      <div class="form-group">
+        <label>Wear</label>
+        <select class="form-control" id="skinWear">
+          <option value="FN">Factory New</option>
+          <option value="MW">Minimal Wear</option>
+          <option value="FT" selected>Field-Tested</option>
+          <option value="WW">Well-Worn</option>
+          <option value="BS">Battle-Scarred</option>
+        </select>
+      </div>
+    </div>
+
+    <div class="form-row">
+      <div class="form-group">
+        <label>Raridade</label>
+        <select class="form-control" id="skinRarity">
+          <option value="Mil-Spec">Mil-Spec</option>
+          <option value="Restricted">Restricted</option>
+          <option value="Classified">Classified</option>
+          <option value="Covert" selected>Covert</option>
+          <option value="Contraband">Contraband</option>
+        </select>
+      </div>
+      <div class="form-group">
+        <label>Tipo de Entrega</label>
+        <select class="form-control" id="skinDelivery">
+          <option value="full">⚡ Entrega Full (até 30 min)</option>
+          <option value="normal">Normal (até 12 horas)</option>
+        </select>
+      </div>
+    </div>
+
+    <div class="form-group">
+      <label>URL da Imagem (opcional)</label>
+      <input type="text" class="form-control" id="skinImage" placeholder="https://...">
+    </div>
+
+    <div class="form-actions">
+      <button class="btn btn-secondary" onclick="closeSkinModal()">Cancelar</button>
+      <button class="btn btn-primary" onclick="saveSkin()">Salvar</button>
+    </div>
+  </div>
+</div>
+
+<!-- TOAST -->
+<div class="toast" id="toast"></div>
+
+<script>
+// ============= FIREBASE INIT =============
+const firebaseConfig = {
+  apiKey: "AIzaSyCN0TV59kJNQMsaQ-5d9dSTowirxFcuHG0",
+  authDomain: "gumax-skins.firebaseapp.com",
+  projectId: "gumax-skins",
+  storageBucket: "gumax-skins.firebasestorage.app",
+  messagingSenderId: "678525908778",
+  appId: "1:678525908778:web:56ee6d6a809c013b341053"
+};
+firebase.initializeApp(firebaseConfig);
+const db = firebase.firestore();
+
+// ============= CONSTANTS =============
+const ADMIN_PASSWORD_KEY = 'gumax_admin_password';
+const ADMIN_SESSION_KEY = 'gumax_admin_session';
+const DEFAULT_PASSWORD = 'gumax2024';
+const COMMISSION_RATE = 0.02; // 2%
+
+// ============= AUTH =============
+function adminLogin() {
+  const input = document.getElementById('adminPassword').value;
+  const savedPassword = localStorage.getItem(ADMIN_PASSWORD_KEY) || DEFAULT_PASSWORD;
+
+  if (input === savedPassword) {
+    localStorage.setItem(ADMIN_SESSION_KEY, Date.now().toString());
+    showDashboard();
+  } else {
+    document.getElementById('loginError').style.display = 'block';
+  }
+}
+
+function checkSession() {
+  const session = localStorage.getItem(ADMIN_SESSION_KEY);
+  if (session) {
+    const elapsed = Date.now() - parseInt(session);
+    if (elapsed < 24 * 60 * 60 * 1000) { // 24h session
+      showDashboard();
+      return;
+    }
+  }
+  document.getElementById('loginScreen').style.display = 'flex';
+}
+
+function showDashboard() {
+  document.getElementById('loginScreen').style.display = 'none';
+  document.getElementById('dashboard').style.display = 'block';
+  loadAllData();
+}
+
+function adminLogout() {
+  localStorage.removeItem(ADMIN_SESSION_KEY);
+  location.reload();
+}
+
+// ============= NAVIGATION =============
+function switchSection(name) {
+  document.querySelectorAll('.section').forEach(s => s.classList.remove('active'));
+  document.querySelectorAll('.sidebar-nav li').forEach(li => li.classList.remove('active'));
+  document.getElementById('section-' + name).classList.add('active');
+
+  const items = document.querySelectorAll('.sidebar-nav li');
+  const names = ['overview', 'skins', 'resellers', 'orders', 'commissions', 'settings'];
+  const index = names.indexOf(name);
+  if (index >= 0 && items[index]) items[index].classList.add('active');
+}
+
+// ============= DATA LOADING =============
+async function loadAllData() {
+  await Promise.all([
+    loadSkins(),
+    loadResellers(),
+    loadOrders(),
+    loadCommissions()
+  ]);
+  updateOverviewStats();
+}
+
+let allSkins = [];
+let allResellers = [];
+let allOrders = [];
+let allCommissions = [];
+
+async function loadSkins() {
+  try {
+    const snapshot = await db.collection('skins').orderBy('createdAt', 'desc').get();
+    allSkins = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+    renderSkinsTable();
+  } catch (e) {
+    console.error('Error loading skins:', e);
+    // Load demo data if Firestore is empty
+    if (allSkins.length === 0) {
+      allSkins = getDemoSkins();
+      renderSkinsTable();
+    }
+  }
+}
+
+async function loadResellers() {
+  try {
+    const snapshot = await db.collection('resellers').orderBy('createdAt', 'desc').get();
+    allResellers = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+    renderResellersTable();
+  } catch (e) {
+    console.error('Error loading resellers:', e);
+  }
+}
+
+async function loadOrders() {
+  try {
+    const snapshot = await db.collection('orders').orderBy('createdAt', 'desc').limit(50).get();
+    allOrders = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+    renderOrdersTable();
+  } catch (e) {
+    console.error('Error loading orders:', e);
+  }
+}
+
+async function loadCommissions() {
+  try {
+    const snapshot = await db.collection('commissions').orderBy('createdAt', 'desc').get();
+    allCommissions = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+    renderCommissionsTable();
+  } catch (e) {
+    console.error('Error loading commissions:', e);
+  }
+}
+
+// ============= OVERVIEW STATS =============
+function updateOverviewStats() {
+  document.getElementById('statTotalSkins').textContent = allSkins.length;
+  document.getElementById('statFullSkins').textContent = allSkins.filter(s => s.delivery === 'full' || s.inStock).length;
+  document.getElementById('statResellers').textContent = allResellers.filter(r => r.status === 'active').length;
+
+  const totalCommission = allCommissions.reduce((sum, c) => sum + (c.commissionAmount || 0), 0);
+  document.getElementById('statCommission').textContent = fmtR(totalCommission);
+
+  const today = new Date().toDateString();
+  const todayOrders = allOrders.filter(o => new Date(o.createdAt).toDateString() === today);
+  document.getElementById('statOrdersToday').textContent = todayOrders.length;
+
+  const totalRevenue = allOrders.filter(o => o.status === 'paid' || o.status === 'delivered').reduce((sum, o) => sum + (o.total || 0), 0);
+  document.getElementById('statRevenue').textContent = fmtR(totalRevenue);
+
+  // Recent orders in overview
+  const recentHtml = allOrders.slice(0, 5).map(o => `
+    <tr>
+      <td style="font-family: 'JetBrains Mono', monospace; font-size: 12px;">#${o.id?.substring(0, 8) || '---'}</td>
+      <td>${o.buyerName || 'Anônimo'}</td>
+      <td>${o.skinName || '-'}</td>
+      <td style="color: var(--accent-yellow);">${fmtR(o.total || 0)}</td>
+      <td><span class="badge ${o.delivery === 'full' ? 'badge-full' : 'badge-normal'}">${o.delivery === 'full' ? '⚡ Full' : 'Normal'}</span></td>
+      <td><span class="badge badge-${o.status || 'pending'}">${statusLabel(o.status)}</span></td>
+    </tr>
+  `).join('');
+  document.getElementById('recentOrdersTable').innerHTML = recentHtml || '<tr><td colspan="6" class="empty-state"><p>Nenhum pedido ainda</p></td></tr>';
+}
+
+// ============= SKINS TABLE =============
+function renderSkinsTable() {
+  const tbody = document.getElementById('skinsTable');
+  if (allSkins.length === 0) {
+    tbody.innerHTML = '<tr><td colspan="8" class="empty-state"><p>Nenhuma skin cadastrada. Clique em "Adicionar" para começar.</p></td></tr>';
+    return;
+  }
+
+  tbody.innerHTML = allSkins.map(skin => `
+    <tr>
+      <td>
+        <strong>${skin.name}</strong>
+        <div style="font-size: 11px; color: var(--text-muted);">${wearLabel(skin.wear)} • FV ${(skin.float || 0).toFixed(3)}</div>
+      </td>
+      <td style="color: var(--accent-yellow); font-weight: 600;">${fmtR(skin.price)}</td>
+      <td>-${skin.discount || 0}%</td>
+      <td style="font-family: 'JetBrains Mono', monospace; font-size: 12px;">${(skin.float || 0).toFixed(4)}</td>
+      <td><span class="badge ${skin.delivery === 'full' ? 'badge-full' : 'badge-normal'}">${skin.delivery === 'full' ? '⚡ Full' : '12h'}</span></td>
+      <td>${skin.seller === 'admin' ? 'Gu (Você)' : skin.sellerName || 'Revendedor'}</td>
+      <td><span class="badge ${skin.active !== false ? 'badge-active' : 'badge-blocked'}">${skin.active !== false ? 'Ativo' : 'Inativo'}</span></td>
+      <td>
+        <button class="btn btn-secondary btn-small" onclick="editSkin('${skin.id}')">Editar</button>
+        <button class="btn btn-danger btn-small" onclick="deleteSkin('${skin.id}')">Excluir</button>
+      </td>
+    </tr>
+  `).join('');
+}
+
+function filterAdminSkins() {
+  const search = document.getElementById('skinSearchInput').value.toLowerCase();
+  const type = document.getElementById('skinTypeFilter').value;
+
+  const filtered = allSkins.filter(s => {
+    if (search && !s.name.toLowerCase().includes(search)) return false;
+    if (type === 'full' && s.delivery !== 'full') return false;
+    if (type === 'normal' && s.delivery !== 'normal') return false;
+    if (type === 'reseller' && s.seller === 'admin') return false;
+    return true;
+  });
+
+  const tbody = document.getElementById('skinsTable');
+  if (filtered.length === 0) {
+    tbody.innerHTML = '<tr><td colspan="8" class="empty-state"><p>Nenhuma skin encontrada</p></td></tr>';
+    return;
+  }
+
+  tbody.innerHTML = filtered.map(skin => `
+    <tr>
+      <td>
+        <strong>${skin.name}</strong>
+        <div style="font-size: 11px; color: var(--text-muted);">${wearLabel(skin.wear)} • FV ${(skin.float || 0).toFixed(3)}</div>
+      </td>
+      <td style="color: var(--accent-yellow); font-weight: 600;">${fmtR(skin.price)}</td>
+      <td>-${skin.discount || 0}%</td>
+      <td style="font-family: 'JetBrains Mono', monospace; font-size: 12px;">${(skin.float || 0).toFixed(4)}</td>
+      <td><span class="badge ${skin.delivery === 'full' ? 'badge-full' : 'badge-normal'}">${skin.delivery === 'full' ? '⚡ Full' : '12h'}</span></td>
+      <td>${skin.seller === 'admin' ? 'Gu (Você)' : skin.sellerName || 'Revendedor'}</td>
+      <td><span class="badge ${skin.active !== false ? 'badge-active' : 'badge-blocked'}">${skin.active !== false ? 'Ativo' : 'Inativo'}</span></td>
+      <td>
+        <button class="btn btn-secondary btn-small" onclick="editSkin('${skin.id}')">Editar</button>
+        <button class="btn btn-danger btn-small" onclick="deleteSkin('${skin.id}')">Excluir</button>
+      </td>
+    </tr>
+  `).join('');
+}
+
+// ============= SKIN MODAL =============
+function openSkinModal(type) {
+  document.getElementById('skinModalTitle').textContent = type === 'full' ? '⚡ Adicionar Skin - Entrega Full' : 'Criar Oferta Normal (12h)';
+  document.getElementById('skinDelivery').value = type;
+  document.getElementById('skinEditId').value = '';
+  document.getElementById('skinName').value = '';
+  document.getElementById('skinPrice').value = '';
+  document.getElementById('skinDiscount').value = '10';
+  document.getElementById('skinFloat').value = '';
+  document.getElementById('skinWear').value = 'FT';
+  document.getElementById('skinRarity').value = 'Covert';
+  document.getElementById('skinImage').value = '';
+  document.getElementById('skinModal').classList.add('show');
+}
+
+function closeSkinModal() {
+  document.getElementById('skinModal').classList.remove('show');
+}
+
+function editSkin(id) {
+  const skin = allSkins.find(s => s.id === id);
+  if (!skin) return;
+
+  document.getElementById('skinModalTitle').textContent = 'Editar Skin';
+  document.getElementById('skinEditId').value = id;
+  document.getElementById('skinName').value = skin.name;
+  document.getElementById('skinPrice').value = skin.price;
+  document.getElementById('skinDiscount').value = skin.discount || 0;
+  document.getElementById('skinFloat').value = skin.float || '';
+  document.getElementById('skinWear').value = skin.wear || 'FT';
+  document.getElementById('skinRarity').value = skin.rarity || 'Covert';
+  document.getElementById('skinDelivery').value = skin.delivery || 'full';
+  document.getElementById('skinImage').value = skin.image || '';
+  document.getElementById('skinModal').classList.add('show');
+}
+
+async function saveSkin() {
+  const id = document.getElementById('skinEditId').value;
+  const skinData = {
+    name: document.getElementById('skinName').value.trim(),
+    price: parseFloat(document.getElementById('skinPrice').value) || 0,
+    discount: parseInt(document.getElementById('skinDiscount').value) || 0,
+    float: parseFloat(document.getElementById('skinFloat').value) || 0,
+    wear: document.getElementById('skinWear').value,
+    rarity: document.getElementById('skinRarity').value,
+    delivery: document.getElementById('skinDelivery').value,
+    image: document.getElementById('skinImage').value.trim(),
+    seller: 'admin',
+    sellerName: 'Gu',
+    active: true,
+    inStock: document.getElementById('skinDelivery').value === 'full',
+    updatedAt: new Date().toISOString()
+  };
+
+  if (!skinData.name || !skinData.price) {
+    showToast('Preencha o nome e o preço', 'error');
+    return;
+  }
+
+  try {
+    if (id) {
+      await db.collection('skins').doc(id).update(skinData);
+      showToast('Skin atualizada com sucesso');
+    } else {
+      skinData.createdAt = new Date().toISOString();
+      await db.collection('skins').add(skinData);
+      showToast('Skin adicionada com sucesso');
+    }
+
+    closeSkinModal();
+    await loadSkins();
+    updateOverviewStats();
+  } catch (e) {
+    console.error('Error saving skin:', e);
+    showToast('Erro ao salvar skin: ' + e.message, 'error');
+  }
+}
+
+async function deleteSkin(id) {
+  if (!confirm('Tem certeza que deseja excluir esta skin?')) return;
+
+  try {
+    await db.collection('skins').doc(id).delete();
+    showToast('Skin excluída');
+    await loadSkins();
+    updateOverviewStats();
+  } catch (e) {
+    showToast('Erro ao excluir: ' + e.message, 'error');
+  }
+}
+
+// ============= RESELLERS TABLE =============
+function renderResellersTable() {
+  const tbody = document.getElementById('resellersTable');
+  if (allResellers.length === 0) {
+    tbody.innerHTML = '<tr><td colspan="8" class="empty-state"><p>Nenhum revendedor cadastrado ainda</p></td></tr>';
+    return;
+  }
+
+  document.getElementById('resellersActive').textContent = allResellers.filter(r => r.status === 'active').length;
+  document.getElementById('resellerSkins').textContent = allSkins.filter(s => s.seller !== 'admin').length;
+
+  const totalComm = allCommissions.reduce((sum, c) => sum + (c.commissionAmount || 0), 0);
+  document.getElementById('totalCommission').textContent = fmtR(totalComm);
+
+  tbody.innerHTML = allResellers.map(r => `
+    <tr>
+      <td style="font-family: 'JetBrains Mono', monospace; font-size: 12px;">${r.steamId || '-'}</td>
+      <td><strong>${r.name || r.steamName || '-'}</strong></td>
+      <td>${r.skinsCount || 0}</td>
+      <td>${r.salesCount || 0}</td>
+      <td style="color: var(--accent-yellow);">${fmtR(r.balance || 0)}</td>
+      <td style="color: var(--primary-light);">${fmtR((r.totalSales || 0) * COMMISSION_RATE)}</td>
+      <td><span class="badge badge-${r.status || 'pending'}">${statusLabel(r.status)}</span></td>
+      <td>
+        <button class="btn btn-success btn-small" onclick="approveReseller('${r.id}')" ${r.status === 'active' ? 'disabled style="opacity:.5"' : ''}>Aprovar</button>
+        <button class="btn btn-danger btn-small" onclick="blockReseller('${r.id}')">Bloquear</button>
+      </td>
+    </tr>
+  `).join('');
+}
+
+async function approveReseller(id) {
+  try {
+    await db.collection('resellers').doc(id).update({ status: 'active', approvedAt: new Date().toISOString() });
+    showToast('Revendedor aprovado');
+    await loadResellers();
+  } catch (e) {
+    showToast('Erro: ' + e.message, 'error');
+  }
+}
+
+async function blockReseller(id) {
+  if (!confirm('Bloquear este revendedor? As skins dele serão desativadas.')) return;
+  try {
+    await db.collection('resellers').doc(id).update({ status: 'blocked' });
+    // Deactivate reseller's skins
+    const skins = await db.collection('skins').where('sellerId', '==', id).get();
+    const batch = db.batch();
+    skins.forEach(doc => batch.update(doc.ref, { active: false }));
+    await batch.commit();
+    showToast('Revendedor bloqueado');
+    await loadResellers();
+    await loadSkins();
+  } catch (e) {
+    showToast('Erro: ' + e.message, 'error');
+  }
+}
+
+// ============= ORDERS TABLE =============
+function renderOrdersTable() {
+  const tbody = document.getElementById('ordersTable');
+  if (allOrders.length === 0) {
+    tbody.innerHTML = '<tr><td colspan="8" class="empty-state"><p>Nenhum pedido encontrado</p></td></tr>';
+    return;
+  }
+
+  tbody.innerHTML = allOrders.map(o => `
+    <tr>
+      <td style="font-family: 'JetBrains Mono', monospace; font-size: 12px;">#${o.id?.substring(0, 8)}</td>
+      <td>${formatDate(o.createdAt)}</td>
+      <td>${o.buyerName || 'Anônimo'}</td>
+      <td>${o.items?.length || 1} item(ns)</td>
+      <td style="color: var(--accent-yellow); font-weight: 600;">${fmtR(o.total || 0)}</td>
+      <td><span class="badge ${o.delivery === 'full' ? 'badge-full' : 'badge-normal'}">${o.delivery === 'full' ? '⚡ Full' : 'Normal'}</span></td>
+      <td><span class="badge badge-${o.status || 'pending'}">${statusLabel(o.status)}</span></td>
+      <td>
+        <button class="btn btn-success btn-small" onclick="markDelivered('${o.id}')" ${o.status === 'delivered' ? 'disabled style="opacity:.5"' : ''}>Entregue</button>
+      </td>
+    </tr>
+  `).join('');
+}
+
+function filterOrders() {
+  const search = document.getElementById('orderSearchInput').value.toLowerCase();
+  const status = document.getElementById('orderStatusFilter').value;
+
+  const filtered = allOrders.filter(o => {
+    if (search && !(o.id || '').toLowerCase().includes(search) && !(o.buyerName || '').toLowerCase().includes(search)) return false;
+    if (status !== 'all' && o.status !== status) return false;
+    return true;
+  });
+
+  const tbody = document.getElementById('ordersTable');
+  tbody.innerHTML = filtered.map(o => `
+    <tr>
+      <td style="font-family: 'JetBrains Mono', monospace; font-size: 12px;">#${o.id?.substring(0, 8)}</td>
+      <td>${formatDate(o.createdAt)}</td>
+      <td>${o.buyerName || 'Anônimo'}</td>
+      <td>${o.items?.length || 1} item(ns)</td>
+      <td style="color: var(--accent-yellow); font-weight: 600;">${fmtR(o.total || 0)}</td>
+      <td><span class="badge ${o.delivery === 'full' ? 'badge-full' : 'badge-normal'}">${o.delivery === 'full' ? '⚡ Full' : 'Normal'}</span></td>
+      <td><span class="badge badge-${o.status || 'pending'}">${statusLabel(o.status)}</span></td>
+      <td>
+        <button class="btn btn-success btn-small" onclick="markDelivered('${o.id}')" ${o.status === 'delivered' ? 'disabled style="opacity:.5"' : ''}>Entregue</button>
+      </td>
+    </tr>
+  `).join('');
+}
+
+async function markDelivered(id) {
+  try {
+    await db.collection('orders').doc(id).update({ status: 'delivered', deliveredAt: new Date().toISOString() });
+    showToast('Pedido marcado como entregue');
+    await loadOrders();
+    updateOverviewStats();
+  } catch (e) {
+    showToast('Erro: ' + e.message, 'error');
+  }
+}
+
+// ============= COMMISSIONS TABLE =============
+function renderCommissionsTable() {
+  const tbody = document.getElementById('commissionsTable');
+  if (allCommissions.length === 0) {
+    tbody.innerHTML = '<tr><td colspan="8" class="empty-state"><p>Nenhuma comissão registrada</p></td></tr>';
+    return;
+  }
+
+  const total = allCommissions.reduce((s, c) => s + (c.commissionAmount || 0), 0);
+  const paid = allCommissions.filter(c => c.paid).reduce((s, c) => s + (c.commissionAmount || 0), 0);
+
+  document.getElementById('commissionTotal').textContent = fmtR(total);
+  document.getElementById('commissionPaid').textContent = fmtR(paid);
+  document.getElementById('commissionToPay').textContent = fmtR(total - paid);
+
+  tbody.innerHTML = allCommissions.map(c => {
+    const resellerReceives = (c.saleAmount || 0) - (c.commissionAmount || 0);
+    return `
+      <tr>
+        <td>${formatDate(c.createdAt)}</td>
+        <td>${c.resellerName || '-'}</td>
+        <td style="font-family: 'JetBrains Mono', monospace; font-size: 12px;">#${c.orderId?.substring(0, 8) || '-'}</td>
+        <td>${fmtR(c.saleAmount || 0)}</td>
+        <td style="color: var(--primary-light); font-weight: 600;">${fmtR(c.commissionAmount || 0)}</td>
+        <td style="color: var(--accent-yellow);">${fmtR(resellerReceives)}</td>
+        <td><span class="badge ${c.paid ? 'badge-active' : 'badge-pending'}">${c.paid ? 'Pago' : 'Pendente'}</span></td>
+        <td>
+          <button class="btn btn-success btn-small" onclick="markCommissionPaid('${c.id}')" ${c.paid ? 'disabled style="opacity:.5"' : ''}>Marcar Pago</button>
+        </td>
+      </tr>
+    `;
+  }).join('');
+}
+
+async function markCommissionPaid(id) {
+  try {
+    await db.collection('commissions').doc(id).update({ paid: true, paidAt: new Date().toISOString() });
+    showToast('Comissão marcada como paga');
+    await loadCommissions();
+  } catch (e) {
+    showToast('Erro: ' + e.message, 'error');
+  }
+}
+
+// ============= SETTINGS =============
+async function saveSettings() {
+  const newPassword = document.getElementById('settingsPassword').value;
+  if (newPassword && newPassword.length >= 4) {
+    localStorage.setItem(ADMIN_PASSWORD_KEY, newPassword);
+    showToast('Senha atualizada');
+  }
+
+  try {
+    await db.collection('settings').doc('general').set({
+      commissionRate: parseFloat(document.getElementById('settingsCommission').value) / 100 || 0.02,
+      acceptResellers: document.getElementById('settingsAcceptResellers').value === 'true',
+      pixKey: document.getElementById('settingsPixKey').value,
+      updatedAt: new Date().toISOString()
+    }, { merge: true });
+    showToast('Configurações salvas');
+  } catch (e) {
+    showToast('Erro: ' + e.message, 'error');
+  }
+}
+
+// ============= DEMO DATA =============
+function getDemoSkins() {
+  return [
+    {id:'demo1',name:'AK-47 | Asiimov',price:349.90,discount:12,float:0.25,wear:'FT',rarity:'Covert',delivery:'full',seller:'admin',sellerName:'Gu',active:true,inStock:true},
+    {id:'demo2',name:'AWP | Asiimov',price:189.90,discount:10,float:0.31,wear:'FT',rarity:'Covert',delivery:'full',seller:'admin',sellerName:'Gu',active:true,inStock:true},
+    {id:'demo3',name:'M4A1-S | Printstream',price:899.90,discount:8,float:0.03,wear:'FN',rarity:'Covert',delivery:'normal',seller:'admin',sellerName:'Gu',active:true,inStock:false},
+  ];
+}
+
+// ============= UTILITIES =============
+function fmtR(n) {
+  return 'R$ ' + (n || 0).toFixed(2).replace('.', ',').replace(/\B(?=(\d{3})+(?!\d))/g, '.');
+}
+
+function wearLabel(w) {
+  const labels = {FN:'Factory New',MW:'Minimal Wear',FT:'Field-Tested',WW:'Well-Worn',BS:'Battle-Scarred'};
+  return labels[w] || w;
+}
+
+function statusLabel(s) {
+  const labels = {active:'Ativo',pending:'Pendente',blocked:'Bloqueado',paid:'Pago',delivered:'Entregue',cancelled:'Cancelado'};
+  return labels[s] || s || 'Pendente';
+}
+
+function formatDate(d) {
+  if (!d) return '-';
+  const date = new Date(d);
+  return date.toLocaleDateString('pt-BR') + ' ' + date.toLocaleTimeString('pt-BR', {hour:'2-digit',minute:'2-digit'});
+}
+
+function showToast(msg, type = 'success') {
+  const toast = document.getElementById('toast');
+  toast.textContent = msg;
+  toast.className = `toast show ${type}`;
+  setTimeout(() => toast.classList.remove('show'), 3000);
+}
+
+// ============= INIT =============
+checkSession();
+</script>
+
+</body>
+</html>
