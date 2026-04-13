@@ -1,0 +1,1175 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Gumax Skins | Painel Revendedor</title>
+<link rel="icon" href="https://static.wixstatic.com/media/874864_b598e856481740e7ae752771a661c242~mv2.png/v1/fill/w_64,h_64,al_c,q_85,enc_auto/874864_b598e856481740e7ae752771a661c242~mv2.png">
+<link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800;900&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<script src="https://www.gstatic.com/firebasejs/10.5.0/firebase-app.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.5.0/firebase-auth.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.5.0/firebase-firestore.js"></script>
+
+<style>
+* { box-sizing: border-box; margin: 0; padding: 0; }
+
+:root {
+  --bg: #08060e;
+  --bg-card: #110e1a;
+  --bg-elevated: #1a1528;
+  --bg-input: #13101e;
+  --text-primary: #ece8f4;
+  --text-secondary: #9890a8;
+  --text-muted: #5e5670;
+  --border: #241e35;
+  --primary: #8B5CF6;
+  --primary-dark: #7C3AED;
+  --primary-light: #A78BFA;
+  --accent-yellow: #FACC15;
+  --success: #22c55e;
+  --danger: #ef4444;
+  --warning: #f59e0b;
+}
+
+body {
+  background: var(--bg);
+  background-image:
+    radial-gradient(ellipse at 50% 0%, rgba(139, 92, 246, .07) 0%, transparent 50%),
+    radial-gradient(ellipse at 80% 100%, rgba(250, 204, 21, .03) 0%, transparent 40%);
+  color: var(--text-primary);
+  font-family: 'Outfit', sans-serif;
+  min-height: 100vh;
+}
+
+/* LOGIN */
+.login-screen {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 100vh;
+  padding: 20px;
+}
+
+.login-box {
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: 16px;
+  padding: 48px;
+  max-width: 480px;
+  width: 100%;
+  text-align: center;
+}
+
+.login-box img { width: 180px; margin-bottom: 24px; }
+.login-box h2 { font-size: 22px; margin-bottom: 8px; color: var(--accent-yellow); }
+.login-box p { color: var(--text-secondary); font-size: 14px; margin-bottom: 32px; line-height: 1.6; }
+
+/* SHARED STYLES */
+.btn {
+  padding: 10px 20px;
+  border: none;
+  border-radius: 8px;
+  font-family: 'Outfit', sans-serif;
+  font-weight: 600;
+  font-size: 14px;
+  cursor: pointer;
+  transition: all .2s;
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  text-decoration: none;
+}
+
+.btn-primary { background: var(--primary); color: white; }
+.btn-primary:hover { background: var(--primary-dark); }
+.btn-secondary { background: var(--bg-elevated); color: var(--text-primary); border: 1px solid var(--border); }
+.btn-secondary:hover { border-color: var(--primary); }
+.btn-danger { background: var(--danger); color: white; }
+.btn-success { background: var(--success); color: white; }
+.btn-small { padding: 6px 12px; font-size: 12px; }
+.btn-steam {
+  background: #171a21;
+  color: white;
+  padding: 14px 28px;
+  font-size: 16px;
+  border-radius: 10px;
+  width: 100%;
+  justify-content: center;
+}
+.btn-steam:hover { background: #2a475e; }
+
+/* DASHBOARD */
+.dashboard { display: none; }
+
+.top-bar {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 16px 32px;
+  background: var(--bg-card);
+  border-bottom: 1px solid var(--border);
+  position: sticky;
+  top: 0;
+  z-index: 50;
+}
+
+.top-bar-left {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+}
+
+.top-bar-left img { width: 100px; }
+.top-bar-left .divider { width: 1px; height: 24px; background: var(--border); }
+.top-bar-left span { color: var(--accent-yellow); font-weight: 600; font-size: 14px; }
+
+.top-bar-right {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+}
+
+.user-info {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.user-avatar {
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  background: var(--bg-elevated);
+  border: 2px solid var(--primary);
+}
+
+.user-name { font-weight: 600; font-size: 14px; }
+
+.main-content {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 32px;
+}
+
+/* TABS */
+.tabs {
+  display: flex;
+  gap: 4px;
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  padding: 4px;
+  margin-bottom: 32px;
+  width: fit-content;
+}
+
+.tab {
+  padding: 10px 20px;
+  border-radius: 8px;
+  font-size: 14px;
+  font-weight: 500;
+  cursor: pointer;
+  color: var(--text-secondary);
+  transition: all .2s;
+}
+
+.tab:hover { color: var(--text-primary); }
+.tab.active { background: var(--primary); color: white; }
+
+/* STATS */
+.stats-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: 16px;
+  margin-bottom: 32px;
+}
+
+.stat-card {
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  padding: 20px;
+}
+
+.stat-card .stat-label { font-size: 12px; color: var(--text-muted); text-transform: uppercase; letter-spacing: 1px; margin-bottom: 8px; }
+.stat-card .stat-value { font-size: 28px; font-weight: 700; }
+
+/* BALANCE BAR */
+.balance-bar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  background: linear-gradient(135deg, rgba(139, 92, 246, .15), rgba(250, 204, 21, .1));
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  padding: 20px 28px;
+  margin-bottom: 32px;
+}
+
+.balance-left .label { font-size: 12px; color: var(--text-muted); text-transform: uppercase; letter-spacing: 1px; }
+.balance-left .value { font-size: 32px; font-weight: 800; color: var(--accent-yellow); }
+.balance-left .sub { font-size: 12px; color: var(--text-secondary); margin-top: 4px; }
+
+/* TABLE */
+.data-table-wrapper {
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  overflow: hidden;
+  margin-bottom: 24px;
+}
+
+.table-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 16px 20px;
+  border-bottom: 1px solid var(--border);
+}
+
+.table-header h3 { font-size: 16px; font-weight: 600; }
+
+.data-table { width: 100%; border-collapse: collapse; }
+
+.data-table th {
+  padding: 12px 16px;
+  text-align: left;
+  font-size: 11px;
+  color: var(--text-muted);
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  border-bottom: 1px solid var(--border);
+  font-weight: 600;
+}
+
+.data-table td {
+  padding: 12px 16px;
+  font-size: 14px;
+  border-bottom: 1px solid rgba(36, 30, 53, .5);
+}
+
+.data-table tr:hover { background: rgba(139, 92, 246, .03); }
+
+.badge {
+  display: inline-block;
+  padding: 3px 10px;
+  border-radius: 20px;
+  font-size: 11px;
+  font-weight: 600;
+}
+
+.badge-full { background: rgba(250, 204, 21, .15); color: var(--accent-yellow); }
+.badge-active { background: rgba(34, 197, 94, .15); color: var(--success); }
+.badge-pending { background: rgba(245, 158, 11, .15); color: var(--warning); }
+.badge-sold { background: rgba(139, 92, 246, .15); color: var(--primary-light); }
+
+/* INVENTORY GRID */
+.inventory-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+  gap: 12px;
+  margin-bottom: 24px;
+}
+
+.inv-card {
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  padding: 12px;
+  cursor: pointer;
+  transition: all .2s;
+  position: relative;
+}
+
+.inv-card:hover { border-color: var(--primary); transform: translateY(-2px); }
+.inv-card.selected { border-color: var(--success); background: rgba(34, 197, 94, .05); }
+.inv-card.already-listed { opacity: .5; pointer-events: none; }
+
+.inv-card img { width: 100%; height: 100px; object-fit: contain; margin-bottom: 8px; }
+.inv-card .inv-name { font-size: 12px; font-weight: 600; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.inv-card .inv-wear { font-size: 11px; color: var(--text-muted); }
+.inv-card .inv-check {
+  position: absolute;
+  top: 8px;
+  right: 8px;
+  width: 22px;
+  height: 22px;
+  border-radius: 50%;
+  background: var(--success);
+  color: white;
+  display: none;
+  align-items: center;
+  justify-content: center;
+  font-size: 12px;
+}
+.inv-card.selected .inv-check { display: flex; }
+.inv-card.already-listed::after {
+  content: 'Já listada';
+  position: absolute;
+  top: 8px;
+  right: 8px;
+  font-size: 10px;
+  background: var(--bg-elevated);
+  padding: 2px 8px;
+  border-radius: 10px;
+  color: var(--text-muted);
+}
+
+/* MODAL */
+.modal-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, .7);
+  backdrop-filter: blur(4px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity .2s;
+}
+
+.modal-overlay.show { opacity: 1; pointer-events: all; }
+
+.modal {
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: 16px;
+  padding: 32px;
+  max-width: 700px;
+  width: 90%;
+  max-height: 90vh;
+  overflow-y: auto;
+}
+
+.modal h2 { font-size: 20px; margin-bottom: 8px; }
+.modal .modal-sub { font-size: 13px; color: var(--text-secondary); margin-bottom: 24px; }
+
+.form-group { margin-bottom: 16px; }
+.form-group label { display: block; font-size: 12px; color: var(--text-secondary); margin-bottom: 6px; font-weight: 500; }
+
+.form-control {
+  width: 100%;
+  padding: 10px 14px;
+  background: var(--bg-input);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  color: var(--text-primary);
+  font-family: 'Outfit', sans-serif;
+  font-size: 14px;
+  outline: none;
+  transition: border-color .2s;
+}
+
+.form-control:focus { border-color: var(--primary); }
+
+.form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+
+.form-actions { display: flex; gap: 12px; margin-top: 24px; justify-content: flex-end; }
+
+/* EMPTY */
+.empty-state { text-align: center; padding: 60px 20px; color: var(--text-muted); }
+
+/* LOADING */
+.loading-spinner {
+  display: inline-block;
+  width: 40px;
+  height: 40px;
+  border: 3px solid var(--border);
+  border-top: 3px solid var(--primary);
+  border-radius: 50%;
+  animation: spin 1s linear infinite;
+}
+
+@keyframes spin { to { transform: rotate(360deg); } }
+
+/* TOAST */
+.toast {
+  position: fixed;
+  bottom: 24px;
+  right: 24px;
+  padding: 14px 24px;
+  background: var(--bg-elevated);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  font-size: 14px;
+  z-index: 9999;
+  transform: translateY(100px);
+  opacity: 0;
+  transition: all .3s;
+}
+
+.toast.show { transform: translateY(0); opacity: 1; }
+.toast.success { border-color: var(--success); }
+.toast.error { border-color: var(--danger); }
+
+/* SECTION */
+.section { display: none; }
+.section.active { display: block; }
+
+/* COMMISSION INFO */
+.commission-notice {
+  background: rgba(250, 204, 21, .08);
+  border: 1px solid rgba(250, 204, 21, .2);
+  border-radius: 10px;
+  padding: 16px 20px;
+  font-size: 13px;
+  color: var(--text-secondary);
+  margin-bottom: 24px;
+  line-height: 1.6;
+}
+
+.commission-notice strong { color: var(--accent-yellow); }
+
+/* RESPONSIVE */
+@media (max-width: 768px) {
+  .main-content { padding: 16px; }
+  .stats-grid { grid-template-columns: 1fr 1fr; }
+  .form-row { grid-template-columns: 1fr; }
+  .inventory-grid { grid-template-columns: repeat(auto-fill, minmax(140px, 1fr)); }
+  .balance-bar { flex-direction: column; gap: 16px; text-align: center; }
+  .tabs { width: 100%; overflow-x: auto; }
+}
+</style>
+</head>
+<body>
+
+<!-- LOGIN SCREEN -->
+<div class="login-screen" id="loginScreen">
+  <div class="login-box">
+    <img src="https://static.wixstatic.com/media/874864_b598e856481740e7ae752771a661c242~mv2.png/v1/fill/w_600,h_235,al_c,q_85,enc_auto/874864_b598e856481740e7ae752771a661c242~mv2.png" alt="Gumax Skins">
+    <h2>Painel do Revendedor</h2>
+    <p>Anuncie suas skins no Gumax Marketplace e venda com facilidade. Comissão de apenas <strong>2%</strong> por venda.</p>
+    <button class="btn btn-steam" onclick="loginWithSteam()">
+      <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor"><path d="M11.979 0C5.678 0 .511 4.86.022 11.037l6.432 2.658c.545-.371 1.203-.59 1.912-.59.063 0 .125.004.188.006l2.861-4.142V8.91c0-2.495 2.028-4.524 4.524-4.524 2.494 0 4.524 2.031 4.524 4.527s-2.03 4.525-4.524 4.525h-.105l-4.076 2.911c0 .052.004.105.004.159 0 1.875-1.515 3.396-3.39 3.396-1.635 0-3.016-1.173-3.331-2.727L.436 15.27C1.862 20.307 6.486 24 11.979 24c6.627 0 11.999-5.373 11.999-12S18.605 0 11.979 0z"/></svg>
+      Entrar com Steam
+    </button>
+    <br><br>
+    <a href="index.html" style="color: var(--text-muted); font-size: 13px; text-decoration: none;">← Voltar ao Marketplace</a>
+  </div>
+</div>
+
+<!-- DASHBOARD -->
+<div class="dashboard" id="dashboard">
+
+  <!-- TOP BAR -->
+  <div class="top-bar">
+    <div class="top-bar-left">
+      <a href="index.html"><img src="https://static.wixstatic.com/media/874864_b598e856481740e7ae752771a661c242~mv2.png/v1/fill/w_600,h_235,al_c,q_85,enc_auto/874864_b598e856481740e7ae752771a661c242~mv2.png" alt="Gumax"></a>
+      <div class="divider"></div>
+      <span>REVENDEDOR</span>
+    </div>
+    <div class="top-bar-right">
+      <div class="user-info">
+        <img class="user-avatar" id="userAvatar" src="" alt="">
+        <span class="user-name" id="userName">Revendedor</span>
+      </div>
+      <button class="btn btn-secondary btn-small" onclick="logout()">Sair</button>
+    </div>
+  </div>
+
+  <div class="main-content">
+
+    <!-- BALANCE BAR -->
+    <div class="balance-bar">
+      <div class="balance-left">
+        <div class="label">Seu Saldo Disponível</div>
+        <div class="value" id="userBalance">R$ 0,00</div>
+        <div class="sub">Comissão Gumax: 2% por venda • Pagamento manual via PIX</div>
+      </div>
+      <button class="btn btn-primary" onclick="requestWithdraw()">Solicitar Saque</button>
+    </div>
+
+    <!-- TABS -->
+    <div class="tabs">
+      <div class="tab active" onclick="switchTab('skins')">Minhas Skins</div>
+      <div class="tab" onclick="switchTab('inventory')">Inventário Steam</div>
+      <div class="tab" onclick="switchTab('sales')">Vendas</div>
+      <div class="tab" onclick="switchTab('earnings')">Ganhos</div>
+    </div>
+
+    <!-- MY SKINS SECTION -->
+    <div class="section active" id="section-skins">
+      <div class="stats-grid">
+        <div class="stat-card">
+          <div class="stat-label">Skins Listadas</div>
+          <div class="stat-value" id="statListed">0</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-label">Skins Vendidas</div>
+          <div class="stat-value" id="statSold">0</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-label">Faturamento Total</div>
+          <div class="stat-value" id="statRevenue">R$ 0</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-label">Ganho Líquido (98%)</div>
+          <div class="stat-value" id="statNet">R$ 0</div>
+        </div>
+      </div>
+
+      <div class="commission-notice">
+        <strong>Como funciona:</strong> Você lista skins do seu inventário Steam. Quando alguém comprar, a Gumax retém <strong>2% de comissão</strong> e você recebe os <strong>98% restantes</strong>. Só é possível listar skins que estão no seu inventário Steam (verificação automática).
+      </div>
+
+      <div class="data-table-wrapper">
+        <div class="table-header">
+          <h3>Skins Listadas</h3>
+          <button class="btn btn-primary btn-small" onclick="switchTab('inventory')">+ Listar Nova Skin</button>
+        </div>
+        <table class="data-table">
+          <thead>
+            <tr>
+              <th>Skin</th>
+              <th>Preço</th>
+              <th>Comissão (2%)</th>
+              <th>Você Recebe</th>
+              <th>Status</th>
+              <th>Ações</th>
+            </tr>
+          </thead>
+          <tbody id="mySkinsTable">
+            <tr><td colspan="6" class="empty-state"><p>Nenhuma skin listada. Vá em "Inventário Steam" para listar.</p></td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- STEAM INVENTORY SECTION -->
+    <div class="section" id="section-inventory">
+      <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
+        <div>
+          <h2 style="font-size: 20px;">Seu Inventário Steam</h2>
+          <p style="color: var(--text-secondary); font-size: 13px; margin-top: 4px;">Selecione as skins que deseja listar no marketplace</p>
+        </div>
+        <div style="display: flex; gap: 8px;">
+          <button class="btn btn-secondary" onclick="refreshInventory()">Atualizar Inventário</button>
+          <button class="btn btn-primary" id="listSelectedBtn" onclick="openListModal()" style="display: none;">Listar Selecionadas (<span id="selectedCount">0</span>)</button>
+        </div>
+      </div>
+
+      <div id="inventoryLoading" class="empty-state">
+        <div class="loading-spinner"></div>
+        <p style="margin-top: 16px;">Carregando inventário Steam...</p>
+      </div>
+
+      <div class="inventory-grid" id="inventoryGrid" style="display: none;"></div>
+
+      <div id="inventoryEmpty" class="empty-state" style="display: none;">
+        <p>Nenhuma skin CS2 encontrada no seu inventário.</p>
+        <p style="margin-top: 8px;">Certifique-se de que seu inventário Steam está público.</p>
+      </div>
+    </div>
+
+    <!-- SALES SECTION -->
+    <div class="section" id="section-sales">
+      <h2 style="font-size: 20px; margin-bottom: 20px;">Histórico de Vendas</h2>
+
+      <div class="data-table-wrapper">
+        <table class="data-table">
+          <thead>
+            <tr>
+              <th>Data</th>
+              <th>Skin</th>
+              <th>Comprador</th>
+              <th>Valor</th>
+              <th>Comissão</th>
+              <th>Seu Ganho</th>
+              <th>Status</th>
+            </tr>
+          </thead>
+          <tbody id="salesTable">
+            <tr><td colspan="7" class="empty-state"><p>Nenhuma venda realizada ainda</p></td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- EARNINGS SECTION -->
+    <div class="section" id="section-earnings">
+      <h2 style="font-size: 20px; margin-bottom: 20px;">Detalhes de Ganhos</h2>
+
+      <div class="stats-grid">
+        <div class="stat-card">
+          <div class="stat-label">Total Bruto</div>
+          <div class="stat-value" id="earningsGross">R$ 0</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-label">Total Comissão (2%)</div>
+          <div class="stat-value" id="earningsCommission" style="color: var(--danger);">R$ 0</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-label">Total Líquido</div>
+          <div class="stat-value" id="earningsNet" style="color: var(--success);">R$ 0</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-label">Já Sacado</div>
+          <div class="stat-value" id="earningsWithdrawn">R$ 0</div>
+        </div>
+      </div>
+
+      <div class="commission-notice">
+        Para solicitar um saque, clique em "Solicitar Saque" no topo da página. O Gu processará o pagamento via PIX manualmente.
+      </div>
+
+      <div class="data-table-wrapper">
+        <div class="table-header"><h3>Histórico de Saques</h3></div>
+        <table class="data-table">
+          <thead>
+            <tr>
+              <th>Data</th>
+              <th>Valor</th>
+              <th>Chave PIX</th>
+              <th>Status</th>
+            </tr>
+          </thead>
+          <tbody id="withdrawalsTable">
+            <tr><td colspan="4" class="empty-state"><p>Nenhum saque solicitado</p></td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<!-- LIST SKINS MODAL -->
+<div class="modal-overlay" id="listModal" onclick="if(event.target===this)closeListModal()">
+  <div class="modal">
+    <h2>Listar Skins no Marketplace</h2>
+    <div class="modal-sub">Defina o preço para cada skin selecionada. Lembre-se: a Gumax retém 2% de comissão.</div>
+
+    <div id="listModalItems"></div>
+
+    <div class="form-actions">
+      <button class="btn btn-secondary" onclick="closeListModal()">Cancelar</button>
+      <button class="btn btn-primary" onclick="confirmListSkins()">Confirmar Listagem</button>
+    </div>
+  </div>
+</div>
+
+<!-- WITHDRAW MODAL -->
+<div class="modal-overlay" id="withdrawModal" onclick="if(event.target===this)closeWithdrawModal()">
+  <div class="modal">
+    <h2>Solicitar Saque</h2>
+    <div class="modal-sub">O pagamento será processado manualmente via PIX pelo Gu.</div>
+
+    <div class="form-group">
+      <label>Valor do Saque (R$)</label>
+      <input type="number" class="form-control" id="withdrawAmount" placeholder="0.00" step="0.01">
+    </div>
+    <div class="form-group">
+      <label>Chave PIX</label>
+      <input type="text" class="form-control" id="withdrawPix" placeholder="Sua chave PIX (CPF, e-mail, celular ou aleatória)">
+    </div>
+
+    <div class="form-actions">
+      <button class="btn btn-secondary" onclick="closeWithdrawModal()">Cancelar</button>
+      <button class="btn btn-primary" onclick="submitWithdraw()">Solicitar</button>
+    </div>
+  </div>
+</div>
+
+<!-- TOAST -->
+<div class="toast" id="toast"></div>
+
+<script>
+// ============= FIREBASE INIT =============
+const firebaseConfig = {
+  apiKey: "AIzaSyCN0TV59kJNQMsaQ-5d9dSTowirxFcuHG0",
+  authDomain: "gumax-skins.firebaseapp.com",
+  projectId: "gumax-skins",
+  storageBucket: "gumax-skins.firebasestorage.app",
+  messagingSenderId: "678525908778",
+  appId: "1:678525908778:web:56ee6d6a809c013b341053"
+};
+firebase.initializeApp(firebaseConfig);
+const db = firebase.firestore();
+
+// ============= CONSTANTS =============
+const API_BASE = 'https://gumax-backend-production.up.railway.app';
+const COMMISSION_RATE = 0.02;
+const SESSION_KEY = 'gumax_reseller_session';
+
+// ============= STATE =============
+let currentUser = null;
+let steamInventory = [];
+let selectedSkins = [];
+let mySkins = [];
+let mySales = [];
+
+// ============= AUTH =============
+function loginWithSteam() {
+  const returnUrl = window.location.origin + '/revendedor.html';
+  window.location.href = `${API_BASE}/api/steam-auth?action=login&returnUrl=${encodeURIComponent(returnUrl)}&role=reseller`;
+}
+
+function checkAuth() {
+  // Check URL params (Steam callback)
+  const params = new URLSearchParams(window.location.search);
+  if (params.has('steam_id')) {
+    currentUser = {
+      steamId: params.get('steam_id'),
+      steamName: params.get('steam_name') || 'Revendedor',
+      avatar: params.get('avatar') || '',
+      loginTime: Date.now()
+    };
+    localStorage.setItem(SESSION_KEY, JSON.stringify(currentUser));
+    window.history.replaceState({}, document.title, window.location.pathname);
+    registerReseller();
+    showDashboard();
+    return;
+  }
+
+  // Check saved session
+  const saved = localStorage.getItem(SESSION_KEY);
+  if (saved) {
+    currentUser = JSON.parse(saved);
+    const elapsed = Date.now() - currentUser.loginTime;
+    if (elapsed < 7 * 24 * 60 * 60 * 1000) { // 7 days
+      showDashboard();
+      return;
+    }
+  }
+
+  document.getElementById('loginScreen').style.display = 'flex';
+}
+
+async function registerReseller() {
+  if (!currentUser) return;
+  try {
+    const doc = await db.collection('resellers').doc(currentUser.steamId).get();
+    if (!doc.exists) {
+      await db.collection('resellers').doc(currentUser.steamId).set({
+        steamId: currentUser.steamId,
+        steamName: currentUser.steamName,
+        avatar: currentUser.avatar,
+        status: 'pending',
+        balance: 0,
+        totalSales: 0,
+        salesCount: 0,
+        skinsCount: 0,
+        createdAt: new Date().toISOString()
+      });
+      showToast('Cadastro enviado! Aguarde aprovação do administrador.');
+    }
+  } catch (e) {
+    console.error('Register error:', e);
+  }
+}
+
+function showDashboard() {
+  document.getElementById('loginScreen').style.display = 'none';
+  document.getElementById('dashboard').style.display = 'block';
+
+  if (currentUser) {
+    document.getElementById('userName').textContent = currentUser.steamName;
+    if (currentUser.avatar) {
+      document.getElementById('userAvatar').src = currentUser.avatar;
+    }
+  }
+
+  loadAllData();
+}
+
+function logout() {
+  localStorage.removeItem(SESSION_KEY);
+  currentUser = null;
+  location.reload();
+}
+
+// ============= NAVIGATION =============
+function switchTab(name) {
+  document.querySelectorAll('.section').forEach(s => s.classList.remove('active'));
+  document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+  document.getElementById('section-' + name).classList.add('active');
+
+  const tabs = document.querySelectorAll('.tab');
+  const names = ['skins', 'inventory', 'sales', 'earnings'];
+  const index = names.indexOf(name);
+  if (index >= 0 && tabs[index]) tabs[index].classList.add('active');
+
+  if (name === 'inventory' && steamInventory.length === 0) {
+    loadSteamInventory();
+  }
+}
+
+// ============= DATA LOADING =============
+async function loadAllData() {
+  if (!currentUser) return;
+  await Promise.all([
+    loadMySkins(),
+    loadMySales(),
+    loadMyBalance()
+  ]);
+}
+
+async function loadMySkins() {
+  try {
+    const snapshot = await db.collection('skins')
+      .where('sellerId', '==', currentUser.steamId)
+      .orderBy('createdAt', 'desc')
+      .get();
+    mySkins = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+    renderMySkins();
+  } catch (e) {
+    console.error('Error loading skins:', e);
+  }
+}
+
+async function loadMySales() {
+  try {
+    const snapshot = await db.collection('orders')
+      .where('sellerId', '==', currentUser.steamId)
+      .orderBy('createdAt', 'desc')
+      .get();
+    mySales = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+    renderSales();
+    updateStats();
+  } catch (e) {
+    console.error('Error loading sales:', e);
+  }
+}
+
+async function loadMyBalance() {
+  try {
+    const doc = await db.collection('resellers').doc(currentUser.steamId).get();
+    if (doc.exists) {
+      const data = doc.data();
+      document.getElementById('userBalance').textContent = fmtR(data.balance || 0);
+    }
+  } catch (e) {
+    console.error('Error loading balance:', e);
+  }
+}
+
+// ============= STEAM INVENTORY =============
+async function loadSteamInventory() {
+  document.getElementById('inventoryLoading').style.display = 'block';
+  document.getElementById('inventoryGrid').style.display = 'none';
+  document.getElementById('inventoryEmpty').style.display = 'none';
+
+  try {
+    const response = await fetch(`${API_BASE}/api/steam-inventory/${currentUser.steamId}`);
+    if (!response.ok) throw new Error('Falha ao carregar inventário');
+
+    const data = await response.json();
+    steamInventory = data.items || [];
+
+    document.getElementById('inventoryLoading').style.display = 'none';
+
+    if (steamInventory.length === 0) {
+      document.getElementById('inventoryEmpty').style.display = 'block';
+      return;
+    }
+
+    renderInventory();
+    document.getElementById('inventoryGrid').style.display = 'grid';
+  } catch (e) {
+    console.error('Inventory error:', e);
+    document.getElementById('inventoryLoading').innerHTML = `
+      <p style="color: var(--danger);">Erro ao carregar inventário Steam</p>
+      <p style="color: var(--text-muted); margin-top: 8px; font-size: 13px;">${e.message}</p>
+      <p style="color: var(--text-muted); margin-top: 8px; font-size: 13px;">Certifique-se de que seu inventário Steam está público.</p>
+      <button class="btn btn-secondary" style="margin-top: 16px;" onclick="loadSteamInventory()">Tentar Novamente</button>
+    `;
+  }
+}
+
+function refreshInventory() {
+  steamInventory = [];
+  selectedSkins = [];
+  updateSelectedCount();
+  loadSteamInventory();
+}
+
+function renderInventory() {
+  const grid = document.getElementById('inventoryGrid');
+  const listedNames = mySkins.filter(s => s.active).map(s => s.name);
+
+  grid.innerHTML = steamInventory.map((item, i) => {
+    const isListed = listedNames.includes(item.name);
+    return `
+      <div class="inv-card ${isListed ? 'already-listed' : ''}" onclick="${isListed ? '' : `toggleSelect(${i})`}" id="inv-${i}">
+        <div class="inv-check">✓</div>
+        ${item.image ? `<img src="${item.image}" alt="${item.name}">` : '<div style="height:100px;background:var(--bg-elevated);border-radius:6px;"></div>'}
+        <div class="inv-name">${item.name}</div>
+        <div class="inv-wear">${item.wear || ''} ${item.float ? '• FV ' + item.float.toFixed(3) : ''}</div>
+      </div>
+    `;
+  }).join('');
+}
+
+function toggleSelect(index) {
+  const card = document.getElementById('inv-' + index);
+  const idx = selectedSkins.indexOf(index);
+
+  if (idx >= 0) {
+    selectedSkins.splice(idx, 1);
+    card.classList.remove('selected');
+  } else {
+    selectedSkins.push(index);
+    card.classList.add('selected');
+  }
+
+  updateSelectedCount();
+}
+
+function updateSelectedCount() {
+  const btn = document.getElementById('listSelectedBtn');
+  const count = document.getElementById('selectedCount');
+  count.textContent = selectedSkins.length;
+  btn.style.display = selectedSkins.length > 0 ? 'inline-flex' : 'none';
+}
+
+// ============= LIST SKINS MODAL =============
+function openListModal() {
+  if (selectedSkins.length === 0) return;
+
+  const container = document.getElementById('listModalItems');
+  container.innerHTML = selectedSkins.map((idx, i) => {
+    const item = steamInventory[idx];
+    return `
+      <div style="display: flex; align-items: center; gap: 16px; padding: 12px; background: var(--bg-elevated); border-radius: 8px; margin-bottom: 8px;">
+        ${item.image ? `<img src="${item.image}" style="width: 60px; height: 40px; object-fit: contain;">` : ''}
+        <div style="flex: 1;">
+          <div style="font-size: 13px; font-weight: 600;">${item.name}</div>
+          <div style="font-size: 11px; color: var(--text-muted);">${item.wear || ''}</div>
+        </div>
+        <div>
+          <label style="font-size: 11px; color: var(--text-muted);">Preço (R$)</label>
+          <input type="number" class="form-control" id="listPrice-${i}" placeholder="0.00" step="0.01" style="width: 120px;">
+        </div>
+      </div>
+    `;
+  }).join('');
+
+  document.getElementById('listModal').classList.add('show');
+}
+
+function closeListModal() {
+  document.getElementById('listModal').classList.remove('show');
+}
+
+async function confirmListSkins() {
+  if (!currentUser) return;
+
+  const skinsToList = [];
+  for (let i = 0; i < selectedSkins.length; i++) {
+    const price = parseFloat(document.getElementById('listPrice-' + i).value);
+    if (!price || price <= 0) {
+      showToast('Defina o preço para todas as skins', 'error');
+      return;
+    }
+    const item = steamInventory[selectedSkins[i]];
+    skinsToList.push({
+      name: item.name,
+      price: price,
+      discount: 0,
+      float: item.float || 0,
+      wear: item.wear || 'FT',
+      rarity: item.rarity || 'Mil-Spec',
+      image: item.image || '',
+      delivery: 'full',
+      seller: 'reseller',
+      sellerId: currentUser.steamId,
+      sellerName: currentUser.steamName,
+      active: true,
+      inStock: true,
+      steamAssetId: item.assetId || '',
+      createdAt: new Date().toISOString()
+    });
+  }
+
+  try {
+    const batch = db.batch();
+    skinsToList.forEach(skin => {
+      const ref = db.collection('skins').doc();
+      batch.set(ref, skin);
+    });
+
+    // Update reseller skin count
+    batch.update(db.collection('resellers').doc(currentUser.steamId), {
+      skinsCount: firebase.firestore.FieldValue.increment(skinsToList.length)
+    });
+
+    await batch.commit();
+
+    showToast(`${skinsToList.length} skin(s) listada(s) com sucesso!`);
+    closeListModal();
+    selectedSkins = [];
+    updateSelectedCount();
+    await loadMySkins();
+    renderInventory();
+  } catch (e) {
+    showToast('Erro ao listar skins: ' + e.message, 'error');
+  }
+}
+
+// ============= MY SKINS TABLE =============
+function renderMySkins() {
+  const tbody = document.getElementById('mySkinsTable');
+  document.getElementById('statListed').textContent = mySkins.filter(s => s.active).length;
+
+  if (mySkins.length === 0) {
+    tbody.innerHTML = '<tr><td colspan="6" class="empty-state"><p>Nenhuma skin listada. Vá em "Inventário Steam" para listar.</p></td></tr>';
+    return;
+  }
+
+  tbody.innerHTML = mySkins.map(skin => {
+    const commission = skin.price * COMMISSION_RATE;
+    const net = skin.price - commission;
+    return `
+      <tr>
+        <td>
+          <strong>${skin.name}</strong>
+          <div style="font-size: 11px; color: var(--text-muted);">${skin.wear || ''} ${skin.float ? '• FV ' + skin.float.toFixed(3) : ''}</div>
+        </td>
+        <td style="color: var(--accent-yellow); font-weight: 600;">${fmtR(skin.price)}</td>
+        <td style="color: var(--danger); font-size: 13px;">-${fmtR(commission)}</td>
+        <td style="color: var(--success); font-weight: 600;">${fmtR(net)}</td>
+        <td><span class="badge ${skin.active ? 'badge-active' : 'badge-sold'}">${skin.active ? 'Ativo' : skin.sold ? 'Vendida' : 'Inativo'}</span></td>
+        <td>
+          ${skin.active ? `
+            <button class="btn btn-secondary btn-small" onclick="editMyPrice('${skin.id}', ${skin.price})">Editar Preço</button>
+            <button class="btn btn-danger btn-small" onclick="removeMyListing('${skin.id}')">Remover</button>
+          ` : ''}
+        </td>
+      </tr>
+    `;
+  }).join('');
+}
+
+async function editMyPrice(id, currentPrice) {
+  const newPrice = prompt('Novo preço (R$):', currentPrice);
+  if (!newPrice || isNaN(newPrice) || parseFloat(newPrice) <= 0) return;
+
+  try {
+    await db.collection('skins').doc(id).update({ price: parseFloat(newPrice), updatedAt: new Date().toISOString() });
+    showToast('Preço atualizado');
+    await loadMySkins();
+  } catch (e) {
+    showToast('Erro: ' + e.message, 'error');
+  }
+}
+
+async function removeMyListing(id) {
+  if (!confirm('Remover esta skin do marketplace?')) return;
+  try {
+    await db.collection('skins').doc(id).update({ active: false });
+    await db.collection('resellers').doc(currentUser.steamId).update({
+      skinsCount: firebase.firestore.FieldValue.increment(-1)
+    });
+    showToast('Skin removida do marketplace');
+    await loadMySkins();
+  } catch (e) {
+    showToast('Erro: ' + e.message, 'error');
+  }
+}
+
+// ============= SALES =============
+function renderSales() {
+  const tbody = document.getElementById('salesTable');
+  if (mySales.length === 0) {
+    tbody.innerHTML = '<tr><td colspan="7" class="empty-state"><p>Nenhuma venda realizada ainda</p></td></tr>';
+    return;
+  }
+
+  tbody.innerHTML = mySales.map(sale => {
+    const commission = (sale.total || 0) * COMMISSION_RATE;
+    const net = (sale.total || 0) - commission;
+    return `
+      <tr>
+        <td>${formatDate(sale.createdAt)}</td>
+        <td><strong>${sale.skinName || '-'}</strong></td>
+        <td>${sale.buyerName || 'Anônimo'}</td>
+        <td style="color: var(--accent-yellow);">${fmtR(sale.total || 0)}</td>
+        <td style="color: var(--danger);">-${fmtR(commission)}</td>
+        <td style="color: var(--success); font-weight: 600;">${fmtR(net)}</td>
+        <td><span class="badge badge-${sale.status === 'delivered' ? 'active' : 'pending'}">${sale.status === 'delivered' ? 'Entregue' : 'Processando'}</span></td>
+      </tr>
+    `;
+  }).join('');
+}
+
+function updateStats() {
+  const totalRevenue = mySales.reduce((s, o) => s + (o.total || 0), 0);
+  const totalCommission = totalRevenue * COMMISSION_RATE;
+  const netEarnings = totalRevenue - totalCommission;
+
+  document.getElementById('statSold').textContent = mySales.length;
+  document.getElementById('statRevenue').textContent = fmtR(totalRevenue);
+  document.getElementById('statNet').textContent = fmtR(netEarnings);
+
+  document.getElementById('earningsGross').textContent = fmtR(totalRevenue);
+  document.getElementById('earningsCommission').textContent = fmtR(totalCommission);
+  document.getElementById('earningsNet').textContent = fmtR(netEarnings);
+}
+
+// ============= WITHDRAW =============
+function requestWithdraw() {
+  document.getElementById('withdrawModal').classList.add('show');
+}
+
+function closeWithdrawModal() {
+  document.getElementById('withdrawModal').classList.remove('show');
+}
+
+async function submitWithdraw() {
+  const amount = parseFloat(document.getElementById('withdrawAmount').value);
+  const pixKey = document.getElementById('withdrawPix').value.trim();
+
+  if (!amount || amount <= 0) {
+    showToast('Informe um valor válido', 'error');
+    return;
+  }
+  if (!pixKey) {
+    showToast('Informe sua chave PIX', 'error');
+    return;
+  }
+
+  try {
+    await db.collection('withdrawals').add({
+      resellerId: currentUser.steamId,
+      resellerName: currentUser.steamName,
+      amount: amount,
+      pixKey: pixKey,
+      status: 'pending',
+      createdAt: new Date().toISOString()
+    });
+
+    showToast('Saque solicitado! O Gu processará em breve.');
+    closeWithdrawModal();
+    document.getElementById('withdrawAmount').value = '';
+    document.getElementById('withdrawPix').value = '';
+  } catch (e) {
+    showToast('Erro: ' + e.message, 'error');
+  }
+}
+
+// ============= UTILITIES =============
+function fmtR(n) {
+  return 'R$ ' + (n || 0).toFixed(2).replace('.', ',').replace(/\B(?=(\d{3})+(?!\d))/g, '.');
+}
+
+function formatDate(d) {
+  if (!d) return '-';
+  const date = new Date(d);
+  return date.toLocaleDateString('pt-BR') + ' ' + date.toLocaleTimeString('pt-BR', {hour:'2-digit',minute:'2-digit'});
+}
+
+function showToast(msg, type = 'success') {
+  const toast = document.getElementById('toast');
+  toast.textContent = msg;
+  toast.className = `toast show ${type}`;
+  setTimeout(() => toast.classList.remove('show'), 3000);
+}
+
+// ============= INIT =============
+checkAuth();
+</script>
+
+</body>
+</html>
