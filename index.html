@@ -185,6 +185,17 @@ nav {
   white-space: nowrap;
 }
 
+.rifas-link {
+  background: linear-gradient(135deg, var(--primary), var(--accent-yellow));
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  font-weight: 600;
+  text-decoration: none;
+}
+.rifas-link:hover {
+  -webkit-text-fill-color: var(--accent-yellow);
+}
+
 .nav-link:hover {
   color: var(--accent-yellow);
 }
@@ -1859,6 +1870,7 @@ footer {
       <span class="nav-link" onclick="scrollToSection('marketplace')">Loja</span>
       <span class="nav-link" onclick="scrollToSection('how')">Como Funciona</span>
       <span class="nav-link" onclick="scrollToSection('faq')">FAQ</span>
+      <a class="nav-link rifas-link" href="https://gumax.com" target="_blank">🎰 Rifas</a>
     </nav>
     <div class="header-actions">
       <div class="cart-icon" onclick="toggleCart()">
@@ -2031,6 +2043,7 @@ footer {
       </div>
       <div class="footer-column">
         <div class="footer-title">Suporte</div>
+        <a class="footer-link" href="revendedor.html">Seja Revendedor</a>
         <a class="footer-link">Termos de Uso</a>
         <a class="footer-link">Privacidade</a>
         <a class="footer-link">Contato</a>
@@ -2228,11 +2241,49 @@ let currentCategory = "Todos";
 let displayedSkins = [];
 let skinImages = {};
 
+// ============= FIRESTORE SKINS =============
+let firestoreSkins = [];
+
+async function loadFirestoreSkins() {
+  try {
+    const snapshot = await db.collection('skins').where('active', '==', true).get();
+    firestoreSkins = snapshot.docs.map((doc, i) => {
+      const data = doc.data();
+      return {
+        id: 1000 + i,
+        firestoreId: doc.id,
+        name: data.name,
+        wear: data.wear || 'FT',
+        price: data.price || 0,
+        rarity: data.rarity || 'Mil-Spec',
+        inStock: data.delivery === 'full' || data.inStock || false,
+        float: data.float || 0,
+        discount: data.discount || 0,
+        image: data.image || '',
+        seller: data.seller || 'admin',
+        sellerName: data.sellerName || 'Gumax',
+        sellerId: data.sellerId || ''
+      };
+    });
+    renderSkins();
+  } catch (e) {
+    console.log('Firestore skins load error:', e);
+  }
+}
+
+function getAllSkins() {
+  // Merge hardcoded + Firestore skins (Firestore takes priority for duplicates)
+  const fsNames = firestoreSkins.map(s => s.name);
+  const hardcoded = SKINS.filter(s => !fsNames.includes(s.name));
+  return [...firestoreSkins, ...hardcoded];
+}
+
 // ============= INITIALIZATION =============
 document.addEventListener('DOMContentLoaded', function() {
   initializeUI();
   renderSkins();
   loadSkinImages();
+  loadFirestoreSkins();
 
   // Check Steam callback
   const params = new URLSearchParams(window.location.search);
@@ -2334,7 +2385,8 @@ function getCategory(name) {
 }
 
 function renderSkins() {
-  const filtered = SKINS.filter(skin => {
+  const allAvailable = getAllSkins();
+  const filtered = allAvailable.filter(skin => {
     // Delivery filter
     if (currentDeliveryFilter === 'full' && !skin.inStock) return false;
     if (currentDeliveryFilter === 'normal' && skin.inStock) return false;
@@ -2371,7 +2423,7 @@ function createSkinCard(skin, index) {
 
   const rarityColor = RARITY_COLORS[skin.rarity] || '#8847ff';
   const originalPrice = (skin.price / (1 - skin.discount / 100)).toFixed(2);
-  const image = skinImages[skin.name];
+  const image = skin.image || skinImages[skin.name];
 
   div.innerHTML = `
     <div class="skin-rarity-bar" style="color: ${rarityColor};"></div>
@@ -2411,7 +2463,7 @@ function createSkinCard(skin, index) {
 // ============= CART MANAGEMENT =============
 function addToCart(event, skinId) {
   event.stopPropagation();
-  const skin = SKINS.find(s => s.id === skinId);
+  const skin = getAllSkins().find(s => s.id === skinId);
   if (!skin) return;
 
   const existing = cart.find(item => item.id === skinId);
@@ -2501,7 +2553,7 @@ function openSkinModal(skin) {
   currentModal = skin;
   const rarityColor = RARITY_COLORS[skin.rarity] || '#8847ff';
   const originalPrice = (skin.price / (1 - skin.discount / 100)).toFixed(2);
-  const image = skinImages[skin.name];
+  const image = skin.image || skinImages[skin.name];
 
   document.getElementById('modalRarityBar').style.color = rarityColor;
   document.getElementById('modalSkinName').textContent = skin.name;
