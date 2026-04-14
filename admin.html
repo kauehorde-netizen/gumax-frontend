@@ -77,28 +77,34 @@ body {
   margin-bottom: 32px;
 }
 
-.login-input {
+.btn-google {
   width: 100%;
-  padding: 14px 16px;
-  background: var(--bg-input);
-  border: 1px solid var(--border);
+  background: white;
+  color: #1a1a1a;
+  padding: 14px 20px;
   border-radius: 10px;
-  color: var(--text-primary);
-  font-family: 'JetBrains Mono', monospace;
-  font-size: 16px;
-  margin-bottom: 16px;
-  outline: none;
-  transition: border-color .2s;
+  font-size: 15px;
+  font-weight: 600;
+  justify-content: center;
+  border: none;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  gap: 12px;
+  transition: all .2s;
+  font-family: 'Outfit', sans-serif;
 }
 
-.login-input:focus {
-  border-color: var(--primary);
+.btn-google:hover {
+  background: #f3f3f3;
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(139, 92, 246, .2);
 }
 
 .login-error {
   color: var(--danger);
   font-size: 13px;
-  margin-bottom: 12px;
+  margin-top: 12px;
   display: none;
 }
 
@@ -423,11 +429,15 @@ select.form-control {
   <div class="login-box">
     <img src="https://static.wixstatic.com/media/874864_b598e856481740e7ae752771a661c242~mv2.png/v1/fill/w_600,h_235,al_c,q_85,enc_auto/874864_b598e856481740e7ae752771a661c242~mv2.png" alt="Gumax Skins">
     <h2>Painel Administrativo</h2>
-    <p>Acesso restrito ao proprietário do site</p>
-    <input type="password" class="login-input" id="adminPassword" placeholder="Senha de administrador" onkeydown="if(event.key==='Enter')adminLogin()">
-    <div class="login-error" id="loginError">Senha incorreta</div>
-    <button class="btn btn-primary" style="width: 100%;" onclick="adminLogin()">Acessar Painel</button>
-    <br><br>
+    <p>Acesso restrito ao proprietário do site.<br>Faça login com uma conta Google autorizada.</p>
+    <button class="btn btn-google" onclick="loginWithGoogle()">
+      <svg width="20" height="20" viewBox="0 0 24 24"><path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/><path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"/><path fill="#FBBC05" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z"/><path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"/></svg>
+      Entrar com Google
+    </button>
+    <div class="login-error" id="loginError">E-mail não autorizado para acesso admin</div>
+    <br>
+    <p style="font-size: 11px; color: var(--text-muted); margin-top: 8px;">Apenas contas autorizadas podem acessar.</p>
+    <br>
     <a href="index.html" style="color: var(--text-muted); font-size: 13px; text-decoration: none;">← Voltar ao site</a>
   </div>
 </div>
@@ -742,20 +752,31 @@ select.form-control {
           <label>Chave PIX para recebimentos</label>
           <input type="text" class="form-control" id="settingsPixKey" placeholder="Sua chave PIX">
         </div>
-        <div class="form-group">
-          <label>Senha do painel admin</label>
-          <input type="password" class="form-control" id="settingsPassword" placeholder="Nova senha (deixe vazio para manter)">
-        </div>
         <button class="btn btn-primary" onclick="saveSettings()">Salvar Configurações</button>
       </div>
 
       <div class="data-table-wrapper" style="padding: 24px; margin-top: 16px;">
-        <h3 style="margin-bottom: 20px;">Dados do Firebase</h3>
-        <p style="color: var(--text-secondary); font-size: 13px; margin-bottom: 12px;">
-          Projeto: gumax-skins<br>
-          Firestore: Ativo<br>
-          Auth: Steam Provider configurado
+        <h3 style="margin-bottom: 20px;">Administradores Autorizados</h3>
+        <p style="color: var(--text-secondary); font-size: 13px; margin-bottom: 16px;">
+          Apenas os e-mails abaixo podem acessar este painel (login via Google):
         </p>
+        <div style="background: var(--bg-elevated); border-radius: 8px; padding: 12px;">
+          <div style="display: flex; align-items: center; gap: 10px; padding: 8px 0;">
+            <span style="width: 8px; height: 8px; border-radius: 50%; background: var(--success);"></span>
+            <code style="font-family: 'JetBrains Mono', monospace; color: var(--accent-yellow);">gumaxskins@gmail.com</code>
+            <span style="color: var(--text-muted); font-size: 12px;">(Gu - Dono)</span>
+          </div>
+          <div style="display: flex; align-items: center; gap: 10px; padding: 8px 0;">
+            <span style="width: 8px; height: 8px; border-radius: 50%; background: var(--success);"></span>
+            <code style="font-family: 'JetBrains Mono', monospace; color: var(--accent-yellow);">cauehorde@gmail.com</code>
+            <span style="color: var(--text-muted); font-size: 12px;">(Imperador)</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="data-table-wrapper" style="padding: 24px; margin-top: 16px;">
+        <h3 style="margin-bottom: 20px;">Conta Logada</h3>
+        <p id="currentAdminInfo" style="color: var(--text-secondary); font-size: 13px;"></p>
       </div>
     </div>
 
@@ -848,46 +869,88 @@ const firebaseConfig = {
 };
 firebase.initializeApp(firebaseConfig);
 const db = firebase.firestore();
+const auth = firebase.auth();
 
 // ============= CONSTANTS =============
-const ADMIN_PASSWORD_KEY = 'gumax_admin_password';
-const ADMIN_SESSION_KEY = 'gumax_admin_session';
-const DEFAULT_PASSWORD = 'gumax2024';
 const COMMISSION_RATE = 0.02; // 2%
 
-// ============= AUTH =============
-function adminLogin() {
-  const input = document.getElementById('adminPassword').value;
-  const savedPassword = localStorage.getItem(ADMIN_PASSWORD_KEY) || DEFAULT_PASSWORD;
+// Whitelist de emails com acesso admin
+const ADMIN_EMAILS = [
+  'gumaxskins@gmail.com',  // Gu (dono)
+  'cauehorde@gmail.com'    // Imperador
+];
 
-  if (input === savedPassword) {
-    localStorage.setItem(ADMIN_SESSION_KEY, Date.now().toString());
+let currentAdminUser = null;
+
+// ============= AUTH =============
+async function loginWithGoogle() {
+  const provider = new firebase.auth.GoogleAuthProvider();
+  provider.setCustomParameters({ prompt: 'select_account' });
+
+  try {
+    const result = await auth.signInWithPopup(provider);
+    const email = (result.user.email || '').toLowerCase();
+
+    if (!ADMIN_EMAILS.includes(email)) {
+      await auth.signOut();
+      document.getElementById('loginError').textContent = `E-mail "${email}" não tem permissão de admin.`;
+      document.getElementById('loginError').style.display = 'block';
+      return;
+    }
+
+    currentAdminUser = {
+      uid: result.user.uid,
+      email: email,
+      name: result.user.displayName,
+      photo: result.user.photoURL
+    };
     showDashboard();
-  } else {
+  } catch (e) {
+    console.error('Login error:', e);
+    document.getElementById('loginError').textContent = 'Erro ao fazer login: ' + e.message;
     document.getElementById('loginError').style.display = 'block';
   }
 }
 
 function checkSession() {
-  const session = localStorage.getItem(ADMIN_SESSION_KEY);
-  if (session) {
-    const elapsed = Date.now() - parseInt(session);
-    if (elapsed < 24 * 60 * 60 * 1000) { // 24h session
-      showDashboard();
-      return;
+  auth.onAuthStateChanged(user => {
+    if (user) {
+      const email = (user.email || '').toLowerCase();
+      if (ADMIN_EMAILS.includes(email)) {
+        currentAdminUser = {
+          uid: user.uid,
+          email: email,
+          name: user.displayName,
+          photo: user.photoURL
+        };
+        showDashboard();
+      } else {
+        auth.signOut();
+        document.getElementById('loginScreen').style.display = 'flex';
+      }
+    } else {
+      document.getElementById('loginScreen').style.display = 'flex';
     }
-  }
-  document.getElementById('loginScreen').style.display = 'flex';
+  });
 }
 
 function showDashboard() {
   document.getElementById('loginScreen').style.display = 'none';
   document.getElementById('dashboard').style.display = 'block';
+
+  // Atualizar nome do admin no topo se existir um elemento
+  const welcomeSub = document.querySelector('.page-header .subtitle');
+  if (welcomeSub && currentAdminUser) {
+    const firstName = (currentAdminUser.name || currentAdminUser.email || '').split(' ')[0].split('@')[0];
+    welcomeSub.innerHTML = `Bem-vindo ao painel, <strong style="color:var(--primary-light)">${firstName}</strong> 👋`;
+  }
+
+  updateAdminInfo();
   loadAllData();
 }
 
-function adminLogout() {
-  localStorage.removeItem(ADMIN_SESSION_KEY);
+async function adminLogout() {
+  await auth.signOut();
   location.reload();
 }
 
@@ -1317,22 +1380,32 @@ async function markCommissionPaid(id) {
 
 // ============= SETTINGS =============
 async function saveSettings() {
-  const newPassword = document.getElementById('settingsPassword').value;
-  if (newPassword && newPassword.length >= 4) {
-    localStorage.setItem(ADMIN_PASSWORD_KEY, newPassword);
-    showToast('Senha atualizada');
-  }
-
   try {
     await db.collection('settings').doc('general').set({
       commissionRate: parseFloat(document.getElementById('settingsCommission').value) / 100 || 0.02,
       acceptResellers: document.getElementById('settingsAcceptResellers').value === 'true',
       pixKey: document.getElementById('settingsPixKey').value,
-      updatedAt: new Date().toISOString()
+      updatedAt: new Date().toISOString(),
+      updatedBy: currentAdminUser?.email || 'unknown'
     }, { merge: true });
     showToast('Configurações salvas');
   } catch (e) {
     showToast('Erro: ' + e.message, 'error');
+  }
+}
+
+function updateAdminInfo() {
+  const el = document.getElementById('currentAdminInfo');
+  if (el && currentAdminUser) {
+    el.innerHTML = `
+      <div style="display: flex; align-items: center; gap: 12px;">
+        ${currentAdminUser.photo ? `<img src="${currentAdminUser.photo}" style="width: 40px; height: 40px; border-radius: 50%; border: 2px solid var(--primary);">` : ''}
+        <div>
+          <div style="font-weight: 600; color: var(--text-primary);">${currentAdminUser.name || 'Admin'}</div>
+          <div style="font-family: 'JetBrains Mono', monospace; font-size: 12px; color: var(--accent-yellow);">${currentAdminUser.email}</div>
+        </div>
+      </div>
+    `;
   }
 }
 
