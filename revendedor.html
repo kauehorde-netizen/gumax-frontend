@@ -87,16 +87,21 @@ body {
 .btn-danger { background: var(--danger); color: white; }
 .btn-success { background: var(--success); color: white; }
 .btn-small { padding: 6px 12px; font-size: 12px; }
-.btn-steam {
-  background: #171a21;
-  color: white;
+.btn-google {
+  background: white;
+  color: #1a1a1a;
   padding: 14px 28px;
-  font-size: 16px;
+  font-size: 15px;
+  font-weight: 600;
   border-radius: 10px;
   width: 100%;
   justify-content: center;
 }
-.btn-steam:hover { background: #2a475e; }
+.btn-google:hover {
+  background: #f3f3f3;
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(139, 92, 246, .2);
+}
 
 /* DASHBOARD */
 .dashboard { display: none; }
@@ -441,11 +446,16 @@ body {
     <img src="https://static.wixstatic.com/media/874864_b598e856481740e7ae752771a661c242~mv2.png/v1/fill/w_600,h_235,al_c,q_85,enc_auto/874864_b598e856481740e7ae752771a661c242~mv2.png" alt="Gumax Skins">
     <h2>Painel do Revendedor</h2>
     <p>Anuncie suas skins no Gumax Marketplace e venda com facilidade. Comissão de apenas <strong>2%</strong> por venda.</p>
-    <button class="btn btn-steam" onclick="loginWithSteam()">
-      <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor"><path d="M11.979 0C5.678 0 .511 4.86.022 11.037l6.432 2.658c.545-.371 1.203-.59 1.912-.59.063 0 .125.004.188.006l2.861-4.142V8.91c0-2.495 2.028-4.524 4.524-4.524 2.494 0 4.524 2.031 4.524 4.527s-2.03 4.525-4.524 4.525h-.105l-4.076 2.911c0 .052.004.105.004.159 0 1.875-1.515 3.396-3.39 3.396-1.635 0-3.016-1.173-3.331-2.727L.436 15.27C1.862 20.307 6.486 24 11.979 24c6.627 0 11.999-5.373 11.999-12S18.605 0 11.979 0z"/></svg>
-      Entrar com Steam
+    <button class="btn btn-google" onclick="loginWithGoogle()">
+      <svg width="20" height="20" viewBox="0 0 24 24"><path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/><path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"/><path fill="#FBBC05" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z"/><path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"/></svg>
+      Entrar com Google
     </button>
-    <br><br>
+    <br>
+    <p style="font-size: 12px; color: var(--text-muted); margin-top: 16px; line-height: 1.6;">
+      Ao fazer login, você cria automaticamente uma conta de revendedor.<br>
+      Aguarde a aprovação do administrador para começar a listar skins.
+    </p>
+    <br>
     <a href="index.html" style="color: var(--text-muted); font-size: 13px; text-decoration: none;">← Voltar ao Marketplace</a>
   </div>
 </div>
@@ -484,7 +494,7 @@ body {
     <!-- TABS -->
     <div class="tabs">
       <div class="tab active" onclick="switchTab('skins')">Minhas Skins</div>
-      <div class="tab" onclick="switchTab('inventory')">Inventário Steam</div>
+      <div class="tab" onclick="switchTab('add')">+ Adicionar Skin</div>
       <div class="tab" onclick="switchTab('sales')">Vendas</div>
       <div class="tab" onclick="switchTab('earnings')">Ganhos</div>
     </div>
@@ -517,7 +527,7 @@ body {
       <div class="data-table-wrapper">
         <div class="table-header">
           <h3>Skins Listadas</h3>
-          <button class="btn btn-primary btn-small" onclick="switchTab('inventory')">+ Listar Nova Skin</button>
+          <button class="btn btn-primary btn-small" onclick="switchTab('add')">+ Listar Nova Skin</button>
         </div>
         <table class="data-table">
           <thead>
@@ -531,35 +541,97 @@ body {
             </tr>
           </thead>
           <tbody id="mySkinsTable">
-            <tr><td colspan="6" class="empty-state"><p>Nenhuma skin listada. Vá em "Inventário Steam" para listar.</p></td></tr>
+            <tr><td colspan="6" class="empty-state"><p>Nenhuma skin listada. Clique em "+ Adicionar Skin" para listar uma nova.</p></td></tr>
           </tbody>
         </table>
       </div>
     </div>
 
-    <!-- STEAM INVENTORY SECTION -->
-    <div class="section" id="section-inventory">
-      <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
-        <div>
-          <h2 style="font-size: 20px;">Seu Inventário Steam</h2>
-          <p style="color: var(--text-secondary); font-size: 13px; margin-top: 4px;">Selecione as skins que deseja listar no marketplace</p>
-        </div>
-        <div style="display: flex; gap: 8px;">
-          <button class="btn btn-secondary" onclick="refreshInventory()">Atualizar Inventário</button>
-          <button class="btn btn-primary" id="listSelectedBtn" onclick="openListModal()" style="display: none;">Listar Selecionadas (<span id="selectedCount">0</span>)</button>
-        </div>
+    <!-- ADD SKIN SECTION (Formulário manual) -->
+    <div class="section" id="section-add">
+      <div style="margin-bottom: 20px;">
+        <h2 style="font-size: 20px;">Adicionar Nova Skin</h2>
+        <p style="color: var(--text-secondary); font-size: 13px; margin-top: 4px;">Preencha os dados da skin que você possui e deseja vender</p>
       </div>
 
-      <div id="inventoryLoading" class="empty-state">
-        <div class="loading-spinner"></div>
-        <p style="margin-top: 16px;">Carregando inventário Steam...</p>
+      <div class="commission-notice">
+        <strong>Importante:</strong> Só liste skins que você <strong>realmente possui</strong> no seu inventário Steam. Após a venda, você terá que transferir a skin para o comprador. Liste dados reais — a Gumax pode verificar manualmente e bloquear contas que listam skins falsas.
       </div>
 
-      <div class="inventory-grid" id="inventoryGrid" style="display: none;"></div>
+      <div class="data-table-wrapper" style="padding: 28px;">
+        <div class="form-row">
+          <div class="form-group">
+            <label>Nome da Skin *</label>
+            <input type="text" class="form-control" id="addSkinName" placeholder="Ex: AK-47 | Asiimov">
+          </div>
+          <div class="form-group">
+            <label>URL da Imagem</label>
+            <input type="text" class="form-control" id="addSkinImage" placeholder="https://...">
+          </div>
+        </div>
 
-      <div id="inventoryEmpty" class="empty-state" style="display: none;">
-        <p>Nenhuma skin CS2 encontrada no seu inventário.</p>
-        <p style="margin-top: 8px;">Certifique-se de que seu inventário Steam está público.</p>
+        <div class="form-row">
+          <div class="form-group">
+            <label>Preço (R$) *</label>
+            <input type="number" class="form-control" id="addSkinPrice" placeholder="349.90" step="0.01">
+          </div>
+          <div class="form-group">
+            <label>Desconto (%) — opcional</label>
+            <input type="number" class="form-control" id="addSkinDiscount" value="0" min="0" max="99">
+          </div>
+        </div>
+
+        <div class="form-row">
+          <div class="form-group">
+            <label>Float Value</label>
+            <input type="number" class="form-control" id="addSkinFloat" placeholder="0.25" step="0.001" min="0" max="1">
+          </div>
+          <div class="form-group">
+            <label>Wear</label>
+            <select class="form-control" id="addSkinWear">
+              <option value="FN">Factory New</option>
+              <option value="MW">Minimal Wear</option>
+              <option value="FT" selected>Field-Tested</option>
+              <option value="WW">Well-Worn</option>
+              <option value="BS">Battle-Scarred</option>
+            </select>
+          </div>
+        </div>
+
+        <div class="form-row">
+          <div class="form-group">
+            <label>Raridade</label>
+            <select class="form-control" id="addSkinRarity">
+              <option value="Mil-Spec">Mil-Spec</option>
+              <option value="Restricted">Restricted</option>
+              <option value="Classified">Classified</option>
+              <option value="Covert" selected>Covert</option>
+              <option value="Contraband">Contraband</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label>Link do Inventário Steam (para verificação)</label>
+            <input type="text" class="form-control" id="addSkinSteamUrl" placeholder="https://steamcommunity.com/id/seu-id/inventory">
+          </div>
+        </div>
+
+        <div style="background: rgba(250, 204, 21, .08); border: 1px solid rgba(250, 204, 21, .2); border-radius: 10px; padding: 16px; margin: 16px 0;">
+          <div style="display: flex; justify-content: space-between; align-items: center;">
+            <div>
+              <div style="font-size: 11px; color: var(--text-muted); text-transform: uppercase; letter-spacing: 1px;">Seu ganho líquido (98%)</div>
+              <div id="addSkinNetPreview" style="font-size: 22px; font-weight: 700; color: var(--success); margin-top: 4px;">R$ 0,00</div>
+            </div>
+            <div style="text-align: right;">
+              <div style="font-size: 11px; color: var(--text-muted); text-transform: uppercase; letter-spacing: 1px;">Comissão Gumax (2%)</div>
+              <div id="addSkinCommissionPreview" style="font-size: 16px; color: var(--danger); margin-top: 4px;">R$ 0,00</div>
+            </div>
+          </div>
+        </div>
+
+        <div class="form-actions">
+          <button class="btn btn-secondary" onclick="clearAddForm()">Limpar</button>
+          <button class="btn btn-primary" onclick="submitNewSkin()">Publicar Skin</button>
+        </div>
       </div>
     </div>
 
@@ -635,21 +707,6 @@ body {
   </div>
 </div>
 
-<!-- LIST SKINS MODAL -->
-<div class="modal-overlay" id="listModal" onclick="if(event.target===this)closeListModal()">
-  <div class="modal">
-    <h2>Listar Skins no Marketplace</h2>
-    <div class="modal-sub">Defina o preço para cada skin selecionada. Lembre-se: a Gumax retém 2% de comissão.</div>
-
-    <div id="listModalItems"></div>
-
-    <div class="form-actions">
-      <button class="btn btn-secondary" onclick="closeListModal()">Cancelar</button>
-      <button class="btn btn-primary" onclick="confirmListSkins()">Confirmar Listagem</button>
-    </div>
-  </div>
-</div>
-
 <!-- WITHDRAW MODAL -->
 <div class="modal-overlay" id="withdrawModal" onclick="if(event.target===this)closeWithdrawModal()">
   <div class="modal">
@@ -687,73 +744,90 @@ const firebaseConfig = {
 };
 firebase.initializeApp(firebaseConfig);
 const db = firebase.firestore();
+const auth = firebase.auth();
 
 // ============= CONSTANTS =============
 const API_BASE = 'https://gumax-backend-production.up.railway.app';
 const COMMISSION_RATE = 0.02;
-const SESSION_KEY = 'gumax_reseller_session';
+
+// Admins têm acesso automático ao painel de revendedor também
+const ADMIN_EMAILS = [
+  'gumaxskins@gmail.com',
+  'cauehorde@gmail.com'
+];
 
 // ============= STATE =============
 let currentUser = null;
-let steamInventory = [];
-let selectedSkins = [];
 let mySkins = [];
 let mySales = [];
 
 // ============= AUTH =============
-function loginWithSteam() {
-  const returnUrl = window.location.origin + '/revendedor.html';
-  window.location.href = `${API_BASE}/api/steam-auth?action=login&returnUrl=${encodeURIComponent(returnUrl)}&role=reseller`;
+async function loginWithGoogle() {
+  const provider = new firebase.auth.GoogleAuthProvider();
+  provider.setCustomParameters({ prompt: 'select_account' });
+
+  try {
+    const result = await auth.signInWithPopup(provider);
+    const user = result.user;
+    currentUser = {
+      uid: user.uid,
+      email: (user.email || '').toLowerCase(),
+      name: user.displayName || 'Revendedor',
+      avatar: user.photoURL || '',
+      loginTime: Date.now()
+    };
+    await registerReseller();
+    showDashboard();
+  } catch (e) {
+    console.error('Login error:', e);
+    showToast('Erro ao fazer login: ' + e.message, 'error');
+  }
 }
 
 function checkAuth() {
-  // Check URL params (Steam callback)
-  const params = new URLSearchParams(window.location.search);
-  if (params.has('steam_id')) {
-    currentUser = {
-      steamId: params.get('steam_id'),
-      steamName: params.get('steam_name') || 'Revendedor',
-      avatar: params.get('avatar') || '',
-      loginTime: Date.now()
-    };
-    localStorage.setItem(SESSION_KEY, JSON.stringify(currentUser));
-    window.history.replaceState({}, document.title, window.location.pathname);
-    registerReseller();
-    showDashboard();
-    return;
-  }
-
-  // Check saved session
-  const saved = localStorage.getItem(SESSION_KEY);
-  if (saved) {
-    currentUser = JSON.parse(saved);
-    const elapsed = Date.now() - currentUser.loginTime;
-    if (elapsed < 7 * 24 * 60 * 60 * 1000) { // 7 days
+  auth.onAuthStateChanged(async user => {
+    if (user) {
+      currentUser = {
+        uid: user.uid,
+        email: (user.email || '').toLowerCase(),
+        name: user.displayName || 'Revendedor',
+        avatar: user.photoURL || '',
+        loginTime: Date.now()
+      };
+      await registerReseller();
       showDashboard();
-      return;
+    } else {
+      document.getElementById('loginScreen').style.display = 'flex';
     }
-  }
-
-  document.getElementById('loginScreen').style.display = 'flex';
+  });
 }
 
 async function registerReseller() {
   if (!currentUser) return;
   try {
-    const doc = await db.collection('resellers').doc(currentUser.steamId).get();
+    const docRef = db.collection('resellers').doc(currentUser.uid);
+    const doc = await docRef.get();
+
+    // Admins ficam auto-aprovados; outros ficam pendentes
+    const isAdmin = ADMIN_EMAILS.includes(currentUser.email);
+
     if (!doc.exists) {
-      await db.collection('resellers').doc(currentUser.steamId).set({
-        steamId: currentUser.steamId,
-        steamName: currentUser.steamName,
+      await docRef.set({
+        uid: currentUser.uid,
+        email: currentUser.email,
+        name: currentUser.name,
         avatar: currentUser.avatar,
-        status: 'pending',
+        status: isAdmin ? 'active' : 'pending',
         balance: 0,
         totalSales: 0,
         salesCount: 0,
         skinsCount: 0,
+        isAdmin: isAdmin,
         createdAt: new Date().toISOString()
       });
-      showToast('Cadastro enviado! Aguarde aprovação do administrador.');
+      if (!isAdmin) {
+        showToast('Cadastro enviado! Aguarde aprovação do administrador.');
+      }
     }
   } catch (e) {
     console.error('Register error:', e);
@@ -765,7 +839,7 @@ function showDashboard() {
   document.getElementById('dashboard').style.display = 'block';
 
   if (currentUser) {
-    document.getElementById('userName').textContent = currentUser.steamName;
+    document.getElementById('userName').textContent = currentUser.name;
     if (currentUser.avatar) {
       document.getElementById('userAvatar').src = currentUser.avatar;
     }
@@ -774,8 +848,8 @@ function showDashboard() {
   loadAllData();
 }
 
-function logout() {
-  localStorage.removeItem(SESSION_KEY);
+async function logout() {
+  await auth.signOut();
   currentUser = null;
   location.reload();
 }
@@ -787,13 +861,9 @@ function switchTab(name) {
   document.getElementById('section-' + name).classList.add('active');
 
   const tabs = document.querySelectorAll('.tab');
-  const names = ['skins', 'inventory', 'sales', 'earnings'];
+  const names = ['skins', 'add', 'sales', 'earnings'];
   const index = names.indexOf(name);
   if (index >= 0 && tabs[index]) tabs[index].classList.add('active');
-
-  if (name === 'inventory' && steamInventory.length === 0) {
-    loadSteamInventory();
-  }
 }
 
 // ============= DATA LOADING =============
@@ -809,7 +879,7 @@ async function loadAllData() {
 async function loadMySkins() {
   try {
     const snapshot = await db.collection('skins')
-      .where('sellerId', '==', currentUser.steamId)
+      .where('sellerId', '==', currentUser.uid)
       .orderBy('createdAt', 'desc')
       .get();
     mySkins = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
@@ -822,7 +892,7 @@ async function loadMySkins() {
 async function loadMySales() {
   try {
     const snapshot = await db.collection('orders')
-      .where('sellerId', '==', currentUser.steamId)
+      .where('sellerId', '==', currentUser.uid)
       .orderBy('createdAt', 'desc')
       .get();
     mySales = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
@@ -835,7 +905,7 @@ async function loadMySales() {
 
 async function loadMyBalance() {
   try {
-    const doc = await db.collection('resellers').doc(currentUser.steamId).get();
+    const doc = await db.collection('resellers').doc(currentUser.uid).get();
     if (doc.exists) {
       const data = doc.data();
       document.getElementById('userBalance').textContent = fmtR(data.balance || 0);
@@ -845,166 +915,81 @@ async function loadMyBalance() {
   }
 }
 
-// ============= STEAM INVENTORY =============
-async function loadSteamInventory() {
-  document.getElementById('inventoryLoading').style.display = 'block';
-  document.getElementById('inventoryGrid').style.display = 'none';
-  document.getElementById('inventoryEmpty').style.display = 'none';
-
-  try {
-    const response = await fetch(`${API_BASE}/api/steam-inventory/${currentUser.steamId}`);
-    if (!response.ok) throw new Error('Falha ao carregar inventário');
-
-    const data = await response.json();
-    steamInventory = data.items || [];
-
-    document.getElementById('inventoryLoading').style.display = 'none';
-
-    if (steamInventory.length === 0) {
-      document.getElementById('inventoryEmpty').style.display = 'block';
-      return;
-    }
-
-    renderInventory();
-    document.getElementById('inventoryGrid').style.display = 'grid';
-  } catch (e) {
-    console.error('Inventory error:', e);
-    document.getElementById('inventoryLoading').innerHTML = `
-      <p style="color: var(--danger);">Erro ao carregar inventário Steam</p>
-      <p style="color: var(--text-muted); margin-top: 8px; font-size: 13px;">${e.message}</p>
-      <p style="color: var(--text-muted); margin-top: 8px; font-size: 13px;">Certifique-se de que seu inventário Steam está público.</p>
-      <button class="btn btn-secondary" style="margin-top: 16px;" onclick="loadSteamInventory()">Tentar Novamente</button>
-    `;
+// ============= ADD SKIN (Formulário Manual) =============
+function attachAddFormListeners() {
+  const priceInput = document.getElementById('addSkinPrice');
+  if (priceInput && !priceInput.dataset.attached) {
+    priceInput.addEventListener('input', updateAddPreview);
+    priceInput.dataset.attached = 'true';
   }
 }
 
-function refreshInventory() {
-  steamInventory = [];
-  selectedSkins = [];
-  updateSelectedCount();
-  loadSteamInventory();
+function updateAddPreview() {
+  const price = parseFloat(document.getElementById('addSkinPrice').value) || 0;
+  const commission = price * COMMISSION_RATE;
+  const net = price - commission;
+  document.getElementById('addSkinCommissionPreview').textContent = fmtR(commission);
+  document.getElementById('addSkinNetPreview').textContent = fmtR(net);
 }
 
-function renderInventory() {
-  const grid = document.getElementById('inventoryGrid');
-  const listedNames = mySkins.filter(s => s.active).map(s => s.name);
-
-  grid.innerHTML = steamInventory.map((item, i) => {
-    const isListed = listedNames.includes(item.name);
-    return `
-      <div class="inv-card ${isListed ? 'already-listed' : ''}" onclick="${isListed ? '' : `toggleSelect(${i})`}" id="inv-${i}">
-        <div class="inv-check">✓</div>
-        ${item.image ? `<img src="${item.image}" alt="${item.name}">` : '<div style="height:100px;background:var(--bg-elevated);border-radius:6px;"></div>'}
-        <div class="inv-name">${item.name}</div>
-        <div class="inv-wear">${item.wear || ''} ${item.float ? '• FV ' + item.float.toFixed(3) : ''}</div>
-      </div>
-    `;
-  }).join('');
+function clearAddForm() {
+  document.getElementById('addSkinName').value = '';
+  document.getElementById('addSkinImage').value = '';
+  document.getElementById('addSkinPrice').value = '';
+  document.getElementById('addSkinDiscount').value = '0';
+  document.getElementById('addSkinFloat').value = '';
+  document.getElementById('addSkinWear').value = 'FT';
+  document.getElementById('addSkinRarity').value = 'Covert';
+  document.getElementById('addSkinSteamUrl').value = '';
+  updateAddPreview();
 }
 
-function toggleSelect(index) {
-  const card = document.getElementById('inv-' + index);
-  const idx = selectedSkins.indexOf(index);
-
-  if (idx >= 0) {
-    selectedSkins.splice(idx, 1);
-    card.classList.remove('selected');
-  } else {
-    selectedSkins.push(index);
-    card.classList.add('selected');
-  }
-
-  updateSelectedCount();
-}
-
-function updateSelectedCount() {
-  const btn = document.getElementById('listSelectedBtn');
-  const count = document.getElementById('selectedCount');
-  count.textContent = selectedSkins.length;
-  btn.style.display = selectedSkins.length > 0 ? 'inline-flex' : 'none';
-}
-
-// ============= LIST SKINS MODAL =============
-function openListModal() {
-  if (selectedSkins.length === 0) return;
-
-  const container = document.getElementById('listModalItems');
-  container.innerHTML = selectedSkins.map((idx, i) => {
-    const item = steamInventory[idx];
-    return `
-      <div style="display: flex; align-items: center; gap: 16px; padding: 12px; background: var(--bg-elevated); border-radius: 8px; margin-bottom: 8px;">
-        ${item.image ? `<img src="${item.image}" style="width: 60px; height: 40px; object-fit: contain;">` : ''}
-        <div style="flex: 1;">
-          <div style="font-size: 13px; font-weight: 600;">${item.name}</div>
-          <div style="font-size: 11px; color: var(--text-muted);">${item.wear || ''}</div>
-        </div>
-        <div>
-          <label style="font-size: 11px; color: var(--text-muted);">Preço (R$)</label>
-          <input type="number" class="form-control" id="listPrice-${i}" placeholder="0.00" step="0.01" style="width: 120px;">
-        </div>
-      </div>
-    `;
-  }).join('');
-
-  document.getElementById('listModal').classList.add('show');
-}
-
-function closeListModal() {
-  document.getElementById('listModal').classList.remove('show');
-}
-
-async function confirmListSkins() {
+async function submitNewSkin() {
   if (!currentUser) return;
 
-  const skinsToList = [];
-  for (let i = 0; i < selectedSkins.length; i++) {
-    const price = parseFloat(document.getElementById('listPrice-' + i).value);
-    if (!price || price <= 0) {
-      showToast('Defina o preço para todas as skins', 'error');
-      return;
-    }
-    const item = steamInventory[selectedSkins[i]];
-    skinsToList.push({
-      name: item.name,
-      price: price,
-      discount: 0,
-      float: item.float || 0,
-      wear: item.wear || 'FT',
-      rarity: item.rarity || 'Mil-Spec',
-      image: item.image || '',
-      delivery: 'full',
-      seller: 'reseller',
-      sellerId: currentUser.steamId,
-      sellerName: currentUser.steamName,
-      active: true,
-      inStock: true,
-      steamAssetId: item.assetId || '',
-      createdAt: new Date().toISOString()
-    });
+  const name = document.getElementById('addSkinName').value.trim();
+  const price = parseFloat(document.getElementById('addSkinPrice').value);
+
+  if (!name) {
+    showToast('Informe o nome da skin', 'error');
+    return;
+  }
+  if (!price || price <= 0) {
+    showToast('Informe um preço válido', 'error');
+    return;
   }
 
+  const skinData = {
+    name: name,
+    price: price,
+    discount: parseInt(document.getElementById('addSkinDiscount').value) || 0,
+    float: parseFloat(document.getElementById('addSkinFloat').value) || 0,
+    wear: document.getElementById('addSkinWear').value,
+    rarity: document.getElementById('addSkinRarity').value,
+    image: document.getElementById('addSkinImage').value.trim(),
+    steamInventoryUrl: document.getElementById('addSkinSteamUrl').value.trim(),
+    delivery: 'full',
+    seller: 'reseller',
+    sellerId: currentUser.uid,
+    sellerEmail: currentUser.email,
+    sellerName: currentUser.name,
+    active: true,
+    inStock: true,
+    createdAt: new Date().toISOString()
+  };
+
   try {
-    const batch = db.batch();
-    skinsToList.forEach(skin => {
-      const ref = db.collection('skins').doc();
-      batch.set(ref, skin);
+    await db.collection('skins').add(skinData);
+    await db.collection('resellers').doc(currentUser.uid).update({
+      skinsCount: firebase.firestore.FieldValue.increment(1)
     });
 
-    // Update reseller skin count
-    batch.update(db.collection('resellers').doc(currentUser.steamId), {
-      skinsCount: firebase.firestore.FieldValue.increment(skinsToList.length)
-    });
-
-    await batch.commit();
-
-    showToast(`${skinsToList.length} skin(s) listada(s) com sucesso!`);
-    closeListModal();
-    selectedSkins = [];
-    updateSelectedCount();
+    showToast('Skin publicada com sucesso!');
+    clearAddForm();
     await loadMySkins();
-    renderInventory();
+    switchTab('skins');
   } catch (e) {
-    showToast('Erro ao listar skins: ' + e.message, 'error');
+    showToast('Erro ao publicar: ' + e.message, 'error');
   }
 }
 
@@ -1014,7 +999,7 @@ function renderMySkins() {
   document.getElementById('statListed').textContent = mySkins.filter(s => s.active).length;
 
   if (mySkins.length === 0) {
-    tbody.innerHTML = '<tr><td colspan="6" class="empty-state"><p>Nenhuma skin listada. Vá em "Inventário Steam" para listar.</p></td></tr>';
+    tbody.innerHTML = '<tr><td colspan="6" class="empty-state"><p>Nenhuma skin listada. Clique em "+ Adicionar Skin" para listar uma nova.</p></td></tr>';
     return;
   }
 
@@ -1059,7 +1044,7 @@ async function removeMyListing(id) {
   if (!confirm('Remover esta skin do marketplace?')) return;
   try {
     await db.collection('skins').doc(id).update({ active: false });
-    await db.collection('resellers').doc(currentUser.steamId).update({
+    await db.collection('resellers').doc(currentUser.uid).update({
       skinsCount: firebase.firestore.FieldValue.increment(-1)
     });
     showToast('Skin removida do marketplace');
@@ -1132,8 +1117,8 @@ async function submitWithdraw() {
 
   try {
     await db.collection('withdrawals').add({
-      resellerId: currentUser.steamId,
-      resellerName: currentUser.steamName,
+      resellerId: currentUser.uid,
+      resellerName: currentUser.name,
       amount: amount,
       pixKey: pixKey,
       status: 'pending',
@@ -1169,6 +1154,9 @@ function showToast(msg, type = 'success') {
 
 // ============= INIT =============
 checkAuth();
+document.addEventListener('DOMContentLoaded', attachAddFormListeners);
+// Attach after a short delay in case DOM already loaded
+setTimeout(attachAddFormListeners, 500);
 </script>
 
 </body>
