@@ -1,0 +1,304 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Gumax Skins | Meu Perfil</title>
+<link rel="icon" href="https://static.wixstatic.com/media/874864_b598e856481740e7ae752771a661c242~mv2.png/v1/fill/w_64,h_64,al_c,q_85,enc_auto/874864_b598e856481740e7ae752771a661c242~mv2.png">
+<link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800;900&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<script src="https://www.gstatic.com/firebasejs/10.5.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.5.0/firebase-auth-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.5.0/firebase-firestore-compat.js"></script>
+
+<style>
+* { box-sizing: border-box; margin: 0; padding: 0; }
+:root {
+  --bg: #08060e; --bg-card: #110e1a; --bg-elevated: #1a1528; --bg-input: #13101e;
+  --text-primary: #ece8f4; --text-secondary: #9890a8; --text-muted: #5e5670;
+  --border: #241e35; --primary: #8B5CF6; --primary-dark: #7C3AED; --primary-light: #A78BFA;
+  --accent-yellow: #FACC15; --accent-green: #10b981; --accent-red: #ef4444;
+}
+body {
+  background: var(--bg);
+  background-image:
+    radial-gradient(ellipse at 50% 0%, rgba(139, 92, 246, .07) 0%, transparent 50%),
+    radial-gradient(ellipse at 80% 100%, rgba(250, 204, 21, .03) 0%, transparent 40%);
+  color: var(--text-primary);
+  font-family: 'Outfit', 'Segoe UI', sans-serif;
+  min-height: 100vh;
+  line-height: 1.5;
+}
+
+.nav {
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 20px 40px; border-bottom: 1px solid var(--border);
+  background: rgba(8, 6, 14, .8); backdrop-filter: blur(12px);
+  position: sticky; top: 0; z-index: 100;
+}
+.nav-brand { font-size: 22px; font-weight: 800; color: var(--primary-light); letter-spacing: -0.5px; text-decoration: none; }
+.nav-links { display: flex; gap: 28px; }
+.nav-link { color: var(--text-secondary); text-decoration: none; font-weight: 500; transition: color .2s; }
+.nav-link:hover { color: var(--primary-light); }
+.nav-link.active { color: var(--primary-light); }
+
+.container {
+  max-width: 720px; margin: 48px auto; padding: 0 24px;
+}
+.card {
+  background: var(--bg-card); border: 1px solid var(--border); border-radius: 16px;
+  padding: 32px;
+}
+h1 {
+  font-size: 26px; font-weight: 800; margin-bottom: 6px;
+  letter-spacing: -0.5px;
+}
+.subtitle {
+  color: var(--text-secondary); font-size: 14px; margin-bottom: 28px;
+}
+.field { margin-bottom: 20px; }
+.field label {
+  display: block; font-size: 13px; font-weight: 600;
+  color: var(--text-secondary); margin-bottom: 6px;
+  text-transform: uppercase; letter-spacing: 0.5px;
+}
+.field input, .field textarea {
+  width: 100%; background: var(--bg-input); border: 1px solid var(--border);
+  border-radius: 10px; padding: 12px 14px; color: var(--text-primary);
+  font-family: inherit; font-size: 14px;
+  transition: border-color .2s;
+}
+.field input:focus, .field textarea:focus {
+  outline: none; border-color: var(--primary);
+}
+.field .hint {
+  font-size: 12px; color: var(--text-muted); margin-top: 6px;
+}
+.field .hint a { color: var(--primary-light); }
+
+.btn {
+  display: inline-flex; align-items: center; gap: 8px;
+  border: none; border-radius: 10px; padding: 12px 22px;
+  font-family: inherit; font-weight: 600; font-size: 14px;
+  cursor: pointer; transition: background .2s, transform .1s;
+}
+.btn-primary { background: var(--primary); color: white; }
+.btn-primary:hover { background: var(--primary-dark); }
+.btn-primary:disabled { background: var(--bg-elevated); color: var(--text-muted); cursor: not-allowed; }
+.btn-ghost { background: transparent; border: 1px solid var(--border); color: var(--text-secondary); }
+.btn-ghost:hover { border-color: var(--primary); color: var(--primary-light); }
+
+.actions { display: flex; gap: 12px; justify-content: flex-end; margin-top: 24px; }
+
+.account-meta {
+  background: var(--bg-elevated); border: 1px solid var(--border);
+  border-radius: 10px; padding: 14px 16px; margin-bottom: 24px;
+  font-size: 13px; color: var(--text-secondary); line-height: 1.7;
+}
+.account-meta strong { color: var(--text-primary); }
+
+.toast {
+  position: fixed; bottom: 30px; left: 50%; transform: translateX(-50%) translateY(30px);
+  background: var(--bg-elevated); border: 1px solid var(--border);
+  padding: 12px 24px; border-radius: 10px; color: var(--text-primary);
+  font-weight: 500; opacity: 0; transition: all .3s; z-index: 1000;
+  pointer-events: none; font-size: 14px;
+}
+.toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
+.toast.error { border-color: var(--accent-red); color: var(--accent-red); }
+.toast.success { border-color: var(--accent-green); color: var(--accent-green); }
+
+.loader {
+  border: 3px solid var(--border); border-top: 3px solid var(--primary);
+  border-radius: 50%; width: 24px; height: 24px;
+  animation: spin 1s linear infinite; margin: 40px auto;
+}
+@keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+
+.login-prompt { text-align: center; padding: 48px 24px; }
+.login-prompt h2 { font-size: 22px; font-weight: 700; margin-bottom: 8px; }
+.login-prompt p { color: var(--text-secondary); margin-bottom: 24px; }
+</style>
+</head>
+<body>
+
+<nav class="nav">
+  <a class="nav-brand" href="index.html">Gumax Skins</a>
+  <div class="nav-links">
+    <a class="nav-link" href="index.html">Loja</a>
+    <a class="nav-link" href="analise.html">Análise</a>
+    <a class="nav-link active" href="perfil.html">Meu Perfil</a>
+  </div>
+  <div>
+    <button class="btn btn-ghost" id="logoutBtn" onclick="doLogout()" style="display:none;">Sair</button>
+  </div>
+</nav>
+
+<div class="container">
+  <div class="card" id="profileCard">
+    <div class="loader" id="loading"></div>
+    <div id="loggedOut" class="login-prompt" style="display:none;">
+      <h2>Você precisa entrar</h2>
+      <p>Faça login com Steam ou Google para editar seu perfil.</p>
+      <a class="btn btn-primary" href="index.html">Voltar à loja e entrar</a>
+    </div>
+    <div id="loggedIn" style="display:none;">
+      <h1>Meu Perfil</h1>
+      <p class="subtitle">Mantenha seus dados atualizados para agilizar compras, entregas e suporte.</p>
+
+      <div class="account-meta" id="accountMeta"></div>
+
+      <form id="profileForm" onsubmit="saveProfile(event)">
+        <div class="field">
+          <label for="fullName">Nome completo</label>
+          <input type="text" id="fullName" placeholder="Seu nome completo" required>
+        </div>
+
+        <div class="field">
+          <label for="whatsapp">WhatsApp</label>
+          <input type="tel" id="whatsapp" placeholder="(11) 99999-9999" required>
+          <div class="hint">Usado para contato de suporte e avisos sobre pedidos.</div>
+        </div>
+
+        <div class="field">
+          <label for="tradeLink">Steam Trade URL</label>
+          <input type="url" id="tradeLink" placeholder="https://steamcommunity.com/tradeoffer/new/?partner=..." required>
+          <div class="hint">
+            Precisamos disso para entregar suas skins. <a href="https://steamcommunity.com/my/tradeoffers/privacy" target="_blank">Pegar meu Trade URL</a>.
+          </div>
+        </div>
+
+        <div class="field">
+          <label for="email">Email de contato (opcional)</label>
+          <input type="email" id="email" placeholder="voce@exemplo.com">
+        </div>
+
+        <div class="actions">
+          <a class="btn btn-ghost" href="index.html">Voltar</a>
+          <button type="submit" class="btn btn-primary" id="saveBtn">Salvar</button>
+        </div>
+      </form>
+    </div>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+const firebaseConfig = {
+  apiKey: "AIzaSyCN0TV59kJNQMsaQ-5d9dSTowirxFcuHG0",
+  authDomain: "gumax-skins.firebaseapp.com",
+  projectId: "gumax-skins",
+  storageBucket: "gumax-skins.firebasestorage.app",
+  messagingSenderId: "678525908778",
+  appId: "1:678525908778:web:56ee6d6a809c013b341053"
+};
+firebase.initializeApp(firebaseConfig);
+const auth = firebase.auth();
+const db = firebase.firestore();
+
+function showToast(msg, type = '') {
+  const t = document.getElementById('toast');
+  t.textContent = msg;
+  t.className = 'toast show ' + type;
+  setTimeout(() => t.classList.remove('show'), 2800);
+}
+
+function maskWhatsapp(v) {
+  const d = v.replace(/\D/g, '').slice(0, 11);
+  if (d.length <= 2) return d;
+  if (d.length <= 6) return `(${d.slice(0,2)}) ${d.slice(2)}`;
+  if (d.length <= 10) return `(${d.slice(0,2)}) ${d.slice(2,6)}-${d.slice(6)}`;
+  return `(${d.slice(0,2)}) ${d.slice(2,7)}-${d.slice(7)}`;
+}
+
+document.getElementById('whatsapp').addEventListener('input', (e) => {
+  e.target.value = maskWhatsapp(e.target.value);
+});
+
+auth.onAuthStateChanged(async (user) => {
+  document.getElementById('loading').style.display = 'none';
+  if (!user) {
+    document.getElementById('loggedOut').style.display = '';
+    document.getElementById('loggedIn').style.display = 'none';
+    document.getElementById('logoutBtn').style.display = 'none';
+    return;
+  }
+  document.getElementById('loggedIn').style.display = '';
+  document.getElementById('loggedOut').style.display = 'none';
+  document.getElementById('logoutBtn').style.display = '';
+
+  // Descobre provedor (steam via customToken vem como firebase.auth.Custom)
+  const provider = (user.providerData && user.providerData[0] && user.providerData[0].providerId)
+    || (user.uid && user.uid.length === 17 && /^\d+$/.test(user.uid) ? 'steam' : 'custom');
+
+  // Carrega perfil do Firestore
+  try {
+    const snap = await db.collection('users').doc(user.uid).get();
+    const data = snap.exists ? snap.data() : {};
+    document.getElementById('fullName').value = data.fullName || user.displayName || '';
+    document.getElementById('whatsapp').value = data.whatsapp ? maskWhatsapp(data.whatsapp) : '';
+    document.getElementById('tradeLink').value = data.tradeLink || '';
+    document.getElementById('email').value = data.email || user.email || '';
+
+    const meta = document.getElementById('accountMeta');
+    const parts = [];
+    if (provider === 'steam' || data.steamId) {
+      parts.push(`Login via <strong>Steam</strong>`);
+      parts.push(`Steam ID: <strong>${data.steamId || user.uid}</strong>`);
+    } else if (provider.includes('google')) {
+      parts.push(`Login via <strong>Google</strong>`);
+      if (user.email) parts.push(`${user.email}`);
+    } else {
+      parts.push(`UID: <strong>${user.uid.slice(0, 12)}…</strong>`);
+    }
+    meta.innerHTML = parts.join(' &nbsp;·&nbsp; ');
+  } catch (e) {
+    console.error('[profile] load error', e);
+    showToast('Erro ao carregar perfil: ' + e.message, 'error');
+  }
+});
+
+async function saveProfile(ev) {
+  ev.preventDefault();
+  const user = auth.currentUser;
+  if (!user) { showToast('Faça login primeiro', 'error'); return; }
+
+  const fullName = document.getElementById('fullName').value.trim();
+  const whatsapp = document.getElementById('whatsapp').value.replace(/\D/g, '');
+  const tradeLink = document.getElementById('tradeLink').value.trim();
+  const email = document.getElementById('email').value.trim();
+
+  if (!fullName || fullName.length < 3) { showToast('Nome inválido', 'error'); return; }
+  if (whatsapp.length < 10) { showToast('WhatsApp inválido', 'error'); return; }
+  if (!tradeLink.includes('steamcommunity.com/tradeoffer')) {
+    showToast('Trade URL inválido. Deve começar com steamcommunity.com/tradeoffer...', 'error');
+    return;
+  }
+
+  const btn = document.getElementById('saveBtn');
+  btn.disabled = true;
+  btn.textContent = 'Salvando...';
+
+  try {
+    await db.collection('users').doc(user.uid).set({
+      fullName, whatsapp, tradeLink, email,
+      updatedAt: new Date().toISOString(),
+    }, { merge: true });
+    showToast('Perfil salvo com sucesso!', 'success');
+  } catch (e) {
+    console.error('[profile] save error', e);
+    showToast('Erro ao salvar: ' + e.message, 'error');
+  } finally {
+    btn.disabled = false;
+    btn.textContent = 'Salvar';
+  }
+}
+
+async function doLogout() {
+  try { await auth.signOut(); } catch (e) {}
+  window.location.href = 'index.html';
+}
+</script>
+
+</body>
+</html>
