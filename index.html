@@ -1887,10 +1887,14 @@ footer {
         <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="9" cy="21" r="1"/><circle cx="20" cy="21" r="1"/><path d="M1 1h4l2.68 13.39a2 2 0 002 1.61h9.72a2 2 0 002-1.61L23 6H6"/></svg>
         <div class="cart-badge" id="cartBadge" style="display: none;">0</div>
       </div>
-      <button class="btn btn-primary btn-small" onclick="openSteamLogin()">
+      <button class="btn btn-primary btn-small" id="headerLoginBtn" onclick="openSteamLogin()">
         <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor"><path d="M11.979 0C5.678 0 .511 4.86.022 11.037l6.432 2.658c.545-.371 1.203-.59 1.912-.59.063 0 .125.004.188.006l2.861-4.142V8.91c0-2.495 2.028-4.524 4.524-4.524 2.494 0 4.524 2.031 4.524 4.527s-2.03 4.525-4.524 4.525h-.105l-4.076 2.911c0 .052.004.105.004.159 0 1.875-1.515 3.396-3.39 3.396-1.635 0-3.016-1.173-3.331-2.727L.436 15.27C1.862 20.307 6.486 24 11.979 24c6.627 0 11.999-5.373 11.999-12S18.605 0 11.979 0zM7.54 18.21l-1.473-.61c.262.543.714.999 1.314 1.25 1.297.539 2.793-.076 3.332-1.375.263-.63.264-1.322.005-1.955-.258-.632-.725-1.123-1.354-1.384a2.47 2.47 0 00-1.29-.211l1.523.63c.956.4 1.409 1.5 1.013 2.457-.397.96-1.494 1.412-2.45 1.013l-1.62-.815zm8.4-5.685c-1.665 0-3.023-1.358-3.023-3.025 0-1.665 1.358-3.024 3.023-3.024 1.665 0 3.024 1.359 3.024 3.024 0 1.667-1.359 3.025-3.024 3.025zm0-5.443c-1.336 0-2.42 1.084-2.42 2.42 0 1.334 1.084 2.418 2.42 2.418s2.42-1.084 2.42-2.418c0-1.336-1.084-2.42-2.42-2.42z"/></svg>
         Entrar com Steam
       </button>
+      <div id="headerProfileArea" style="display: none; align-items: center; gap: 8px;">
+        <a class="btn btn-small" href="perfil.html" style="background: rgba(139,92,246,0.12); border: 1px solid rgba(139,92,246,0.35); color: var(--primary-light);">👤 Meu perfil</a>
+        <button class="btn btn-small" onclick="logoutUser()" style="background: transparent; border: 1px solid var(--border); color: var(--text-muted);">Sair</button>
+      </div>
     </div>
   </div>
 </header>
@@ -2154,26 +2158,14 @@ footer {
         <h3 class="modal-title" style="margin-bottom: 8px;">Conecte sua Steam</h3>
         <p style="font-size: 13px; color: var(--text-secondary); line-height: 1.6;">Faça login com sua conta Steam para comprar skins e receber no seu inventário.</p>
       </div>
-      <button class="btn btn-primary" style="width: 100%; padding: 16px; border-radius: 14px; background: #171a21; border: 1px solid #2a475e; color: #c7d5e0; margin-bottom: 20px;" onclick="redirectToSteamAuth()">
+      <button class="btn btn-primary" style="width: 100%; padding: 16px; border-radius: 14px; background: #171a21; border: 1px solid #2a475e; color: #c7d5e0; margin-bottom: 16px;" onclick="redirectToSteamAuth()">
         <svg width="22" height="22" viewBox="0 0 24 24" fill="currentColor"><path d="M11.979 0C5.678 0 .511 4.86.022 11.037l6.432 2.658c.545-.371 1.203-.59 1.912-.59.063 0 .125.004.188.006l2.861-4.142V8.91c0-2.495 2.028-4.524 4.524-4.524 2.494 0 4.524 2.031 4.524 4.527s-2.03 4.525-4.524 4.525h-.105l-4.076 2.911c0 .052.004.105.004.159 0 1.875-1.515 3.396-3.39 3.396-1.635 0-3.016-1.173-3.331-2.727L.436 15.27C1.862 20.307 6.486 24 11.979 24c6.627 0 11.999-5.373 11.999-12S18.605 0 11.979 0zM7.54 18.21l-1.473-.61c.262.543.714.999 1.314 1.25 1.297.539 2.793-.076 3.332-1.375.263-.63.264-1.322.005-1.955-.258-.632-.725-1.123-1.354-1.384a2.47 2.47 0 00-1.29-.211l1.523.63c.956.4 1.409 1.5 1.013 2.457-.397.96-1.494 1.412-2.45 1.013l-1.62-.815zm8.4-5.685c-1.665 0-3.023-1.358-3.023-3.025 0-1.665 1.358-3.024 3.023-3.024 1.665 0 3.024 1.359 3.024 3.024 0 1.667-1.359 3.025-3.024 3.025zm0-5.443c-1.336 0-2.42 1.084-2.42 2.42 0 1.334 1.084 2.418 2.42 2.418s2.42-1.084 2.42-2.418c0-1.336-1.084-2.42-2.42-2.42z"/></svg>
         Entrar com Steam
       </button>
-      <div style="background: var(--bg-input); border-radius: 14px; border: 1px solid var(--border); padding: 20px;">
-        <div style="font-size: 12px; font-weight: 700; color: var(--text-muted); margin-bottom: 16px; letter-spacing: 0.5px;">INFORMAÇÕES ADICIONAIS</div>
-        <div style="margin-bottom: 12px;">
-          <label style="font-size: 11px; font-weight: 600; color: var(--text-secondary); display: block; margin-bottom: 6px;">Nome completo</label>
-          <input type="text" id="steamName" placeholder="Seu nome" style="width: 100%; background: var(--bg); border: 1px solid var(--border); border-radius: 10px; padding: 12px 14px; color: var(--text-primary); font-size: 13px; font-family: inherit; outline: none;">
-        </div>
-        <div style="margin-bottom: 12px;">
-          <label style="font-size: 11px; font-weight: 600; color: var(--text-secondary); display: block; margin-bottom: 6px;">WhatsApp</label>
-          <input type="tel" id="steamWhatsapp" placeholder="(00) 00000-0000" style="width: 100%; background: var(--bg); border: 1px solid var(--border); border-radius: 10px; padding: 12px 14px; color: var(--text-primary); font-size: 13px; font-family: inherit; outline: none;">
-        </div>
-        <div>
-          <label style="font-size: 11px; font-weight: 600; color: var(--text-secondary); display: block; margin-bottom: 6px;">Trade Link</label>
-          <input type="url" id="steamTradeLink" placeholder="https://steamcommunity.com/tradeoffer/..." style="width: 100%; background: var(--bg); border: 1px solid var(--border); border-radius: 10px; padding: 12px 14px; color: var(--text-primary); font-size: 13px; font-family: inherit; outline: none;">
-        </div>
-      </div>
-      <div style="display: flex; gap: 8px; margin-top: 16px; font-size: 11px; color: var(--text-muted); align-items: flex-start;">
+      <p style="font-size: 12px; color: var(--text-muted); text-align: center; margin-bottom: 16px;">
+        Depois do login você completa seu perfil (WhatsApp, Trade Link etc.) em <a href="perfil.html" style="color: var(--primary-light);">Meu perfil</a>.
+      </p>
+      <div style="display: flex; gap: 8px; margin-top: 8px; font-size: 11px; color: var(--text-muted); align-items: flex-start;">
         <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="margin-top: 2px; flex-shrink: 0;"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
         <span>Seus dados são protegidos e nunca compartilhados. Login via API oficial da Valve.</span>
       </div>
@@ -2297,10 +2289,29 @@ document.addEventListener('DOMContentLoaded', function() {
 
   // Check Steam callback
   const params = new URLSearchParams(window.location.search);
-  if (params.has('steam_id')) {
+  if (params.get('steam_callback') === '1') {
     handleSteamCallback();
   }
+
+  // Auth state listener — mostra "Meu perfil" + botão sair quando logado
+  auth.onAuthStateChanged(user => {
+    const loginBtn = document.getElementById('headerLoginBtn');
+    const profileArea = document.getElementById('headerProfileArea');
+    if (!loginBtn || !profileArea) return;
+    if (user) {
+      loginBtn.style.display = 'none';
+      profileArea.style.display = 'flex';
+    } else {
+      loginBtn.style.display = '';
+      profileArea.style.display = 'none';
+    }
+  });
 });
+
+async function logoutUser() {
+  try { await auth.signOut(); } catch (e) {}
+  showToast('Você saiu da conta');
+}
 
 function initializeUI() {
   // Category buttons
@@ -2813,44 +2824,69 @@ function closeSteamLogin(event) {
   document.getElementById('steamLoginModal').classList.add('hidden');
 }
 
-function redirectToSteamAuth() {
-  const name = document.getElementById('steamName').value;
-  const whatsapp = document.getElementById('steamWhatsapp').value;
-  const tradeLink = document.getElementById('steamTradeLink').value;
-
-  if (!name || !whatsapp || !tradeLink) {
-    showToast('Preencha todos os campos');
-    return;
+async function redirectToSteamAuth() {
+  // Backend devolve a loginUrl do Steam OpenID; o browser redireciona.
+  // Steam volta pra essa página com ?steam_callback=1&openid.*=... e
+  // handleSteamCallback() completa o login via Firebase customToken.
+  try {
+    const r = await fetch(`${API_BASE}/api/steam-auth?action=login&returnTo=${encodeURIComponent(window.location.origin + window.location.pathname)}`);
+    const d = await r.json();
+    if (!d.loginUrl) {
+      showToast('Erro ao iniciar login Steam. Tente novamente em alguns instantes.');
+      return;
+    }
+    window.location.href = d.loginUrl;
+  } catch (e) {
+    showToast('Servidor indisponível. Tente novamente mais tarde.');
+    console.error('[Steam Auth]', e);
   }
-
-  // Save form data and redirect to Steam
-  localStorage.setItem('steam_form_data', JSON.stringify({name, whatsapp, tradeLink}));
-  window.location.href = `${API_BASE}/api/steam-auth?action=login&returnUrl=${encodeURIComponent(window.location.href)}`;
 }
 
-function handleSteamCallback() {
+async function handleSteamCallback() {
   const params = new URLSearchParams(window.location.search);
-  const steamId = params.get('steam_id');
-  const steamName = params.get('steam_name');
+  if (params.get('steam_callback') !== '1') return;
 
-  if (steamId) {
-    const formData = JSON.parse(localStorage.getItem('steam_form_data') || '{}');
-    const userData = {
-      steamId,
-      steamName,
-      name: formData.name,
-      whatsapp: formData.whatsapp,
-      tradeLink: formData.tradeLink,
-      loginTime: new Date().toISOString()
-    };
-
-    localStorage.setItem('gumax_user', JSON.stringify(userData));
-    closeSteamLogin();
-    showToast(`Bem-vindo, ${steamName}!`);
-
-    // Clean up URL
-    window.history.replaceState({}, document.title, window.location.pathname);
+  const openidParams = {};
+  for (const [k, v] of params.entries()) {
+    if (k.startsWith('openid.')) openidParams[k] = v;
   }
+  if (!openidParams['openid.claimed_id']) return;
+
+  try {
+    const r = await fetch(`${API_BASE}/api/steam-auth`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ action: 'verify', params: openidParams }),
+    });
+    const d = await r.json();
+    if (d.success && d.firebaseCustomToken) {
+      await auth.signInWithCustomToken(d.firebaseCustomToken);
+      closeSteamLogin();
+      showToast('Login Steam realizado!');
+      // Se ainda não preencheu perfil, manda pra página de perfil
+      try {
+        const uid = auth.currentUser && auth.currentUser.uid;
+        if (uid) {
+          const doc = await db.collection('users').doc(uid).get();
+          const data = doc.exists ? doc.data() : {};
+          if (!data.whatsapp || !data.tradeLink) {
+            setTimeout(() => { window.location.href = 'perfil.html'; }, 800);
+          }
+        }
+      } catch (e) { console.log('[profile check]', e.message); }
+    } else {
+      showToast('Falha no login Steam: ' + (d.error || 'inválido'));
+    }
+  } catch (e) {
+    showToast('Erro no login Steam: ' + e.message);
+  }
+
+  // Limpa openid.* e steam_callback da URL
+  const url = new URL(location.href);
+  [...url.searchParams.keys()].forEach(k => {
+    if (k.startsWith('openid.') || k === 'steam_callback') url.searchParams.delete(k);
+  });
+  history.replaceState({}, '', url.toString());
 }
 
 // ============= UTILITIES =============
