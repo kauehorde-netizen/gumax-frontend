@@ -6,9 +6,9 @@
 <title>Gumax Skins | Marketplace CS2</title>
 <link rel="icon" href="https://static.wixstatic.com/media/874864_b598e856481740e7ae752771a661c242~mv2.png/v1/fill/w_64,h_64,al_c,q_85,enc_auto/874864_b598e856481740e7ae752771a661c242~mv2.png">
 <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800;900&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
-<script src="https://www.gstatic.com/firebasejs/10.5.0/firebase-app.js"></script>
-<script src="https://www.gstatic.com/firebasejs/10.5.0/firebase-auth.js"></script>
-<script src="https://www.gstatic.com/firebasejs/10.5.0/firebase-firestore.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.5.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.5.0/firebase-auth-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.5.0/firebase-firestore-compat.js"></script>
 
 <style>
 * {
@@ -194,6 +194,15 @@ nav {
 }
 .rifas-link:hover {
   -webkit-text-fill-color: var(--accent-yellow);
+}
+
+.analise-link {
+  color: var(--primary-light);
+  font-weight: 600;
+  text-decoration: none;
+}
+.analise-link:hover {
+  color: var(--accent-yellow);
 }
 
 .nav-link:hover {
@@ -1870,6 +1879,7 @@ footer {
       <span class="nav-link" onclick="scrollToSection('marketplace')">Loja</span>
       <span class="nav-link" onclick="scrollToSection('how')">Como Funciona</span>
       <span class="nav-link" onclick="scrollToSection('faq')">FAQ</span>
+      <a class="nav-link analise-link" href="analise.html">📊 Análise</a>
       <a class="nav-link rifas-link" href="https://gumax.com" target="_blank">🎰 Rifas</a>
     </nav>
     <div class="header-actions">
