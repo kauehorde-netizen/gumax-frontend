@@ -945,23 +945,38 @@ select.form-control {
           </span>
         </p>
 
-        <!-- Modo -->
+        <!-- Modo — toggle em cards grandes com visual ATIVO/INATIVO -->
         <div class="form-group">
-          <label>Modo de conversão</label>
-          <label style="display: flex; gap: 10px; padding: 12px; border: 1px solid var(--border); border-radius: 8px; cursor: pointer; margin-bottom: 6px;">
-            <input type="radio" name="pricingMode" value="fixed" id="pricingModeFixed" style="margin-top: 3px;">
-            <div>
-              <div style="font-weight: 600; font-size: 14px;">Fator fixo</div>
-              <div style="color: var(--text-muted); font-size: 12px;">Você define o valor. Preço previsível, não sofre com volatilidade.</div>
+          <label>Como converter ¥ → R$</label>
+          <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px;">
+            <!-- Card 1: Fator fixo -->
+            <div id="pricingCardFixed" onclick="selectPricingMode('fixed')"
+              style="cursor: pointer; padding: 18px; border: 2px solid var(--border); border-radius: 10px; background: var(--bg-elevated); position: relative; transition: all .15s;">
+              <div style="position: absolute; top: 10px; right: 10px; display: none;" id="pricingCheckFixed">
+                <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="var(--success, #10b981)" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10" fill="rgba(16,185,129,0.15)"/><path d="M9 12l2 2 4-4"/></svg>
+              </div>
+              <div style="font-size: 22px; margin-bottom: 6px;">💰</div>
+              <div style="font-weight: 700; font-size: 15px; margin-bottom: 4px;">Fator fixo (manual)</div>
+              <div style="color: var(--text-muted); font-size: 12px; line-height: 1.4;">
+                Você define quantos reais vale 1 yuan (ex: 0,78). Preço previsível.
+              </div>
             </div>
-          </label>
-          <label style="display: flex; gap: 10px; padding: 12px; border: 1px solid var(--border); border-radius: 8px; cursor: pointer;">
-            <input type="radio" name="pricingMode" value="rate" id="pricingModeRate" style="margin-top: 3px;">
-            <div>
-              <div style="font-weight: 600; font-size: 14px;">Cotação Google (ao vivo)</div>
-              <div style="color: var(--text-muted); font-size: 12px;">Usa o valor exato do Google Finance. Atualiza a cada 5 min.</div>
+            <!-- Card 2: Cotação Google -->
+            <div id="pricingCardRate" onclick="selectPricingMode('rate')"
+              style="cursor: pointer; padding: 18px; border: 2px solid var(--border); border-radius: 10px; background: var(--bg-elevated); position: relative; transition: all .15s;">
+              <div style="position: absolute; top: 10px; right: 10px; display: none;" id="pricingCheckRate">
+                <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="var(--success, #10b981)" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10" fill="rgba(16,185,129,0.15)"/><path d="M9 12l2 2 4-4"/></svg>
+              </div>
+              <div style="font-size: 22px; margin-bottom: 6px;">📈</div>
+              <div style="font-weight: 700; font-size: 15px; margin-bottom: 4px;">Cotação Google (ao vivo)</div>
+              <div style="color: var(--text-muted); font-size: 12px; line-height: 1.4;">
+                Usa o valor exato do Google agora. Atualiza a cada 5 min.
+              </div>
             </div>
-          </label>
+          </div>
+          <!-- Radios escondidos pra compat com código antigo -->
+          <input type="radio" name="pricingMode" value="fixed" id="pricingModeFixed" style="display: none;">
+          <input type="radio" name="pricingMode" value="rate" id="pricingModeRate" style="display: none;">
         </div>
 
         <!-- Fator fixo -->
@@ -984,18 +999,21 @@ select.form-control {
 
         <!-- Preview ao vivo -->
         <div style="background: var(--bg-elevated); border-radius: 8px; padding: 14px; margin-top: 12px;">
-          <div style="color: var(--text-muted); font-size: 12px; margin-bottom: 8px;">Preview em tempo real</div>
+          <div style="display: flex; align-items: center; gap: 8px; margin-bottom: 10px;">
+            <span style="color: var(--text-muted); font-size: 12px;">Modo em uso agora:</span>
+            <span id="pricingActiveMode" style="padding: 3px 10px; background: rgba(16,185,129,0.15); color: #10b981; font-weight: 700; font-size: 12px; border-radius: 999px;">—</span>
+          </div>
           <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(160px, 1fr)); gap: 10px; font-size: 13px;">
             <div>
-              <div style="color: var(--text-muted); font-size: 11px;">Cotação Google</div>
+              <div style="color: var(--text-muted); font-size: 11px;">Cotação Google agora</div>
               <div id="pricingGoogleRate" style="font-weight: 700;">—</div>
             </div>
             <div>
-              <div style="color: var(--text-muted); font-size: 11px;">Fator em uso</div>
+              <div style="color: var(--text-muted); font-size: 11px;">Fator aplicado</div>
               <div id="pricingActiveFactor" style="font-weight: 700;">—</div>
             </div>
             <div>
-              <div style="color: var(--text-muted); font-size: 11px;">Skin ¥100 Youpin</div>
+              <div style="color: var(--text-muted); font-size: 11px;">Skin ¥100 Youpin ficaria:</div>
               <div style="font-weight: 700;">
                 <span style="text-decoration: line-through; color: var(--text-muted); font-size: 12px;" id="pricingExampleOriginal">—</span>
                 <span id="pricingExampleSale" style="color: var(--accent-yellow); margin-left: 6px;">—</span>
@@ -1504,20 +1522,52 @@ function formatBRL(n) {
   return 'R$ ' + (Number(n) || 0).toFixed(2).replace('.', ',');
 }
 
+// User clica num dos cards pra escolher o modo.
+function selectPricingMode(mode) {
+  if (mode !== 'fixed' && mode !== 'rate') return;
+  document.getElementById('pricingModeFixed').checked = mode === 'fixed';
+  document.getElementById('pricingModeRate').checked = mode === 'rate';
+  updatePricingPreview();
+}
+
 function updatePricingPreview() {
-  // Chamado quando user muda algum campo. Calcula preview local.
-  const mode = document.querySelector('input[name="pricingMode"]:checked')?.value || 'fixed';
+  const mode = document.getElementById('pricingModeRate').checked ? 'rate' : 'fixed';
   const fixedRate = parseFloat(document.getElementById('pricingFixedRate').value) || 0.78;
   const marginPct = parseFloat(document.getElementById('pricingMargin').value) || 0;
   const googleRate = parseFloat(document.getElementById('pricingGoogleRate').dataset.raw || '0');
   const activeFactor = mode === 'rate' ? (googleRate || fixedRate) : fixedRate;
+
+  // Visual: destaca o card escolhido com borda amarela + checkmark
+  const cardFixed = document.getElementById('pricingCardFixed');
+  const cardRate = document.getElementById('pricingCardRate');
+  const checkFixed = document.getElementById('pricingCheckFixed');
+  const checkRate = document.getElementById('pricingCheckRate');
+  if (mode === 'fixed') {
+    cardFixed.style.borderColor = 'var(--accent-yellow, #facc15)';
+    cardFixed.style.background = 'rgba(250,204,21,0.08)';
+    cardRate.style.borderColor  = 'var(--border)';
+    cardRate.style.background   = 'var(--bg-elevated)';
+    if (checkFixed) checkFixed.style.display = 'block';
+    if (checkRate)  checkRate.style.display  = 'none';
+  } else {
+    cardRate.style.borderColor = 'var(--accent-yellow, #facc15)';
+    cardRate.style.background = 'rgba(250,204,21,0.08)';
+    cardFixed.style.borderColor = 'var(--border)';
+    cardFixed.style.background  = 'var(--bg-elevated)';
+    if (checkRate)  checkRate.style.display  = 'block';
+    if (checkFixed) checkFixed.style.display = 'none';
+  }
+
+  // Badge de "Modo em uso agora"
+  const badge = document.getElementById('pricingActiveMode');
+  if (badge) badge.textContent = mode === 'rate' ? '📈 Cotação Google' : '💰 Fator fixo';
 
   document.getElementById('pricingActiveFactor').textContent =
     mode === 'rate' ? `${activeFactor.toFixed(4)} (Google)` : `${activeFactor.toFixed(4)} (fixo)`;
   document.getElementById('pricingExampleOriginal').textContent = formatBRL(100 * activeFactor);
   document.getElementById('pricingExampleSale').textContent = formatBRL(100 * activeFactor * (1 + marginPct / 100));
 
-  // Mostra/oculta o card de fator fixo se modo for "rate"
+  // Esmaece o campo de fator fixo quando modo for "cotação" (pra indicar que não tá em uso)
   document.getElementById('pricingFixedCard').style.opacity = mode === 'rate' ? '0.5' : '1';
 }
 
