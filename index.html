@@ -2651,16 +2651,47 @@ async function fetchSkinImagesFresh(silent) {
   }
 }
 
-// Resolve imagem pra um market_hash_name usando: exato → sem wear → vazio
+// Resolve imagem pra um market_hash_name testando múltiplas variantes.
+// A ByMykel/CSGO-API geralmente indexa pelo nome base (sem ★ / sem StatTrak™ / sem wear).
+// Exemplos de nomes que podem aparecer:
+//   "★ StatTrak™ Skeleton Knife | Crimson Web (Battle-Scarred)"
+//   "StatTrak™ AK-47 | Redline (Field-Tested)"
+//   "★ Karambit | Doppler (Factory New)"
+//   "AWP | Dragon Lore (Field-Tested)"
 function resolveSkinImage(fullName) {
   if (!fullName) return '';
-  if (skinImages[fullName]) return skinImages[fullName];
-  // Remove sufixo "(Field-Tested)", "(Factory New)" etc
-  const baseName = fullName.replace(/\s*\([^)]+\)\s*$/, '').trim();
-  if (baseName !== fullName && skinImages[baseName]) return skinImages[baseName];
-  // Remove StatTrak™ prefix também
-  const noStatTrak = baseName.replace(/^StatTrak™\s*/, '').trim();
-  if (noStatTrak !== baseName && skinImages[noStatTrak]) return skinImages[noStatTrak];
+  // Gera lista de variantes a tentar, na ordem de preferência (mais específica primeiro)
+  const variants = new Set();
+  const trim = (s) => s.replace(/\s+/g, ' ').trim();
+  variants.add(fullName);
+
+  // 1) Sem wear suffix
+  const noWear = trim(fullName.replace(/\s*\([^)]+\)\s*$/, ''));
+  variants.add(noWear);
+
+  // 2) Para cada variante atual, tenta remover prefixos em combinações
+  const base = [fullName, noWear];
+  for (const n of base) {
+    // remove ★ no início (com espaço opcional)
+    const noStar = trim(n.replace(/^★\s*/, ''));
+    variants.add(noStar);
+    // remove StatTrak™ no início (com espaço opcional)
+    const noST = trim(n.replace(/^StatTrak™\s*/, ''));
+    variants.add(noST);
+    // remove ★ + StatTrak™ (qualquer ordem)
+    const noStarST = trim(n.replace(/^★\s*StatTrak™\s*/, '').replace(/^StatTrak™\s*★\s*/, ''));
+    variants.add(noStarST);
+    // combinações com noWear também
+    const noWearInner = trim(n.replace(/\s*\([^)]+\)\s*$/, ''));
+    variants.add(noWearInner);
+    variants.add(trim(noWearInner.replace(/^★\s*/, '')));
+    variants.add(trim(noWearInner.replace(/^StatTrak™\s*/, '')));
+    variants.add(trim(noWearInner.replace(/^★\s*StatTrak™\s*/, '').replace(/^StatTrak™\s*★\s*/, '')));
+  }
+
+  for (const v of variants) {
+    if (v && skinImages[v]) return skinImages[v];
+  }
   return '';
 }
 
