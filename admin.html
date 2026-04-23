@@ -472,6 +472,10 @@ select.form-control {
         <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="1" x2="12" y2="23"/><path d="M17 5H9.5a3.5 3.5 0 000 7h5a3.5 3.5 0 010 7H6"/></svg>
         <span>Comissões</span>
       </li>
+      <li onclick="switchSection('appearance')">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 19l7-7 3 3-7 7-3-3z"/><path d="M18 13l-1.5-7.5L2 2l3.5 14.5L13 18l5-5z"/><path d="M2 2l7.586 7.586"/><circle cx="11" cy="11" r="2"/></svg>
+        <span>Aparência</span>
+      </li>
       <li onclick="switchSection('settings')">
         <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 00.33 1.82l.06.06a2 2 0 010 2.83 2 2 0 01-2.83 0l-.06-.06a1.65 1.65 0 00-1.82-.33 1.65 1.65 0 00-1 1.51V21a2 2 0 01-4 0v-.09A1.65 1.65 0 009 19.4a1.65 1.65 0 00-1.82.33l-.06.06a2 2 0 01-2.83-2.83l.06-.06A1.65 1.65 0 004.68 15a1.65 1.65 0 00-1.51-1H3a2 2 0 010-4h.09A1.65 1.65 0 004.6 9a1.65 1.65 0 00-.33-1.82l-.06-.06a2 2 0 012.83-2.83l.06.06A1.65 1.65 0 009 4.68a1.65 1.65 0 001-1.51V3a2 2 0 014 0v.09a1.65 1.65 0 001 1.51 1.65 1.65 0 001.82-.33l.06-.06a2 2 0 012.83 2.83l-.06.06A1.65 1.65 0 0019.4 9a1.65 1.65 0 001.51 1H21a2 2 0 010 4h-.09a1.65 1.65 0 00-1.51 1z"/></svg>
         <span>Configurações</span>
@@ -727,6 +731,100 @@ select.form-control {
     </div>
 
     <!-- SETTINGS SECTION -->
+    <!-- APPEARANCE SECTION -->
+    <div class="section" id="section-appearance">
+      <div class="page-header">
+        <div>
+          <h1>Aparência</h1>
+          <div class="subtitle">Edite a imagem principal e os textos do topo do site</div>
+        </div>
+        <a href="index.html" class="btn btn-secondary" target="_blank">Ver Site →</a>
+      </div>
+
+      <!-- Tutorial / Dicas -->
+      <div class="data-table-wrapper" style="padding: 20px; margin-bottom: 16px; border-left: 3px solid var(--accent-yellow);">
+        <h3 style="margin-bottom: 8px; color: var(--accent-yellow);">📋 Como preparar a imagem do Hero</h3>
+        <p style="color: var(--text-secondary); font-size: 13px; line-height: 1.7; margin-bottom: 12px;">
+          O Hero é a imagem grande que aparece no topo da página inicial — primeira coisa que o visitante vê. Pra ficar nítida em todos os dispositivos, siga estas recomendações:
+        </p>
+        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 10px;">
+          <div style="background: var(--bg-elevated); padding: 12px 14px; border-radius: 8px; border: 1px solid var(--border);">
+            <div style="font-size: 11px; color: var(--text-muted); text-transform: uppercase; letter-spacing: .5px; margin-bottom: 4px;">Formato</div>
+            <div style="font-weight: 600;">JPG ou PNG</div>
+            <div style="font-size: 11px; color: var(--text-muted); margin-top: 2px;">PNG se precisar de transparência</div>
+          </div>
+          <div style="background: var(--bg-elevated); padding: 12px 14px; border-radius: 8px; border: 1px solid var(--border);">
+            <div style="font-size: 11px; color: var(--text-muted); text-transform: uppercase; letter-spacing: .5px; margin-bottom: 4px;">Dimensões</div>
+            <div style="font-weight: 600;">1600 × 900 px</div>
+            <div style="font-size: 11px; color: var(--text-muted); margin-top: 2px;">Proporção 16:9</div>
+          </div>
+          <div style="background: var(--bg-elevated); padding: 12px 14px; border-radius: 8px; border: 1px solid var(--border);">
+            <div style="font-size: 11px; color: var(--text-muted); text-transform: uppercase; letter-spacing: .5px; margin-bottom: 4px;">Peso máximo</div>
+            <div style="font-weight: 600;">500 KB</div>
+            <div style="font-size: 11px; color: var(--text-muted); margin-top: 2px;">Comprima em tinypng.com</div>
+          </div>
+          <div style="background: var(--bg-elevated); padding: 12px 14px; border-radius: 8px; border: 1px solid var(--border);">
+            <div style="font-size: 11px; color: var(--text-muted); text-transform: uppercase; letter-spacing: .5px; margin-bottom: 4px;">Conteúdo</div>
+            <div style="font-weight: 600;">Skin + fundo escuro</div>
+            <div style="font-size: 11px; color: var(--text-muted); margin-top: 2px;">Texto fica sobreposto à direita</div>
+          </div>
+        </div>
+        <p style="color: var(--text-muted); font-size: 12px; margin-top: 12px; line-height: 1.5;">
+          💡 <strong>Dica:</strong> imagens muito pesadas deixam o site lento. Use <a href="https://tinypng.com" target="_blank" style="color: var(--primary-light);">tinypng.com</a> pra reduzir sem perder qualidade. Se seu arquivo tem mais de 500KB, o painel avisa antes de salvar.
+        </p>
+      </div>
+
+      <!-- Card: Imagem do Hero -->
+      <div class="data-table-wrapper" style="padding: 24px; margin-bottom: 16px;">
+        <h3 style="margin-bottom: 16px;">Imagem do Hero</h3>
+
+        <div id="heroPreviewWrap" style="background: var(--bg-elevated); border: 1px dashed var(--border); border-radius: 12px; padding: 20px; margin-bottom: 16px; text-align: center; min-height: 180px; display: flex; align-items: center; justify-content: center;">
+          <img id="heroPreview" src="" alt="" style="max-width: 100%; max-height: 240px; border-radius: 8px; display: none;">
+          <div id="heroPreviewEmpty" style="color: var(--text-muted); font-size: 13px;">Nenhuma imagem carregada. Faça upload ou cole uma URL abaixo.</div>
+        </div>
+
+        <div class="form-group">
+          <label>Opção 1 — Fazer upload da imagem</label>
+          <input type="file" class="form-control" id="heroFileInput" accept="image/png,image/jpeg,image/jpg" onchange="previewHeroFile(event)">
+          <div style="font-size: 11px; color: var(--text-muted); margin-top: 6px;">Limite 500 KB · a imagem é salva diretamente no Firestore (base64).</div>
+        </div>
+
+        <div style="text-align: center; color: var(--text-muted); font-size: 12px; margin: 12px 0;">— ou —</div>
+
+        <div class="form-group">
+          <label>Opção 2 — Usar URL externa da imagem</label>
+          <input type="url" class="form-control" id="heroImageUrl" placeholder="https://exemplo.com/hero.png" onchange="previewHeroUrl()">
+          <div style="font-size: 11px; color: var(--text-muted); margin-top: 6px;">Se a imagem estiver hospedada em outro lugar (Imgur, Cloudinary, seu CDN), cole o link direto.</div>
+        </div>
+      </div>
+
+      <!-- Card: Textos -->
+      <div class="data-table-wrapper" style="padding: 24px; margin-bottom: 16px;">
+        <h3 style="margin-bottom: 16px;">Textos do cabeçalho</h3>
+
+        <div class="form-group">
+          <label>Título principal</label>
+          <input type="text" class="form-control" id="heroTitle" placeholder="Ex: Skins CS2 com os melhores preços" maxlength="80">
+          <div style="font-size: 11px; color: var(--text-muted); margin-top: 6px;">Até 80 caracteres. Aparece grande no topo do site.</div>
+        </div>
+
+        <div class="form-group">
+          <label>Subtítulo</label>
+          <textarea class="form-control" id="heroSubtitle" rows="2" placeholder="Ex: Entrega rápida e segura. Pagamento via PIX." maxlength="160" style="resize: vertical; font-family: inherit;"></textarea>
+          <div style="font-size: 11px; color: var(--text-muted); margin-top: 6px;">Até 160 caracteres. Uma linha de apoio logo abaixo do título.</div>
+        </div>
+
+        <div class="form-group">
+          <label>Texto do botão principal (CTA)</label>
+          <input type="text" class="form-control" id="heroCta" placeholder="Ver Skins" maxlength="30">
+        </div>
+
+        <button class="btn btn-primary" onclick="saveAppearance()" style="margin-top: 8px;">Salvar alterações</button>
+        <button class="btn btn-secondary" onclick="loadAppearance()" style="margin-top: 8px; margin-left: 8px;">Descartar</button>
+      </div>
+
+    </div>
+
     <div class="section" id="section-settings">
       <div class="page-header">
         <div>
@@ -961,9 +1059,110 @@ function switchSection(name) {
   document.getElementById('section-' + name).classList.add('active');
 
   const items = document.querySelectorAll('.sidebar-nav li');
-  const names = ['overview', 'skins', 'resellers', 'orders', 'commissions', 'settings'];
+  const names = ['overview', 'skins', 'resellers', 'orders', 'commissions', 'appearance', 'settings'];
   const index = names.indexOf(name);
   if (index >= 0 && items[index]) items[index].classList.add('active');
+
+  if (name === 'appearance') loadAppearance();
+}
+
+// ============= APPEARANCE (Hero image + textos) =============
+const APPEARANCE_DOC = { col: 'settings', id: 'hero' };
+const HERO_MAX_BYTES = 500 * 1024; // 500 KB
+
+function setHeroPreview(src) {
+  const img = document.getElementById('heroPreview');
+  const empty = document.getElementById('heroPreviewEmpty');
+  if (src) {
+    img.src = src;
+    img.style.display = 'block';
+    empty.style.display = 'none';
+  } else {
+    img.src = '';
+    img.style.display = 'none';
+    empty.style.display = 'block';
+  }
+}
+
+function previewHeroFile(ev) {
+  const file = ev.target.files && ev.target.files[0];
+  if (!file) return;
+  if (file.size > HERO_MAX_BYTES) {
+    alert(`Imagem grande demais (${Math.round(file.size/1024)} KB). Reduza pra no máximo 500 KB em tinypng.com antes de fazer upload.`);
+    ev.target.value = '';
+    return;
+  }
+  if (!['image/png', 'image/jpeg', 'image/jpg'].includes(file.type)) {
+    alert('Formato inválido. Use JPG ou PNG.');
+    ev.target.value = '';
+    return;
+  }
+  const reader = new FileReader();
+  reader.onload = () => {
+    setHeroPreview(reader.result);
+    // limpa o campo de URL se estava preenchido
+    document.getElementById('heroImageUrl').value = '';
+  };
+  reader.readAsDataURL(file);
+}
+
+function previewHeroUrl() {
+  const url = document.getElementById('heroImageUrl').value.trim();
+  if (!url) return;
+  setHeroPreview(url);
+  // limpa upload local
+  document.getElementById('heroFileInput').value = '';
+}
+
+async function loadAppearance() {
+  try {
+    const doc = await db.collection(APPEARANCE_DOC.col).doc(APPEARANCE_DOC.id).get();
+    const d = doc.exists ? (doc.data() || {}) : {};
+    document.getElementById('heroTitle').value = d.title || 'Skins CS2 com os melhores preços';
+    document.getElementById('heroSubtitle').value = d.subtitle || 'Entrega rápida e segura. Pagamento via PIX.';
+    document.getElementById('heroCta').value = d.cta || 'Ver Skins';
+    const src = d.imageDataUrl || d.imageUrl || '';
+    setHeroPreview(src);
+    if (d.imageUrl && !d.imageDataUrl) {
+      document.getElementById('heroImageUrl').value = d.imageUrl;
+    } else {
+      document.getElementById('heroImageUrl').value = '';
+    }
+  } catch (e) {
+    console.log('[appearance] load error', e);
+  }
+}
+
+async function saveAppearance() {
+  const title = document.getElementById('heroTitle').value.trim();
+  const subtitle = document.getElementById('heroSubtitle').value.trim();
+  const cta = document.getElementById('heroCta').value.trim() || 'Ver Skins';
+  const imageUrl = document.getElementById('heroImageUrl').value.trim();
+  const imgEl = document.getElementById('heroPreview');
+  const previewSrc = imgEl.style.display !== 'none' ? imgEl.src : '';
+  const isDataUrl = previewSrc.startsWith('data:');
+
+  if (!title) { alert('Título não pode ficar vazio'); return; }
+
+  const payload = {
+    title, subtitle, cta,
+    updatedAt: new Date().toISOString(),
+    updatedBy: (firebase.auth().currentUser?.email) || 'admin',
+  };
+  if (isDataUrl) {
+    payload.imageDataUrl = previewSrc;
+    payload.imageUrl = '';
+  } else if (imageUrl) {
+    payload.imageUrl = imageUrl;
+    payload.imageDataUrl = '';
+  }
+
+  try {
+    await db.collection(APPEARANCE_DOC.col).doc(APPEARANCE_DOC.id).set(payload, { merge: true });
+    alert('Aparência salva! Abra o site numa aba pra conferir (pode precisar de Ctrl+Shift+R pra limpar cache).');
+  } catch (e) {
+    alert('Erro ao salvar: ' + e.message);
+  }
 }
 
 // ============= DATA LOADING =============
