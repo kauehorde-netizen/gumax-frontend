@@ -472,6 +472,10 @@ select.form-control {
         <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="1" x2="12" y2="23"/><path d="M17 5H9.5a3.5 3.5 0 000 7h5a3.5 3.5 0 010 7H6"/></svg>
         <span>Comissões</span>
       </li>
+      <li onclick="switchSection('inventory')">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 16V8a2 2 0 00-1-1.73l-7-4a2 2 0 00-2 0l-7 4A2 2 0 003 8v8a2 2 0 001 1.73l7 4a2 2 0 002 0l7-4A2 2 0 0021 16z"/><polyline points="3.27 6.96 12 12.01 20.73 6.96"/><line x1="12" y1="22.08" x2="12" y2="12"/></svg>
+        <span>Inventário</span>
+      </li>
       <li onclick="switchSection('appearance')">
         <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 19l7-7 3 3-7 7-3-3z"/><path d="M18 13l-1.5-7.5L2 2l3.5 14.5L13 18l5-5z"/><path d="M2 2l7.586 7.586"/><circle cx="11" cy="11" r="2"/></svg>
         <span>Aparência</span>
@@ -731,6 +735,60 @@ select.form-control {
     </div>
 
     <!-- SETTINGS SECTION -->
+    <!-- INVENTORY SECTION -->
+    <div class="section" id="section-inventory">
+      <div class="page-header">
+        <div>
+          <h1>Inventário</h1>
+          <div class="subtitle">Sincronize automaticamente as skins das suas contas Steam</div>
+        </div>
+        <a href="index.html" class="btn btn-secondary" target="_blank">Ver Site →</a>
+      </div>
+
+      <!-- Tutorial -->
+      <div class="data-table-wrapper" style="padding: 20px; margin-bottom: 16px; border-left: 3px solid var(--primary-light);">
+        <h3 style="margin-bottom: 8px; color: var(--primary-light);">🎮 Como funciona</h3>
+        <p style="color: var(--text-secondary); font-size: 13px; line-height: 1.7;">
+          Cadastre os <strong>SteamID64</strong> (17 dígitos) das contas Steam que você usa como estoque. O sistema puxa todo o inventário CS2 público dessas contas e lista como <strong>Entrega Full</strong> (30min) no site. Items vendidos/transferidos somem da loja automaticamente na próxima sync.
+        </p>
+        <div style="margin-top: 12px; padding: 10px 14px; background: rgba(250, 204, 21, 0.08); border: 1px solid rgba(250, 204, 21, 0.25); border-radius: 8px; font-size: 12px; color: var(--text-secondary);">
+          ⚠️ <strong style="color: var(--accent-yellow);">Pré-requisito:</strong> o inventário da conta Steam precisa estar <strong>público</strong>. Configure em Steam → Perfil → Editar Perfil → Privacidade → "Detalhes do jogo + Inventário" como <strong>Público</strong>.
+        </div>
+        <div style="margin-top: 8px; font-size: 12px; color: var(--text-muted);">
+          Pra achar o SteamID64: abra o perfil da conta Steam no navegador e a URL vira <code style="background:var(--bg-elevated); padding:1px 6px; border-radius:4px;">steamcommunity.com/profiles/76561198xxxxxxxxx</code> — o número é o ID.
+        </div>
+      </div>
+
+      <!-- Lista de SteamIDs -->
+      <div class="data-table-wrapper" style="padding: 24px; margin-bottom: 16px;">
+        <h3 style="margin-bottom: 16px;">Contas Steam de estoque</h3>
+
+        <div id="steamIdsList" style="display: flex; flex-direction: column; gap: 8px; margin-bottom: 16px;">
+          <!-- preenchido via JS -->
+        </div>
+
+        <div style="display: flex; gap: 8px;">
+          <input type="text" id="newSteamId" class="form-control" placeholder="SteamID64 (17 dígitos) ou nick ex: Gumaxx" style="flex: 1;">
+          <button class="btn btn-primary" onclick="addStoreSteamId()">+ Adicionar conta</button>
+        </div>
+        <div style="font-size: 11px; color: var(--text-muted); margin-top: 6px;">
+          Pode colar o SteamID direto, ou o nick customizado (ex: <code>Gumaxx</code>) — o sistema resolve automaticamente via Steam API.
+        </div>
+      </div>
+
+      <!-- Botão de Sync -->
+      <div class="data-table-wrapper" style="padding: 24px; margin-bottom: 16px;">
+        <h3 style="margin-bottom: 8px;">Sincronizar agora</h3>
+        <p style="color: var(--text-secondary); font-size: 13px; margin-bottom: 16px;">
+          Puxa o inventário de todas as contas cadastradas acima e atualiza a loja. A sincronização leva ~10-30s dependendo do tamanho dos inventários.
+        </p>
+        <button class="btn btn-primary" onclick="syncInventoryNow()" id="syncBtn" style="padding: 12px 24px;">
+          🔄 Sincronizar inventário
+        </button>
+        <div id="syncStatus" style="margin-top: 16px;"></div>
+      </div>
+    </div>
+
     <!-- APPEARANCE SECTION -->
     <div class="section" id="section-appearance">
       <div class="page-header">
@@ -1100,11 +1158,141 @@ function switchSection(name) {
   document.getElementById('section-' + name).classList.add('active');
 
   const items = document.querySelectorAll('.sidebar-nav li');
-  const names = ['overview', 'skins', 'resellers', 'orders', 'commissions', 'appearance', 'settings'];
+  const names = ['overview', 'skins', 'resellers', 'orders', 'commissions', 'inventory', 'appearance', 'settings'];
   const index = names.indexOf(name);
   if (index >= 0 && items[index]) items[index].classList.add('active');
 
   if (name === 'appearance') loadAppearance();
+  if (name === 'inventory')  loadInventoryPage();
+}
+
+// ============= INVENTORY (Steam sync) =============
+const API_BASE_ADMIN = 'https://gumax-backend-production.up.railway.app';
+// ADMIN_API_KEY fica só no Railway; no frontend admin pedimos manualmente via prompt ou lemos de um local seguro.
+// Pra simplificar, armazenamos em sessionStorage após o primeiro input.
+
+function getAdminKey() {
+  let k = sessionStorage.getItem('gumax_admin_key');
+  if (!k) {
+    k = prompt('Cole a ADMIN_API_KEY (só nesta sessão):');
+    if (k) sessionStorage.setItem('gumax_admin_key', k);
+  }
+  return k;
+}
+
+async function loadInventoryPage() {
+  try {
+    const doc = await db.collection('settings').doc('store').get();
+    const d = doc.exists ? (doc.data() || {}) : {};
+    const ids = Array.isArray(d.storeSteamIds) ? d.storeSteamIds : [];
+    renderSteamIds(ids, d.lastInventorySyncResults || [], d.lastInventorySync);
+  } catch (e) {
+    console.log('[inventory] load error', e);
+  }
+}
+
+function renderSteamIds(ids, lastResults, lastSync) {
+  const list = document.getElementById('steamIdsList');
+  if (!ids.length) {
+    list.innerHTML = `<div style="padding: 16px; text-align: center; color: var(--text-muted); font-size: 13px; background: var(--bg-elevated); border-radius: 8px;">Nenhuma conta cadastrada ainda. Adicione abaixo.</div>`;
+    return;
+  }
+  const resById = Object.fromEntries((lastResults || []).map(r => [r.steamId, r]));
+  list.innerHTML = ids.map(id => {
+    const r = resById[id];
+    const statusBadge = r
+      ? (r.error
+          ? `<span style="font-size: 11px; color: var(--accent-red);">Erro: ${r.error}</span>`
+          : `<span style="font-size: 11px; color: var(--success, #10b981);">${r.count || 0} items · ${r.personaName || ''}</span>`)
+      : `<span style="font-size: 11px; color: var(--text-muted);">Nunca sincronizado</span>`;
+    return `
+      <div style="display: flex; align-items: center; gap: 12px; padding: 10px 14px; background: var(--bg-elevated); border: 1px solid var(--border); border-radius: 8px;">
+        <div style="flex: 1;">
+          <div style="font-family: 'JetBrains Mono', monospace; font-size: 13px;">${id}</div>
+          <div>${statusBadge}</div>
+        </div>
+        <button class="btn btn-secondary" style="padding: 6px 12px; font-size: 12px;" onclick="removeStoreSteamId('${id}')">Remover</button>
+      </div>
+    `;
+  }).join('');
+  if (lastSync) {
+    list.innerHTML += `<div style="font-size: 11px; color: var(--text-muted); margin-top: 6px;">Última sincronização: ${new Date(lastSync).toLocaleString('pt-BR')}</div>`;
+  }
+}
+
+async function addStoreSteamId() {
+  const input = document.getElementById('newSteamId');
+  let val = (input.value || '').trim();
+  if (!val) return;
+
+  // Se não for numérico 17-dig, tenta resolver vanity via backend
+  if (!/^\d{17}$/.test(val)) {
+    try {
+      const r = await fetch(`${API_BASE_ADMIN}/api/steam-auth?action=resolve-vanity&name=${encodeURIComponent(val)}`);
+      const d = await r.json();
+      if (d.success && d.steamId) {
+        val = d.steamId;
+        alert(`Resolvido: ${d.profileName || '(sem nome)'} → ${val}`);
+      } else {
+        alert('Não achei essa conta na Steam. Cole o SteamID64 direto.');
+        return;
+      }
+    } catch (e) {
+      alert('Erro ao resolver vanity URL: ' + e.message);
+      return;
+    }
+  }
+
+  try {
+    const ref = db.collection('settings').doc('store');
+    const doc = await ref.get();
+    const cur = doc.exists ? (doc.data()?.storeSteamIds || []) : [];
+    if (cur.includes(val)) { alert('Essa conta já está cadastrada'); return; }
+    cur.push(val);
+    await ref.set({ storeSteamIds: cur, updatedAt: new Date().toISOString() }, { merge: true });
+    input.value = '';
+    loadInventoryPage();
+  } catch (e) {
+    alert('Erro ao salvar: ' + e.message);
+  }
+}
+
+async function removeStoreSteamId(id) {
+  if (!confirm(`Remover a conta ${id}? As skins dela serão marcadas como inativas na próxima sincronização.`)) return;
+  try {
+    const ref = db.collection('settings').doc('store');
+    const doc = await ref.get();
+    const cur = doc.exists ? (doc.data()?.storeSteamIds || []) : [];
+    const next = cur.filter(x => x !== id);
+    await ref.set({ storeSteamIds: next, updatedAt: new Date().toISOString() }, { merge: true });
+    loadInventoryPage();
+  } catch (e) { alert('Erro: ' + e.message); }
+}
+
+async function syncInventoryNow() {
+  const key = getAdminKey();
+  if (!key) return;
+  const btn = document.getElementById('syncBtn');
+  const status = document.getElementById('syncStatus');
+  btn.disabled = true; btn.textContent = '⏳ Sincronizando...';
+  status.innerHTML = '<div style="color: var(--text-secondary); font-size: 13px;">Puxando inventários das contas Steam, pegando preços e salvando no Firestore... pode levar 30s.</div>';
+
+  try {
+    const r = await fetch(`${API_BASE_ADMIN}/api/admin/sync-inventory`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', 'X-Admin-Key': key },
+      body: JSON.stringify({}),
+    });
+    const d = await r.json();
+    if (!r.ok) throw new Error(d.error || 'falha');
+    const total = (d.accounts || []).reduce((s, a) => s + (a.count || 0), 0);
+    status.innerHTML = `<div style="color: var(--success, #10b981); font-size: 13px;">✅ Sincronizado! <strong>${total} items</strong> de ${d.accounts.length} conta${d.accounts.length > 1 ? 's' : ''}. ${d.pruned ? `${d.pruned} items removidos (vendidos/transferidos).` : ''}</div>`;
+    loadInventoryPage();
+  } catch (e) {
+    status.innerHTML = `<div style="color: var(--accent-red); font-size: 13px;">❌ Erro: ${e.message}</div>`;
+  } finally {
+    btn.disabled = false; btn.textContent = '🔄 Sincronizar inventário';
+  }
 }
 
 // ============= APPEARANCE (Hero image + textos) =============
