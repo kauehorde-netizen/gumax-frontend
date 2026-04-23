@@ -284,7 +284,9 @@ body {
   <!-- HERO DA RIFA -->
   <section class="rifa-hero">
     <div class="rifa-image-wrap" id="skinImageWrap">
-      <div id="skinImageLoader" style="color:var(--text-muted);font-size:11px;">Carregando imagem da skin...</div>
+      <img src="dragonlore.png" alt="AWP Dragon Lore"
+        style="width:100%;max-width:260px;filter:drop-shadow(0 0 18px rgba(235,75,75,0.4));"
+        onerror="this.parentElement.innerHTML=fallbackPlaceholder();">
     </div>
     <div class="rifa-info">
       <span class="rarity-tag">Cobiçada · Factory New</span>
@@ -572,7 +574,6 @@ function fallbackPlaceholder() {
 // ============ INIT ============
 renderGrid();
 updateCheckoutBar();
-loadSkinImage();
 </script>
 
 </body>
