@@ -360,7 +360,7 @@ body {
   <div class="nav-links">
     <a href="index.html" class="nav-link">Skins</a>
     <a href="analise.html" class="nav-link active">Análise</a>
-    <a href="https://gumax.com" target="_blank" class="nav-link" style="background:linear-gradient(135deg,#8B5CF6,#FACC15);-webkit-background-clip:text;-webkit-text-fill-color:transparent;font-weight:700;">Rifas</a>
+    <a href="rifas.html" class="nav-link" style="background:linear-gradient(135deg,#8B5CF6,#FACC15);-webkit-background-clip:text;-webkit-text-fill-color:transparent;font-weight:700;">Rifas</a>
   </div>
   <div style="display:flex;gap:10px;align-items:center;flex-wrap:wrap;">
     <div class="plan-widget hidden" id="planWidget" onclick="openPlansModal()" title="Gerenciar assinatura">
@@ -485,7 +485,7 @@ auth.onAuthStateChanged(async (user) => {
     document.getElementById('loginSteamBtn')?.classList.add('hidden');
     document.getElementById('creditWidget').classList.remove('hidden');
     document.getElementById('userWidget').classList.remove('hidden');
-    // Nome + avatar: tenta provider → Firestore users/{uid} → fallback
+    // Nome + avatar: tenta provider → Firestore users/{uid} → refresh Steam → fallback
     let displayName = user.displayName || user.email?.split('@')[0] || '';
     let photoURL = user.photoURL || '';
     try {
@@ -496,8 +496,26 @@ auth.onAuthStateChanged(async (user) => {
         photoURL = d.steamAvatar || d.photoURL || photoURL;
       }
     } catch (e) { /* rules podem estar bloqueando — tudo bem */ }
-    // Se veio de login Steam (uid numérico 17 dígitos) e ainda sem nome, usa últimos 4 dígitos
-    if (!displayName && /^\d{17}$/.test(user.uid)) {
+
+    const isSteamUid = /^\d{17}$/.test(user.uid);
+
+    // Se é Steam user mas o Firestore ainda não tem o avatar, chama refresh automático
+    if (isSteamUid && !photoURL) {
+      try {
+        const r = await fetch(`${API_BASE}/api/steam-auth`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${idToken}` },
+          body: JSON.stringify({ action: 'refresh-profile' }),
+        });
+        const d = await r.json();
+        if (d.success) {
+          displayName = d.steamName || displayName;
+          photoURL = d.steamAvatar || photoURL;
+        }
+      } catch (e) { console.log('[auth] refresh-profile falhou', e); }
+    }
+
+    if (!displayName && isSteamUid) {
       displayName = 'Steam ' + user.uid.slice(-4);
     }
     document.getElementById('userAvatar').src = photoURL || 'https://www.gravatar.com/avatar?d=mp';
