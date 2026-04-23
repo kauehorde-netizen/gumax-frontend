@@ -354,7 +354,9 @@ body {
 <body>
 
 <nav class="nav">
-  <a href="index.html" class="nav-brand">GUMAX SKINS</a>
+  <a href="index.html" class="nav-brand" style="display:inline-flex;align-items:center;gap:10px;">
+    <img src="https://static.wixstatic.com/media/874864_b598e856481740e7ae752771a661c242~mv2.png/v1/fill/w_300,h_118,al_c,q_85,enc_auto/874864_b598e856481740e7ae752771a661c242~mv2.png" alt="Gumax Skins" style="height:32px;width:auto;">
+  </a>
   <div class="nav-links">
     <a href="index.html" class="nav-link">Skins</a>
     <a href="analise.html" class="nav-link active">Análise</a>
@@ -687,10 +689,11 @@ function renderResult(data) {
   const trendClass = !t ? 'trend-stable' :
     t.direction === 'up' ? 'trend-up' :
     t.direction === 'down' ? 'trend-down' : 'trend-stable';
-  const trendLabel = !t ? 'Dados insuficientes' :
+  const trendLabel = !t ? 'Construindo histórico...' :
     t.direction === 'up' ? 'Subindo' :
     t.direction === 'down' ? 'Caindo' : 'Estável';
-  const trendDelta = t ? `${t.pctChange7d > 0 ? '+' : ''}${t.pctChange7d}% nos últimos 7 dias` : '';
+  const trendDelta = t ? `${t.pctChange7d > 0 ? '+' : ''}${t.pctChange7d}% nos últimos 7 dias`
+                       : '1 snapshot/dia · disponível em ~7 dias';
 
   let html = `
     <div class="result-card">
@@ -712,6 +715,9 @@ function renderResult(data) {
           <h3>Score de mercado</h3>
           <div class="score-value ${scoreClass}">${s ? s.value : 'n/a'}</div>
           <div class="score-label ${scoreClass}">${s ? s.label : 'Dados insuficientes'}</div>
+          ${s && data.sources && !data.sources.steam && !data.sources.pricempire
+             ? '<div style="font-size:11px;color:var(--text-muted);margin-top:6px;">comparado ao preço sugerido Skinport</div>'
+             : ''}
         </div>
         <div class="score-card">
           <h3>Tendência (7d)</h3>
