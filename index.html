@@ -1987,7 +1987,10 @@ footer {
     </div>
   </div>
   <div class="hero-right">
-    <img id="heroImageEl" src="hero.png" alt="CS2" class="hero-image" onerror="this.style.display='none'">
+    <picture>
+      <source id="heroSourceMobile" media="(max-width: 768px)" srcset="">
+      <img id="heroImageEl" src="hero.png" alt="CS2" class="hero-image" onerror="this.style.display='none'">
+    </picture>
   </div>
 </section>
 
@@ -2335,12 +2338,18 @@ async function loadHeroConfig() {
     if (d.title) document.getElementById('heroTitleEl').innerHTML = d.title;
     if (d.subtitle) document.getElementById('heroSubtitleEl').textContent = d.subtitle;
     if (d.cta) document.getElementById('heroCtaBtn').textContent = d.cta;
-    // Imagem: dataUrl (base64 salvo pelo admin) > url externa > hero.png local
-    const imgSrc = d.imageDataUrl || d.imageUrl;
-    if (imgSrc) {
+    // Desktop: dataUrl (base64) > url externa > hero.png local
+    const desktopSrc = d.imageDataUrl || d.imageUrl;
+    if (desktopSrc) {
       const img = document.getElementById('heroImageEl');
-      img.src = imgSrc;
+      img.src = desktopSrc;
       img.style.display = '';
+    }
+    // Mobile: se tiver, sobrescreve em viewports <= 768px
+    const mobileSrc = d.imageMobileDataUrl || d.imageMobileUrl;
+    if (mobileSrc) {
+      const src = document.getElementById('heroSourceMobile');
+      if (src) src.srcset = mobileSrc;
     }
   } catch (e) {
     console.log('[hero] Firestore settings not available:', e.message);
