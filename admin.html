@@ -952,7 +952,7 @@ select.form-control {
         <div style="display: inline-flex; background: var(--bg-elevated); border: 1px solid var(--border); border-radius: 999px; padding: 4px; margin-bottom: 20px;">
           <button type="button" id="pricingToggleRate" onclick="selectPricingMode('rate')"
             style="border: none; background: transparent; color: var(--text); padding: 10px 20px; border-radius: 999px; cursor: pointer; font-weight: 600; font-size: 14px; transition: all .2s;">
-            📈 Cotação Google
+            📈 Cotação
           </button>
           <button type="button" id="pricingTogglePct" onclick="selectPricingMode('fixed')"
             style="border: none; background: transparent; color: var(--text); padding: 10px 20px; border-radius: 999px; cursor: pointer; font-weight: 600; font-size: 14px; transition: all .2s;">
@@ -965,7 +965,7 @@ select.form-control {
           <label>Quantos reais você quer por cada ¥ 1 do Youpin?</label>
           <input type="number" class="form-control" id="pricingFixedRate" step="0.01" min="0.1" max="2" placeholder="0.78">
           <div style="color: var(--text-muted); font-size: 12px; margin-top: 6px;">
-            Gu hoje usa <strong>0,78</strong> (já inclui a margem dele). Cotação Google agora: <strong id="pricingGoogleRateInline">—</strong>.
+            Gu hoje usa <strong>0,78</strong> (já inclui a margem dele). Cotação agora: <strong id="pricingGoogleRateInline">—</strong>.
           </div>
         </div>
 
@@ -973,7 +973,7 @@ select.form-control {
         <div id="pricingRateInfo" style="display: none;">
           <div style="background: rgba(16,185,129,0.08); border-left: 3px solid #10b981; padding: 14px; border-radius: 6px; margin-bottom: 16px;">
             <div style="font-size: 13px; color: var(--text);">
-              Usando cotação <strong>ao vivo do Google Finance</strong>. Atualiza a cada 5 minutos.
+              Usando <strong>cotação ao vivo</strong>. Atualiza automaticamente a cada 5 minutos.
             </div>
             <div style="margin-top: 6px; font-size: 14px; font-weight: 700;">
               Cotação agora: <span id="pricingGoogleRateBig">—</span>
@@ -984,7 +984,7 @@ select.form-control {
             <label>Margem de lucro (%)</label>
             <input type="number" class="form-control" id="pricingMargin" step="1" min="0" max="99" placeholder="10" value="10">
             <div style="color: var(--text-muted); font-size: 12px; margin-top: 6px;">
-              Soma sobre o Google. Ex: <strong>10</strong> = Google + 10%. Se Google tá 0,74 → você vende a 0,814.
+              Soma sobre a cotação. Ex: <strong>10</strong> = cotação + 10%. Se cotação tá 0,74 → você vende a 0,814.
             </div>
           </div>
         </div>
@@ -1550,7 +1550,7 @@ function updatePricingPreview() {
 
   // Preview
   document.getElementById('pricingActiveFactor').textContent = mode === 'rate'
-    ? `${finalFactor.toFixed(4)} (Google ${baseFactor.toFixed(4)} + ${marginPct}%)`
+    ? `${finalFactor.toFixed(4)} (cotação ${baseFactor.toFixed(4)} + ${marginPct}%)`
     : `${finalFactor.toFixed(4)} (você escolheu)`;
   document.getElementById('pricingExampleOriginal').textContent = formatBRL(100 * finalFactor * 1.35); // Steam ~= Youpin × 1.35
   document.getElementById('pricingExampleSale').textContent = formatBRL(100 * finalFactor);
