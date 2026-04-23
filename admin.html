@@ -480,6 +480,10 @@ select.form-control {
         <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 19l7-7 3 3-7 7-3-3z"/><path d="M18 13l-1.5-7.5L2 2l3.5 14.5L13 18l5-5z"/><path d="M2 2l7.586 7.586"/><circle cx="11" cy="11" r="2"/></svg>
         <span>Aparência</span>
       </li>
+      <li onclick="switchSection('pricing')">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="1" x2="12" y2="23"/><path d="M17 5H9.5a3.5 3.5 0 000 7h5a3.5 3.5 0 010 7H6"/></svg>
+        <span>Precificação</span>
+      </li>
       <li onclick="switchSection('settings')">
         <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 00.33 1.82l.06.06a2 2 0 010 2.83 2 2 0 01-2.83 0l-.06-.06a1.65 1.65 0 00-1.82-.33 1.65 1.65 0 00-1 1.51V21a2 2 0 01-4 0v-.09A1.65 1.65 0 009 19.4a1.65 1.65 0 00-1.82.33l-.06.06a2 2 0 01-2.83-2.83l.06-.06A1.65 1.65 0 004.68 15a1.65 1.65 0 00-1.51-1H3a2 2 0 010-4h.09A1.65 1.65 0 004.6 9a1.65 1.65 0 00-.33-1.82l-.06-.06a2 2 0 012.83-2.83l.06.06A1.65 1.65 0 009 4.68a1.65 1.65 0 001-1.51V3a2 2 0 014 0v.09a1.65 1.65 0 001 1.51 1.65 1.65 0 001.82-.33l.06-.06a2 2 0 012.83 2.83l-.06.06A1.65 1.65 0 0019.4 9a1.65 1.65 0 001.51 1H21a2 2 0 010 4h-.09a1.65 1.65 0 00-1.51 1z"/></svg>
         <span>Configurações</span>
@@ -924,6 +928,102 @@ select.form-control {
 
     </div>
 
+    <!-- PRECIFICAÇÃO SECTION -->
+    <div class="section" id="section-pricing">
+      <div class="page-header">
+        <div>
+          <h1>Precificação</h1>
+          <div class="subtitle">Controle como o preço de venda é calculado a partir do Youpin (Pricempire)</div>
+        </div>
+      </div>
+
+      <!-- Explicação -->
+      <div class="data-table-wrapper" style="padding: 20px; margin-bottom: 16px; border-left: 3px solid var(--primary-light);">
+        <p style="margin: 0; color: var(--text-muted); line-height: 1.6;">
+          <strong style="color: var(--text);">Como funciona:</strong> o valor original (riscado) na loja é o preço da Steam convertido.
+          O preço de venda é calculado a partir do Youpin em Yuan (¥) × fator de conversão × (1 + margem).
+          Você escolhe o fator: fixo (previsível) ou cotação ao vivo do Google (acompanha o mercado).
+        </p>
+      </div>
+
+      <!-- Card: modo -->
+      <div class="data-table-wrapper" style="padding: 24px; margin-bottom: 16px;">
+        <h3 style="margin: 0 0 16px 0;">Modo de conversão</h3>
+
+        <label style="display: flex; gap: 12px; padding: 14px; border: 1px solid var(--border); border-radius: 8px; cursor: pointer; margin-bottom: 8px;">
+          <input type="radio" name="pricingMode" value="fixed" id="pricingModeFixed" style="margin-top: 3px;">
+          <div>
+            <div style="font-weight: 600;">Fator fixo</div>
+            <div style="color: var(--text-muted); font-size: 13px;">
+              Você define quantos reais vale 1 yuan. Preço previsível, não sofre com volatilidade do câmbio.
+              Bom pra garantir margem quando o yuan sobe de repente.
+            </div>
+          </div>
+        </label>
+
+        <label style="display: flex; gap: 12px; padding: 14px; border: 1px solid var(--border); border-radius: 8px; cursor: pointer;">
+          <input type="radio" name="pricingMode" value="rate" id="pricingModeRate" style="margin-top: 3px;">
+          <div>
+            <div style="font-weight: 600;">Cotação atual (Google Finance)</div>
+            <div style="color: var(--text-muted); font-size: 13px;">
+              Usa o valor exato que aparece no Google agora. Atualiza a cada 5 minutos.
+              Bom pra acompanhar o mercado em tempo real.
+            </div>
+          </div>
+        </label>
+      </div>
+
+      <!-- Card: fator fixo -->
+      <div class="data-table-wrapper" style="padding: 24px; margin-bottom: 16px;" id="pricingFixedCard">
+        <h3 style="margin: 0 0 16px 0;">Fator fixo (BRL por CNY)</h3>
+        <div class="form-group">
+          <label>Quantos reais você quer cobrar por cada yuan do Youpin?</label>
+          <input type="number" class="form-control" id="pricingFixedRate" step="0.01" min="0.1" max="2" placeholder="0.78">
+          <div style="color: var(--text-muted); font-size: 12px; margin-top: 6px;">
+            Exemplo: <code>0.78</code> significa que uma skin de ¥100 no Youpin vira R$ 78 (antes da margem).
+            Gu tá trabalhando atualmente com 0.78. Google hoje: <strong id="pricingGoogleRateInline">—</strong>.
+          </div>
+        </div>
+      </div>
+
+      <!-- Card: margem -->
+      <div class="data-table-wrapper" style="padding: 24px; margin-bottom: 16px;">
+        <h3 style="margin: 0 0 16px 0;">Margem de lucro</h3>
+        <div class="form-group">
+          <label>% acima do preço Youpin convertido</label>
+          <input type="number" class="form-control" id="pricingMargin" step="1" min="0" max="99" placeholder="10">
+          <div style="color: var(--text-muted); font-size: 12px; margin-top: 6px;">
+            Exemplo: <code>10</code> = +10% sobre o valor convertido. Skin ¥100 × 0,78 × 1,10 = R$ 85,80.
+          </div>
+        </div>
+      </div>
+
+      <!-- Preview ao vivo -->
+      <div class="data-table-wrapper" style="padding: 24px; margin-bottom: 16px; border-left: 3px solid var(--accent-yellow);">
+        <h3 style="margin: 0 0 16px 0;">Preview em tempo real</h3>
+        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 12px; font-size: 14px;">
+          <div>
+            <div style="color: var(--text-muted); font-size: 12px;">Cotação Google</div>
+            <div id="pricingGoogleRate" style="font-weight: 700; font-size: 18px;">—</div>
+          </div>
+          <div>
+            <div style="color: var(--text-muted); font-size: 12px;">Fator em uso</div>
+            <div id="pricingActiveFactor" style="font-weight: 700; font-size: 18px;">—</div>
+          </div>
+          <div>
+            <div style="color: var(--text-muted); font-size: 12px;">Skin exemplo: ¥100 Youpin</div>
+            <div style="font-weight: 700; font-size: 18px;">
+              <span style="text-decoration: line-through; color: var(--text-muted); font-size: 14px;" id="pricingExampleOriginal">—</span>
+              <span id="pricingExampleSale" style="color: var(--accent-yellow); margin-left: 8px;">—</span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <button class="btn btn-primary" onclick="savePricing()">Salvar precificação</button>
+      <button class="btn btn-secondary" onclick="loadPricing()" style="margin-left: 8px;">Recarregar</button>
+    </div>
+
     <div class="section" id="section-settings">
       <div class="page-header">
         <div>
@@ -1158,12 +1258,13 @@ function switchSection(name) {
   document.getElementById('section-' + name).classList.add('active');
 
   const items = document.querySelectorAll('.sidebar-nav li');
-  const names = ['overview', 'skins', 'resellers', 'orders', 'commissions', 'inventory', 'appearance', 'settings'];
+  const names = ['overview', 'skins', 'resellers', 'orders', 'commissions', 'inventory', 'appearance', 'pricing', 'settings'];
   const index = names.indexOf(name);
   if (index >= 0 && items[index]) items[index].classList.add('active');
 
   if (name === 'appearance') loadAppearance();
   if (name === 'inventory')  loadInventoryPage();
+  if (name === 'pricing')    loadPricing();
 }
 
 // ============= INVENTORY (Steam sync) =============
@@ -1414,6 +1515,98 @@ async function saveAppearance() {
     alert('Erro ao salvar: ' + e.message);
   }
 }
+
+// ============= PRICING =============
+function formatBRL(n) {
+  return 'R$ ' + (Number(n) || 0).toFixed(2).replace('.', ',');
+}
+
+function updatePricingPreview() {
+  // Chamado quando user muda algum campo. Calcula preview local.
+  const mode = document.querySelector('input[name="pricingMode"]:checked')?.value || 'fixed';
+  const fixedRate = parseFloat(document.getElementById('pricingFixedRate').value) || 0.78;
+  const marginPct = parseFloat(document.getElementById('pricingMargin').value) || 0;
+  const googleRate = parseFloat(document.getElementById('pricingGoogleRate').dataset.raw || '0');
+  const activeFactor = mode === 'rate' ? (googleRate || fixedRate) : fixedRate;
+
+  document.getElementById('pricingActiveFactor').textContent =
+    mode === 'rate' ? `${activeFactor.toFixed(4)} (Google)` : `${activeFactor.toFixed(4)} (fixo)`;
+  document.getElementById('pricingExampleOriginal').textContent = formatBRL(100 * activeFactor);
+  document.getElementById('pricingExampleSale').textContent = formatBRL(100 * activeFactor * (1 + marginPct / 100));
+
+  // Mostra/oculta o card de fator fixo se modo for "rate"
+  document.getElementById('pricingFixedCard').style.opacity = mode === 'rate' ? '0.5' : '1';
+}
+
+async function loadPricing() {
+  const key = getAdminKey();
+  if (!key) return;
+  try {
+    const r = await fetch(`${API_BASE_ADMIN}/api/admin/get-pricing`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${key}` },
+      body: JSON.stringify({}),
+    });
+    if (r.status === 401) { sessionStorage.removeItem('gumax_admin_key'); alert('Admin key inválida'); return; }
+    const data = await r.json();
+    if (!data.success) { alert('Erro: ' + (data.error || 'desconhecido')); return; }
+
+    const cfg = data.config || {};
+    document.getElementById('pricingModeFixed').checked = cfg.mode !== 'rate';
+    document.getElementById('pricingModeRate').checked = cfg.mode === 'rate';
+    document.getElementById('pricingFixedRate').value = cfg.fixedRate ?? 0.78;
+    document.getElementById('pricingMargin').value = Math.round((cfg.margin ?? 0.10) * 100);
+
+    const google = data.googleRate || 0;
+    const googleEl = document.getElementById('pricingGoogleRate');
+    googleEl.textContent = google > 0 ? google.toFixed(4) : 'indisponível';
+    googleEl.dataset.raw = google;
+    document.getElementById('pricingGoogleRateInline').textContent = google > 0 ? google.toFixed(4) : '—';
+
+    updatePricingPreview();
+  } catch (e) {
+    alert('Erro ao carregar precificação: ' + e.message);
+  }
+}
+
+async function savePricing() {
+  const key = getAdminKey();
+  if (!key) return;
+  const mode = document.querySelector('input[name="pricingMode"]:checked')?.value || 'fixed';
+  const fixedRate = parseFloat(document.getElementById('pricingFixedRate').value);
+  const marginPct = parseFloat(document.getElementById('pricingMargin').value);
+
+  if (mode === 'fixed' && !(fixedRate > 0 && fixedRate < 5)) { alert('Fator fixo precisa estar entre 0 e 5'); return; }
+  if (!(marginPct >= 0 && marginPct < 100)) { alert('Margem precisa ser entre 0 e 99%'); return; }
+
+  try {
+    const r = await fetch(`${API_BASE_ADMIN}/api/admin/update-pricing`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${key}` },
+      body: JSON.stringify({ mode, fixedRate, margin: marginPct / 100 }),
+    });
+    const data = await r.json();
+    if (data.success) {
+      alert('Precificação salva! A loja vai usar os novos valores em até 1 minuto.');
+    } else {
+      alert('Erro: ' + (data.error || 'desconhecido'));
+    }
+  } catch (e) {
+    alert('Erro ao salvar: ' + e.message);
+  }
+}
+
+// Wire: atualiza preview quando muda algum campo
+document.addEventListener('change', (e) => {
+  if (e.target.name === 'pricingMode' || e.target.id === 'pricingFixedRate' || e.target.id === 'pricingMargin') {
+    updatePricingPreview();
+  }
+});
+document.addEventListener('input', (e) => {
+  if (e.target.id === 'pricingFixedRate' || e.target.id === 'pricingMargin') {
+    updatePricingPreview();
+  }
+});
 
 // ============= DATA LOADING =============
 async function loadAllData() {
