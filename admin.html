@@ -939,7 +939,10 @@ select.form-control {
         <h3 style="margin: 0 0 8px 0;">💰 Precificação das skins Youpin</h3>
         <p style="margin: 0 0 20px 0; color: var(--text-muted); font-size: 13px; line-height: 1.5;">
           O preço da loja é calculado: <strong>Youpin (¥) × fator de conversão × (1 + margem)</strong>.
-          O valor riscado na loja usa o preço da Steam convertido.
+          O valor riscado na loja usa o preço da Steam convertido.<br>
+          <span style="color: var(--text-muted); font-size: 12px;">
+            Ao salvar, será pedida a <strong>ADMIN_API_KEY</strong> uma vez por sessão.
+          </span>
         </p>
 
         <!-- Modo -->
@@ -1003,7 +1006,7 @@ select.form-control {
 
         <div style="margin-top: 14px;">
           <button class="btn btn-primary" onclick="savePricing()">Salvar precificação</button>
-          <button class="btn btn-secondary" onclick="loadPricing()" style="margin-left: 6px;">Recarregar</button>
+          <button class="btn btn-secondary" onclick="loadPricing(true)" style="margin-left: 6px;">Recarregar do servidor</button>
         </div>
       </div>
 
@@ -1247,11 +1250,16 @@ const API_BASE_ADMIN = 'https://gumax-backend-production.up.railway.app';
 // ADMIN_API_KEY fica só no Railway; no frontend admin pedimos manualmente via prompt ou lemos de um local seguro.
 // Pra simplificar, armazenamos em sessionStorage após o primeiro input.
 
+// Retorna a admin key sem perguntar (silencioso). Usa só quando já existe em sessionStorage.
+function getAdminKeySilent() {
+  return sessionStorage.getItem('gumax_admin_key') || '';
+}
+// Pede a admin key com prompt — SÓ chamar quando o user explicitamente pediu pra salvar/sincronizar.
 function getAdminKey() {
   let k = sessionStorage.getItem('gumax_admin_key');
   if (!k) {
-    k = prompt('Cole a ADMIN_API_KEY (só nesta sessão):');
-    if (k) sessionStorage.setItem('gumax_admin_key', k);
+    k = prompt('Cole a ADMIN_API_KEY pra autorizar esta ação (só nesta sessão):');
+    if (k) sessionStorage.setItem('gumax_admin_key', k.trim());
   }
   return k;
 }
@@ -1513,18 +1521,42 @@ function updatePricingPreview() {
   document.getElementById('pricingFixedCard').style.opacity = mode === 'rate' ? '0.5' : '1';
 }
 
-async function loadPricing() {
-  const key = getAdminKey();
-  if (!key) return;
+// Popula o UI com defaults (ou valores cachados em localStorage se houver).
+// NÃO faz fetch no backend — evita pedir admin key ao abrir a aba.
+function setPricingDefaults() {
+  const cached = JSON.parse(localStorage.getItem('gumax_pricing_cache') || 'null') || {};
+  const mode = cached.mode || 'fixed';
+  document.getElementById('pricingModeFixed').checked = mode !== 'rate';
+  document.getElementById('pricingModeRate').checked = mode === 'rate';
+  document.getElementById('pricingFixedRate').value = cached.fixedRate ?? 0.78;
+  document.getElementById('pricingMargin').value = Math.round((cached.margin ?? 0.10) * 100);
+  document.getElementById('pricingGoogleRate').textContent = '—';
+  document.getElementById('pricingGoogleRate').dataset.raw = '0';
+  document.getElementById('pricingGoogleRateInline').textContent = '—';
+  updatePricingPreview();
+}
+
+// Busca a config atual no backend. SÓ roda se a admin key estiver em sessionStorage —
+// não faz prompt. User clica em "Recarregar" se quiser forçar prompt.
+async function loadPricing(forcePrompt = false) {
+  setPricingDefaults(); // sempre popula defaults primeiro
+  const key = forcePrompt ? getAdminKey() : getAdminKeySilent();
+  if (!key) return; // sem key, fica só com defaults — sem prompt chato
+
   try {
     const r = await fetch(`${API_BASE_ADMIN}/api/admin/get-pricing`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${key}` },
       body: JSON.stringify({}),
     });
-    if (r.status === 401) { sessionStorage.removeItem('gumax_admin_key'); alert('Admin key inválida'); return; }
+    if (r.status === 401) {
+      sessionStorage.removeItem('gumax_admin_key');
+      if (forcePrompt) alert('Admin key inválida');
+      return;
+    }
+    if (!r.ok) return;
     const data = await r.json();
-    if (!data.success) { alert('Erro: ' + (data.error || 'desconhecido')); return; }
+    if (!data.success) return;
 
     const cfg = data.config || {};
     document.getElementById('pricingModeFixed').checked = cfg.mode !== 'rate';
@@ -1538,9 +1570,14 @@ async function loadPricing() {
     googleEl.dataset.raw = google;
     document.getElementById('pricingGoogleRateInline').textContent = google > 0 ? google.toFixed(4) : '—';
 
+    // Cacheia localmente pra próxima abertura não precisar nem de key
+    localStorage.setItem('gumax_pricing_cache', JSON.stringify({
+      mode: cfg.mode, fixedRate: cfg.fixedRate, margin: cfg.margin,
+    }));
+
     updatePricingPreview();
   } catch (e) {
-    alert('Erro ao carregar precificação: ' + e.message);
+    console.log('[pricing] load silent error:', e.message);
   }
 }
 
