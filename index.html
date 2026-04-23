@@ -713,6 +713,55 @@ nav {
   margin-left: auto;
 }
 
+/* Botão "Analisar" no topo do card + badge de veredito */
+.analyze-btn {
+  position: absolute;
+  top: 10px;
+  right: 10px;
+  z-index: 3;
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  background: rgba(139, 92, 246, 0.15);
+  border: 1px solid rgba(139, 92, 246, 0.35);
+  color: var(--primary-light);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: all .2s;
+}
+.analyze-btn:hover {
+  background: var(--primary);
+  color: white;
+  transform: scale(1.1);
+}
+.analyze-btn svg { width: 16px; height: 16px; }
+
+.verdict-chip {
+  position: absolute;
+  left: 10px;
+  top: 10px;
+  z-index: 3;
+  padding: 3px 8px;
+  border-radius: 999px;
+  font-size: 10px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: .4px;
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  cursor: pointer;
+  transition: transform .15s;
+}
+.verdict-chip:hover { transform: translateY(-1px); }
+.verdict-chip.verdict-comprar { background: rgba(16, 185, 129, 0.18); color: #10b981; border: 1px solid rgba(16, 185, 129, 0.35); }
+.verdict-chip.verdict-esperar { background: rgba(250, 204, 21, 0.15); color: #facc15; border: 1px solid rgba(250, 204, 21, 0.35); }
+.verdict-chip.verdict-evitar  { background: rgba(239, 68, 68, 0.15);  color: #ef4444; border: 1px solid rgba(239, 68, 68, 0.35); }
+.verdict-chip.verdict-estavel { background: rgba(148, 163, 184, 0.15); color: #94a3b8; border: 1px solid rgba(148, 163, 184, 0.3); }
+.verdict-chip .dot { width: 5px; height: 5px; border-radius: 50%; background: currentColor; }
+
 .skin-image {
   height: 170px;
   display: flex;
@@ -1999,7 +2048,11 @@ footer {
   <div class="steps-grid">
     <div class="step-card">
       <div class="step-number">01</div>
-      <div class="step-emoji">🎮</div>
+      <div class="step-emoji" style="color: #66c0f4;">
+        <svg width="44" height="44" viewBox="0 0 24 24" fill="currentColor" aria-label="Steam">
+          <path d="M11.98 0C5.7 0 .54 4.86.05 11.04l6.42 2.66c.55-.37 1.2-.59 1.91-.59.07 0 .13 0 .19.01l2.86-4.14V8.9c0-2.5 2.03-4.52 4.52-4.52 2.5 0 4.53 2.03 4.53 4.53s-2.03 4.52-4.53 4.52h-.1l-4.08 2.91c0 .05 0 .1 0 .16 0 1.87-1.51 3.4-3.39 3.4-1.63 0-3.02-1.18-3.33-2.73L.44 15.27C1.86 20.3 6.49 24 11.98 24c6.63 0 12-5.37 12-12S18.6 0 11.98 0zM7.54 18.21l-1.47-.61c.26.54.71 1 1.31 1.25 1.3.54 2.8-.08 3.33-1.37.26-.63.26-1.33 0-1.96-.26-.63-.73-1.12-1.35-1.38-.62-.25-1.28-.25-1.86-.04l1.52.63c.96.4 1.41 1.5 1.01 2.46-.4.96-1.49 1.41-2.45 1.02zm8.4-5.69c-1.67 0-3.02-1.36-3.02-3.02 0-1.67 1.36-3.02 3.02-3.02 1.67 0 3.03 1.36 3.03 3.02 0 1.67-1.36 3.02-3.03 3.02zm0-5.44c-1.33 0-2.42 1.08-2.42 2.42 0 1.33 1.08 2.42 2.42 2.42 1.33 0 2.42-1.08 2.42-2.42 0-1.34-1.08-2.42-2.42-2.42z"/>
+        </svg>
+      </div>
       <div class="step-title">Conecte sua Steam</div>
       <div class="step-description">Faça login seguro com sua conta Steam para vincular seu inventário.</div>
     </div>
@@ -2233,6 +2286,45 @@ let skinImages = {};
 // ============= FIRESTORE SKINS =============
 let firestoreSkins = [];
 
+// Cache dos vereditos por skin name, carregado sob demanda do Firestore analysis_cache.
+const skinVerdicts = {};
+
+// Redireciona pra página de análise com a skin pré-preenchida. Auto-submit via ?auto=1
+function analyzeSkin(name) {
+  window.location.href = `analise.html?name=${encodeURIComponent(name)}&auto=1`;
+}
+
+// Busca no Firestore o veredito já cacheado de uma lista de skins.
+// Só lê docs existentes — skins nunca analisadas não geram chip.
+async function loadVerdictsForVisibleSkins() {
+  const allNames = getAllSkins().map(s => s.name);
+  if (!allNames.length) return;
+  const MAX = 40; // evita 40+ reads por página
+  const names = allNames.slice(0, MAX);
+  const results = await Promise.all(names.map(async (name) => {
+    try {
+      // tier "full" tem recomendação, tier "basic" não. Tenta full primeiro.
+      const fullDoc = await db.collection('analysis_cache').doc(`${name}::full`).get();
+      if (fullDoc.exists) {
+        const r = fullDoc.data()?.response?.recommendation;
+        const t = fullDoc.data()?.response?.trend;
+        if (r?.verdict) return { name, verdict: r.verdict, label: (r.reasons || []).slice(0, 2).join(' · '), trend: t?.direction };
+      }
+      // Fallback: trend da tier basic
+      const basicDoc = await db.collection('analysis_cache').doc(`${name}::basic`).get();
+      if (basicDoc.exists) {
+        const t = basicDoc.data()?.response?.trend;
+        if (t?.direction === 'up') return { name, verdict: 'COMPRAR', label: `Subindo ${t.pctChange7d}%`, trend: 'up' };
+        if (t?.direction === 'down') return { name, verdict: 'EVITAR', label: `Caindo ${t.pctChange7d}%`, trend: 'down' };
+        if (t?.direction === 'stable') return { name, verdict: 'ESTAVEL', label: 'Preço estável', trend: 'stable' };
+      }
+    } catch {}
+    return null;
+  }));
+  results.filter(Boolean).forEach(r => { skinVerdicts[r.name] = r; });
+  renderSkins(); // re-render pra incluir os chips
+}
+
 // Carrega título/subtítulo/CTA/imagem do hero da collection settings/hero.
 // Se o doc não existe ou falhar, mantém os valores hardcoded (default).
 async function loadHeroConfig() {
@@ -2294,7 +2386,7 @@ document.addEventListener('DOMContentLoaded', function() {
   initializeUI();
   renderSkins();
   loadSkinImages();
-  loadFirestoreSkins();
+  loadFirestoreSkins().then(() => loadVerdictsForVisibleSkins());
   loadHeroConfig();
 
   // Check Steam callback
@@ -2473,8 +2565,23 @@ function createSkinCard(skin, index) {
   const originalPrice = (skin.price / (1 - skin.discount / 100)).toFixed(2);
   const image = skin.image || skinImages[skin.name];
 
+  // Veredito vem do cache pré-carregado (loadVerdictsForVisibleSkins)
+  const verdict = skinVerdicts[skin.name]; // { verdict, label, trend }
+  const verdictChip = verdict ? `
+    <span class="verdict-chip verdict-${verdict.verdict.toLowerCase()}"
+      title="${verdict.label || ''}" onclick="event.stopPropagation(); analyzeSkin('${skin.name.replace(/'/g, "\\'")}')">
+      <span class="dot"></span>${verdict.verdict}
+    </span>` : '';
+
   div.innerHTML = `
     <div class="skin-rarity-bar" style="color: ${rarityColor};"></div>
+    ${verdictChip}
+    <button class="analyze-btn" title="Analisar esta skin"
+      onclick="event.stopPropagation(); analyzeSkin('${skin.name.replace(/'/g, "\\'")}')">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+        <path d="M3 3v18h18"/><path d="M7 14l4-4 4 4 5-5"/>
+      </svg>
+    </button>
     <div class="skin-badges">
       <div class="delivery-badge ${skin.inStock ? 'full' : ''}">
         ${skin.inStock ? '⚡ ENTREGA FULL' : 'ATÉ 12H'}
