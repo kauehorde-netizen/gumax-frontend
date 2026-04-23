@@ -480,10 +480,6 @@ select.form-control {
         <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 19l7-7 3 3-7 7-3-3z"/><path d="M18 13l-1.5-7.5L2 2l3.5 14.5L13 18l5-5z"/><path d="M2 2l7.586 7.586"/><circle cx="11" cy="11" r="2"/></svg>
         <span>Aparência</span>
       </li>
-      <li onclick="switchSection('pricing')">
-        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="1" x2="12" y2="23"/><path d="M17 5H9.5a3.5 3.5 0 000 7h5a3.5 3.5 0 010 7H6"/></svg>
-        <span>Precificação</span>
-      </li>
       <li onclick="switchSection('settings')">
         <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 00.33 1.82l.06.06a2 2 0 010 2.83 2 2 0 01-2.83 0l-.06-.06a1.65 1.65 0 00-1.82-.33 1.65 1.65 0 00-1 1.51V21a2 2 0 01-4 0v-.09A1.65 1.65 0 009 19.4a1.65 1.65 0 00-1.82.33l-.06.06a2 2 0 01-2.83-2.83l.06-.06A1.65 1.65 0 004.68 15a1.65 1.65 0 00-1.51-1H3a2 2 0 010-4h.09A1.65 1.65 0 004.6 9a1.65 1.65 0 00-.33-1.82l-.06-.06a2 2 0 012.83-2.83l.06.06A1.65 1.65 0 009 4.68a1.65 1.65 0 001-1.51V3a2 2 0 014 0v.09a1.65 1.65 0 001 1.51 1.65 1.65 0 001.82-.33l.06-.06a2 2 0 012.83 2.83l-.06.06A1.65 1.65 0 0019.4 9a1.65 1.65 0 001.51 1H21a2 2 0 010 4h-.09a1.65 1.65 0 00-1.51 1z"/></svg>
         <span>Configurações</span>
@@ -562,11 +558,13 @@ select.form-control {
       <div class="page-header">
         <div>
           <h1>Minhas Skins</h1>
-          <div class="subtitle">Gerencie suas skins e ofertas</div>
+          <div class="subtitle">
+            Skins do seu inventário Steam (Entrega Full — 30 min).
+            As milhares de ofertas normais (Youpin, 12h) aparecem automaticamente na loja via Pricempire.
+          </div>
         </div>
         <div style="display: flex; gap: 8px;">
           <button class="btn btn-yellow" onclick="openSkinModal('full')">⚡ Adicionar Full (30min)</button>
-          <button class="btn btn-primary" onclick="openSkinModal('normal')">+ Criar Oferta Normal (12h)</button>
         </div>
       </div>
 
@@ -928,107 +926,84 @@ select.form-control {
 
     </div>
 
-    <!-- PRECIFICAÇÃO SECTION -->
-    <div class="section" id="section-pricing">
-      <div class="page-header">
-        <div>
-          <h1>Precificação</h1>
-          <div class="subtitle">Controle como o preço de venda é calculado a partir do Youpin (Pricempire)</div>
-        </div>
-      </div>
-
-      <!-- Explicação -->
-      <div class="data-table-wrapper" style="padding: 20px; margin-bottom: 16px; border-left: 3px solid var(--primary-light);">
-        <p style="margin: 0; color: var(--text-muted); line-height: 1.6;">
-          <strong style="color: var(--text);">Como funciona:</strong> o valor original (riscado) na loja é o preço da Steam convertido.
-          O preço de venda é calculado a partir do Youpin em Yuan (¥) × fator de conversão × (1 + margem).
-          Você escolhe o fator: fixo (previsível) ou cotação ao vivo do Google (acompanha o mercado).
-        </p>
-      </div>
-
-      <!-- Card: modo -->
-      <div class="data-table-wrapper" style="padding: 24px; margin-bottom: 16px;">
-        <h3 style="margin: 0 0 16px 0;">Modo de conversão</h3>
-
-        <label style="display: flex; gap: 12px; padding: 14px; border: 1px solid var(--border); border-radius: 8px; cursor: pointer; margin-bottom: 8px;">
-          <input type="radio" name="pricingMode" value="fixed" id="pricingModeFixed" style="margin-top: 3px;">
-          <div>
-            <div style="font-weight: 600;">Fator fixo</div>
-            <div style="color: var(--text-muted); font-size: 13px;">
-              Você define quantos reais vale 1 yuan. Preço previsível, não sofre com volatilidade do câmbio.
-              Bom pra garantir margem quando o yuan sobe de repente.
-            </div>
-          </div>
-        </label>
-
-        <label style="display: flex; gap: 12px; padding: 14px; border: 1px solid var(--border); border-radius: 8px; cursor: pointer;">
-          <input type="radio" name="pricingMode" value="rate" id="pricingModeRate" style="margin-top: 3px;">
-          <div>
-            <div style="font-weight: 600;">Cotação atual (Google Finance)</div>
-            <div style="color: var(--text-muted); font-size: 13px;">
-              Usa o valor exato que aparece no Google agora. Atualiza a cada 5 minutos.
-              Bom pra acompanhar o mercado em tempo real.
-            </div>
-          </div>
-        </label>
-      </div>
-
-      <!-- Card: fator fixo -->
-      <div class="data-table-wrapper" style="padding: 24px; margin-bottom: 16px;" id="pricingFixedCard">
-        <h3 style="margin: 0 0 16px 0;">Fator fixo (BRL por CNY)</h3>
-        <div class="form-group">
-          <label>Quantos reais você quer cobrar por cada yuan do Youpin?</label>
-          <input type="number" class="form-control" id="pricingFixedRate" step="0.01" min="0.1" max="2" placeholder="0.78">
-          <div style="color: var(--text-muted); font-size: 12px; margin-top: 6px;">
-            Exemplo: <code>0.78</code> significa que uma skin de ¥100 no Youpin vira R$ 78 (antes da margem).
-            Gu tá trabalhando atualmente com 0.78. Google hoje: <strong id="pricingGoogleRateInline">—</strong>.
-          </div>
-        </div>
-      </div>
-
-      <!-- Card: margem -->
-      <div class="data-table-wrapper" style="padding: 24px; margin-bottom: 16px;">
-        <h3 style="margin: 0 0 16px 0;">Margem de lucro</h3>
-        <div class="form-group">
-          <label>% acima do preço Youpin convertido</label>
-          <input type="number" class="form-control" id="pricingMargin" step="1" min="0" max="99" placeholder="10">
-          <div style="color: var(--text-muted); font-size: 12px; margin-top: 6px;">
-            Exemplo: <code>10</code> = +10% sobre o valor convertido. Skin ¥100 × 0,78 × 1,10 = R$ 85,80.
-          </div>
-        </div>
-      </div>
-
-      <!-- Preview ao vivo -->
-      <div class="data-table-wrapper" style="padding: 24px; margin-bottom: 16px; border-left: 3px solid var(--accent-yellow);">
-        <h3 style="margin: 0 0 16px 0;">Preview em tempo real</h3>
-        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 12px; font-size: 14px;">
-          <div>
-            <div style="color: var(--text-muted); font-size: 12px;">Cotação Google</div>
-            <div id="pricingGoogleRate" style="font-weight: 700; font-size: 18px;">—</div>
-          </div>
-          <div>
-            <div style="color: var(--text-muted); font-size: 12px;">Fator em uso</div>
-            <div id="pricingActiveFactor" style="font-weight: 700; font-size: 18px;">—</div>
-          </div>
-          <div>
-            <div style="color: var(--text-muted); font-size: 12px;">Skin exemplo: ¥100 Youpin</div>
-            <div style="font-weight: 700; font-size: 18px;">
-              <span style="text-decoration: line-through; color: var(--text-muted); font-size: 14px;" id="pricingExampleOriginal">—</span>
-              <span id="pricingExampleSale" style="color: var(--accent-yellow); margin-left: 8px;">—</span>
-            </div>
-          </div>
-        </div>
-      </div>
-
-      <button class="btn btn-primary" onclick="savePricing()">Salvar precificação</button>
-      <button class="btn btn-secondary" onclick="loadPricing()" style="margin-left: 8px;">Recarregar</button>
-    </div>
-
     <div class="section" id="section-settings">
       <div class="page-header">
         <div>
           <h1>Configurações</h1>
           <div class="subtitle">Configurações gerais do marketplace</div>
+        </div>
+      </div>
+
+      <!-- ═══ PRECIFICAÇÃO ═══ -->
+      <div class="data-table-wrapper" style="padding: 24px; margin-bottom: 16px; border-left: 3px solid var(--accent-yellow);">
+        <h3 style="margin: 0 0 8px 0;">💰 Precificação das skins Youpin</h3>
+        <p style="margin: 0 0 20px 0; color: var(--text-muted); font-size: 13px; line-height: 1.5;">
+          O preço da loja é calculado: <strong>Youpin (¥) × fator de conversão × (1 + margem)</strong>.
+          O valor riscado na loja usa o preço da Steam convertido.
+        </p>
+
+        <!-- Modo -->
+        <div class="form-group">
+          <label>Modo de conversão</label>
+          <label style="display: flex; gap: 10px; padding: 12px; border: 1px solid var(--border); border-radius: 8px; cursor: pointer; margin-bottom: 6px;">
+            <input type="radio" name="pricingMode" value="fixed" id="pricingModeFixed" style="margin-top: 3px;">
+            <div>
+              <div style="font-weight: 600; font-size: 14px;">Fator fixo</div>
+              <div style="color: var(--text-muted); font-size: 12px;">Você define o valor. Preço previsível, não sofre com volatilidade.</div>
+            </div>
+          </label>
+          <label style="display: flex; gap: 10px; padding: 12px; border: 1px solid var(--border); border-radius: 8px; cursor: pointer;">
+            <input type="radio" name="pricingMode" value="rate" id="pricingModeRate" style="margin-top: 3px;">
+            <div>
+              <div style="font-weight: 600; font-size: 14px;">Cotação Google (ao vivo)</div>
+              <div style="color: var(--text-muted); font-size: 12px;">Usa o valor exato do Google Finance. Atualiza a cada 5 min.</div>
+            </div>
+          </label>
+        </div>
+
+        <!-- Fator fixo -->
+        <div class="form-group" id="pricingFixedCard">
+          <label>Fator fixo (quantos R$ por ¥)</label>
+          <input type="number" class="form-control" id="pricingFixedRate" step="0.01" min="0.1" max="2" placeholder="0.78">
+          <div style="color: var(--text-muted); font-size: 12px; margin-top: 4px;">
+            Gu hoje usa <strong>0.78</strong>. Google agora: <strong id="pricingGoogleRateInline">—</strong>.
+          </div>
+        </div>
+
+        <!-- Margem -->
+        <div class="form-group">
+          <label>Margem de lucro (%)</label>
+          <input type="number" class="form-control" id="pricingMargin" step="1" min="0" max="99" placeholder="10">
+          <div style="color: var(--text-muted); font-size: 12px; margin-top: 4px;">
+            Ex: <strong>10</strong> = +10% sobre o Youpin convertido.
+          </div>
+        </div>
+
+        <!-- Preview ao vivo -->
+        <div style="background: var(--bg-elevated); border-radius: 8px; padding: 14px; margin-top: 12px;">
+          <div style="color: var(--text-muted); font-size: 12px; margin-bottom: 8px;">Preview em tempo real</div>
+          <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(160px, 1fr)); gap: 10px; font-size: 13px;">
+            <div>
+              <div style="color: var(--text-muted); font-size: 11px;">Cotação Google</div>
+              <div id="pricingGoogleRate" style="font-weight: 700;">—</div>
+            </div>
+            <div>
+              <div style="color: var(--text-muted); font-size: 11px;">Fator em uso</div>
+              <div id="pricingActiveFactor" style="font-weight: 700;">—</div>
+            </div>
+            <div>
+              <div style="color: var(--text-muted); font-size: 11px;">Skin ¥100 Youpin</div>
+              <div style="font-weight: 700;">
+                <span style="text-decoration: line-through; color: var(--text-muted); font-size: 12px;" id="pricingExampleOriginal">—</span>
+                <span id="pricingExampleSale" style="color: var(--accent-yellow); margin-left: 6px;">—</span>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div style="margin-top: 14px;">
+          <button class="btn btn-primary" onclick="savePricing()">Salvar precificação</button>
+          <button class="btn btn-secondary" onclick="loadPricing()" style="margin-left: 6px;">Recarregar</button>
         </div>
       </div>
 
@@ -1258,13 +1233,13 @@ function switchSection(name) {
   document.getElementById('section-' + name).classList.add('active');
 
   const items = document.querySelectorAll('.sidebar-nav li');
-  const names = ['overview', 'skins', 'resellers', 'orders', 'commissions', 'inventory', 'appearance', 'pricing', 'settings'];
+  const names = ['overview', 'skins', 'resellers', 'orders', 'commissions', 'inventory', 'appearance', 'settings'];
   const index = names.indexOf(name);
   if (index >= 0 && items[index]) items[index].classList.add('active');
 
   if (name === 'appearance') loadAppearance();
   if (name === 'inventory')  loadInventoryPage();
-  if (name === 'pricing')    loadPricing();
+  if (name === 'settings')   loadPricing();
 }
 
 // ============= INVENTORY (Steam sync) =============
