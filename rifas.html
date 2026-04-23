@@ -30,26 +30,26 @@ body {
 /* NAV */
 .nav {
   display: flex; align-items: center; justify-content: space-between;
-  padding: 20px 40px; border-bottom: 1px solid var(--border);
+  padding: 12px 32px; border-bottom: 1px solid var(--border);
   background: rgba(8, 6, 14, .8); backdrop-filter: blur(12px);
   position: sticky; top: 0; z-index: 100;
 }
-.nav-brand img { height: 32px; width: auto; }
-.nav-links { display: flex; gap: 28px; }
+.nav-brand img { height: 26px; width: auto; display: block; }
+.nav-links { display: flex; gap: 24px; }
 .nav-link {
   color: var(--text-secondary); text-decoration: none; font-weight: 500;
-  transition: color .2s; cursor: pointer;
+  transition: color .2s; cursor: pointer; font-size: 14px;
 }
 .nav-link:hover { color: var(--primary-light); }
 .nav-link.active { color: var(--accent-gold); }
 
-.container { max-width: 1100px; margin: 0 auto; padding: 32px 24px 64px; }
+.container { max-width: 1080px; margin: 0 auto; padding: 16px 20px 80px; }
 
 /* HERO */
 .rifa-hero {
-  display: grid; grid-template-columns: 1fr 1fr; gap: 32px;
+  display: grid; grid-template-columns: 0.9fr 1.1fr; gap: 20px;
   background: var(--bg-card); border: 1px solid var(--border);
-  border-radius: 20px; padding: 32px; margin-bottom: 32px;
+  border-radius: 16px; padding: 20px; margin-bottom: 16px;
   position: relative; overflow: hidden;
 }
 .rifa-hero::before {
@@ -60,89 +60,90 @@ body {
 .rifa-image-wrap {
   display: flex; align-items: center; justify-content: center;
   background: linear-gradient(135deg, rgba(235, 75, 75, .12), rgba(235, 75, 75, .02));
-  border-radius: 16px; padding: 32px; position: relative;
-  border: 1px solid rgba(235, 75, 75, .25);
+  border-radius: 12px; padding: 16px; position: relative;
+  border: 1px solid rgba(235, 75, 75, .25); min-height: 200px;
 }
 .rifa-image-wrap img {
-  width: 100%; max-width: 340px; filter: drop-shadow(0 0 30px rgba(235, 75, 75, .35));
+  width: 100%; max-width: 280px; filter: drop-shadow(0 0 24px rgba(235, 75, 75, .35));
 }
 .rifa-info { display: flex; flex-direction: column; justify-content: center; position: relative; }
 .rarity-tag {
-  display: inline-block; padding: 4px 12px; border-radius: 999px;
+  display: inline-block; padding: 3px 10px; border-radius: 999px;
   background: rgba(235, 75, 75, .15); color: var(--accent-gold);
-  font-weight: 700; font-size: 12px; letter-spacing: .8px; margin-bottom: 12px;
+  font-weight: 700; font-size: 11px; letter-spacing: .6px; margin-bottom: 8px;
   width: fit-content; text-transform: uppercase;
 }
 .rifa-title {
-  font-size: 32px; font-weight: 800; letter-spacing: -0.5px;
-  line-height: 1.1; margin-bottom: 8px;
+  font-size: 24px; font-weight: 800; letter-spacing: -0.5px;
+  line-height: 1.1; margin-bottom: 6px;
 }
-.rifa-subtitle { color: var(--text-secondary); margin-bottom: 20px; font-size: 14px; }
+.rifa-subtitle { color: var(--text-secondary); margin-bottom: 14px; font-size: 12px; line-height: 1.4; }
 .rifa-stats {
-  display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px;
-  margin: 16px 0 24px;
+  display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px;
+  margin: 10px 0 14px;
 }
 .stat-box {
   background: var(--bg-elevated); border: 1px solid var(--border);
-  border-radius: 10px; padding: 12px; text-align: center;
+  border-radius: 8px; padding: 8px 10px; text-align: center;
 }
 .stat-box .value {
-  font-size: 22px; font-weight: 800; color: var(--primary-light);
+  font-size: 17px; font-weight: 800; color: var(--primary-light);
   font-family: 'JetBrains Mono', monospace;
 }
 .stat-box .label {
-  font-size: 11px; color: var(--text-muted); text-transform: uppercase;
-  letter-spacing: .5px; margin-top: 2px;
+  font-size: 10px; color: var(--text-muted); text-transform: uppercase;
+  letter-spacing: .4px; margin-top: 2px;
 }
 .ticket-price {
   display: flex; align-items: center; justify-content: space-between;
   background: var(--bg-elevated); border: 1px solid var(--border);
-  border-radius: 12px; padding: 14px 18px; margin-bottom: 16px;
+  border-radius: 10px; padding: 10px 14px; margin-bottom: 10px;
 }
-.ticket-price .label { font-size: 13px; color: var(--text-secondary); }
+.ticket-price .label { font-size: 12px; color: var(--text-secondary); }
 .ticket-price .price {
-  font-size: 24px; font-weight: 800; color: var(--accent-yellow);
+  font-size: 20px; font-weight: 800; color: var(--accent-yellow);
   font-family: 'JetBrains Mono', monospace;
 }
 .progress-wrap {
-  background: var(--bg-elevated); border-radius: 999px; height: 8px;
-  overflow: hidden; margin-bottom: 8px;
+  background: var(--bg-elevated); border-radius: 999px; height: 6px;
+  overflow: hidden; margin-bottom: 6px;
 }
 .progress-bar {
   height: 100%; background: linear-gradient(90deg, var(--accent-gold), var(--accent-yellow));
   transition: width .3s;
 }
-.progress-text { font-size: 12px; color: var(--text-secondary); text-align: right; }
+.progress-text { font-size: 11px; color: var(--text-secondary); text-align: right; }
 
 /* NUMBER GRID */
 .grid-section {
   background: var(--bg-card); border: 1px solid var(--border);
-  border-radius: 20px; padding: 28px; margin-bottom: 24px;
+  border-radius: 16px; padding: 18px 20px; margin-bottom: 16px;
 }
 .grid-header {
   display: flex; align-items: center; justify-content: space-between;
-  margin-bottom: 20px; flex-wrap: wrap; gap: 12px;
+  margin-bottom: 14px; flex-wrap: wrap; gap: 10px;
 }
-.grid-title { font-size: 20px; font-weight: 700; }
-.grid-legend { display: flex; gap: 16px; font-size: 12px; color: var(--text-secondary); }
-.legend-dot { display: inline-block; width: 12px; height: 12px; border-radius: 4px; margin-right: 6px; vertical-align: middle; }
+.grid-title { font-size: 17px; font-weight: 700; }
+.grid-subtitle { font-size: 12px; color: var(--text-secondary); margin-top: 2px; }
+.grid-legend { display: flex; gap: 14px; font-size: 11px; color: var(--text-secondary); }
+.legend-dot { display: inline-block; width: 10px; height: 10px; border-radius: 3px; margin-right: 5px; vertical-align: middle; }
 .legend-dot.available { background: var(--bg-input); border: 1px solid var(--border); }
 .legend-dot.selected { background: var(--primary); }
 .legend-dot.taken { background: var(--accent-red); opacity: 0.6; }
 
 .number-grid {
-  display: grid; grid-template-columns: repeat(10, 1fr); gap: 10px;
+  display: grid; grid-template-columns: repeat(10, 1fr); gap: 6px;
 }
 .num {
-  aspect-ratio: 1; border-radius: 10px; background: var(--bg-input);
+  aspect-ratio: 1; border-radius: 8px; background: var(--bg-input);
   border: 1px solid var(--border); display: flex; align-items: center; justify-content: center;
-  font-weight: 700; font-size: 18px; font-family: 'JetBrains Mono', monospace;
+  font-weight: 700; font-size: 14px; font-family: 'JetBrains Mono', monospace;
   cursor: pointer; transition: all .15s; user-select: none;
 }
-.num:hover:not(.taken) { border-color: var(--primary); transform: translateY(-2px); color: var(--primary-light); }
+.num:hover:not(.taken) { border-color: var(--primary); transform: translateY(-1px); color: var(--primary-light); }
 .num.selected {
   background: var(--primary); color: white; border-color: var(--primary-dark);
-  box-shadow: 0 4px 14px rgba(139, 92, 246, .35);
+  box-shadow: 0 3px 10px rgba(139, 92, 246, .35);
 }
 .num.taken {
   background: rgba(239, 68, 68, .15); color: var(--accent-red);
@@ -152,26 +153,26 @@ body {
 
 /* CHECKOUT */
 .checkout-bar {
-  position: sticky; bottom: 16px; z-index: 50;
+  position: sticky; bottom: 10px; z-index: 50;
   background: var(--bg-card); border: 1px solid var(--border);
-  border-radius: 16px; padding: 16px 20px; box-shadow: 0 8px 32px rgba(0, 0, 0, .4);
+  border-radius: 12px; padding: 10px 16px; box-shadow: 0 6px 24px rgba(0, 0, 0, .4);
   display: flex; align-items: center; justify-content: space-between;
-  flex-wrap: wrap; gap: 16px;
+  flex-wrap: wrap; gap: 12px;
 }
 .checkout-summary {
-  display: flex; align-items: center; gap: 24px; flex-wrap: wrap;
+  display: flex; align-items: center; gap: 18px; flex-wrap: wrap;
 }
-.checkout-label { font-size: 12px; color: var(--text-muted); text-transform: uppercase; letter-spacing: .5px; }
-.checkout-value { font-size: 20px; font-weight: 800; }
-.checkout-value.big { color: var(--accent-yellow); font-family: 'JetBrains Mono', monospace; }
+.checkout-label { font-size: 10px; color: var(--text-muted); text-transform: uppercase; letter-spacing: .4px; }
+.checkout-value { font-size: 16px; font-weight: 800; }
+.checkout-value.big { color: var(--accent-yellow); font-family: 'JetBrains Mono', monospace; font-size: 18px; }
 .checkout-selected {
   color: var(--primary-light); font-family: 'JetBrains Mono', monospace;
-  font-size: 13px; max-width: 420px; word-break: break-all;
+  font-size: 12px; max-width: 360px; word-break: break-all;
 }
 .btn-buy {
   background: linear-gradient(135deg, var(--primary), var(--primary-dark));
-  color: white; border: none; padding: 14px 32px; border-radius: 12px;
-  font-family: inherit; font-weight: 700; font-size: 15px; cursor: pointer;
+  color: white; border: none; padding: 10px 24px; border-radius: 10px;
+  font-family: inherit; font-weight: 700; font-size: 14px; cursor: pointer;
   transition: transform .1s, filter .2s;
 }
 .btn-buy:hover:not(:disabled) { transform: translateY(-2px); filter: brightness(1.1); }
@@ -283,54 +284,10 @@ body {
   <!-- HERO DA RIFA -->
   <section class="rifa-hero">
     <div class="rifa-image-wrap">
-      <svg id="skinImage" viewBox="0 0 480 280" xmlns="http://www.w3.org/2000/svg" style="width:100%;max-width:360px;">
-        <defs>
-          <linearGradient id="dragonGrad" x1="0%" y1="0%" x2="100%" y2="100%">
-            <stop offset="0%" stop-color="#eb4b4b"/>
-            <stop offset="50%" stop-color="#d4a017"/>
-            <stop offset="100%" stop-color="#8b1a1a"/>
-          </linearGradient>
-          <linearGradient id="barrelGrad" x1="0" y1="0" x2="0" y2="1">
-            <stop offset="0%" stop-color="#4a3020"/>
-            <stop offset="100%" stop-color="#1a0f08"/>
-          </linearGradient>
-          <filter id="glow">
-            <feGaussianBlur stdDeviation="4" result="coloredBlur"/>
-            <feMerge><feMergeNode in="coloredBlur"/><feMergeNode in="SourceGraphic"/></feMerge>
-          </filter>
-        </defs>
-        <!-- Stock (coronha) -->
-        <rect x="20" y="130" width="80" height="60" rx="6" fill="url(#barrelGrad)"/>
-        <rect x="20" y="130" width="80" height="60" rx="6" fill="url(#dragonGrad)" opacity="0.85"/>
-        <!-- Corpo principal -->
-        <rect x="100" y="115" width="160" height="55" rx="4" fill="url(#barrelGrad)"/>
-        <rect x="100" y="115" width="160" height="55" rx="4" fill="url(#dragonGrad)" opacity="0.9"/>
-        <!-- Scope (mira) -->
-        <rect x="145" y="85" width="110" height="24" rx="12" fill="#1a0f08"/>
-        <circle cx="155" cy="97" r="6" fill="#4a3020"/>
-        <circle cx="245" cy="97" r="6" fill="#4a3020"/>
-        <!-- Cano -->
-        <rect x="260" y="135" width="180" height="14" fill="url(#barrelGrad)"/>
-        <rect x="260" y="135" width="180" height="14" fill="url(#dragonGrad)" opacity="0.7"/>
-        <rect x="440" y="130" width="18" height="24" rx="2" fill="#1a0f08"/>
-        <!-- Gatilho -->
-        <path d="M 170 170 L 175 195 L 195 195 L 200 170 Z" fill="#2a1810"/>
-        <circle cx="185" cy="180" r="8" fill="none" stroke="#1a0f08" stroke-width="2"/>
-        <!-- Cabo -->
-        <rect x="95" y="170" width="30" height="50" rx="4" fill="url(#barrelGrad)"/>
-        <!-- Efeito dragão decorativo -->
-        <path d="M 110 130 Q 160 100, 200 130 Q 240 155, 260 135" stroke="url(#dragonGrad)" stroke-width="3" fill="none" opacity="0.6" filter="url(#glow)"/>
-        <path d="M 120 155 Q 170 140, 220 155" stroke="#fac619" stroke-width="1.5" fill="none" opacity="0.5"/>
-        <!-- Escamas -->
-        <circle cx="140" cy="135" r="3" fill="#fac619" opacity="0.7"/>
-        <circle cx="160" cy="145" r="2.5" fill="#fac619" opacity="0.6"/>
-        <circle cx="180" cy="135" r="3" fill="#fac619" opacity="0.7"/>
-        <circle cx="200" cy="145" r="2.5" fill="#fac619" opacity="0.6"/>
-        <circle cx="220" cy="138" r="3" fill="#fac619" opacity="0.7"/>
-        <circle cx="240" cy="148" r="2.5" fill="#fac619" opacity="0.5"/>
-        <!-- Label FN -->
-        <text x="240" y="250" text-anchor="middle" fill="#A78BFA" font-family="monospace" font-size="14" font-weight="bold" opacity="0.8">FACTORY NEW · 0.0001</text>
-      </svg>
+      <img id="skinImage"
+        src="https://community.cloudflare.steamstatic.com/economy/image/-9a81dlWLwJ2UUGcVs_nsVtzdOEdtWwKGZZLQHTxDZ7I56KU0Zwwo4NUX4oFJZEHLbXH5ApeO4YmlhxYQknCRvCoAQ0jFNQsRI9M2QlR3oja4Nx-iq7ymI-IkOCNzobB5oOLh-fpPLvdwmpS7ZMiibvEpo6jiwHmrhBsZm-hcNWVIwI6NQqD-FW9xrzt0Z-5vsnXiSA36UI8pSGK0RTIEh7e7A/360fx360f"
+        alt="AWP Dragon Lore"
+        onerror="this.onerror=null; loadSkinFromBackend(this);">
     </div>
     <div class="rifa-info">
       <span class="rarity-tag">Cobiçada · Factory New</span>
@@ -573,6 +530,32 @@ function showToast(msg) {
   t.textContent = msg;
   t.className = 'toast show';
   setTimeout(() => t.classList.remove('show'), 2500);
+}
+
+// Fallback: se a URL da Steam falhar, pede ao backend o icon da Pricempire
+async function loadSkinFromBackend(img) {
+  try {
+    // Tenta pegar via nossa API de skinport (que indireto pode retornar item_page)
+    // Se tiver Pricempire configurada, outra opção é /api/skin-detail
+    const r = await fetch('https://gumax-backend-production.up.railway.app/api/skin-detail', {
+      method: 'POST', headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ name: 'AWP | Dragon Lore (Factory New)' })
+    });
+    const d = await r.json();
+    if (d.icon) {
+      img.src = d.icon.startsWith('http') ? d.icon : `https://community.cloudflare.steamstatic.com/economy/image/${d.icon}/360fx360f`;
+      return;
+    }
+  } catch (e) { console.log('[rifas] fallback icon error', e); }
+  // Último recurso: placeholder visual com iniciais
+  img.outerHTML = `
+    <div style="width:100%;max-width:280px;aspect-ratio:16/9;display:flex;align-items:center;justify-content:center;background:linear-gradient(135deg,rgba(235,75,75,0.3),rgba(212,160,23,0.3));border-radius:12px;border:1px solid rgba(235,75,75,0.4);">
+      <div style="text-align:center;">
+        <div style="font-size:48px;font-weight:900;color:#eb4b4b;line-height:1;font-family:'JetBrains Mono',monospace;">AWP</div>
+        <div style="font-size:14px;color:#fac619;margin-top:4px;letter-spacing:1px;">Dragon Lore</div>
+      </div>
+    </div>
+  `;
 }
 
 // ============ INIT ============
