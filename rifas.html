@@ -1,0 +1,537 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Gumax Skins | Rifa — AWP Dragon Lore</title>
+<link rel="icon" href="https://static.wixstatic.com/media/874864_b598e856481740e7ae752771a661c242~mv2.png/v1/fill/w_64,h_64,al_c,q_85,enc_auto/874864_b598e856481740e7ae752771a661c242~mv2.png">
+<link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800;900&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+
+<style>
+* { box-sizing: border-box; margin: 0; padding: 0; }
+:root {
+  --bg: #08060e; --bg-card: #110e1a; --bg-elevated: #1a1528; --bg-input: #13101e;
+  --text-primary: #ece8f4; --text-secondary: #9890a8; --text-muted: #5e5670;
+  --border: #241e35; --primary: #8B5CF6; --primary-dark: #7C3AED; --primary-light: #A78BFA;
+  --accent-yellow: #FACC15; --accent-green: #10b981; --accent-red: #ef4444;
+  --accent-gold: #eb4b4b;
+}
+body {
+  background: var(--bg);
+  background-image:
+    radial-gradient(ellipse at 50% 0%, rgba(235, 75, 75, .09) 0%, transparent 50%),
+    radial-gradient(ellipse at 80% 100%, rgba(250, 204, 21, .04) 0%, transparent 40%);
+  color: var(--text-primary);
+  font-family: 'Outfit', 'Segoe UI', sans-serif;
+  min-height: 100vh;
+  line-height: 1.5;
+}
+
+/* NAV */
+.nav {
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 20px 40px; border-bottom: 1px solid var(--border);
+  background: rgba(8, 6, 14, .8); backdrop-filter: blur(12px);
+  position: sticky; top: 0; z-index: 100;
+}
+.nav-brand img { height: 32px; width: auto; }
+.nav-links { display: flex; gap: 28px; }
+.nav-link {
+  color: var(--text-secondary); text-decoration: none; font-weight: 500;
+  transition: color .2s; cursor: pointer;
+}
+.nav-link:hover { color: var(--primary-light); }
+.nav-link.active { color: var(--accent-gold); }
+
+.container { max-width: 1100px; margin: 0 auto; padding: 32px 24px 64px; }
+
+/* HERO */
+.rifa-hero {
+  display: grid; grid-template-columns: 1fr 1fr; gap: 32px;
+  background: var(--bg-card); border: 1px solid var(--border);
+  border-radius: 20px; padding: 32px; margin-bottom: 32px;
+  position: relative; overflow: hidden;
+}
+.rifa-hero::before {
+  content: ''; position: absolute; inset: 0;
+  background: radial-gradient(circle at 80% 30%, rgba(235, 75, 75, .18), transparent 60%);
+  pointer-events: none;
+}
+.rifa-image-wrap {
+  display: flex; align-items: center; justify-content: center;
+  background: linear-gradient(135deg, rgba(235, 75, 75, .12), rgba(235, 75, 75, .02));
+  border-radius: 16px; padding: 32px; position: relative;
+  border: 1px solid rgba(235, 75, 75, .25);
+}
+.rifa-image-wrap img {
+  width: 100%; max-width: 340px; filter: drop-shadow(0 0 30px rgba(235, 75, 75, .35));
+}
+.rifa-info { display: flex; flex-direction: column; justify-content: center; position: relative; }
+.rarity-tag {
+  display: inline-block; padding: 4px 12px; border-radius: 999px;
+  background: rgba(235, 75, 75, .15); color: var(--accent-gold);
+  font-weight: 700; font-size: 12px; letter-spacing: .8px; margin-bottom: 12px;
+  width: fit-content; text-transform: uppercase;
+}
+.rifa-title {
+  font-size: 32px; font-weight: 800; letter-spacing: -0.5px;
+  line-height: 1.1; margin-bottom: 8px;
+}
+.rifa-subtitle { color: var(--text-secondary); margin-bottom: 20px; font-size: 14px; }
+.rifa-stats {
+  display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px;
+  margin: 16px 0 24px;
+}
+.stat-box {
+  background: var(--bg-elevated); border: 1px solid var(--border);
+  border-radius: 10px; padding: 12px; text-align: center;
+}
+.stat-box .value {
+  font-size: 22px; font-weight: 800; color: var(--primary-light);
+  font-family: 'JetBrains Mono', monospace;
+}
+.stat-box .label {
+  font-size: 11px; color: var(--text-muted); text-transform: uppercase;
+  letter-spacing: .5px; margin-top: 2px;
+}
+.ticket-price {
+  display: flex; align-items: center; justify-content: space-between;
+  background: var(--bg-elevated); border: 1px solid var(--border);
+  border-radius: 12px; padding: 14px 18px; margin-bottom: 16px;
+}
+.ticket-price .label { font-size: 13px; color: var(--text-secondary); }
+.ticket-price .price {
+  font-size: 24px; font-weight: 800; color: var(--accent-yellow);
+  font-family: 'JetBrains Mono', monospace;
+}
+.progress-wrap {
+  background: var(--bg-elevated); border-radius: 999px; height: 8px;
+  overflow: hidden; margin-bottom: 8px;
+}
+.progress-bar {
+  height: 100%; background: linear-gradient(90deg, var(--accent-gold), var(--accent-yellow));
+  transition: width .3s;
+}
+.progress-text { font-size: 12px; color: var(--text-secondary); text-align: right; }
+
+/* NUMBER GRID */
+.grid-section {
+  background: var(--bg-card); border: 1px solid var(--border);
+  border-radius: 20px; padding: 28px; margin-bottom: 24px;
+}
+.grid-header {
+  display: flex; align-items: center; justify-content: space-between;
+  margin-bottom: 20px; flex-wrap: wrap; gap: 12px;
+}
+.grid-title { font-size: 20px; font-weight: 700; }
+.grid-legend { display: flex; gap: 16px; font-size: 12px; color: var(--text-secondary); }
+.legend-dot { display: inline-block; width: 12px; height: 12px; border-radius: 4px; margin-right: 6px; vertical-align: middle; }
+.legend-dot.available { background: var(--bg-input); border: 1px solid var(--border); }
+.legend-dot.selected { background: var(--primary); }
+.legend-dot.taken { background: var(--accent-red); opacity: 0.6; }
+
+.number-grid {
+  display: grid; grid-template-columns: repeat(10, 1fr); gap: 10px;
+}
+.num {
+  aspect-ratio: 1; border-radius: 10px; background: var(--bg-input);
+  border: 1px solid var(--border); display: flex; align-items: center; justify-content: center;
+  font-weight: 700; font-size: 18px; font-family: 'JetBrains Mono', monospace;
+  cursor: pointer; transition: all .15s; user-select: none;
+}
+.num:hover:not(.taken) { border-color: var(--primary); transform: translateY(-2px); color: var(--primary-light); }
+.num.selected {
+  background: var(--primary); color: white; border-color: var(--primary-dark);
+  box-shadow: 0 4px 14px rgba(139, 92, 246, .35);
+}
+.num.taken {
+  background: rgba(239, 68, 68, .15); color: var(--accent-red);
+  border-color: rgba(239, 68, 68, .3); cursor: not-allowed;
+  text-decoration: line-through; opacity: 0.55;
+}
+
+/* CHECKOUT */
+.checkout-bar {
+  position: sticky; bottom: 16px; z-index: 50;
+  background: var(--bg-card); border: 1px solid var(--border);
+  border-radius: 16px; padding: 16px 20px; box-shadow: 0 8px 32px rgba(0, 0, 0, .4);
+  display: flex; align-items: center; justify-content: space-between;
+  flex-wrap: wrap; gap: 16px;
+}
+.checkout-summary {
+  display: flex; align-items: center; gap: 24px; flex-wrap: wrap;
+}
+.checkout-label { font-size: 12px; color: var(--text-muted); text-transform: uppercase; letter-spacing: .5px; }
+.checkout-value { font-size: 20px; font-weight: 800; }
+.checkout-value.big { color: var(--accent-yellow); font-family: 'JetBrains Mono', monospace; }
+.checkout-selected {
+  color: var(--primary-light); font-family: 'JetBrains Mono', monospace;
+  font-size: 13px; max-width: 420px; word-break: break-all;
+}
+.btn-buy {
+  background: linear-gradient(135deg, var(--primary), var(--primary-dark));
+  color: white; border: none; padding: 14px 32px; border-radius: 12px;
+  font-family: inherit; font-weight: 700; font-size: 15px; cursor: pointer;
+  transition: transform .1s, filter .2s;
+}
+.btn-buy:hover:not(:disabled) { transform: translateY(-2px); filter: brightness(1.1); }
+.btn-buy:disabled { opacity: .4; cursor: not-allowed; }
+
+/* MODAL */
+.modal-overlay {
+  position: fixed; inset: 0; background: rgba(8, 6, 14, .85);
+  display: flex; align-items: center; justify-content: center;
+  padding: 24px; z-index: 1000; backdrop-filter: blur(8px);
+}
+.modal-overlay.hidden { display: none; }
+.modal {
+  background: var(--bg-card); border: 1px solid var(--border);
+  border-radius: 20px; padding: 32px; max-width: 520px; width: 100%;
+  max-height: 90vh; overflow-y: auto; position: relative;
+}
+.modal h2 {
+  font-size: 24px; font-weight: 800; margin-bottom: 8px; letter-spacing: -0.5px;
+}
+.modal .sub { color: var(--text-secondary); margin-bottom: 24px; font-size: 14px; }
+.modal-close {
+  position: absolute; top: 16px; right: 16px; background: transparent;
+  border: 1px solid var(--border); color: var(--text-muted); width: 32px; height: 32px;
+  border-radius: 8px; cursor: pointer; font-size: 18px;
+}
+.modal-close:hover { color: var(--text-primary); }
+.pix-box {
+  background: var(--bg-elevated); border: 1px dashed var(--primary);
+  border-radius: 12px; padding: 24px; text-align: center; margin-bottom: 16px;
+}
+.pix-qr {
+  width: 200px; height: 200px; margin: 0 auto 16px;
+  background: white; border-radius: 12px; padding: 12px;
+  display: flex; align-items: center; justify-content: center;
+}
+.pix-qr svg { width: 100%; height: 100%; }
+.pix-code {
+  background: var(--bg-input); padding: 10px; border-radius: 8px;
+  font-family: 'JetBrains Mono', monospace; font-size: 11px;
+  word-break: break-all; color: var(--text-secondary); margin-bottom: 8px;
+}
+.pix-copy-btn {
+  background: var(--primary); color: white; border: none; padding: 10px 18px;
+  border-radius: 8px; font-family: inherit; font-weight: 600; font-size: 13px;
+  cursor: pointer; transition: background .2s;
+}
+.pix-copy-btn:hover { background: var(--primary-dark); }
+.success-screen { text-align: center; }
+.success-icon {
+  width: 72px; height: 72px; margin: 0 auto 16px;
+  background: rgba(16, 185, 129, .15); border-radius: 50%;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 36px; color: var(--accent-green);
+}
+
+.toast {
+  position: fixed; bottom: 30px; left: 50%; transform: translateX(-50%) translateY(30px);
+  background: var(--bg-elevated); border: 1px solid var(--border);
+  padding: 12px 24px; border-radius: 10px; color: var(--text-primary);
+  font-weight: 500; opacity: 0; transition: all .3s; z-index: 2000;
+  pointer-events: none; font-size: 14px;
+}
+.toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
+
+@media (max-width: 720px) {
+  .rifa-hero { grid-template-columns: 1fr; }
+  .number-grid { grid-template-columns: repeat(5, 1fr); }
+  .rifa-title { font-size: 24px; }
+  .nav { padding: 16px 20px; }
+  .nav-links { display: none; }
+  .checkout-bar { flex-direction: column; align-items: stretch; }
+  .btn-buy { width: 100%; }
+}
+
+.badge-status {
+  display: inline-flex; align-items: center; gap: 6px;
+  padding: 4px 10px; border-radius: 999px; font-size: 11px;
+  background: rgba(16, 185, 129, .15); color: var(--accent-green);
+  font-weight: 600; text-transform: uppercase; letter-spacing: .5px;
+}
+.badge-status::before {
+  content: ''; width: 6px; height: 6px; border-radius: 50%;
+  background: var(--accent-green); animation: pulse 1.5s infinite;
+}
+@keyframes pulse {
+  0%, 100% { opacity: 1; } 50% { opacity: .3; }
+}
+</style>
+</head>
+<body>
+
+<nav class="nav">
+  <a href="index.html" class="nav-brand">
+    <img src="https://static.wixstatic.com/media/874864_b598e856481740e7ae752771a661c242~mv2.png/v1/fill/w_300,h_118,al_c,q_85,enc_auto/874864_b598e856481740e7ae752771a661c242~mv2.png" alt="Gumax Skins">
+  </a>
+  <div class="nav-links">
+    <a class="nav-link" href="index.html">Skins</a>
+    <a class="nav-link" href="analise.html">Análise</a>
+    <a class="nav-link active" href="rifas.html">Rifas</a>
+  </div>
+  <div>
+    <span class="badge-status">Sorteio ao vivo</span>
+  </div>
+</nav>
+
+<div class="container">
+
+  <!-- HERO DA RIFA -->
+  <section class="rifa-hero">
+    <div class="rifa-image-wrap">
+      <img id="skinImage" src="https://community.cloudflare.steamstatic.com/economy/image/-9a81dlWLwJ2UUGcVs_nsVtzdOEdtWwKGZZLQHTxDZ7I56KU0Zwwo4NUX4oFJZEHLbXH5ApeO4YmlhxYQknCRvCoAQ0jFNQsRI9M2QlR3oja4Nx-iq7ymI-IkOCNz3sJuZAj37vH9tqm3gG3-hY4NGz1JY-UIAdtY1iC_gfqx--90cXpv8zKyCNlvz5iu3yJlhG_iQYMMLLDpRHU/256fx256f" alt="AWP Dragon Lore">
+    </div>
+    <div class="rifa-info">
+      <span class="rarity-tag">Cobiçada · Factory New</span>
+      <h1 class="rifa-title">AWP | Dragon Lore</h1>
+      <p class="rifa-subtitle">Uma das AWPs mais raras do CS2 — acabou de ser adicionada à rifa. Pegue seus números antes que acabe.</p>
+
+      <div class="rifa-stats">
+        <div class="stat-box">
+          <div class="value">R$ 38.4k</div>
+          <div class="label">Valor da skin</div>
+        </div>
+        <div class="stat-box">
+          <div class="value" id="ticketsTaken">0</div>
+          <div class="label">Números vendidos</div>
+        </div>
+        <div class="stat-box">
+          <div class="value" id="ticketsLeft">50</div>
+          <div class="label">Disponíveis</div>
+        </div>
+      </div>
+
+      <div class="ticket-price">
+        <span class="label">Cada número custa</span>
+        <span class="price" id="pricePerTicket">R$ 19,90</span>
+      </div>
+
+      <div class="progress-wrap"><div class="progress-bar" id="progressBar" style="width: 0%"></div></div>
+      <div class="progress-text"><span id="progressPercent">0%</span> completo · sorteio quando bater 100%</div>
+    </div>
+  </section>
+
+  <!-- GRID DE NÚMEROS -->
+  <section class="grid-section">
+    <div class="grid-header">
+      <div>
+        <div class="grid-title">Escolha seus números da sorte</div>
+        <div style="font-size:13px;color:var(--text-secondary);margin-top:4px;">Clique nos números pra selecionar. Cada um custa R$ 19,90.</div>
+      </div>
+      <div class="grid-legend">
+        <span><span class="legend-dot available"></span>Disponível</span>
+        <span><span class="legend-dot selected"></span>Selecionado</span>
+        <span><span class="legend-dot taken"></span>Já vendido</span>
+      </div>
+    </div>
+    <div class="number-grid" id="numberGrid"></div>
+  </section>
+
+  <!-- BARRA DE CHECKOUT -->
+  <div class="checkout-bar">
+    <div class="checkout-summary">
+      <div>
+        <div class="checkout-label">Números selecionados</div>
+        <div class="checkout-selected" id="selectedNums">Nenhum ainda</div>
+      </div>
+      <div>
+        <div class="checkout-label">Total</div>
+        <div class="checkout-value big" id="totalValue">R$ 0,00</div>
+      </div>
+    </div>
+    <button class="btn-buy" id="buyBtn" onclick="openCheckout()" disabled>Comprar números selecionados</button>
+  </div>
+</div>
+
+<!-- MODAL CHECKOUT -->
+<div class="modal-overlay hidden" id="checkoutModal" onclick="closeCheckout(event)">
+  <div class="modal" onclick="event.stopPropagation()">
+    <button class="modal-close" onclick="closeCheckout()">×</button>
+    <div id="modalContent"></div>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+// ============ ESTADO ============
+const TOTAL_NUMBERS = 50;
+const TICKET_PRICE = 19.90;
+
+// Números "já vendidos" pra dar sensação de movimento (simulação).
+// Em produção isso virá do Firestore.
+const TAKEN_NUMBERS = new Set([3, 7, 12, 15, 18, 22, 27, 31, 33, 38, 42, 47]);
+
+const selected = new Set();
+
+// ============ RENDER GRID ============
+function renderGrid() {
+  const grid = document.getElementById('numberGrid');
+  grid.innerHTML = '';
+  for (let i = 1; i <= TOTAL_NUMBERS; i++) {
+    const btn = document.createElement('div');
+    btn.className = 'num';
+    if (TAKEN_NUMBERS.has(i)) btn.classList.add('taken');
+    if (selected.has(i)) btn.classList.add('selected');
+    btn.textContent = String(i).padStart(2, '0');
+    btn.dataset.num = i;
+    btn.onclick = () => toggleNumber(i);
+    grid.appendChild(btn);
+  }
+
+  // Stats
+  document.getElementById('ticketsTaken').textContent = TAKEN_NUMBERS.size;
+  document.getElementById('ticketsLeft').textContent = TOTAL_NUMBERS - TAKEN_NUMBERS.size;
+  const pct = Math.round((TAKEN_NUMBERS.size / TOTAL_NUMBERS) * 100);
+  document.getElementById('progressBar').style.width = pct + '%';
+  document.getElementById('progressPercent').textContent = pct + '%';
+}
+
+function toggleNumber(n) {
+  if (TAKEN_NUMBERS.has(n)) {
+    showToast('Esse número já foi vendido');
+    return;
+  }
+  if (selected.has(n)) selected.delete(n);
+  else selected.add(n);
+  renderGrid();
+  updateCheckoutBar();
+}
+
+function updateCheckoutBar() {
+  const arr = [...selected].sort((a, b) => a - b);
+  const label = arr.length === 0
+    ? 'Nenhum ainda'
+    : arr.map(n => String(n).padStart(2, '0')).join(', ');
+  document.getElementById('selectedNums').textContent = label;
+  const total = arr.length * TICKET_PRICE;
+  document.getElementById('totalValue').textContent = 'R$ ' + total.toFixed(2).replace('.', ',');
+  document.getElementById('buyBtn').disabled = arr.length === 0;
+}
+
+// ============ CHECKOUT ============
+function openCheckout() {
+  if (selected.size === 0) return;
+  const arr = [...selected].sort((a, b) => a - b);
+  const total = arr.length * TICKET_PRICE;
+  const modal = document.getElementById('checkoutModal');
+  const content = document.getElementById('modalContent');
+
+  content.innerHTML = `
+    <h2>Confirmar compra</h2>
+    <p class="sub">Você está comprando ${arr.length} número${arr.length > 1 ? 's' : ''} da rifa AWP Dragon Lore.</p>
+
+    <div style="background:var(--bg-elevated);border:1px solid var(--border);border-radius:12px;padding:16px;margin-bottom:20px;">
+      <div style="font-size:12px;color:var(--text-muted);text-transform:uppercase;letter-spacing:.5px;margin-bottom:8px;">Seus números</div>
+      <div style="font-family:'JetBrains Mono',monospace;font-size:15px;color:var(--primary-light);word-break:break-all;">
+        ${arr.map(n => String(n).padStart(2, '0')).join(' · ')}
+      </div>
+    </div>
+
+    <div style="display:flex;justify-content:space-between;padding:12px 0;border-top:1px solid var(--border);border-bottom:1px solid var(--border);margin-bottom:20px;">
+      <span style="color:var(--text-secondary);">Total a pagar</span>
+      <strong style="font-size:20px;color:var(--accent-yellow);font-family:'JetBrains Mono',monospace;">R$ ${total.toFixed(2).replace('.', ',')}</strong>
+    </div>
+
+    <button class="btn-buy" style="width:100%;" onclick="proceedToPix(${total})">Pagar com PIX</button>
+
+    <p style="font-size:11px;color:var(--text-muted);margin-top:14px;text-align:center;">
+      Pagamento 100% seguro via Mercado Pago. Seus números ficam reservados por 15 min pra conclusão.
+    </p>
+  `;
+  modal.classList.remove('hidden');
+}
+
+function closeCheckout(ev) {
+  if (ev && ev.target.id !== 'checkoutModal') return;
+  document.getElementById('checkoutModal').classList.add('hidden');
+}
+
+function proceedToPix(total) {
+  const content = document.getElementById('modalContent');
+  // PIX copia-cola fictício. Em produção virá do backend via /api/create-order
+  const pixCode = '00020126580014br.gov.bcb.pix0136e7b4ba05-4d9a-4b84-a8f6-gumax-rifa5204000053039865406' + total.toFixed(2).replace('.', '') + '5802BR5913Gumax Skins6009SAO PAULO62070503***6304A1B2';
+
+  content.innerHTML = `
+    <h2>Pagamento via PIX</h2>
+    <p class="sub">Escaneie o QR Code ou copie o código abaixo no seu app de banco.</p>
+
+    <div class="pix-box">
+      <div class="pix-qr">${fakeQr()}</div>
+      <div style="font-size:28px;font-weight:800;color:var(--accent-yellow);font-family:'JetBrains Mono',monospace;margin-bottom:12px;">
+        R$ ${total.toFixed(2).replace('.', ',')}
+      </div>
+      <div class="pix-code" id="pixCode">${pixCode}</div>
+      <button class="pix-copy-btn" onclick="copyPix()">Copiar código PIX</button>
+    </div>
+
+    <p style="font-size:12px;color:var(--text-secondary);text-align:center;margin-bottom:16px;">
+      O pagamento é confirmado em segundos. Assim que cair, seus números ficam reservados.
+    </p>
+
+    <div style="display:flex;gap:8px;">
+      <button class="btn-buy" style="flex:1;background:transparent;border:1px solid var(--border);color:var(--text-secondary);" onclick="closeCheckout()">Cancelar</button>
+      <button class="btn-buy" style="flex:1;" onclick="simulatePaid()">Simular pagamento confirmado</button>
+    </div>
+  `;
+}
+
+function copyPix() {
+  const code = document.getElementById('pixCode').textContent;
+  navigator.clipboard.writeText(code).then(() => showToast('Código PIX copiado!'));
+}
+
+function simulatePaid() {
+  const arr = [...selected].sort((a, b) => a - b);
+  // Marca como taken localmente (simulando confirmação)
+  arr.forEach(n => TAKEN_NUMBERS.add(n));
+  selected.clear();
+
+  const content = document.getElementById('modalContent');
+  content.innerHTML = `
+    <div class="success-screen">
+      <div class="success-icon">✓</div>
+      <h2>Pagamento confirmado!</h2>
+      <p class="sub">Seus números estão garantidos na rifa. Se vc ganhar, a skin é entregue direto no seu inventário Steam.</p>
+      <div style="background:var(--bg-elevated);border:1px solid var(--border);border-radius:12px;padding:16px;margin-bottom:20px;text-align:left;">
+        <div style="font-size:12px;color:var(--text-muted);text-transform:uppercase;letter-spacing:.5px;margin-bottom:8px;">Seus números confirmados</div>
+        <div style="font-family:'JetBrains Mono',monospace;font-size:15px;color:var(--accent-green);word-break:break-all;">
+          ${arr.map(n => String(n).padStart(2, '0')).join(' · ')}
+        </div>
+      </div>
+      <button class="btn-buy" style="width:100%;" onclick="closeCheckout();renderGrid();updateCheckoutBar();">Voltar à rifa</button>
+    </div>
+  `;
+}
+
+// QR code fake (placeholder estilizado — em produção usar biblioteca qrcode.js com o pixCode real)
+function fakeQr() {
+  const pattern = [];
+  for (let i = 0; i < 20; i++) {
+    for (let j = 0; j < 20; j++) {
+      const corner = (i < 3 && j < 3) || (i < 3 && j > 16) || (i > 16 && j < 3);
+      const isDark = corner || (Math.sin(i * 7.3 + j * 5.1) > 0);
+      if (isDark) pattern.push(`<rect x="${j*10}" y="${i*10}" width="10" height="10" fill="#0a0a0a"/>`);
+    }
+  }
+  return `<svg viewBox="0 0 200 200" xmlns="http://www.w3.org/2000/svg">${pattern.join('')}</svg>`;
+}
+
+function showToast(msg) {
+  const t = document.getElementById('toast');
+  t.textContent = msg;
+  t.className = 'toast show';
+  setTimeout(() => t.classList.remove('show'), 2500);
+}
+
+// ============ INIT ============
+renderGrid();
+updateCheckoutBar();
+</script>
+
+</body>
+</html>
