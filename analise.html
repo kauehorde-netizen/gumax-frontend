@@ -775,17 +775,26 @@ function renderResult(data) {
           <tbody>
     `;
     const brlMap = data.breakdown.brl || {};
+    const srcMap = data.breakdown.sources || {};
     const platformLabels = {
       skinport: 'Skinport', steam: 'Steam Market',
       buff: 'BUFF163', youpin: 'Youpin', c5game: 'C5Game',
       csfloat: 'CSFloat', csmoney: 'CS.Money', dmarket: 'DMarket', waxpeer: 'Waxpeer',
     };
     const sorted = Object.entries(brlMap).sort((a, b) => a[1] - b[1]);
+    let hasEstimates = false;
     for (const [plat, brl] of sorted) {
       if (!brl) continue;
       const isCheapest = plat === data.breakdown.cheapestPlatform;
       const label = platformLabels[plat] || plat;
-      html += `<tr><td>${label}${isCheapest ? ' <span class="cheapest">· melhor preço</span>' : ''}</td><td>R$ ${brl.toFixed(2)}</td></tr>`;
+      const isEstimate = srcMap[plat] === 'estimate';
+      if (isEstimate) hasEstimates = true;
+      const srcBadge = isEstimate
+        ? ' <span style="font-size:10px;padding:2px 6px;border-radius:4px;background:rgba(250,204,21,.15);color:var(--accent-yellow);margin-left:6px;letter-spacing:.3px;">estimativa</span>'
+        : '';
+      const cheapBadge = isCheapest && !isEstimate ? ' <span class="cheapest">· melhor preço</span>' : '';
+      const opacity = isEstimate ? '0.7' : '1';
+      html += `<tr style="opacity:${opacity}"><td>${label}${srcBadge}${cheapBadge}</td><td>R$ ${brl.toFixed(2)}</td></tr>`;
     }
     // Volume
     const vol = data.breakdown.volume || {};
@@ -795,6 +804,10 @@ function renderResult(data) {
           ${vol.steam ? `<span>Volume Steam (24h): <strong>${vol.steam}</strong></span>` : ''}
           ${vol.skinport ? `<span>Listings Skinport: <strong>${vol.skinport}</strong></span>` : ''}
         </div>
+        ${hasEstimates ? `
+          <div style="margin-top:14px;padding:10px 14px;background:rgba(250,204,21,.08);border:1px solid rgba(250,204,21,.25);border-radius:8px;font-size:12px;color:var(--text-secondary);line-height:1.5;">
+            <strong style="color:var(--accent-yellow);">Sobre as estimativas:</strong> BUFF163, Youpin, C5Game, CSFloat e DMarket são estimativas calibradas com deltas históricos — preços reais exigem integração com provedor pago (Pricempire). Score e "melhor preço" são calculados apenas sobre fontes reais (Skinport + Steam Market).
+          </div>` : ''}
       </div>
     `;
   } else {
