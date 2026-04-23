@@ -743,58 +743,99 @@ select.form-control {
 
       <!-- Tutorial / Dicas -->
       <div class="data-table-wrapper" style="padding: 20px; margin-bottom: 16px; border-left: 3px solid var(--accent-yellow);">
-        <h3 style="margin-bottom: 8px; color: var(--accent-yellow);">📋 Como preparar a imagem do Hero</h3>
+        <h3 style="margin-bottom: 8px; color: var(--accent-yellow);">📋 Como preparar as imagens do Hero</h3>
         <p style="color: var(--text-secondary); font-size: 13px; line-height: 1.7; margin-bottom: 12px;">
-          O Hero é a imagem grande que aparece no topo da página inicial — primeira coisa que o visitante vê. Pra ficar nítida em todos os dispositivos, siga estas recomendações:
+          O Hero é a imagem de destaque no topo da página inicial. Como o site funciona em <strong>desktop e mobile</strong>, o ideal é preparar <strong>duas imagens</strong> pra cada tela ficar nítida. A imagem mobile é opcional — se não subir, o site usa a desktop centralizada.
         </p>
-        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 10px;">
-          <div style="background: var(--bg-elevated); padding: 12px 14px; border-radius: 8px; border: 1px solid var(--border);">
-            <div style="font-size: 11px; color: var(--text-muted); text-transform: uppercase; letter-spacing: .5px; margin-bottom: 4px;">Formato</div>
-            <div style="font-weight: 600;">JPG ou PNG</div>
-            <div style="font-size: 11px; color: var(--text-muted); margin-top: 2px;">PNG se precisar de transparência</div>
+
+        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 12px; margin-bottom: 12px;">
+          <div style="background: var(--bg-elevated); padding: 14px; border-radius: 10px; border: 1px solid rgba(139, 92, 246, 0.25);">
+            <div style="font-size: 11px; color: var(--primary-light); text-transform: uppercase; letter-spacing: .6px; font-weight: 700; margin-bottom: 8px;">🖥️ Desktop (obrigatória)</div>
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 8px;">
+              <div><div style="font-size: 10px; color: var(--text-muted); text-transform: uppercase;">Dimensões</div><div style="font-weight: 600; font-size: 13px;">1600 × 900 px</div></div>
+              <div><div style="font-size: 10px; color: var(--text-muted); text-transform: uppercase;">Proporção</div><div style="font-weight: 600; font-size: 13px;">16:9 (landscape)</div></div>
+              <div><div style="font-size: 10px; color: var(--text-muted); text-transform: uppercase;">Peso máximo</div><div style="font-weight: 600; font-size: 13px;">500 KB</div></div>
+              <div><div style="font-size: 10px; color: var(--text-muted); text-transform: uppercase;">Posição skin</div><div style="font-weight: 600; font-size: 13px;">Direita ou centro</div></div>
+            </div>
           </div>
-          <div style="background: var(--bg-elevated); padding: 12px 14px; border-radius: 8px; border: 1px solid var(--border);">
-            <div style="font-size: 11px; color: var(--text-muted); text-transform: uppercase; letter-spacing: .5px; margin-bottom: 4px;">Dimensões</div>
-            <div style="font-weight: 600;">1600 × 900 px</div>
-            <div style="font-size: 11px; color: var(--text-muted); margin-top: 2px;">Proporção 16:9</div>
-          </div>
-          <div style="background: var(--bg-elevated); padding: 12px 14px; border-radius: 8px; border: 1px solid var(--border);">
-            <div style="font-size: 11px; color: var(--text-muted); text-transform: uppercase; letter-spacing: .5px; margin-bottom: 4px;">Peso máximo</div>
-            <div style="font-weight: 600;">500 KB</div>
-            <div style="font-size: 11px; color: var(--text-muted); margin-top: 2px;">Comprima em tinypng.com</div>
-          </div>
-          <div style="background: var(--bg-elevated); padding: 12px 14px; border-radius: 8px; border: 1px solid var(--border);">
-            <div style="font-size: 11px; color: var(--text-muted); text-transform: uppercase; letter-spacing: .5px; margin-bottom: 4px;">Conteúdo</div>
-            <div style="font-weight: 600;">Skin + fundo escuro</div>
-            <div style="font-size: 11px; color: var(--text-muted); margin-top: 2px;">Texto fica sobreposto à direita</div>
+
+          <div style="background: var(--bg-elevated); padding: 14px; border-radius: 10px; border: 1px solid rgba(250, 204, 21, 0.25);">
+            <div style="font-size: 11px; color: var(--accent-yellow); text-transform: uppercase; letter-spacing: .6px; font-weight: 700; margin-bottom: 8px;">📱 Mobile (opcional, mas recomendado)</div>
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 8px;">
+              <div><div style="font-size: 10px; color: var(--text-muted); text-transform: uppercase;">Dimensões</div><div style="font-weight: 600; font-size: 13px;">1080 × 1080 px</div></div>
+              <div><div style="font-size: 10px; color: var(--text-muted); text-transform: uppercase;">Proporção</div><div style="font-weight: 600; font-size: 13px;">1:1 (quadrado)</div></div>
+              <div><div style="font-size: 10px; color: var(--text-muted); text-transform: uppercase;">Peso máximo</div><div style="font-weight: 600; font-size: 13px;">300 KB</div></div>
+              <div><div style="font-size: 10px; color: var(--text-muted); text-transform: uppercase;">Posição skin</div><div style="font-weight: 600; font-size: 13px;">Centralizada</div></div>
+            </div>
           </div>
         </div>
+
+        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 10px;">
+          <div style="background: var(--bg-elevated); padding: 10px 14px; border-radius: 8px; border: 1px solid var(--border);">
+            <div style="font-size: 11px; color: var(--text-muted); text-transform: uppercase; letter-spacing: .5px; margin-bottom: 2px;">Formatos aceitos</div>
+            <div style="font-weight: 600; font-size: 13px;">JPG ou PNG</div>
+          </div>
+          <div style="background: var(--bg-elevated); padding: 10px 14px; border-radius: 8px; border: 1px solid var(--border);">
+            <div style="font-size: 11px; color: var(--text-muted); text-transform: uppercase; letter-spacing: .5px; margin-bottom: 2px;">Fundo ideal</div>
+            <div style="font-weight: 600; font-size: 13px;">Escuro ou transparente</div>
+          </div>
+          <div style="background: var(--bg-elevated); padding: 10px 14px; border-radius: 8px; border: 1px solid var(--border);">
+            <div style="font-size: 11px; color: var(--text-muted); text-transform: uppercase; letter-spacing: .5px; margin-bottom: 2px;">Texto na imagem</div>
+            <div style="font-weight: 600; font-size: 13px;">Evitar</div>
+          </div>
+        </div>
+
         <p style="color: var(--text-muted); font-size: 12px; margin-top: 12px; line-height: 1.5;">
-          💡 <strong>Dica:</strong> imagens muito pesadas deixam o site lento. Use <a href="https://tinypng.com" target="_blank" style="color: var(--primary-light);">tinypng.com</a> pra reduzir sem perder qualidade. Se seu arquivo tem mais de 500KB, o painel avisa antes de salvar.
+          💡 <strong>Dica:</strong> se você fizer a imagem desktop com o elemento principal no <strong>centro</strong> (área "safe zone" de 1080×1080 no meio), ela funciona bem mesmo sozinha — o site corta automático as bordas pros dispositivos menores. Use <a href="https://tinypng.com" target="_blank" style="color: var(--primary-light);">tinypng.com</a> pra reduzir sem perder qualidade.
         </p>
       </div>
 
-      <!-- Card: Imagem do Hero -->
+      <!-- Card: Imagem Desktop -->
       <div class="data-table-wrapper" style="padding: 24px; margin-bottom: 16px;">
-        <h3 style="margin-bottom: 16px;">Imagem do Hero</h3>
+        <h3 style="margin-bottom: 4px;">🖥️ Imagem do Hero — Desktop</h3>
+        <p style="font-size: 12px; color: var(--text-muted); margin-bottom: 16px;">1600×900 px · 16:9 · até 500 KB</p>
 
-        <div id="heroPreviewWrap" style="background: var(--bg-elevated); border: 1px dashed var(--border); border-radius: 12px; padding: 20px; margin-bottom: 16px; text-align: center; min-height: 180px; display: flex; align-items: center; justify-content: center;">
+        <div style="background: var(--bg-elevated); border: 1px dashed var(--border); border-radius: 12px; padding: 20px; margin-bottom: 16px; text-align: center; min-height: 180px; display: flex; align-items: center; justify-content: center;">
           <img id="heroPreview" src="" alt="" style="max-width: 100%; max-height: 240px; border-radius: 8px; display: none;">
-          <div id="heroPreviewEmpty" style="color: var(--text-muted); font-size: 13px;">Nenhuma imagem carregada. Faça upload ou cole uma URL abaixo.</div>
+          <div id="heroPreviewEmpty" style="color: var(--text-muted); font-size: 13px;">Nenhuma imagem desktop carregada.</div>
         </div>
 
         <div class="form-group">
-          <label>Opção 1 — Fazer upload da imagem</label>
+          <label>Opção 1 — Upload local</label>
           <input type="file" class="form-control" id="heroFileInput" accept="image/png,image/jpeg,image/jpg" onchange="previewHeroFile(event)">
-          <div style="font-size: 11px; color: var(--text-muted); margin-top: 6px;">Limite 500 KB · a imagem é salva diretamente no Firestore (base64).</div>
+          <div style="font-size: 11px; color: var(--text-muted); margin-top: 6px;">Limite 500 KB · salvo direto no Firestore (base64).</div>
         </div>
 
         <div style="text-align: center; color: var(--text-muted); font-size: 12px; margin: 12px 0;">— ou —</div>
 
         <div class="form-group">
-          <label>Opção 2 — Usar URL externa da imagem</label>
+          <label>Opção 2 — URL externa</label>
           <input type="url" class="form-control" id="heroImageUrl" placeholder="https://exemplo.com/hero.png" onchange="previewHeroUrl()">
-          <div style="font-size: 11px; color: var(--text-muted); margin-top: 6px;">Se a imagem estiver hospedada em outro lugar (Imgur, Cloudinary, seu CDN), cole o link direto.</div>
+          <div style="font-size: 11px; color: var(--text-muted); margin-top: 6px;">Se hospedada em Imgur, Cloudinary, seu CDN etc.</div>
+        </div>
+      </div>
+
+      <!-- Card: Imagem Mobile -->
+      <div class="data-table-wrapper" style="padding: 24px; margin-bottom: 16px;">
+        <h3 style="margin-bottom: 4px;">📱 Imagem do Hero — Mobile <span style="font-size: 11px; color: var(--text-muted); font-weight: 400; margin-left: 6px;">(opcional)</span></h3>
+        <p style="font-size: 12px; color: var(--text-muted); margin-bottom: 16px;">1080×1080 px · 1:1 quadrado · até 300 KB — se não subir, usa a desktop centralizada</p>
+
+        <div style="background: var(--bg-elevated); border: 1px dashed var(--border); border-radius: 12px; padding: 20px; margin-bottom: 16px; text-align: center; min-height: 140px; display: flex; align-items: center; justify-content: center;">
+          <img id="heroPreviewMobile" src="" alt="" style="max-width: 200px; max-height: 200px; border-radius: 8px; display: none;">
+          <div id="heroPreviewMobileEmpty" style="color: var(--text-muted); font-size: 13px;">Nenhuma imagem mobile carregada. (Opcional)</div>
+        </div>
+
+        <div class="form-group">
+          <label>Upload local</label>
+          <input type="file" class="form-control" id="heroFileInputMobile" accept="image/png,image/jpeg,image/jpg" onchange="previewHeroFileMobile(event)">
+          <div style="font-size: 11px; color: var(--text-muted); margin-top: 6px;">Limite 300 KB.</div>
+        </div>
+
+        <div style="text-align: center; color: var(--text-muted); font-size: 12px; margin: 12px 0;">— ou —</div>
+
+        <div class="form-group">
+          <label>URL externa</label>
+          <input type="url" class="form-control" id="heroImageUrlMobile" placeholder="https://exemplo.com/hero-mobile.png" onchange="previewHeroUrlMobile()">
         </div>
       </div>
 
@@ -1068,11 +1109,12 @@ function switchSection(name) {
 
 // ============= APPEARANCE (Hero image + textos) =============
 const APPEARANCE_DOC = { col: 'settings', id: 'hero' };
-const HERO_MAX_BYTES = 500 * 1024; // 500 KB
+const HERO_MAX_BYTES_DESKTOP = 500 * 1024; // 500 KB
+const HERO_MAX_BYTES_MOBILE  = 300 * 1024; // 300 KB
 
-function setHeroPreview(src) {
-  const img = document.getElementById('heroPreview');
-  const empty = document.getElementById('heroPreviewEmpty');
+function setHeroPreviewGeneric(imgId, emptyId, src) {
+  const img = document.getElementById(imgId);
+  const empty = document.getElementById(emptyId);
   if (src) {
     img.src = src;
     img.style.display = 'block';
@@ -1083,12 +1125,14 @@ function setHeroPreview(src) {
     empty.style.display = 'block';
   }
 }
+function setHeroPreview(src)       { setHeroPreviewGeneric('heroPreview', 'heroPreviewEmpty', src); }
+function setHeroPreviewMobile(src) { setHeroPreviewGeneric('heroPreviewMobile', 'heroPreviewMobileEmpty', src); }
 
-function previewHeroFile(ev) {
+function previewFileGeneric(ev, maxBytes, setPreviewFn, urlInputId) {
   const file = ev.target.files && ev.target.files[0];
   if (!file) return;
-  if (file.size > HERO_MAX_BYTES) {
-    alert(`Imagem grande demais (${Math.round(file.size/1024)} KB). Reduza pra no máximo 500 KB em tinypng.com antes de fazer upload.`);
+  if (file.size > maxBytes) {
+    alert(`Imagem grande demais (${Math.round(file.size/1024)} KB). Máximo ${Math.round(maxBytes/1024)} KB. Reduza em tinypng.com antes de fazer upload.`);
     ev.target.value = '';
     return;
   }
@@ -1099,19 +1143,26 @@ function previewHeroFile(ev) {
   }
   const reader = new FileReader();
   reader.onload = () => {
-    setHeroPreview(reader.result);
-    // limpa o campo de URL se estava preenchido
-    document.getElementById('heroImageUrl').value = '';
+    setPreviewFn(reader.result);
+    document.getElementById(urlInputId).value = '';
   };
   reader.readAsDataURL(file);
 }
+
+function previewHeroFile(ev)       { previewFileGeneric(ev, HERO_MAX_BYTES_DESKTOP, setHeroPreview, 'heroImageUrl'); }
+function previewHeroFileMobile(ev) { previewFileGeneric(ev, HERO_MAX_BYTES_MOBILE, setHeroPreviewMobile, 'heroImageUrlMobile'); }
 
 function previewHeroUrl() {
   const url = document.getElementById('heroImageUrl').value.trim();
   if (!url) return;
   setHeroPreview(url);
-  // limpa upload local
   document.getElementById('heroFileInput').value = '';
+}
+function previewHeroUrlMobile() {
+  const url = document.getElementById('heroImageUrlMobile').value.trim();
+  if (!url) return;
+  setHeroPreviewMobile(url);
+  document.getElementById('heroFileInputMobile').value = '';
 }
 
 async function loadAppearance() {
@@ -1121,13 +1172,16 @@ async function loadAppearance() {
     document.getElementById('heroTitle').value = d.title || 'Skins CS2 com os melhores preços';
     document.getElementById('heroSubtitle').value = d.subtitle || 'Entrega rápida e segura. Pagamento via PIX.';
     document.getElementById('heroCta').value = d.cta || 'Ver Skins';
-    const src = d.imageDataUrl || d.imageUrl || '';
-    setHeroPreview(src);
-    if (d.imageUrl && !d.imageDataUrl) {
-      document.getElementById('heroImageUrl').value = d.imageUrl;
-    } else {
-      document.getElementById('heroImageUrl').value = '';
-    }
+
+    // Desktop
+    const desktopSrc = d.imageDataUrl || d.imageUrl || '';
+    setHeroPreview(desktopSrc);
+    document.getElementById('heroImageUrl').value = (d.imageUrl && !d.imageDataUrl) ? d.imageUrl : '';
+
+    // Mobile
+    const mobileSrc = d.imageMobileDataUrl || d.imageMobileUrl || '';
+    setHeroPreviewMobile(mobileSrc);
+    document.getElementById('heroImageUrlMobile').value = (d.imageMobileUrl && !d.imageMobileDataUrl) ? d.imageMobileUrl : '';
   } catch (e) {
     console.log('[appearance] load error', e);
   }
@@ -1137,11 +1191,6 @@ async function saveAppearance() {
   const title = document.getElementById('heroTitle').value.trim();
   const subtitle = document.getElementById('heroSubtitle').value.trim();
   const cta = document.getElementById('heroCta').value.trim() || 'Ver Skins';
-  const imageUrl = document.getElementById('heroImageUrl').value.trim();
-  const imgEl = document.getElementById('heroPreview');
-  const previewSrc = imgEl.style.display !== 'none' ? imgEl.src : '';
-  const isDataUrl = previewSrc.startsWith('data:');
-
   if (!title) { alert('Título não pode ficar vazio'); return; }
 
   const payload = {
@@ -1149,12 +1198,25 @@ async function saveAppearance() {
     updatedAt: new Date().toISOString(),
     updatedBy: (firebase.auth().currentUser?.email) || 'admin',
   };
-  if (isDataUrl) {
-    payload.imageDataUrl = previewSrc;
-    payload.imageUrl = '';
-  } else if (imageUrl) {
-    payload.imageUrl = imageUrl;
-    payload.imageDataUrl = '';
+
+  // Desktop
+  const desktopUrl = document.getElementById('heroImageUrl').value.trim();
+  const desktopImg = document.getElementById('heroPreview');
+  const desktopSrc = desktopImg.style.display !== 'none' ? desktopImg.src : '';
+  if (desktopSrc.startsWith('data:')) {
+    payload.imageDataUrl = desktopSrc; payload.imageUrl = '';
+  } else if (desktopUrl) {
+    payload.imageUrl = desktopUrl; payload.imageDataUrl = '';
+  }
+
+  // Mobile
+  const mobileUrl = document.getElementById('heroImageUrlMobile').value.trim();
+  const mobileImg = document.getElementById('heroPreviewMobile');
+  const mobileSrc = mobileImg.style.display !== 'none' ? mobileImg.src : '';
+  if (mobileSrc.startsWith('data:')) {
+    payload.imageMobileDataUrl = mobileSrc; payload.imageMobileUrl = '';
+  } else if (mobileUrl) {
+    payload.imageMobileUrl = mobileUrl; payload.imageMobileDataUrl = '';
   }
 
   try {
