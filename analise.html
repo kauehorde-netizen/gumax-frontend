@@ -477,6 +477,15 @@ let currentSubscription = null;
 let currentUser = null;
 let idToken = null;
 
+// Se veio de um link ?name=X (ex: index.html → analizar skin), pré-preenche a busca
+const _urlParams = new URLSearchParams(location.search);
+const _prefName = _urlParams.get('name');
+const _autoRun = _urlParams.get('auto') === '1';
+if (_prefName) {
+  const input = document.getElementById('skinSearch');
+  if (input) input.value = _prefName;
+}
+
 auth.onAuthStateChanged(async (user) => {
   if (user) {
     currentUser = user;
@@ -540,6 +549,11 @@ auth.onAuthStateChanged(async (user) => {
     // Mostrar banner de push se ainda não concedeu permissão
     if ('Notification' in window && Notification.permission === 'default') {
       document.getElementById('pushBanner').classList.remove('hidden');
+    }
+
+    // Se a URL pediu auto-run (veio de um card da loja), dispara a análise automática
+    if (_autoRun && _prefName) {
+      setTimeout(() => runAnalysis('basic'), 400);
     }
   } else {
     currentUser = null; idToken = null;
