@@ -981,12 +981,15 @@ select.form-control {
           </div>
 
           <div class="form-group">
-            <label>Margem de lucro (%)</label>
-            <input type="number" class="form-control" id="pricingMargin" step="1" min="0" max="99" placeholder="10" value="10">
+            <label>Lucro por yuan (R$ extras por ¥)</label>
+            <input type="number" class="form-control" id="pricingSurcharge" step="0.01" min="0" max="2" placeholder="0.04" value="0.04">
             <div style="color: var(--text-muted); font-size: 12px; margin-top: 6px;">
-              Soma sobre a cotação. Ex: <strong>10</strong> = cotação + 10%. Se cotação tá 0,74 → você vende a 0,814.
+              Valor fixo em <strong>reais</strong> somado à cotação. Ex: cotação 0,74 + <strong>0,04</strong> = 0,78 por ¥.
+              Quando a cotação subir pra 0,75, você passa a cobrar 0,79 automaticamente.
             </div>
           </div>
+          <!-- Input hidden de margem pra compat com savePricing antigo -->
+          <input type="hidden" id="pricingMargin" value="0">
         </div>
 
         <!-- Preview: skin exemplo -->
@@ -1520,8 +1523,8 @@ function updatePricingPreview() {
   const mode = document.getElementById('pricingModeRate').checked ? 'rate' : 'fixed';
   const fixedRate = parseFloat(document.getElementById('pricingFixedRate').value) || 0.78;
   const googleRate = parseFloat(document.getElementById('pricingGoogleRate')?.dataset?.raw || '0');
-  // Margem só é considerada no modo cotação
-  const marginPct = parseFloat(document.getElementById('pricingMargin')?.value || '0') || 0;
+  // Lucro por yuan (R$ extras somados à cotação). Só usado no modo cotação.
+  const surcharge = parseFloat(document.getElementById('pricingSurcharge')?.value || '0') || 0;
 
   // Toggle visual: só o botão ativo fica amarelo
   const btnRate = document.getElementById('pricingToggleRate');
@@ -1543,15 +1546,15 @@ function updatePricingPreview() {
   rateInfo.style.display  = mode === 'rate'  ? 'block' : 'none';
 
   // Cálculo do fator final aplicado:
-  //   fixed → user já baked in a margem no número (0,78 já é o preço final por ¥)
-  //   rate  → Google × (1 + margem/100)
+  //   fixed → user escolheu o número final (ex: 0,78 por ¥)
+  //   rate  → cotação Google + R$ X fixos por ¥ (ex: 0,74 + 0,04 = 0,78)
   const baseFactor = mode === 'rate' ? (googleRate || fixedRate) : fixedRate;
-  const finalFactor = mode === 'rate' ? baseFactor * (1 + marginPct / 100) : baseFactor;
+  const finalFactor = mode === 'rate' ? (baseFactor + surcharge) : baseFactor;
 
   // Preview
   document.getElementById('pricingActiveFactor').textContent = mode === 'rate'
-    ? `${finalFactor.toFixed(4)} (cotação ${baseFactor.toFixed(4)} + ${marginPct}%)`
-    : `${finalFactor.toFixed(4)} (você escolheu)`;
+    ? `R$ ${finalFactor.toFixed(4)} por ¥  (cotação ${baseFactor.toFixed(4)} + R$ ${surcharge.toFixed(2)})`
+    : `R$ ${finalFactor.toFixed(4)} por ¥  (você escolheu)`;
   document.getElementById('pricingExampleOriginal').textContent = formatBRL(100 * finalFactor * 1.35); // Steam ~= Youpin × 1.35
   document.getElementById('pricingExampleSale').textContent = formatBRL(100 * finalFactor);
 
@@ -1568,10 +1571,10 @@ function setPricingDefaults() {
   document.getElementById('pricingModeFixed').checked = mode !== 'rate';
   document.getElementById('pricingModeRate').checked = mode === 'rate';
   document.getElementById('pricingFixedRate').value = cached.fixedRate ?? 0.78;
-  // margem — só faz sentido no modo cotação
-  const marginPct = Math.round((cached.margin ?? 0.10) * 100);
-  const marginEl = document.getElementById('pricingMargin');
-  if (marginEl) marginEl.value = marginPct;
+  // Surcharge (R$ extras por ¥) — só faz sentido no modo cotação
+  const surcharge = cached.surcharge ?? 0.04;
+  const surchargeEl = document.getElementById('pricingSurcharge');
+  if (surchargeEl) surchargeEl.value = surcharge;
 
   const cachedGoogle = parseFloat(cached.lastGoogleRate || 0) || 0;
   document.getElementById('pricingGoogleRate').dataset.raw = String(cachedGoogle);
@@ -1606,7 +1609,8 @@ async function loadPricing(forcePrompt = false) {
     document.getElementById('pricingModeFixed').checked = cfg.mode !== 'rate';
     document.getElementById('pricingModeRate').checked = cfg.mode === 'rate';
     document.getElementById('pricingFixedRate').value = cfg.fixedRate ?? 0.78;
-    document.getElementById('pricingMargin').value = Math.round((cfg.margin ?? 0.10) * 100);
+    const surchargeInput = document.getElementById('pricingSurcharge');
+    if (surchargeInput) surchargeInput.value = cfg.surcharge ?? 0.04;
 
     const google = data.googleRate || 0;
     const googleEl = document.getElementById('pricingGoogleRate');
@@ -1616,7 +1620,7 @@ async function loadPricing(forcePrompt = false) {
 
     // Cacheia localmente pra próxima abertura não precisar nem de key
     localStorage.setItem('gumax_pricing_cache', JSON.stringify({
-      mode: cfg.mode, fixedRate: cfg.fixedRate, margin: cfg.margin,
+      mode: cfg.mode, fixedRate: cfg.fixedRate, surcharge: cfg.surcharge,
       lastGoogleRate: google,
     }));
 
@@ -1631,31 +1635,27 @@ async function savePricing() {
   if (!key) return;
   const mode = document.getElementById('pricingModeRate').checked ? 'rate' : 'fixed';
   const fixedRate = parseFloat(document.getElementById('pricingFixedRate').value);
-  const marginPct = parseFloat(document.getElementById('pricingMargin').value) || 0;
+  const surcharge = parseFloat(document.getElementById('pricingSurcharge').value) || 0;
 
   if (mode === 'fixed' && !(fixedRate > 0 && fixedRate < 5)) {
     alert('Valor em R$ por ¥ precisa estar entre 0 e 5 (ex: 0,78)');
     return;
   }
-  if (mode === 'rate' && !(marginPct >= 0 && marginPct < 100)) {
-    alert('Margem precisa estar entre 0 e 99%');
+  if (mode === 'rate' && !(surcharge >= 0 && surcharge < 2)) {
+    alert('Valor extra precisa estar entre 0 e 2 R$ (ex: 0,04)');
     return;
   }
-
-  // No modo fixed, margem não é aplicada (o fator já inclui tudo) — envia 0.
-  // No modo rate, margem é aplicada sobre a cotação Google.
-  const marginDec = mode === 'rate' ? marginPct / 100 : 0;
 
   try {
     const r = await fetch(`${API_BASE_ADMIN}/api/admin/update-pricing`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${key}` },
-      body: JSON.stringify({ mode, fixedRate, margin: marginDec }),
+      body: JSON.stringify({ mode, fixedRate, surcharge }),
     });
     const data = await r.json();
     if (data.success) {
       localStorage.setItem('gumax_pricing_cache', JSON.stringify({
-        mode, fixedRate, margin: marginDec,
+        mode, fixedRate, surcharge,
       }));
       alert('Precificação salva! A loja vai usar os novos valores em até 1 minuto.');
     } else {
@@ -1668,12 +1668,12 @@ async function savePricing() {
 
 // Wire: atualiza preview quando muda algum campo
 document.addEventListener('change', (e) => {
-  if (e.target.name === 'pricingMode' || e.target.id === 'pricingFixedRate' || e.target.id === 'pricingMargin') {
+  if (e.target.name === 'pricingMode' || e.target.id === 'pricingFixedRate' || e.target.id === 'pricingSurcharge') {
     updatePricingPreview();
   }
 });
 document.addEventListener('input', (e) => {
-  if (e.target.id === 'pricingFixedRate' || e.target.id === 'pricingMargin') {
+  if (e.target.id === 'pricingFixedRate' || e.target.id === 'pricingSurcharge') {
     updatePricingPreview();
   }
 });
