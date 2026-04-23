@@ -483,8 +483,23 @@ auth.onAuthStateChanged(async (user) => {
     document.getElementById('loginSteamBtn')?.classList.add('hidden');
     document.getElementById('creditWidget').classList.remove('hidden');
     document.getElementById('userWidget').classList.remove('hidden');
-    document.getElementById('userAvatar').src = user.photoURL || 'https://www.gravatar.com/avatar?d=mp';
-    document.getElementById('userName').textContent = user.displayName || user.email?.split('@')[0] || 'user';
+    // Nome + avatar: tenta provider → Firestore users/{uid} → fallback
+    let displayName = user.displayName || user.email?.split('@')[0] || '';
+    let photoURL = user.photoURL || '';
+    try {
+      const udoc = await db.collection('users').doc(user.uid).get();
+      if (udoc.exists) {
+        const d = udoc.data() || {};
+        displayName = d.steamName || d.fullName || displayName;
+        photoURL = d.steamAvatar || d.photoURL || photoURL;
+      }
+    } catch (e) { /* rules podem estar bloqueando — tudo bem */ }
+    // Se veio de login Steam (uid numérico 17 dígitos) e ainda sem nome, usa últimos 4 dígitos
+    if (!displayName && /^\d{17}$/.test(user.uid)) {
+      displayName = 'Steam ' + user.uid.slice(-4);
+    }
+    document.getElementById('userAvatar').src = photoURL || 'https://www.gravatar.com/avatar?d=mp';
+    document.getElementById('userName').textContent = displayName || 'user';
     document.getElementById('loginEmpty').classList.add('hidden');
     document.getElementById('mainContent').classList.remove('hidden');
 
@@ -750,38 +765,60 @@ function renderResult(data) {
           <span class="cost-chip">-2 créditos</span>
         </div>
         <table class="platforms-table">
-          <thead><tr><th>Plataforma</th><th>Preço (CNY)</th><th>Preço (BRL)</th></tr></thead>
+          <thead><tr><th>Plataforma</th><th>Preço (BRL)</th></tr></thead>
           <tbody>
     `;
-    for (const [plat, cny] of Object.entries(data.breakdown.cny)) {
-      if (!cny) continue;
-      const brl = data.breakdown.brl[plat];
+    const brlMap = data.breakdown.brl || {};
+    const platformLabels = {
+      skinport: 'Skinport', steam: 'Steam Market',
+      buff: 'BUFF163', youpin: 'Youpin', c5game: 'C5Game',
+      csfloat: 'CSFloat', csmoney: 'CS.Money', dmarket: 'DMarket', waxpeer: 'Waxpeer',
+    };
+    const sorted = Object.entries(brlMap).sort((a, b) => a[1] - b[1]);
+    for (const [plat, brl] of sorted) {
+      if (!brl) continue;
       const isCheapest = plat === data.breakdown.cheapestPlatform;
-      html += `<tr><td>${plat}${isCheapest ? ' <span class="cheapest">· melhor preço</span>' : ''}</td><td>¥ ${cny.toFixed(2)}</td><td>R$ ${brl.toFixed(2)}</td></tr>`;
+      const label = platformLabels[plat] || plat;
+      html += `<tr><td>${label}${isCheapest ? ' <span class="cheapest">· melhor preço</span>' : ''}</td><td>R$ ${brl.toFixed(2)}</td></tr>`;
     }
+    // Volume
+    const vol = data.breakdown.volume || {};
     html += `</tbody></table>
-        <p style="margin-top:12px;font-size:13px;color:var(--text-secondary);">
-          Spread entre plataformas: <strong>${data.breakdown.spread || 0}%</strong>
-        </p>
+        <div style="margin-top:12px;font-size:13px;color:var(--text-secondary);display:flex;justify-content:space-between;flex-wrap:wrap;gap:12px;">
+          <span>Spread entre plataformas: <strong>${data.score?.spread ?? 0}%</strong></span>
+          ${vol.steam ? `<span>Volume Steam (24h): <strong>${vol.steam}</strong></span>` : ''}
+          ${vol.skinport ? `<span>Listings Skinport: <strong>${vol.skinport}</strong></span>` : ''}
+        </div>
       </div>
     `;
   } else {
     html += renderLockedSection('full', 'Análise completa + Recomendação', 'COMPRAR / ESPERAR / EVITAR + breakdown de 6 marketplaces + Gumax Shield (48h).', 2);
   }
 
-  // HISTORY (if paid)
-  if (data.history && data.history.length > 0) {
+  // HISTORY (if paid) — aceita tanto {points: []} (novo) quanto array direto (legacy)
+  const historyPoints = Array.isArray(data.history) ? data.history
+                       : Array.isArray(data.history?.points) ? data.history.points
+                       : null;
+  if (historyPoints && historyPoints.length > 0) {
+    const src = data.history?.source === 'internal_skinport' ? 'Skinport (próprio)'
+              : data.history?.source === 'pricempire' ? 'Pricempire'
+              : 'variável';
     html += `
       <div class="paid-section">
         <div class="header">
-          <span class="title">Histórico de preços (30 dias)</span>
+          <span class="title">Histórico de preços (${historyPoints.length} pontos)</span>
           <span class="cost-chip">-2 créditos</span>
         </div>
+        <div style="font-size:12px;color:var(--text-muted);margin-bottom:8px;">Fonte: ${src}</div>
         <div id="historyChart" style="height:160px;display:flex;align-items:end;gap:2px;padding:10px 0;"></div>
       </div>
     `;
   } else if (data.tier === 'basic') {
     html += renderLockedSection('history', 'Histórico de preços', 'Veja como o preço variou nos últimos 7, 30 e 90 dias.', 2);
+  } else if (data.tier === 'history') {
+    html += `<div class="paid-section"><div class="header"><span class="title">Histórico de preços</span></div>
+      <p style="color:var(--text-secondary);padding:12px 0;">Ainda não temos histórico suficiente pra essa skin. Nosso sistema grava um snapshot por dia — volta em ~7 dias ou ative o enriquecimento Pricempire.</p>
+    </div>`;
   }
 
   // ALERT (always locked until triggered — costs 3)
@@ -792,8 +829,8 @@ function renderResult(data) {
   document.getElementById('resultShell').innerHTML = html;
 
   // Render history bars if present
-  if (data.history && data.history.length) {
-    renderHistoryBars(data.history);
+  if (historyPoints && historyPoints.length) {
+    renderHistoryBars(historyPoints);
   }
 }
 
@@ -837,13 +874,20 @@ function renderInsufficient(data) {
 function renderHistoryBars(history) {
   const container = document.getElementById('historyChart');
   if (!container) return;
-  const prices = history.map(p => p.price_cny);
-  const max = Math.max(...prices);
-  const min = Math.min(...prices);
+  // Aceita tanto price_brl (novo) quanto price_cny (legacy)
+  const pts = history.map(p => ({
+    date: p.date,
+    value: p.price_brl ?? p.price_cny ?? 0,
+    currency: p.price_brl != null ? 'R$' : '¥',
+  })).filter(p => p.value > 0);
+  if (!pts.length) return;
+  const values = pts.map(p => p.value);
+  const max = Math.max(...values);
+  const min = Math.min(...values);
   const range = max - min || 1;
-  container.innerHTML = history.map(p => {
-    const h = 8 + ((p.price_cny - min) / range) * 140;
-    return `<div title="${p.date}: ¥${p.price_cny.toFixed(2)}" style="flex:1;height:${h}px;background:linear-gradient(to top, var(--primary-dark), var(--primary-light));border-radius:2px;"></div>`;
+  container.innerHTML = pts.map(p => {
+    const h = 8 + ((p.value - min) / range) * 140;
+    return `<div title="${p.date}: ${p.currency} ${p.value.toFixed(2)}" style="flex:1;height:${h}px;background:linear-gradient(to top, var(--primary-dark), var(--primary-light));border-radius:2px;"></div>`;
   }).join('');
 }
 
