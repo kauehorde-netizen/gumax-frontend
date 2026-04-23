@@ -1564,14 +1564,14 @@ function updatePricingPreview() {
 }
 
 // Popula o UI com defaults (ou valores cachados em localStorage se houver).
-// NÃO faz fetch no backend — evita pedir admin key ao abrir a aba.
+// NÃO faz fetch no backend admin — evita pedir admin key ao abrir a aba.
+// MAS busca a cotação ao vivo do endpoint público /api/exchange-rate.
 function setPricingDefaults() {
   const cached = JSON.parse(localStorage.getItem('gumax_pricing_cache') || 'null') || {};
   const mode = cached.mode || 'fixed';
   document.getElementById('pricingModeFixed').checked = mode !== 'rate';
   document.getElementById('pricingModeRate').checked = mode === 'rate';
   document.getElementById('pricingFixedRate').value = cached.fixedRate ?? 0.78;
-  // Surcharge (R$ extras por ¥) — só faz sentido no modo cotação
   const surcharge = cached.surcharge ?? 0.04;
   const surchargeEl = document.getElementById('pricingSurcharge');
   if (surchargeEl) surchargeEl.value = surcharge;
@@ -1579,8 +1579,34 @@ function setPricingDefaults() {
   const cachedGoogle = parseFloat(cached.lastGoogleRate || 0) || 0;
   document.getElementById('pricingGoogleRate').dataset.raw = String(cachedGoogle);
   const inlineEl = document.getElementById('pricingGoogleRateInline');
-  if (inlineEl) inlineEl.textContent = cachedGoogle > 0 ? cachedGoogle.toFixed(4) : '—';
+  if (inlineEl) inlineEl.textContent = cachedGoogle > 0 ? cachedGoogle.toFixed(4) : '…';
   updatePricingPreview();
+
+  // Busca a cotação ao vivo (endpoint público, sem admin key)
+  fetchLiveExchangeRate();
+}
+
+// Busca a cotação CNY→BRL ao vivo do endpoint público do backend.
+// Não precisa de admin key. Roda sempre que a aba Configurações é aberta.
+async function fetchLiveExchangeRate() {
+  try {
+    const r = await fetch(`${API_BASE_ADMIN}/api/exchange-rate`);
+    if (!r.ok) return;
+    const data = await r.json();
+    const rate = parseFloat(data.rate) || 0;
+    if (rate <= 0) return;
+    // Atualiza os displays
+    document.getElementById('pricingGoogleRate').dataset.raw = String(rate);
+    const inlineEl = document.getElementById('pricingGoogleRateInline');
+    if (inlineEl) inlineEl.textContent = rate.toFixed(4);
+    // Atualiza cache local
+    const cached = JSON.parse(localStorage.getItem('gumax_pricing_cache') || 'null') || {};
+    cached.lastGoogleRate = rate;
+    localStorage.setItem('gumax_pricing_cache', JSON.stringify(cached));
+    updatePricingPreview();
+  } catch (e) {
+    console.log('[pricing] fetchLiveExchangeRate error:', e.message);
+  }
 }
 
 // Busca a config atual no backend. SÓ roda se a admin key estiver em sessionStorage —
