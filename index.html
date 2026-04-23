@@ -585,35 +585,33 @@ nav {
   background: rgba(139, 92, 246, 0.08);
 }
 
-/* Search autocomplete — sempre por cima do resto da página, fundo sólido */
-.search-bar { position: relative; z-index: 1000; }
+/* Search autocomplete — position:fixed pra escapar de todos stacking contexts.
+   JS posiciona via top/left baseado no rect do input. z-index absurdo. */
 .search-suggestions {
-  position: absolute;
-  top: calc(100% + 6px);
-  left: 0;
-  right: 0;
-  background: #110e1a;              /* sólido, não depende de var */
+  position: fixed;
+  background: #110e1a;
   border: 1px solid var(--border);
   border-radius: 12px;
-  box-shadow: 0 16px 40px rgba(0, 0, 0, .75);
+  box-shadow: 0 20px 48px rgba(0, 0, 0, .85);
   max-height: 360px;
   overflow-y: auto;
-  z-index: 1001;                     /* sempre na frente */
-  isolation: isolate;                /* novo stacking context */
+  z-index: 999999;
+  display: none;
 }
+.search-suggestions.visible { display: block; }
 .search-suggestions .sug {
   padding: 10px 16px;
   cursor: pointer;
   font-size: 14px;
   color: var(--text-primary);
-  background: #110e1a;              /* sólido em cada item também */
+  background: #110e1a;
   border-bottom: 1px solid var(--border);
   transition: background .15s;
 }
 .search-suggestions .sug:last-child { border-bottom: none; }
 .search-suggestions .sug:hover,
 .search-suggestions .sug.active {
-  background: #1a1528;               /* var(--bg-elevated) hardcoded */
+  background: #1a1528;
   color: var(--primary-light);
 }
 
@@ -795,31 +793,41 @@ nav {
   margin-left: auto;
 }
 
-/* Botão "Analisar" no canto inferior direito da imagem — não sobrepõe badges no topo */
+/* Botão "Analisar" aparece em overlay no centro da imagem quando passa mouse (hover).
+   Não ocupa espaço permanente no card, não colide com badges nem com o + do carrinho. */
 .analyze-btn {
   position: absolute;
-  bottom: 10px;
-  right: 10px;
-  z-index: 3;
-  width: 30px;
-  height: 30px;
-  border-radius: 50%;
-  background: rgba(139, 92, 246, 0.85);
-  border: 1px solid rgba(139, 92, 246, 0.8);
-  backdrop-filter: blur(4px);
+  top: 75px;                /* meio vertical da skin-image (170px height) */
+  left: 50%;
+  transform: translate(-50%, -50%) scale(0.8);
+  z-index: 4;
+  padding: 8px 16px;
+  border-radius: 999px;
+  background: var(--primary);
+  border: 1px solid var(--primary-light);
   color: white;
-  display: flex;
+  display: inline-flex;
   align-items: center;
-  justify-content: center;
+  gap: 6px;
+  font-size: 12px;
+  font-weight: 600;
   cursor: pointer;
-  transition: all .2s;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, .4);
+  transition: all .25s;
+  box-shadow: 0 4px 16px rgba(0, 0, 0, .6);
+  opacity: 0;
+  pointer-events: none;
+  white-space: nowrap;
+}
+.skin-card:hover .analyze-btn {
+  opacity: 1;
+  pointer-events: auto;
+  transform: translate(-50%, -50%) scale(1);
 }
 .analyze-btn:hover {
-  background: var(--primary);
-  transform: scale(1.12);
+  background: var(--primary-light);
+  transform: translate(-50%, -50%) scale(1.06) !important;
 }
-.analyze-btn svg { width: 15px; height: 15px; }
+.analyze-btn svg { width: 14px; height: 14px; }
 
 .verdict-chip {
   position: absolute;
@@ -2594,31 +2602,66 @@ function initializeUI() {
   currentDeliveryFilter = 'todos';
 }
 
+// Carrega imagens com cache localStorage (vira instantâneo depois do 1º load).
+// Persiste ~7 dias e tem fallback pra nome base (sem wear).
+const SKIN_IMG_CACHE_KEY = 'gumax_skin_images_v1';
+const SKIN_IMG_CACHE_TTL = 7 * 24 * 60 * 60 * 1000; // 7 dias
+
 function loadSkinImages() {
-  // Carrega o JSON completo da CSGO-API (ByMykel) e popula skinImages indexado
-  // pelo market_hash_name. Depois qualquer skin com esse nome puxa imagem automático.
-  fetch('https://raw.githubusercontent.com/ByMykel/CSGO-API/main/public/api/en/skins.json')
-    .then(r => r.json())
-    .then(data => {
-      data.forEach(s => {
-        if (s.name && s.image) skinImages[s.name] = s.image;
-      });
-      // Também carrega stickers (pra o sticker ShahZaM Katowice, por exemplo)
-      return fetch('https://raw.githubusercontent.com/ByMykel/CSGO-API/main/public/api/en/stickers.json')
-        .then(r2 => r2.json())
-        .then(stickers => {
-          stickers.forEach(s => {
-            // Stickers vêm como "Sticker | ShahZaM (Foil) | Katowice 2019"
-            if (s.name && s.image) skinImages[s.name] = s.image;
-            // Alguns vêm sem "Sticker | " prefix na chave mas com no hash_name
-            const altName = 'Sticker | ' + s.name;
-            if (s.image && !skinImages[altName]) skinImages[altName] = s.image;
-          });
-        })
-        .catch(() => {});
-    })
-    .then(() => renderSkins())
-    .catch(e => console.log('Image load error:', e.message));
+  // Tenta cache local primeiro (instant)
+  try {
+    const cached = localStorage.getItem(SKIN_IMG_CACHE_KEY);
+    if (cached) {
+      const parsed = JSON.parse(cached);
+      if (parsed && parsed.ts && Date.now() - parsed.ts < SKIN_IMG_CACHE_TTL) {
+        Object.assign(skinImages, parsed.data || {});
+        console.log(`[skin images] ${Object.keys(parsed.data || {}).length} from cache`);
+        renderSkins();
+        // Atualiza em background se tiver >3 dias (silencioso)
+        if (Date.now() - parsed.ts > 3 * 24 * 60 * 60 * 1000) {
+          fetchSkinImagesFresh(true);
+        }
+        return;
+      }
+    }
+  } catch (e) { /* cache corrompido — segue pro fresh */ }
+
+  fetchSkinImagesFresh(false);
+}
+
+async function fetchSkinImagesFresh(silent) {
+  try {
+    const r = await fetch('https://raw.githubusercontent.com/ByMykel/CSGO-API/main/public/api/en/skins.json');
+    if (!r.ok) throw new Error('skins HTTP ' + r.status);
+    const data = await r.json();
+    const map = {};
+    data.forEach(s => {
+      if (s.name && s.image) map[s.name] = s.image;
+    });
+    Object.assign(skinImages, map);
+    // Salva no localStorage
+    try {
+      localStorage.setItem(SKIN_IMG_CACHE_KEY, JSON.stringify({ ts: Date.now(), data: map }));
+    } catch { /* quota exceeded — ignora */ }
+    console.log(`[skin images] ${Object.keys(map).length} loaded fresh`);
+    if (!silent) renderSkins();
+    else renderSkins(); // também re-render no caso silencioso (substituição de shimmer por imagem)
+  } catch (e) {
+    console.log('[skin images] fetch error:', e.message);
+  }
+}
+
+// Resolve imagem pra um market_hash_name usando: exato → sem wear → vazio
+function resolveSkinImage(fullName) {
+  if (!fullName) return '';
+  if (skinImages[fullName]) return skinImages[fullName];
+  // Remove sufixo "(Field-Tested)", "(Factory New)" etc
+  const baseName = fullName.replace(/\s*\([^)]+\)\s*$/, '').trim();
+  if (baseName !== fullName && skinImages[baseName]) return skinImages[baseName];
+  // Remove StatTrak™ prefix também
+  const noStatTrak = baseName.replace(/^StatTrak™\s*/, '').trim();
+  if (noStatTrak !== baseName && skinImages[noStatTrak]) return skinImages[noStatTrak];
+  return '';
 }
 
 // ============= FILTERING & RENDERING =============
@@ -2668,25 +2711,49 @@ async function fetchSuggestions(query) {
   } catch { hideSuggestions(); }
 }
 
+function positionSuggestionsBox() {
+  const box = document.getElementById('searchSuggestions');
+  const input = document.getElementById('searchInput');
+  if (!box || !input) return;
+  const rect = input.getBoundingClientRect();
+  box.style.top = (rect.bottom + 6) + 'px';
+  box.style.left = rect.left + 'px';
+  box.style.width = rect.width + 'px';
+}
+
 function renderSuggestions(names) {
   const box = document.getElementById('searchSuggestions');
   if (!box) return;
   if (!names.length) { hideSuggestions(); return; }
   _suggestionIndex = -1;
   box.innerHTML = names.map((n, i) => `<div class="sug" data-idx="${i}" onmousedown="selectSuggestion('${n.replace(/'/g, "\\'")}')">${n}</div>`).join('');
-  box.style.display = 'block';
+  positionSuggestionsBox();
+  box.classList.add('visible');
 }
 
 function showSuggestions() {
   const box = document.getElementById('searchSuggestions');
-  if (box && box.innerHTML) box.style.display = 'block';
+  if (box && box.innerHTML) {
+    positionSuggestionsBox();
+    box.classList.add('visible');
+  }
 }
 
 function hideSuggestions() {
   const box = document.getElementById('searchSuggestions');
-  if (box) box.style.display = 'none';
+  if (box) box.classList.remove('visible');
   _suggestionIndex = -1;
 }
+
+// Reposiciona dropdown no scroll/resize (pq é position:fixed)
+window.addEventListener('scroll', () => {
+  const box = document.getElementById('searchSuggestions');
+  if (box && box.classList.contains('visible')) positionSuggestionsBox();
+}, { passive: true });
+window.addEventListener('resize', () => {
+  const box = document.getElementById('searchSuggestions');
+  if (box && box.classList.contains('visible')) positionSuggestionsBox();
+});
 
 function selectSuggestion(name) {
   document.getElementById('searchInput').value = name;
@@ -2834,7 +2901,7 @@ function createSkinCard(skin, index) {
 
   const rarityColor = RARITY_COLORS[skin.rarity] || '#8847ff';
   const originalPrice = (skin.price / (1 - skin.discount / 100)).toFixed(2);
-  const image = skin.image || skinImages[skin.name];
+  const image = skin.image || resolveSkinImage(skin.name);
 
   // Veredito vem do cache pré-carregado (loadVerdictsForVisibleSkins)
   const verdict = skinVerdicts[skin.name]; // { verdict, label, trend }
@@ -2852,6 +2919,7 @@ function createSkinCard(skin, index) {
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
         <path d="M3 3v18h18"/><path d="M7 14l4-4 4 4 5-5"/>
       </svg>
+      Analisar
     </button>
     <div class="skin-badges">
       <div class="delivery-badge ${skin.inStock ? 'full' : ''}">
@@ -2979,7 +3047,7 @@ function openSkinModal(skin) {
   currentModal = skin;
   const rarityColor = RARITY_COLORS[skin.rarity] || '#8847ff';
   const originalPrice = (skin.price / (1 - skin.discount / 100)).toFixed(2);
-  const image = skin.image || skinImages[skin.name];
+  const image = skin.image || resolveSkinImage(skin.name);
 
   document.getElementById('modalRarityBar').style.color = rarityColor;
   document.getElementById('modalSkinName').textContent = skin.name;
