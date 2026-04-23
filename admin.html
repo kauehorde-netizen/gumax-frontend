@@ -960,22 +960,32 @@ select.form-control {
           </button>
         </div>
 
-        <!-- Campo condicional: só aparece no modo porcentagem -->
+        <!-- MODO PORCENTAGEM: um único input (já é o preço final por ¥) -->
         <div class="form-group" id="pricingFixedCard" style="display: none;">
           <label>Quantos reais você quer por cada ¥ 1 do Youpin?</label>
           <input type="number" class="form-control" id="pricingFixedRate" step="0.01" min="0.1" max="2" placeholder="0.78">
           <div style="color: var(--text-muted); font-size: 12px; margin-top: 6px;">
-            Gu hoje usa <strong>0,78</strong>. Cotação Google agora: <strong id="pricingGoogleRateInline">—</strong>.
+            Gu hoje usa <strong>0,78</strong> (já inclui a margem dele). Cotação Google agora: <strong id="pricingGoogleRateInline">—</strong>.
           </div>
         </div>
 
-        <!-- Info do modo cotação -->
-        <div id="pricingRateInfo" style="display: none; background: rgba(16,185,129,0.08); border-left: 3px solid #10b981; padding: 14px; border-radius: 6px; margin-bottom: 16px;">
-          <div style="font-size: 13px; color: var(--text);">
-            Usando cotação <strong>ao vivo do Google Finance</strong>. Atualiza a cada 5 minutos automaticamente.
+        <!-- MODO COTAÇÃO: info da cotação ao vivo + campo de margem de lucro -->
+        <div id="pricingRateInfo" style="display: none;">
+          <div style="background: rgba(16,185,129,0.08); border-left: 3px solid #10b981; padding: 14px; border-radius: 6px; margin-bottom: 16px;">
+            <div style="font-size: 13px; color: var(--text);">
+              Usando cotação <strong>ao vivo do Google Finance</strong>. Atualiza a cada 5 minutos.
+            </div>
+            <div style="margin-top: 6px; font-size: 14px; font-weight: 700;">
+              Cotação agora: <span id="pricingGoogleRateBig">—</span>
+            </div>
           </div>
-          <div style="margin-top: 6px; font-size: 14px; font-weight: 700;">
-            Cotação agora: <span id="pricingGoogleRateBig">—</span>
+
+          <div class="form-group">
+            <label>Margem de lucro (%)</label>
+            <input type="number" class="form-control" id="pricingMargin" step="1" min="0" max="99" placeholder="10" value="10">
+            <div style="color: var(--text-muted); font-size: 12px; margin-top: 6px;">
+              Soma sobre o Google. Ex: <strong>10</strong> = Google + 10%. Se Google tá 0,74 → você vende a 0,814.
+            </div>
           </div>
         </div>
 
@@ -996,7 +1006,6 @@ select.form-control {
         <!-- Radios e dados escondidos (compat backend) -->
         <input type="radio" name="pricingMode" value="fixed" id="pricingModeFixed" style="display: none;">
         <input type="radio" name="pricingMode" value="rate" id="pricingModeRate" style="display: none;">
-        <input type="hidden" id="pricingMargin" value="0">
         <span id="pricingGoogleRate" style="display: none;" data-raw="0"></span>
 
         <div style="margin-top: 16px;">
@@ -1511,7 +1520,8 @@ function updatePricingPreview() {
   const mode = document.getElementById('pricingModeRate').checked ? 'rate' : 'fixed';
   const fixedRate = parseFloat(document.getElementById('pricingFixedRate').value) || 0.78;
   const googleRate = parseFloat(document.getElementById('pricingGoogleRate')?.dataset?.raw || '0');
-  const activeFactor = mode === 'rate' ? (googleRate || fixedRate) : fixedRate;
+  // Margem só é considerada no modo cotação
+  const marginPct = parseFloat(document.getElementById('pricingMargin')?.value || '0') || 0;
 
   // Toggle visual: só o botão ativo fica amarelo
   const btnRate = document.getElementById('pricingToggleRate');
@@ -1532,11 +1542,18 @@ function updatePricingPreview() {
   fixedCard.style.display = mode === 'fixed' ? 'block' : 'none';
   rateInfo.style.display  = mode === 'rate'  ? 'block' : 'none';
 
+  // Cálculo do fator final aplicado:
+  //   fixed → user já baked in a margem no número (0,78 já é o preço final por ¥)
+  //   rate  → Google × (1 + margem/100)
+  const baseFactor = mode === 'rate' ? (googleRate || fixedRate) : fixedRate;
+  const finalFactor = mode === 'rate' ? baseFactor * (1 + marginPct / 100) : baseFactor;
+
   // Preview
-  document.getElementById('pricingActiveFactor').textContent =
-    mode === 'rate' ? `${activeFactor.toFixed(4)} (Google ao vivo)` : `${activeFactor.toFixed(4)} (você escolheu)`;
-  document.getElementById('pricingExampleOriginal').textContent = formatBRL(100 * activeFactor * 1.35); // Steam ~= Youpin × 1.35
-  document.getElementById('pricingExampleSale').textContent = formatBRL(100 * activeFactor);
+  document.getElementById('pricingActiveFactor').textContent = mode === 'rate'
+    ? `${finalFactor.toFixed(4)} (Google ${baseFactor.toFixed(4)} + ${marginPct}%)`
+    : `${finalFactor.toFixed(4)} (você escolheu)`;
+  document.getElementById('pricingExampleOriginal').textContent = formatBRL(100 * finalFactor * 1.35); // Steam ~= Youpin × 1.35
+  document.getElementById('pricingExampleSale').textContent = formatBRL(100 * finalFactor);
 
   // Cotação grande no bloco info
   const big = document.getElementById('pricingGoogleRateBig');
@@ -1551,6 +1568,11 @@ function setPricingDefaults() {
   document.getElementById('pricingModeFixed').checked = mode !== 'rate';
   document.getElementById('pricingModeRate').checked = mode === 'rate';
   document.getElementById('pricingFixedRate').value = cached.fixedRate ?? 0.78;
+  // margem — só faz sentido no modo cotação
+  const marginPct = Math.round((cached.margin ?? 0.10) * 100);
+  const marginEl = document.getElementById('pricingMargin');
+  if (marginEl) marginEl.value = marginPct;
+
   const cachedGoogle = parseFloat(cached.lastGoogleRate || 0) || 0;
   document.getElementById('pricingGoogleRate').dataset.raw = String(cachedGoogle);
   const inlineEl = document.getElementById('pricingGoogleRateInline');
@@ -1609,23 +1631,32 @@ async function savePricing() {
   if (!key) return;
   const mode = document.getElementById('pricingModeRate').checked ? 'rate' : 'fixed';
   const fixedRate = parseFloat(document.getElementById('pricingFixedRate').value);
+  const marginPct = parseFloat(document.getElementById('pricingMargin').value) || 0;
 
   if (mode === 'fixed' && !(fixedRate > 0 && fixedRate < 5)) {
     alert('Valor em R$ por ¥ precisa estar entre 0 e 5 (ex: 0,78)');
     return;
   }
+  if (mode === 'rate' && !(marginPct >= 0 && marginPct < 100)) {
+    alert('Margem precisa estar entre 0 e 99%');
+    return;
+  }
+
+  // No modo fixed, margem não é aplicada (o fator já inclui tudo) — envia 0.
+  // No modo rate, margem é aplicada sobre a cotação Google.
+  const marginDec = mode === 'rate' ? marginPct / 100 : 0;
 
   try {
-    // margem = 0, pois agora o próprio fator já é o preço final por ¥
     const r = await fetch(`${API_BASE_ADMIN}/api/admin/update-pricing`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${key}` },
-      body: JSON.stringify({ mode, fixedRate, margin: 0 }),
+      body: JSON.stringify({ mode, fixedRate, margin: marginDec }),
     });
     const data = await r.json();
     if (data.success) {
-      // Atualiza cache local
-      localStorage.setItem('gumax_pricing_cache', JSON.stringify({ mode, fixedRate, margin: 0 }));
+      localStorage.setItem('gumax_pricing_cache', JSON.stringify({
+        mode, fixedRate, margin: marginDec,
+      }));
       alert('Precificação salva! A loja vai usar os novos valores em até 1 minuto.');
     } else {
       alert('Erro: ' + (data.error || 'desconhecido'));
