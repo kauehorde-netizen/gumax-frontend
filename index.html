@@ -2469,31 +2469,33 @@ async function loadHeroConfig() {
   }
 }
 
-// Carrega as skins "Mais vendidas" do Youpin (top 50) e adiciona como skins normais
+// Carrega as skins "Mais vendidas" do Youpin (top 50).
+// O BACKEND já calcula originalBRL (Steam × fator) e saleBRL (Youpin × fator × margem)
+// com base em settings/pricing — frontend só exibe.
 async function loadYoupinTopSellers(limit = 40) {
   try {
     const r = await fetch(`${API_BASE}/api/youpin/top-sellers?limit=${limit}`);
     if (!r.ok) return;
     const data = await r.json();
     const items = Array.isArray(data.items) ? data.items : [];
-    // Converte pra formato interno de skin
-    // Cotação CNY→BRL: usamos fixo 0.68 como fallback (backend tem endpoint /api/exchange-rate se quiser ser preciso)
-    const cnyBrl = 0.68;
-    const margin = 15;
     const topSkins = items
-      .filter(it => it.price_cny > 0 && it.name)
+      .filter(it => (it.saleBRL > 0 || it.price_cny > 0) && it.name)
       .map((it, i) => {
-        const basePrice = it.price_cny * cnyBrl;
-        const finalPrice = basePrice * (1 + margin / 100);
+        const sale = it.saleBRL || 0;
+        const original = it.originalBRL || sale;
+        const discount = original > sale && sale > 0
+          ? Math.round((1 - sale / original) * 100)
+          : 0;
         return {
           id: 10000 + i,
           name: it.name,
           wear: inferWearFromName(it.name) || 'FT',
-          price: Math.round(finalPrice * 100) / 100,
+          price: sale,
+          originalPrice: original,       // strikethrough no card
           rarity: 'Common',
-          inStock: false, // Youpin = entrega normal
+          inStock: false,                // Youpin = entrega normal
           float: 0,
-          discount: margin,
+          discount,
           image: it.iconUrl ? `https://community.cloudflare.steamstatic.com/economy/image/${it.iconUrl}/256fx256f` : '',
           source: 'youpin_top',
           sellerName: 'Youpin Top',
@@ -2931,7 +2933,11 @@ function createSkinCard(skin, index) {
   div.onclick = () => openSkinModal(skin);
 
   const rarityColor = RARITY_COLORS[skin.rarity] || '#8847ff';
-  const originalPrice = (skin.price / (1 - skin.discount / 100)).toFixed(2);
+  const originalPrice = (skin.originalPrice && skin.originalPrice > skin.price)
+    ? skin.originalPrice.toFixed(2)
+    : (skin.discount > 0
+        ? (skin.price / (1 - skin.discount / 100)).toFixed(2)
+        : skin.price.toFixed(2));
   const image = skin.image || resolveSkinImage(skin.name);
 
   // Veredito vem do cache pré-carregado (loadVerdictsForVisibleSkins)
@@ -3077,7 +3083,11 @@ function fmtR(n) {
 function openSkinModal(skin) {
   currentModal = skin;
   const rarityColor = RARITY_COLORS[skin.rarity] || '#8847ff';
-  const originalPrice = (skin.price / (1 - skin.discount / 100)).toFixed(2);
+  const originalPrice = (skin.originalPrice && skin.originalPrice > skin.price)
+    ? skin.originalPrice.toFixed(2)
+    : (skin.discount > 0
+        ? (skin.price / (1 - skin.discount / 100)).toFixed(2)
+        : skin.price.toFixed(2));
   const image = skin.image || resolveSkinImage(skin.name);
 
   document.getElementById('modalRarityBar').style.color = rarityColor;
