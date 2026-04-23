@@ -47,9 +47,9 @@ body {
 
 /* HERO */
 .rifa-hero {
-  display: grid; grid-template-columns: 0.9fr 1.1fr; gap: 20px;
+  display: grid; grid-template-columns: 0.8fr 1.2fr; gap: 16px;
   background: var(--bg-card); border: 1px solid var(--border);
-  border-radius: 16px; padding: 20px; margin-bottom: 16px;
+  border-radius: 14px; padding: 14px; margin-bottom: 12px;
   position: relative; overflow: hidden;
 }
 .rifa-hero::before {
@@ -132,12 +132,12 @@ body {
 .legend-dot.taken { background: var(--accent-red); opacity: 0.6; }
 
 .number-grid {
-  display: grid; grid-template-columns: repeat(10, 1fr); gap: 6px;
+  display: grid; grid-template-columns: repeat(10, 1fr); gap: 5px;
 }
 .num {
-  aspect-ratio: 1; border-radius: 8px; background: var(--bg-input);
+  height: 42px; border-radius: 6px; background: var(--bg-input);
   border: 1px solid var(--border); display: flex; align-items: center; justify-content: center;
-  font-weight: 700; font-size: 14px; font-family: 'JetBrains Mono', monospace;
+  font-weight: 700; font-size: 13px; font-family: 'JetBrains Mono', monospace;
   cursor: pointer; transition: all .15s; user-select: none;
 }
 .num:hover:not(.taken) { border-color: var(--primary); transform: translateY(-1px); color: var(--primary-light); }
@@ -283,11 +283,8 @@ body {
 
   <!-- HERO DA RIFA -->
   <section class="rifa-hero">
-    <div class="rifa-image-wrap">
-      <img id="skinImage"
-        src="https://community.cloudflare.steamstatic.com/economy/image/-9a81dlWLwJ2UUGcVs_nsVtzdOEdtWwKGZZLQHTxDZ7I56KU0Zwwo4NUX4oFJZEHLbXH5ApeO4YmlhxYQknCRvCoAQ0jFNQsRI9M2QlR3oja4Nx-iq7ymI-IkOCNzobB5oOLh-fpPLvdwmpS7ZMiibvEpo6jiwHmrhBsZm-hcNWVIwI6NQqD-FW9xrzt0Z-5vsnXiSA36UI8pSGK0RTIEh7e7A/360fx360f"
-        alt="AWP Dragon Lore"
-        onerror="this.onerror=null; loadSkinFromBackend(this);">
+    <div class="rifa-image-wrap" id="skinImageWrap">
+      <div id="skinImageLoader" style="color:var(--text-muted);font-size:11px;">Carregando imagem da skin...</div>
     </div>
     <div class="rifa-info">
       <span class="rarity-tag">Cobiçada · Factory New</span>
@@ -532,28 +529,42 @@ function showToast(msg) {
   setTimeout(() => t.classList.remove('show'), 2500);
 }
 
-// Fallback: se a URL da Steam falhar, pede ao backend o icon da Pricempire
-async function loadSkinFromBackend(img) {
+// Carrega imagem da skin via nossa própria API. Tenta várias fontes em ordem.
+async function loadSkinImage() {
+  const wrap = document.getElementById('skinImageWrap');
+  const SKIN_NAME = 'AWP | Dragon Lore (Factory New)';
+
+  const renderImg = (url) => {
+    wrap.innerHTML = `<img src="${url}" alt="${SKIN_NAME}" style="width:100%;max-width:220px;filter:drop-shadow(0 0 18px rgba(235,75,75,0.35));"
+      onerror="this.parentElement.innerHTML=fallbackPlaceholder();">`;
+  };
+
+  // 1. Tenta skin-detail (Pricempire retorna icon URL direto)
   try {
-    // Tenta pegar via nossa API de skinport (que indireto pode retornar item_page)
-    // Se tiver Pricempire configurada, outra opção é /api/skin-detail
     const r = await fetch('https://gumax-backend-production.up.railway.app/api/skin-detail', {
       method: 'POST', headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ name: 'AWP | Dragon Lore (Factory New)' })
+      body: JSON.stringify({ name: SKIN_NAME })
     });
-    const d = await r.json();
-    if (d.icon) {
-      img.src = d.icon.startsWith('http') ? d.icon : `https://community.cloudflare.steamstatic.com/economy/image/${d.icon}/360fx360f`;
-      return;
+    if (r.ok) {
+      const d = await r.json();
+      if (d.icon) {
+        const url = d.icon.startsWith('http') ? d.icon
+          : `https://community.cloudflare.steamstatic.com/economy/image/${d.icon}/360fx360f`;
+        renderImg(url);
+        return;
+      }
     }
-  } catch (e) { console.log('[rifas] fallback icon error', e); }
-  // Último recurso: placeholder visual com iniciais
-  img.outerHTML = `
-    <div style="width:100%;max-width:280px;aspect-ratio:16/9;display:flex;align-items:center;justify-content:center;background:linear-gradient(135deg,rgba(235,75,75,0.3),rgba(212,160,23,0.3));border-radius:12px;border:1px solid rgba(235,75,75,0.4);">
-      <div style="text-align:center;">
-        <div style="font-size:48px;font-weight:900;color:#eb4b4b;line-height:1;font-family:'JetBrains Mono',monospace;">AWP</div>
-        <div style="font-size:14px;color:#fac619;margin-top:4px;letter-spacing:1px;">Dragon Lore</div>
-      </div>
+  } catch (e) { /* tenta próximo */ }
+
+  // 2. Fallback: placeholder estilizado
+  wrap.innerHTML = fallbackPlaceholder();
+}
+
+function fallbackPlaceholder() {
+  return `
+    <div style="width:100%;max-width:260px;aspect-ratio:16/10;display:flex;flex-direction:column;align-items:center;justify-content:center;background:linear-gradient(135deg,rgba(235,75,75,0.22),rgba(212,160,23,0.18));border-radius:12px;border:1px solid rgba(235,75,75,0.35);">
+      <div style="font-size:42px;font-weight:900;color:#eb4b4b;line-height:1;letter-spacing:2px;font-family:'JetBrains Mono',monospace;">AWP</div>
+      <div style="font-size:13px;color:#fac619;margin-top:6px;letter-spacing:1.5px;font-weight:600;">DRAGON LORE</div>
     </div>
   `;
 }
@@ -561,6 +572,7 @@ async function loadSkinFromBackend(img) {
 // ============ INIT ============
 renderGrid();
 updateCheckoutBar();
+loadSkinImage();
 </script>
 
 </body>
