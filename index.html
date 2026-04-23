@@ -2470,22 +2470,40 @@ async function loadHeroConfig() {
 }
 
 // Carrega as skins "Mais vendidas" do Youpin (top 50).
-// O BACKEND já calcula originalBRL (Steam × fator) e saleBRL (Youpin × fator × margem)
+// O BACKEND NOVO já calcula originalBRL (Steam × fator) e saleBRL (Youpin × fator × margem)
 // com base em settings/pricing — frontend só exibe.
+// FALLBACK: se o backend ainda é versão antiga (só tem price_cny), calculamos no frontend
+// com fator padrão 0,78 e margem 10% — evita mostrar R$ 0 durante uma janela de deploy.
 async function loadYoupinTopSellers(limit = 40) {
   try {
     const r = await fetch(`${API_BASE}/api/youpin/top-sellers?limit=${limit}`);
     if (!r.ok) return;
     const data = await r.json();
     const items = Array.isArray(data.items) ? data.items : [];
+
+    // Fallback local se backend ainda não envia saleBRL
+    const FALLBACK_RATE = 0.78;
+    const FALLBACK_MARGIN = 0.10;
+
     const topSkins = items
       .filter(it => (it.saleBRL > 0 || it.price_cny > 0) && it.name)
       .map((it, i) => {
-        const sale = it.saleBRL || 0;
-        const original = it.originalBRL || sale;
+        // Se backend já calcula, usa. Senão, calcula local com defaults.
+        const saleFromBackend = parseFloat(it.saleBRL) || 0;
+        const sale = saleFromBackend > 0
+          ? saleFromBackend
+          : Math.round(it.price_cny * FALLBACK_RATE * (1 + FALLBACK_MARGIN) * 100) / 100;
+
+        const originalFromBackend = parseFloat(it.originalBRL) || 0;
+        const steamCNY = parseFloat(it.steam_price_cny) || (it.price_cny * 1.35);
+        const original = originalFromBackend > 0
+          ? originalFromBackend
+          : Math.round(steamCNY * FALLBACK_RATE * 100) / 100;
+
         const discount = original > sale && sale > 0
           ? Math.round((1 - sale / original) * 100)
           : 0;
+
         return {
           id: 10000 + i,
           name: it.name,
