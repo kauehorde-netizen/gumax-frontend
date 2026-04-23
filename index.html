@@ -2645,7 +2645,7 @@ function onSearchInput() {
 
 async function fetchSuggestions(query) {
   try {
-    const r = await fetch(`${API_BASE}/api/skinport/suggest?q=${encodeURIComponent(query)}&limit=10`);
+    const r = await fetch(`${API_BASE}/api/pricempire/suggest?q=${encodeURIComponent(query)}&limit=10`);
     if (!r.ok) { hideSuggestions(); return; }
     const data = await r.json();
     renderSuggestions(data.suggestions || []);
