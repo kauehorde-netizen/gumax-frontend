@@ -946,7 +946,13 @@ nav {
 .badge-icon {
   font-size: 16px;
   flex-shrink: 0;
+  width: 18px;
+  height: 18px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
 }
+svg.badge-icon { stroke: var(--primary-light); }
 
 /* FOOTER */
 footer {
@@ -1880,7 +1886,7 @@ footer {
       <span class="nav-link" onclick="scrollToSection('how')">Como Funciona</span>
       <span class="nav-link" onclick="scrollToSection('faq')">FAQ</span>
       <a class="nav-link analise-link" href="analise.html">📊 Análise</a>
-      <a class="nav-link rifas-link" href="https://gumax.com" target="_blank">🎰 Rifas</a>
+      <a class="nav-link rifas-link" href="rifas.html">🎰 Rifas</a>
     </nav>
     <div class="header-actions">
       <div class="cart-icon" onclick="toggleCart()">
