@@ -419,6 +419,13 @@ let priceMap = {};  // market_hash_name → { offerBRL, cheapestSource }
 let selected = new Map();  // assetid → item
 
 // ============= BOOT =============
+// Força persistência LOCAL (IndexedDB) — sessão sobrevive reload, troca de aba,
+// fechamento do browser. É o default mas setamos explicitamente pra evitar
+// regressões em browsers que têm IndexedDB restrito.
+auth.setPersistence(firebase.auth.Auth.Persistence.LOCAL).catch(e => {
+  console.warn('[auth] setPersistence LOCAL falhou, caindo pra default:', e.message);
+});
+
 auth.onAuthStateChanged(async user => {
   currentUser = user;
   renderHeader();
