@@ -2113,7 +2113,7 @@ footer {
 <!-- SEARCH & FILTERS -->
 <section class="search-section" id="marketplace">
   <!-- Marca visível pra confirmar versão deployada. -->
-  <div style="font-size: 10px; color: rgba(139,92,246,0.5); text-align: right; margin-bottom: 4px;">search v12-pro-icons</div>
+  <div style="font-size: 10px; color: rgba(139,92,246,0.5); text-align: right; margin-bottom: 4px;">search v13-weapon-filter</div>
 
   <!-- BUFF-style category picker com SVG icons (Faca, Luvas, Rifle, ...).
        Clicar num modelo (ex: AK-47) filtra a grid e rola pra seção. -->
@@ -2225,15 +2225,17 @@ footer {
       dropdown.classList.add('visible');
     }
     renderMenu('buffMenu', (weaponName) => {
-      const input = document.getElementById('searchInput');
-      if (input) {
-        const query = weaponName.replace(/^★\s*/, '');
-        input.value = query;
-        if (typeof onSearchInput === 'function') onSearchInput();
-        // Atualiza título da seção pra dar contexto
-        const header = document.querySelector('.section-title-inline');
-        if (header) header.innerHTML = `🔥 <span style="color: var(--primary-light);">${query}</span> — skins disponíveis`;
-        document.getElementById('section-catalog')?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+      // Novo fluxo: clica numa arma (ex: Karambit) → ativa filtro de arma,
+      // mostra sub-filter bar (Exterior + busca), filtra grid, rola pra ele.
+      if (typeof setWeaponFilter === 'function') {
+        setWeaponFilter(weaponName);
+      } else {
+        // Fallback: só popula a busca (se setWeaponFilter não carregou)
+        const input = document.getElementById('searchInput');
+        if (input) {
+          input.value = weaponName.replace(/^★\s*/, '');
+          if (typeof onSearchInput === 'function') onSearchInput();
+        }
       }
     });
     console.log('[BuffMenu] inicializado em index.html (v12-pro-icons)');
@@ -2260,6 +2262,83 @@ footer {
       <span id="fullCount">0</span> Full disponíveis
     </span>
   </div>
+
+  <!-- Sub-filter bar (aparece quando usuário escolhe uma arma no menu BUFF).
+       Estilo BUFF: chip do modelo ativo + dropdown Exterior + busca por nome. -->
+  <div id="weaponFilterBar" class="weapon-filter-bar" style="display:none;">
+    <div class="wfb-chip" id="wfbActive">
+      <span id="wfbActiveLabel">—</span>
+      <button class="wfb-close" onclick="clearWeaponFilter()" title="Limpar filtro">×</button>
+    </div>
+    <div class="wfb-select-wrap">
+      <label>Exterior:</label>
+      <select id="wfbWearFilter" onchange="onWearFilterChange(this.value)">
+        <option value="">Todos</option>
+        <option value="Factory New">Factory New</option>
+        <option value="Minimal Wear">Minimal Wear</option>
+        <option value="Field-Tested">Field-Tested</option>
+        <option value="Well-Worn">Well-Worn</option>
+        <option value="Battle-Scarred">Battle-Scarred</option>
+      </select>
+    </div>
+    <div class="wfb-search">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" style="width:14px;height:14px;opacity:.6;"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>
+      <input type="text" id="wfbNameFilter" placeholder="Busca por nome (ex: Fade, Redline)" oninput="onWfbNameFilterChange(this.value)">
+    </div>
+  </div>
+
+  <style>
+    .weapon-filter-bar {
+      display: flex !important;
+      flex-wrap: wrap;
+      gap: 12px;
+      align-items: center;
+      padding: 12px 16px;
+      margin-bottom: 18px;
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+    }
+    .wfb-chip {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      padding: 6px 10px 6px 14px;
+      background: rgba(139,92,246,.18);
+      border: 1px solid rgba(167,139,250,.4);
+      border-radius: 20px;
+      color: var(--primary-light);
+      font-weight: 600;
+      font-size: 13px;
+    }
+    .wfb-close {
+      background: rgba(255,255,255,.08);
+      border: none; color: var(--text-secondary);
+      width: 22px; height: 22px; border-radius: 50%;
+      cursor: pointer; font-size: 14px; line-height: 1;
+      transition: background .15s, color .15s;
+    }
+    .wfb-close:hover { background: rgba(239,68,68,.2); color: var(--accent-red); }
+    .wfb-select-wrap { display: inline-flex; align-items: center; gap: 8px; }
+    .wfb-select-wrap label { font-size: 12px; color: var(--text-muted); text-transform: uppercase; letter-spacing: .5px; }
+    .wfb-select-wrap select {
+      padding: 8px 12px; border-radius: 8px;
+      background: var(--bg-elevated); border: 1px solid var(--border);
+      color: var(--text-primary); font-size: 13px; font-family: inherit;
+      cursor: pointer;
+    }
+    .wfb-search {
+      flex: 1; min-width: 200px;
+      display: inline-flex; align-items: center; gap: 8px;
+      padding: 6px 12px; border-radius: 8px;
+      background: var(--bg-elevated); border: 1px solid var(--border);
+    }
+    .wfb-search input {
+      flex: 1; background: transparent; border: none;
+      color: var(--text-primary); font-size: 13px; font-family: inherit; outline: none;
+    }
+  </style>
+
   <div class="skin-grid" id="skinGridUnified">
     <!-- Catálogo completo (Full + Youpin juntos) -->
   </div>
@@ -2516,6 +2595,91 @@ let currentCategory = "Todos";
 let displayedSkins = [];
 let skinImages = {};
 
+// ============= WEAPON FILTER (BUFF-style) =============
+// Quando usuário escolhe uma arma no menu BUFF (ex: Karambit), ativa esse filtro.
+// Estado é independente de currentSearchQuery (que é a busca livre). A grid
+// filtra por AMBOS: nome da arma + wear selecionado + busca por nome dentro.
+let weaponFilter = null;     // ex: "Karambit" ou "★ Karambit"
+let weaponFilterWear = '';   // "Factory New" | "Minimal Wear" | ... | ""
+let weaponFilterName = '';   // busca livre dentro do filtro (ex: "Fade")
+
+function setWeaponFilter(weaponName) {
+  weaponFilter = weaponName;
+  weaponFilterWear = '';
+  weaponFilterName = '';
+  // Limpa busca principal pra não conflitar com o filtro por arma
+  const mainInput = document.getElementById('searchInput');
+  if (mainInput) mainInput.value = '';
+  currentSearchQuery = '';
+  searchResults = [];
+
+  // Mostra o sub-filter bar + atualiza UI
+  const bar = document.getElementById('weaponFilterBar');
+  if (bar) bar.style.display = '';
+  const label = document.getElementById('wfbActiveLabel');
+  if (label) label.textContent = weaponName;
+  const wearSel = document.getElementById('wfbWearFilter');
+  if (wearSel) wearSel.value = '';
+  const nameIn = document.getElementById('wfbNameFilter');
+  if (nameIn) nameIn.value = '';
+
+  // Atualiza título da seção
+  const header = document.querySelector('.section-title-inline');
+  if (header) header.innerHTML = `🔥 <span style="color: var(--primary-light);">${weaponName}</span> — variantes disponíveis`;
+
+  // Busca no backend pra trazer TODAS as variantes da arma (Youpin completo)
+  if (typeof searchCatalogBackend === 'function') {
+    searchCatalogBackend(weaponName.replace(/^★\s*/, ''));
+  }
+
+  renderSkins();
+  document.getElementById('section-catalog')?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+}
+
+function clearWeaponFilter() {
+  weaponFilter = null;
+  weaponFilterWear = '';
+  weaponFilterName = '';
+  const bar = document.getElementById('weaponFilterBar');
+  if (bar) bar.style.display = 'none';
+  const header = document.querySelector('.section-title-inline');
+  if (header) header.innerHTML = `🔥 <span style="color: var(--primary-light);">Catálogo</span> — milhares de skins`;
+  searchResults = [];
+  lastSearchQuery = '';
+  renderSkins();
+}
+
+function onWearFilterChange(value) {
+  weaponFilterWear = value;
+  renderSkins();
+}
+
+function onWfbNameFilterChange(value) {
+  weaponFilterName = (value || '').trim().toLowerCase();
+  renderSkins();
+}
+
+// Aplica o filtro de weapon (nome da arma + wear + busca interna) nos skins.
+// Retorna true se o skin deve aparecer no grid considerando o filtro ativo.
+function weaponFilterMatches(skin) {
+  if (!weaponFilter) return true;
+  const name = (skin.name || '').toLowerCase();
+  // 1. Nome da arma — tem que conter "karambit", "ak-47 |", etc
+  const weaponKey = weaponFilter.replace(/^★\s*/, '').toLowerCase();
+  // Pra facas/luvas, checa se começa com ★ (item de faca/luva)
+  if (weaponFilter.startsWith('★')) {
+    if (!name.includes(weaponKey)) return false;
+  } else {
+    // Pra armas normais, checa "arma |" (ex: "ak-47 |")
+    if (!name.includes(weaponKey)) return false;
+  }
+  // 2. Wear (se filtro ativo)
+  if (weaponFilterWear && !name.includes('(' + weaponFilterWear.toLowerCase() + ')')) return false;
+  // 3. Busca livre dentro do filtro
+  if (weaponFilterName && !name.includes(weaponFilterName)) return false;
+  return true;
+}
+
 // ============= FIRESTORE SKINS =============
 let firestoreSkins = [];
 
@@ -2768,6 +2932,13 @@ function skinMatchesQuery(skinName, query) {
 }
 
 function getAllSkins() {
+  // Weapon filter ativo (menu BUFF): retorna TODO o stock + searchResults (Youpin)
+  // — o filtro de nome/wear é aplicado depois em renderSkins via weaponFilterMatches.
+  if (weaponFilter) {
+    const stockNames = new Set(allStockSkins.map(s => s.name));
+    const youpinMatching = searchResults.filter(s => !stockNames.has(s.name));
+    return [...allStockSkins, ...youpinMatching];
+  }
   // Busca ativa: Full matching (allStockSkins completo) + Youpin sob encomenda (searchResults).
   if (currentSearchQuery) {
     const matchingStock = allStockSkins.filter(s => skinMatchesQuery(s.name, currentSearchQuery));
@@ -3247,6 +3418,10 @@ function renderSkins() {
     // Delivery filter
     if (currentDeliveryFilter === 'full' && !skin.inStock) return false;
     if (currentDeliveryFilter === 'normal' && skin.inStock) return false;
+
+    // Weapon filter (BUFF-style): quando user escolheu arma no menu.
+    // Aplica filtro de nome da arma + wear + busca livre dentro do grupo.
+    if (weaponFilter && !weaponFilterMatches(skin)) return false;
 
     // getAllSkins() já aplicou o filtro de busca corretamente (por palavras, fuzzy).
     // Aqui NÃO refiltramos — getAllSkins entrega apenas itens relevantes.
