@@ -1,0 +1,763 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
+<meta http-equiv="Pragma" content="no-cache">
+<meta http-equiv="Expires" content="0">
+<title>Vender Skins | Gumax Skins</title>
+<link rel="icon" href="https://static.wixstatic.com/media/874864_b598e856481740e7ae752771a661c242~mv2.png/v1/fill/w_64,h_64,al_c,q_85,enc_auto/874864_b598e856481740e7ae752771a661c242~mv2.png">
+<link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800;900&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<script src="https://www.gstatic.com/firebasejs/10.5.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.5.0/firebase-auth-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.5.0/firebase-firestore-compat.js"></script>
+
+<style>
+* { box-sizing: border-box; margin: 0; padding: 0; }
+
+:root {
+  --bg: #08060e;
+  --bg-card: #110e1a;
+  --bg-elevated: #1a1528;
+  --bg-input: #13101e;
+  --text-primary: #ece8f4;
+  --text-secondary: #9890a8;
+  --text-muted: #5e5670;
+  --border: #241e35;
+  --primary: #8B5CF6;
+  --primary-dark: #7C3AED;
+  --primary-light: #A78BFA;
+  --accent-yellow: #FACC15;
+  --success: #10b981;
+  --danger: #ef4444;
+}
+
+body {
+  background: var(--bg);
+  background-image:
+    radial-gradient(ellipse at 50% 0%, rgba(139, 92, 246, .07) 0%, transparent 50%),
+    radial-gradient(ellipse at 80% 100%, rgba(250, 204, 21, .03) 0%, transparent 40%);
+  color: var(--text-primary);
+  font-family: 'Outfit', 'Segoe UI', sans-serif;
+  min-height: 100vh;
+  line-height: 1.5;
+}
+
+header {
+  position: sticky;
+  top: 0;
+  z-index: 100;
+  background: rgba(8, 6, 14, 0.95);
+  backdrop-filter: blur(20px);
+  border-bottom: 1px solid var(--border);
+  padding: 0 24px;
+}
+
+.header-content {
+  max-width: 1280px;
+  margin: 0 auto;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  height: 72px;
+}
+
+.logo { height: 44px; object-fit: contain; cursor: pointer; }
+
+nav { display: flex; gap: 32px; flex: 1; margin-left: 48px; }
+
+.nav-link {
+  font-size: 14px; font-weight: 500; color: var(--text-secondary);
+  cursor: pointer; transition: color 0.2s; white-space: nowrap; text-decoration: none;
+}
+.nav-link:hover { color: var(--accent-yellow); }
+.nav-link.active { color: var(--accent-yellow); }
+
+.btn {
+  border: none; border-radius: 10px; padding: 10px 20px;
+  font-family: inherit; font-weight: 600; font-size: 13px;
+  cursor: pointer; transition: all 0.25s;
+  display: inline-flex; align-items: center; gap: 8px; white-space: nowrap;
+}
+.btn-primary { background: linear-gradient(135deg, var(--primary), var(--primary-dark)); color: #fff; }
+.btn-primary:hover { transform: translateY(-2px); box-shadow: 0 8px 24px rgba(139, 92, 246, 0.4); }
+.btn-primary:disabled { opacity: 0.5; cursor: not-allowed; transform: none; }
+.btn-secondary { background: transparent; border: 1px solid var(--border); color: var(--text-primary); }
+.btn-secondary:hover { background: var(--bg-elevated); border-color: rgba(139, 92, 246, 0.3); }
+.btn-danger { background: var(--danger); color: #fff; }
+
+.page {
+  max-width: 1280px;
+  margin: 0 auto;
+  padding: 48px 24px;
+}
+
+.page-header {
+  margin-bottom: 32px;
+}
+.page-title {
+  font-size: 36px; font-weight: 800; letter-spacing: -1px;
+  margin-bottom: 8px;
+}
+.page-title-gradient {
+  background: linear-gradient(135deg, var(--primary-light), var(--accent-yellow));
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+}
+.page-description {
+  font-size: 15px; color: var(--text-secondary); max-width: 640px; line-height: 1.7;
+}
+
+.info-card {
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-left: 3px solid var(--accent-yellow);
+  border-radius: 12px;
+  padding: 16px 20px;
+  margin-bottom: 24px;
+  font-size: 13px;
+  color: var(--text-secondary);
+  line-height: 1.6;
+}
+.info-card strong { color: var(--text-primary); }
+
+/* Steam login CTA (quando não logado) */
+.login-cta {
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: 16px;
+  padding: 56px 32px;
+  text-align: center;
+  max-width: 480px;
+  margin: 40px auto;
+}
+.login-cta h2 { font-size: 24px; font-weight: 800; margin-bottom: 12px; }
+.login-cta p { color: var(--text-secondary); margin-bottom: 24px; line-height: 1.6; }
+.login-cta .btn {
+  background: #171a21; color: #c7d5e0; border: 1px solid #2a475e;
+  padding: 14px 28px; font-size: 15px;
+}
+
+/* Layout em 2 colunas: inventário + carrinho */
+.vender-layout {
+  display: grid;
+  grid-template-columns: 1fr 380px;
+  gap: 24px;
+}
+@media (max-width: 980px) {
+  .vender-layout { grid-template-columns: 1fr; }
+}
+
+.inventory-section h2,
+.cart-section h2 {
+  font-size: 20px; font-weight: 700; margin-bottom: 14px;
+}
+
+.inventory-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+  gap: 12px;
+}
+
+.inv-card {
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  padding: 12px;
+  cursor: pointer;
+  transition: all 0.2s;
+  position: relative;
+}
+.inv-card:hover {
+  border-color: rgba(139, 92, 246, 0.4);
+  transform: translateY(-2px);
+}
+.inv-card.selected {
+  border-color: var(--accent-yellow);
+  box-shadow: 0 0 0 1px rgba(250, 204, 21, 0.4), 0 6px 20px rgba(250, 204, 21, 0.12);
+}
+.inv-card.selected::before {
+  content: '✓';
+  position: absolute;
+  top: 8px; right: 8px;
+  width: 22px; height: 22px;
+  border-radius: 50%;
+  background: var(--accent-yellow);
+  color: #0a0a0a;
+  font-weight: 900; font-size: 14px;
+  display: flex; align-items: center; justify-content: center;
+  z-index: 2;
+}
+
+.inv-image {
+  height: 120px;
+  display: flex; align-items: center; justify-content: center;
+  background: radial-gradient(circle at 50% 60%, rgba(139, 92, 246, 0.05), transparent 70%);
+  border-radius: 8px;
+  margin-bottom: 8px;
+}
+.inv-image img { height: 90px; object-fit: contain; filter: drop-shadow(0 4px 8px rgba(0,0,0,0.4)); }
+.inv-name {
+  font-size: 12px; font-weight: 600;
+  white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+  margin-bottom: 2px;
+}
+.inv-meta {
+  font-size: 10px; color: var(--text-muted); margin-bottom: 8px;
+}
+.inv-price {
+  font-size: 14px; font-weight: 800; color: var(--accent-yellow);
+  font-family: 'JetBrains Mono', monospace;
+}
+.inv-price-loading {
+  font-size: 11px; color: var(--text-muted); font-style: italic;
+}
+.inv-price-unavailable {
+  font-size: 11px; color: var(--text-muted);
+}
+
+/* Cart (resumo da proposta) */
+.cart-section {
+  position: sticky;
+  top: 96px;
+  height: fit-content;
+}
+.cart-box {
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: 16px;
+  padding: 20px;
+}
+.cart-items {
+  max-height: 280px;
+  overflow-y: auto;
+  margin-bottom: 16px;
+}
+.cart-item {
+  display: flex; gap: 10px; align-items: center;
+  padding: 8px 0;
+  border-bottom: 1px solid var(--border);
+  font-size: 13px;
+}
+.cart-item:last-child { border-bottom: none; }
+.cart-item img { width: 36px; height: 36px; object-fit: contain; }
+.cart-item-name {
+  flex: 1; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+}
+.cart-item-price {
+  color: var(--accent-yellow); font-weight: 700; font-family: 'JetBrains Mono', monospace;
+}
+.cart-total {
+  display: flex; justify-content: space-between; align-items: baseline;
+  padding: 12px 0; border-top: 1px solid var(--border);
+  font-size: 14px; color: var(--text-secondary);
+}
+.cart-total-value {
+  font-size: 24px; font-weight: 800;
+  color: var(--accent-yellow);
+  font-family: 'JetBrains Mono', monospace;
+}
+
+.form-group { margin-bottom: 14px; }
+.form-group label {
+  display: block; font-size: 12px; font-weight: 600;
+  color: var(--text-secondary); margin-bottom: 6px;
+}
+.form-group input {
+  width: 100%;
+  background: var(--bg-input);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  padding: 12px 14px;
+  color: var(--text-primary);
+  font-size: 13px; font-family: inherit;
+  outline: none; transition: all 0.2s;
+}
+.form-group input:focus { border-color: var(--primary); }
+.form-group small { font-size: 11px; color: var(--text-muted); display: block; margin-top: 4px; line-height: 1.4; }
+
+.empty-state {
+  text-align: center; padding: 60px 24px;
+  background: var(--bg-card); border: 1px dashed var(--border); border-radius: 12px;
+  color: var(--text-secondary);
+}
+.empty-state .icon { font-size: 40px; margin-bottom: 12px; opacity: 0.6; }
+
+/* Toast */
+.toast {
+  position: fixed; bottom: 24px; right: 24px; z-index: 300;
+  background: var(--bg-card); border: 1px solid var(--border);
+  border-radius: 12px; padding: 14px 22px; font-size: 14px;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.3);
+  opacity: 0; transition: all 0.3s; transform: translateY(10px);
+}
+.toast.show { opacity: 1; transform: translateY(0); }
+.toast.success { border-color: #22c55e; background: rgba(34, 197, 94, 0.12); color: #22c55e; }
+.toast.error { border-color: var(--danger); background: rgba(239, 68, 68, 0.12); color: var(--danger); }
+
+.spinner {
+  width: 18px; height: 18px;
+  border: 2px solid rgba(139,92,246,0.2); border-top-color: var(--primary);
+  border-radius: 50%;
+  animation: spin 0.8s linear infinite;
+  display: inline-block;
+}
+@keyframes spin { to { transform: rotate(360deg); } }
+
+/* Success panel */
+.success-panel {
+  background: var(--bg-card);
+  border: 1px solid var(--success);
+  border-radius: 16px; padding: 32px; text-align: center;
+}
+.success-panel .icon { font-size: 60px; margin-bottom: 16px; }
+.success-panel h2 { margin-bottom: 12px; }
+.success-panel .tx-id {
+  font-family: 'JetBrains Mono', monospace;
+  background: var(--bg-elevated); padding: 10px 14px;
+  border-radius: 8px; margin: 16px auto; display: inline-block;
+  font-size: 13px; color: var(--accent-yellow);
+}
+.success-panel .next-steps {
+  background: rgba(250,204,21,0.06);
+  border-left: 3px solid var(--accent-yellow);
+  padding: 16px; margin: 20px 0;
+  text-align: left; border-radius: 8px;
+  font-size: 13px; line-height: 1.6; color: var(--text-secondary);
+}
+</style>
+</head>
+
+<body>
+
+<!-- HEADER -->
+<header>
+  <div class="header-content">
+    <img src="https://static.wixstatic.com/media/874864_b598e856481740e7ae752771a661c242~mv2.png/v1/fill/w_600,h_235,al_c,q_85,enc_auto/874864_b598e856481740e7ae752771a661c242~mv2.png" alt="Gumax Skins" class="logo" onclick="location.href='index.html'">
+    <nav>
+      <a class="nav-link" href="index.html">Início</a>
+      <a class="nav-link" href="index.html#marketplace">Loja</a>
+      <a class="nav-link active" href="vender.html">💰 Vender</a>
+      <a class="nav-link" href="analise.html">📊 Análise</a>
+    </nav>
+    <div class="header-actions" id="headerActions"></div>
+  </div>
+</header>
+
+<main class="page">
+  <div class="page-header">
+    <h1 class="page-title">
+      💰 <span class="page-title-gradient">Venda suas skins</span> por PIX
+    </h1>
+    <p class="page-description">
+      Recebemos suas skins e pagamos direto no seu PIX. Compramos a
+      <strong style="color: var(--text-primary);">15% abaixo do menor preço entre Youpin e Buff163</strong>.
+      Pagamento garantido após os 8 dias de trade protection da Steam.
+    </p>
+  </div>
+
+  <div id="mainContent"></div>
+</main>
+
+<div class="toast" id="toast"></div>
+
+<script>
+// ============= FIREBASE INIT =============
+const firebaseConfig = {
+  apiKey: "AIzaSyCN0TV59kJNQMsaQ-5d9dSTowirxFcuHG0",
+  authDomain: "gumax-skins.firebaseapp.com",
+  projectId: "gumax-skins",
+  storageBucket: "gumax-skins.firebasestorage.app",
+  messagingSenderId: "678525908778",
+  appId: "1:678525908778:web:56ee6d6a809c013b341053"
+};
+firebase.initializeApp(firebaseConfig);
+const db = firebase.firestore();
+const auth = firebase.auth();
+
+const API_BASE = 'https://gumax-backend-production.up.railway.app';
+
+// State
+let currentUser = null;
+let steamId = null;
+let userProfile = null;
+let inventory = [];
+let priceMap = {};  // market_hash_name → { offerBRL, cheapestSource }
+let selected = new Map();  // assetid → item
+
+// ============= BOOT =============
+auth.onAuthStateChanged(async user => {
+  currentUser = user;
+  renderHeader();
+  if (user) {
+    steamId = user.providerData?.[0]?.uid || user.uid;
+    // Busca o perfil no Firestore (pra pegar steamId real + PIX salvo)
+    try {
+      const doc = await db.collection('users').doc(user.uid).get();
+      userProfile = doc.exists ? doc.data() : {};
+      steamId = userProfile.steamId || steamId;
+    } catch { userProfile = {}; }
+    await loadInventory();
+  }
+  renderMain();
+});
+
+function renderHeader() {
+  const actions = document.getElementById('headerActions');
+  if (!currentUser) {
+    actions.innerHTML = `
+      <button class="btn btn-primary" onclick="loginSteam()">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><path d="M11.98 0C5.7 0 .54 4.86.05 11.04l6.42 2.66c.55-.37 1.2-.59 1.91-.59.07 0 .13 0 .19.01l2.86-4.14V8.9c0-2.5 2.03-4.52 4.52-4.52 2.5 0 4.53 2.03 4.53 4.53s-2.03 4.52-4.53 4.52h-.1l-4.08 2.91c0 .05 0 .1 0 .16 0 1.87-1.51 3.4-3.39 3.4-1.63 0-3.02-1.18-3.33-2.73L.44 15.27C1.86 20.3 6.49 24 11.98 24c6.63 0 12-5.37 12-12S18.6 0 11.98 0z"/></svg>
+        Entrar com Steam
+      </button>
+    `;
+  } else {
+    actions.innerHTML = `
+      <a href="perfil.html" class="btn btn-secondary">👤 Perfil</a>
+      <button class="btn btn-secondary" onclick="logout()">Sair</button>
+    `;
+  }
+}
+
+// ============= LOGIN STEAM =============
+async function loginSteam() {
+  try {
+    const r = await fetch(`${API_BASE}/api/steam-auth?action=login&returnTo=${encodeURIComponent(window.location.href)}`);
+    const d = await r.json();
+    if (d.loginUrl) {
+      window.location.href = d.loginUrl;
+    } else {
+      toast('Falha ao iniciar login Steam', 'error');
+    }
+  } catch (e) {
+    toast('Erro: ' + e.message, 'error');
+  }
+}
+
+async function logout() {
+  await auth.signOut();
+  location.reload();
+}
+
+// Steam callback handling (igual no index.html)
+(async function handleCallback() {
+  const params = new URLSearchParams(location.search);
+  if (params.get('steam_callback') !== '1') return;
+  const openidParams = {};
+  for (const [k, v] of params.entries()) if (k.startsWith('openid.')) openidParams[k] = v;
+  if (!openidParams['openid.claimed_id']) return;
+  try {
+    const r = await fetch(`${API_BASE}/api/steam-auth`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ action: 'verify', params: openidParams }),
+    });
+    const d = await r.json();
+    if (d.success && d.firebaseCustomToken) {
+      await auth.signInWithCustomToken(d.firebaseCustomToken);
+      // Limpa URL
+      const url = new URL(location.href);
+      [...url.searchParams.keys()].forEach(k => {
+        if (k.startsWith('openid.') || k === 'steam_callback') url.searchParams.delete(k);
+      });
+      history.replaceState({}, '', url.toString());
+    }
+  } catch (e) { console.error('[Steam callback]', e); }
+})();
+
+// ============= INVENTORY =============
+async function loadInventory() {
+  if (!steamId) return;
+  try {
+    const r = await fetch(`${API_BASE}/api/steam-inventory?steamId=${steamId}`);
+    if (!r.ok) {
+      const err = await r.json().catch(() => ({}));
+      if (r.status === 403) {
+        inventory = { error: 'private', msg: 'Seu inventário está privado. Abra ele em Steam → Perfil → Privacidade → Inventário → Público.' };
+      } else {
+        inventory = { error: 'generic', msg: err.error || 'Erro ao carregar inventário' };
+      }
+      return;
+    }
+    const data = await r.json();
+    inventory = data.items || [];
+    // Busca cotação em lote
+    await loadQuotes();
+  } catch (e) {
+    inventory = { error: 'network', msg: e.message };
+  }
+}
+
+async function loadQuotes() {
+  if (!Array.isArray(inventory) || !inventory.length) return;
+  // Agrupa pelos nomes únicos
+  const uniqNames = [...new Set(inventory.map(i => i.market_hash_name))];
+  try {
+    const r = await fetch(`${API_BASE}/api/buyback/quote`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ names: uniqNames }),
+    });
+    const data = await r.json();
+    (data.items || []).forEach(q => { priceMap[q.name] = q; });
+  } catch (e) {
+    console.log('[quotes] error', e);
+  }
+  renderMain();
+}
+
+// ============= RENDER =============
+function renderMain() {
+  const main = document.getElementById('mainContent');
+  if (!currentUser) {
+    main.innerHTML = `
+      <div class="login-cta">
+        <div style="font-size: 48px; margin-bottom: 16px;">🎮</div>
+        <h2>Conecte sua Steam pra vender</h2>
+        <p>Pra vender, precisamos ler seu inventário público. O login é via Steam OpenID (seguro, não pedimos senha).</p>
+        <button class="btn btn-primary" onclick="loginSteam()">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor"><path d="M11.98 0C5.7 0 .54 4.86.05 11.04l6.42 2.66c.55-.37 1.2-.59 1.91-.59.07 0 .13 0 .19.01l2.86-4.14V8.9c0-2.5 2.03-4.52 4.52-4.52 2.5 0 4.53 2.03 4.53 4.53s-2.03 4.52-4.53 4.52h-.1l-4.08 2.91c0 .05 0 .1 0 .16 0 1.87-1.51 3.4-3.39 3.4-1.63 0-3.02-1.18-3.33-2.73L.44 15.27C1.86 20.3 6.49 24 11.98 24c6.63 0 12-5.37 12-12S18.6 0 11.98 0z"/></svg>
+          Entrar com Steam
+        </button>
+      </div>
+    `;
+    return;
+  }
+
+  if (inventory && inventory.error) {
+    main.innerHTML = `
+      <div class="empty-state">
+        <div class="icon">🔒</div>
+        <h3 style="margin-bottom: 8px;">Não foi possível carregar seu inventário</h3>
+        <p style="max-width: 440px; margin: 0 auto;">${inventory.msg || ''}</p>
+        <button class="btn btn-secondary" onclick="loadInventory().then(renderMain)" style="margin-top: 16px;">Tentar de novo</button>
+      </div>
+    `;
+    return;
+  }
+
+  if (!Array.isArray(inventory)) {
+    main.innerHTML = `<div class="empty-state"><div class="spinner" style="margin: 0 auto 12px;"></div><p>Carregando seu inventário...</p></div>`;
+    return;
+  }
+
+  if (inventory.length === 0) {
+    main.innerHTML = `
+      <div class="empty-state">
+        <div class="icon">📦</div>
+        <h3>Seu inventário CS2 tá vazio</h3>
+        <p>Ou não tem itens negociáveis pra vender.</p>
+      </div>
+    `;
+    return;
+  }
+
+  // Layout normal: inventário + carrinho
+  main.innerHTML = `
+    <div class="info-card">
+      <strong>Como funciona:</strong> selecione as skins que quer vender, informe seu PIX e trade link, e confirme.
+      Após você enviar o trade, aguardamos os 8 dias de trade protection da Steam e pagamos seu PIX. Simples e seguro.
+    </div>
+
+    <div class="vender-layout">
+      <div class="inventory-section">
+        <h2>Seu inventário <span style="color: var(--text-muted); font-weight: 400; font-size: 14px;">(${inventory.length} itens)</span></h2>
+        <div class="inventory-grid" id="inventoryGrid"></div>
+      </div>
+
+      <div class="cart-section">
+        <div class="cart-box">
+          <h2>Sua proposta</h2>
+          <div class="cart-items" id="cartItems"></div>
+          <div class="cart-total">
+            <span>Total a receber</span>
+            <span class="cart-total-value" id="cartTotal">R$ 0,00</span>
+          </div>
+
+          <div class="form-group">
+            <label>Sua chave PIX (CPF, e-mail, telefone ou aleatória)</label>
+            <input type="text" id="pixKey" placeholder="ex: 123.456.789-00" value="${(userProfile?.pixKey || '').replace(/"/g, '&quot;')}">
+            <small>Ficará salva no seu perfil pra próximas vendas.</small>
+          </div>
+
+          <div class="form-group">
+            <label>Seu trade link da Steam</label>
+            <input type="text" id="tradeLink" placeholder="https://steamcommunity.com/tradeoffer/new/?partner=..." value="${(userProfile?.tradeLink || '').replace(/"/g, '&quot;')}">
+            <small>Achar em Steam → Inventário → Trade Offers → Quem pode enviar ofertas?</small>
+          </div>
+
+          <button class="btn btn-primary" onclick="submitSell()" id="submitBtn" style="width: 100%; padding: 14px; font-size: 14px;">
+            Confirmar proposta
+          </button>
+        </div>
+      </div>
+    </div>
+  `;
+  renderInventory();
+  renderCart();
+}
+
+function renderInventory() {
+  const grid = document.getElementById('inventoryGrid');
+  if (!grid) return;
+  grid.innerHTML = inventory.map(item => {
+    const price = priceMap[item.market_hash_name];
+    const isSelected = selected.has(item.assetid);
+    const priceHtml = price
+      ? (price.offerBRL > 0
+         ? `<div class="inv-price">R$ ${price.offerBRL.toFixed(2).replace('.', ',')}</div>`
+         : `<div class="inv-price-unavailable">Sem preço</div>`)
+      : `<div class="inv-price-loading">cotando...</div>`;
+    return `
+      <div class="inv-card ${isSelected ? 'selected' : ''}" onclick="toggleSelect('${item.assetid}')">
+        <div class="inv-image">
+          ${item.iconUrl ? `<img src="${item.iconUrl}" alt="${escapeHtml(item.market_hash_name)}" loading="lazy">` : ''}
+        </div>
+        <div class="inv-name">${escapeHtml(item.market_hash_name)}</div>
+        <div class="inv-meta">${item.wear} · ${escapeHtml(item.rarity)}</div>
+        ${priceHtml}
+      </div>
+    `;
+  }).join('');
+}
+
+function toggleSelect(assetid) {
+  const item = inventory.find(i => i.assetid === assetid);
+  if (!item) return;
+  const price = priceMap[item.market_hash_name];
+  if (!price || price.offerBRL <= 0) {
+    toast('Essa skin não tem cotação disponível', 'error');
+    return;
+  }
+  if (selected.has(assetid)) selected.delete(assetid);
+  else selected.set(assetid, item);
+  renderInventory();
+  renderCart();
+}
+
+function renderCart() {
+  const container = document.getElementById('cartItems');
+  const totalEl = document.getElementById('cartTotal');
+  if (!container) return;
+
+  if (selected.size === 0) {
+    container.innerHTML = `<div style="text-align: center; color: var(--text-muted); padding: 20px; font-size: 13px;">Nenhuma skin selecionada</div>`;
+    totalEl.textContent = 'R$ 0,00';
+    return;
+  }
+
+  let total = 0;
+  container.innerHTML = [...selected.values()].map(item => {
+    const price = priceMap[item.market_hash_name];
+    const val = price?.offerBRL || 0;
+    total += val;
+    return `
+      <div class="cart-item">
+        ${item.iconUrl ? `<img src="${item.iconUrl}" alt="">` : ''}
+        <div class="cart-item-name" title="${escapeHtml(item.market_hash_name)}">${escapeHtml(item.market_hash_name)}</div>
+        <span class="cart-item-price">R$ ${val.toFixed(2).replace('.', ',')}</span>
+      </div>
+    `;
+  }).join('');
+  totalEl.textContent = `R$ ${total.toFixed(2).replace('.', ',')}`;
+}
+
+// ============= SUBMIT =============
+async function submitSell() {
+  if (selected.size === 0) { toast('Selecione pelo menos uma skin', 'error'); return; }
+  const pixKey = document.getElementById('pixKey').value.trim();
+  const tradeLink = document.getElementById('tradeLink').value.trim();
+  if (!pixKey) { toast('Informe sua chave PIX', 'error'); return; }
+  if (!/steamcommunity\.com\/tradeoffer/.test(tradeLink)) {
+    toast('Trade link inválido — deve ser steamcommunity.com/tradeoffer/...', 'error');
+    return;
+  }
+
+  const btn = document.getElementById('submitBtn');
+  btn.disabled = true;
+  btn.innerHTML = '<span class="spinner"></span> Enviando...';
+
+  try {
+    // Salva PIX e trade link no perfil (pra preencher próxima venda)
+    await db.collection('users').doc(currentUser.uid).set({
+      pixKey, tradeLink, updatedAt: new Date().toISOString()
+    }, { merge: true });
+
+    const offered = [...selected.values()].map(i => ({
+      name: i.market_hash_name,
+      assetid: i.assetid,
+    }));
+
+    const idToken = await currentUser.getIdToken();
+    const r = await fetch(`${API_BASE}/api/buyback/create`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${idToken}`,
+      },
+      body: JSON.stringify({
+        type: 'sell',
+        offered,
+        pixKey,
+        tradeLink,
+        steamId,
+        userName: currentUser.displayName || null,
+      }),
+    });
+    const data = await r.json();
+    if (!r.ok) throw new Error(data.error || 'Erro ao criar proposta');
+
+    showSuccess(data.transaction);
+  } catch (e) {
+    toast('Erro: ' + e.message, 'error');
+    btn.disabled = false;
+    btn.innerHTML = 'Confirmar proposta';
+  }
+}
+
+function showSuccess(tx) {
+  const main = document.getElementById('mainContent');
+  main.innerHTML = `
+    <div class="success-panel">
+      <div class="icon">✅</div>
+      <h2>Proposta criada com sucesso!</h2>
+      <p style="color: var(--text-secondary);">Sua proposta foi registrada. Agora é só enviar as skins pra gente no Steam Trade.</p>
+
+      <div class="tx-id">ID: ${tx.id}</div>
+
+      <div class="next-steps">
+        <strong style="color: var(--text-primary);">Próximos passos:</strong>
+        <ol style="margin: 10px 0 0 20px;">
+          <li style="margin-bottom: 6px;">Você recebe uma notificação do Gumax no Steam em até algumas horas.</li>
+          <li style="margin-bottom: 6px;">Confirma o trade (envia as skins) no seu painel da Steam.</li>
+          <li style="margin-bottom: 6px;">Espera os <strong>8 dias de trade protection</strong> da Steam.</li>
+          <li>Você recebe o <strong>PIX de R$ ${(tx.offeredTotalBRL || 0).toFixed(2).replace('.', ',')}</strong> na chave <code>${escapeHtml(tx.userPixKey || '')}</code>.</li>
+        </ol>
+      </div>
+
+      <div style="margin-top: 20px;">
+        <a href="perfil.html" class="btn btn-primary">Ver minhas transações</a>
+        <button class="btn btn-secondary" onclick="location.reload()" style="margin-left: 8px;">Nova venda</button>
+      </div>
+    </div>
+  `;
+}
+
+// ============= UTILS =============
+function escapeHtml(s) {
+  return String(s || '')
+    .replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;').replace(/'/g, '&#039;');
+}
+
+function toast(msg, type = 'success') {
+  const el = document.getElementById('toast');
+  el.textContent = msg;
+  el.className = 'toast show ' + type;
+  setTimeout(() => el.classList.remove('show'), 3000);
+}
+</script>
+
+</body>
+</html>
