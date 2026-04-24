@@ -2636,13 +2636,34 @@ async function loadFirestoreSkins() {
   }
 }
 
+// Normaliza nome pra busca fuzzy: tira ★, StatTrak™, |, parênteses, hífens, acentos.
+// Ex: "★ StatTrak™ AWP | Wildfire (Field-Tested)" → "awp wildfire field tested"
+function normalizeForSearch(s) {
+  return String(s || '')
+    .toLowerCase()
+    .replace(/[★™|()\-]+/g, ' ')
+    .replace(/stattrak/g, ' ')
+    .replace(/\s+/g, ' ')
+    .trim();
+}
+
+// Verifica se o nome da skin bate com a query — por PALAVRAS (todas presentes),
+// não por substring exata. Permite encontrar "AWP | Wildfire" com query "awp wildfire"
+// ou "Redline FT" com query que tem palavras separadas.
+function skinMatchesQuery(skinName, query) {
+  const q = normalizeForSearch(query);
+  if (!q) return false;
+  const n = normalizeForSearch(skinName);
+  const words = q.split(' ').filter(Boolean);
+  return words.every(w => n.includes(w));
+}
+
 function getAllSkins() {
   // Home default (sem busca): só os 40 mais caros do estoque Full (firestoreSkins já cortado).
   // Em busca ativa: Full matching (allStockSkins completo) + Youpin sob encomenda (searchResults)
   // pras skins que o Gu não tem.
   if (currentSearchQuery) {
-    const q = currentSearchQuery.toLowerCase();
-    const matchingStock = allStockSkins.filter(s => s.name.toLowerCase().includes(q));
+    const matchingStock = allStockSkins.filter(s => skinMatchesQuery(s.name, currentSearchQuery));
     const stockNames = new Set(matchingStock.map(s => s.name));
     const matchingYoupin = searchResults.filter(s => !stockNames.has(s.name));
     // Full primeiro, Youpin depois
@@ -2902,15 +2923,16 @@ async function searchCatalogBackend(query) {
 
 // Fallback local: filtra dos skins já carregados se backend falhar
 function localSuggestions(query, limit = 10) {
-  const q = (query || '').toLowerCase().trim();
-  if (!q) return [];
-  const all = getAllSkins();
+  if (!query) return [];
+  // Busca nos stocks do Gu (Full) E no top-sellers de Youpin já carregados.
+  // Match fuzzy por palavras (suporta "awp wildfire" encontrar "AWP | Wildfire").
+  const pool = [...allStockSkins, ...youpinSkins];
   const seen = new Set();
   const matches = [];
-  for (const s of all) {
+  for (const s of pool) {
     const name = s.name;
     if (!name || seen.has(name)) continue;
-    if (name.toLowerCase().includes(q)) {
+    if (skinMatchesQuery(name, query)) {
       matches.push(name);
       seen.add(name);
       if (matches.length >= limit) break;
@@ -3111,9 +3133,8 @@ function renderSkins() {
     if (currentDeliveryFilter === 'full' && !skin.inStock) return false;
     if (currentDeliveryFilter === 'normal' && skin.inStock) return false;
 
-    // Search filter (só quando NÃO tem resultados do backend — busca local)
-    if (currentSearchQuery && !isSearchMode
-        && !skin.name.toLowerCase().includes(currentSearchQuery)) return false;
+    // getAllSkins() já aplicou o filtro de busca corretamente (por palavras, fuzzy).
+    // Aqui NÃO refiltramos — getAllSkins entrega apenas itens relevantes.
 
     // Category filter
     if (currentCategory !== 'Todos') {
