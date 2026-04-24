@@ -783,6 +783,75 @@ select.form-control {
         </div>
       </div>
 
+      <!-- Precificação do estoque Full -->
+      <div class="data-table-wrapper" style="padding: 24px; margin-bottom: 16px; border-left: 3px solid var(--accent-yellow);">
+        <h3 style="margin: 0 0 6px 0;">💰 Precificação do estoque Full</h3>
+        <p style="color: var(--text-muted); font-size: 13px; margin-bottom: 14px; line-height: 1.5;">
+          Preço de venda das skins do SEU inventário (Entrega Full 30min).
+          Pode ser diferente do preço das skins Youpin (entrega 12h) — você escolhe as margens separadamente.
+        </p>
+
+        <!-- Cotação ao vivo (compartilhada) -->
+        <div style="background: rgba(16,185,129,0.08); border-left: 3px solid #10b981; padding: 10px 14px; border-radius: 6px; margin-bottom: 14px; font-size: 13px;">
+          <span style="color: var(--text-muted);">Cotação Google agora:</span>
+          <strong id="stockGoogleRateBig" style="margin-left: 6px;">carregando...</strong>
+        </div>
+
+        <!-- Toggle Cotação vs Porcentagem -->
+        <label style="font-size: 12px; color: var(--text-muted);">Como aplicar o lucro:</label>
+        <div style="display: inline-flex; background: var(--bg-elevated); border: 1px solid var(--border); border-radius: 999px; padding: 4px; margin: 6px 0 14px 0;">
+          <button type="button" id="stockToggleSurcharge" onclick="selectStockMode('surcharge')"
+            style="border: none; background: transparent; color: var(--text); padding: 8px 16px; border-radius: 999px; cursor: pointer; font-weight: 600; font-size: 13px;">
+            R$ fixo por ¥
+          </button>
+          <button type="button" id="stockTogglePercent" onclick="selectStockMode('percent')"
+            style="border: none; background: transparent; color: var(--text); padding: 8px 16px; border-radius: 999px; cursor: pointer; font-weight: 600; font-size: 13px;">
+            % acima da cotação
+          </button>
+        </div>
+
+        <!-- Surcharge mode -->
+        <div class="form-group" id="stockSurchargeCard" style="display: none;">
+          <label>Lucro por yuan (R$ extras)</label>
+          <input type="number" class="form-control" id="stockSurcharge" step="0.01" min="0" max="2" placeholder="0.10">
+          <div style="color: var(--text-muted); font-size: 11px; margin-top: 4px;">
+            Ex: cotação 0,74 + R$ <strong>0,10</strong> = 0,84 por ¥. Skin ¥100 = R$ 84,00.
+          </div>
+        </div>
+
+        <!-- Percent mode -->
+        <div class="form-group" id="stockPercentCard" style="display: none;">
+          <label>Porcentagem acima da cotação (%)</label>
+          <input type="number" class="form-control" id="stockMarginPct" step="1" min="0" max="99" placeholder="15">
+          <div style="color: var(--text-muted); font-size: 11px; margin-top: 4px;">
+            Ex: cotação 0,74 × <strong>1,15</strong> = 0,851 por ¥. Skin ¥100 = R$ 85,10.
+          </div>
+        </div>
+
+        <!-- Preview -->
+        <div style="background: var(--bg-elevated); border-radius: 8px; padding: 12px; margin-top: 10px; font-size: 13px;">
+          <div style="color: var(--text-muted); font-size: 11px; margin-bottom: 4px;">
+            Skin ¥100 no Youpin vai aparecer como:
+          </div>
+          <div>
+            <span id="stockExampleSale" style="font-weight: 700; color: var(--accent-yellow);">—</span>
+            <span style="color: var(--text-muted); font-size: 11px; margin-left: 6px;">(fator aplicado: <span id="stockActiveFactor">—</span>)</span>
+          </div>
+        </div>
+
+        <!-- Radios escondidos + storage -->
+        <input type="radio" name="stockMode" value="surcharge" id="stockModeSurcharge" style="display: none;">
+        <input type="radio" name="stockMode" value="percent" id="stockModePercent" style="display: none;">
+        <span id="stockGoogleRate" style="display: none;" data-raw="0"></span>
+
+        <div style="margin-top: 14px;">
+          <button class="btn btn-primary" onclick="saveStockPricing()">Salvar precificação do estoque</button>
+          <small style="display: block; margin-top: 8px; color: var(--text-muted);">
+            Após salvar, clica em "Sincronizar inventário" abaixo pra aplicar os novos preços nas skins do estoque.
+          </small>
+        </div>
+      </div>
+
       <!-- Botão de Sync -->
       <div class="data-table-wrapper" style="padding: 24px; margin-bottom: 16px;">
         <h3 style="margin-bottom: 8px;">Sincronizar agora</h3>
@@ -1251,9 +1320,140 @@ function switchSection(name) {
   if (index >= 0 && items[index]) items[index].classList.add('active');
 
   if (name === 'appearance') loadAppearance();
-  if (name === 'inventory')  loadInventoryPage();
+  if (name === 'inventory')  { loadInventoryPage(); loadStockPricing(); }
   if (name === 'settings')   loadPricing();
 }
+
+// ============= STOCK PRICING (aba Inventário) =============
+function selectStockMode(mode) {
+  if (mode !== 'surcharge' && mode !== 'percent') return;
+  document.getElementById('stockModeSurcharge').checked = mode === 'surcharge';
+  document.getElementById('stockModePercent').checked = mode === 'percent';
+  updateStockPricingPreview();
+}
+
+function updateStockPricingPreview() {
+  const mode = document.getElementById('stockModePercent')?.checked ? 'percent' : 'surcharge';
+  const surcharge = parseFloat(document.getElementById('stockSurcharge')?.value || '0') || 0;
+  const marginPct = parseFloat(document.getElementById('stockMarginPct')?.value || '0') || 0;
+  const googleRate = parseFloat(document.getElementById('stockGoogleRate')?.dataset?.raw || '0') || 0.74;
+
+  // Toggle visual
+  const btnS = document.getElementById('stockToggleSurcharge');
+  const btnP = document.getElementById('stockTogglePercent');
+  const ACTIVE_BG = 'var(--accent-yellow, #facc15)';
+  const ACTIVE_COLOR = '#0a0a0a';
+  if (mode === 'percent') {
+    btnP.style.background = ACTIVE_BG; btnP.style.color = ACTIVE_COLOR;
+    btnS.style.background = 'transparent'; btnS.style.color = 'var(--text)';
+  } else {
+    btnS.style.background = ACTIVE_BG; btnS.style.color = ACTIVE_COLOR;
+    btnP.style.background = 'transparent'; btnP.style.color = 'var(--text)';
+  }
+
+  document.getElementById('stockSurchargeCard').style.display = mode === 'surcharge' ? 'block' : 'none';
+  document.getElementById('stockPercentCard').style.display = mode === 'percent' ? 'block' : 'none';
+
+  // Preview
+  const finalFactor = mode === 'percent' ? googleRate * (1 + marginPct / 100) : googleRate + surcharge;
+  const saleEl = document.getElementById('stockExampleSale');
+  if (saleEl) saleEl.textContent = 'R$ ' + (100 * finalFactor).toFixed(2).replace('.', ',');
+  const factorEl = document.getElementById('stockActiveFactor');
+  if (factorEl) factorEl.textContent = finalFactor.toFixed(4);
+
+  const big = document.getElementById('stockGoogleRateBig');
+  if (big) big.textContent = googleRate > 0 ? `R$ ${googleRate.toFixed(4)} por ¥` : 'carregando...';
+}
+
+async function loadStockPricing() {
+  // Popula defaults primeiro (pra não ficar vazio se offline)
+  const cached = JSON.parse(localStorage.getItem('gumax_stock_pricing_cache') || 'null') || {};
+  const defaultMode = cached.mode === 'percent' ? 'percent' : 'surcharge';
+  document.getElementById('stockModeSurcharge').checked = defaultMode === 'surcharge';
+  document.getElementById('stockModePercent').checked = defaultMode === 'percent';
+  document.getElementById('stockSurcharge').value = cached.surchargeBRL ?? 0.10;
+  document.getElementById('stockMarginPct').value = cached.marginPct ?? 15;
+  document.getElementById('stockGoogleRate').dataset.raw = String(cached.lastGoogleRate || 0);
+  updateStockPricingPreview();
+
+  // Fetch cotação ao vivo (endpoint público)
+  try {
+    const r = await fetch(`${API_BASE_ADMIN}/api/exchange-rate`);
+    const d = await r.json();
+    const rate = parseFloat(d.rate) || 0;
+    if (rate > 0) {
+      document.getElementById('stockGoogleRate').dataset.raw = String(rate);
+      updateStockPricingPreview();
+    }
+  } catch {}
+
+  // Busca config salva no backend (requer admin key via Firebase token)
+  const key = await getAdminKeySilent();
+  if (!key) return;
+  try {
+    const r = await fetch(`${API_BASE_ADMIN}/api/admin/get-stock-pricing`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${key}` },
+      body: JSON.stringify({}),
+    });
+    if (!r.ok) return;
+    const data = await r.json();
+    const cfg = data.config || {};
+    const m = cfg.mode === 'percent' ? 'percent' : 'surcharge';
+    document.getElementById('stockModeSurcharge').checked = m === 'surcharge';
+    document.getElementById('stockModePercent').checked = m === 'percent';
+    document.getElementById('stockSurcharge').value = cfg.surchargeBRL ?? 0.10;
+    document.getElementById('stockMarginPct').value = cfg.marginPct ?? 15;
+    localStorage.setItem('gumax_stock_pricing_cache', JSON.stringify({
+      mode: m, surchargeBRL: cfg.surchargeBRL, marginPct: cfg.marginPct,
+      lastGoogleRate: data.googleRate || 0,
+    }));
+    updateStockPricingPreview();
+  } catch {}
+}
+
+async function saveStockPricing() {
+  const key = await getAdminKey();
+  if (!key) return;
+  const mode = document.getElementById('stockModePercent').checked ? 'percent' : 'surcharge';
+  const surchargeBRL = parseFloat(document.getElementById('stockSurcharge').value) || 0;
+  const marginPct = parseFloat(document.getElementById('stockMarginPct').value) || 0;
+
+  if (mode === 'surcharge' && !(surchargeBRL >= 0 && surchargeBRL < 2)) {
+    alert('Lucro por yuan entre 0 e 2 R$');
+    return;
+  }
+  if (mode === 'percent' && !(marginPct >= 0 && marginPct < 100)) {
+    alert('Porcentagem entre 0 e 99');
+    return;
+  }
+
+  try {
+    const r = await fetch(`${API_BASE_ADMIN}/api/admin/update-stock-pricing`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${key}` },
+      body: JSON.stringify({ mode, surchargeBRL, marginPct }),
+    });
+    const data = await r.json();
+    if (!data.success) { alert('Erro: ' + (data.error || '')); return; }
+    localStorage.setItem('gumax_stock_pricing_cache', JSON.stringify({
+      mode, surchargeBRL, marginPct,
+    }));
+    alert('Precificação do estoque salva! Clica em "Sincronizar inventário" pra aplicar os novos preços nas skins.');
+  } catch (e) {
+    alert('Erro: ' + e.message);
+  }
+}
+
+// Wire listeners
+document.addEventListener('input', (e) => {
+  if (e.target.id === 'stockSurcharge' || e.target.id === 'stockMarginPct') {
+    updateStockPricingPreview();
+  }
+});
+document.addEventListener('change', (e) => {
+  if (e.target.name === 'stockMode') updateStockPricingPreview();
+});
 
 // ============= INVENTORY (Steam sync) =============
 const API_BASE_ADMIN = 'https://gumax-backend-production.up.railway.app';
