@@ -358,9 +358,10 @@ body {
     <img src="https://static.wixstatic.com/media/874864_b598e856481740e7ae752771a661c242~mv2.png/v1/fill/w_300,h_118,al_c,q_85,enc_auto/874864_b598e856481740e7ae752771a661c242~mv2.png" alt="Gumax Skins" style="height:32px;width:auto;">
   </a>
   <div class="nav-links">
-    <a href="index.html" class="nav-link">Skins</a>
-    <a href="analise.html" class="nav-link active">Análise</a>
-    <a href="rifas.html" class="nav-link" style="background:linear-gradient(135deg,#8B5CF6,#FACC15);-webkit-background-clip:text;-webkit-text-fill-color:transparent;font-weight:700;">Rifas</a>
+    <a href="index.html" class="nav-link">🛒 Mercado</a>
+    <a href="vender.html" class="nav-link" style="color:var(--accent-yellow,#facc15);font-weight:600;">💰 Vender</a>
+    <a href="analise.html" class="nav-link active">📊 Análise</a>
+    <a href="rifas.html" class="nav-link" style="background:linear-gradient(135deg,#8B5CF6,#FACC15);-webkit-background-clip:text;-webkit-text-fill-color:transparent;font-weight:700;">🎰 Rifas</a>
   </div>
   <div style="display:flex;gap:10px;align-items:center;flex-wrap:wrap;">
     <div class="plan-widget hidden" id="planWidget" onclick="openPlansModal()" title="Gerenciar assinatura">
@@ -851,7 +852,12 @@ function highlightAnaliseSuggestion() {
 }
 
 // =========== ANALYSIS ===========
-async function runAnalysis(depth = 'basic') {
+// Guarda o último resultado + inputs de refinamento pra re-rodar quando user
+// ajusta slider / digita pattern / muda phase.
+let _lastAnalysisData = null;
+let _refinement = { floatvalue: null, paintseed: null, paintindex: null };
+
+async function runAnalysis(depth = 'basic', refinement = null) {
   const name = document.getElementById('skinSearch').value.trim();
   if (!name) { showToast('Digite o nome da skin', 'error'); return; }
   if (!idToken) { showToast('Entre no site pra analisar', 'error'); return; }
@@ -865,6 +871,13 @@ async function runAnalysis(depth = 'basic') {
     return;
   }
 
+  // Merge refinement params (slider de float, pattern, phase) se passados
+  if (refinement) _refinement = { ..._refinement, ...refinement };
+  const payload = { name, depth };
+  if (_refinement.floatvalue != null) payload.floatvalue = _refinement.floatvalue;
+  if (_refinement.paintseed != null)  payload.paintseed  = _refinement.paintseed;
+  if (_refinement.paintindex != null) payload.paintindex = _refinement.paintindex;
+
   const shell = document.getElementById('resultShell');
   shell.innerHTML = `<div class="result-card" style="text-align:center;padding:60px;"><div class="loading-spinner"></div><p style="margin-top:14px;color:var(--text-secondary);">Analisando ${name}...</p></div>`;
 
@@ -872,7 +885,7 @@ async function runAnalysis(depth = 'basic') {
     const r = await fetch(`${API_BASE}/api/analysis`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${idToken}` },
-      body: JSON.stringify({ name, depth })
+      body: JSON.stringify(payload)
     });
     const data = await r.json();
 
@@ -886,10 +899,179 @@ async function runAnalysis(depth = 'basic') {
     }
 
     await refreshBalance();
+    _lastAnalysisData = data;
     renderResult(data);
   } catch (e) {
     shell.innerHTML = `<div class="result-card"><p style="color:var(--accent-red);">Erro de rede: ${e.message}</p></div>`;
   }
+}
+
+// =========== REFINAMENTO (float slider + pattern + phase) ===========
+function buildRefinementPanel(data) {
+  // Detecta wear do nome pra definir range do slider
+  const wearMap = {
+    'Factory New':    { min: 0.00, max: 0.07 },
+    'Minimal Wear':   { min: 0.07, max: 0.15 },
+    'Field-Tested':   { min: 0.15, max: 0.38 },
+    'Well-Worn':      { min: 0.38, max: 0.45 },
+    'Battle-Scarred': { min: 0.45, max: 1.00 },
+  };
+  let wearRange = null;
+  for (const [label, range] of Object.entries(wearMap)) {
+    if ((data.name || '').includes(`(${label})`)) { wearRange = { label, ...range }; break; }
+  }
+  if (!wearRange) return '';
+
+  const isDoppler = /Doppler/i.test(data.name || '');
+  const isCaseHardened = /Case Hardened/i.test(data.name || '');
+  const isMarbleFade = /Marble Fade/i.test(data.name || '');
+  const isFade = /\| Fade/i.test(data.name || '');
+
+  const currentFloat = _refinement.floatvalue != null ? _refinement.floatvalue : ((wearRange.min + wearRange.max) / 2);
+  const currentSeed = _refinement.paintseed != null ? _refinement.paintseed : '';
+  const currentIdx = _refinement.paintindex != null ? _refinement.paintindex : '';
+
+  // Render pattern analysis box se veio do backend
+  let patternHtml = '';
+  if (data.pattern) {
+    const p = data.pattern;
+    const cards = [];
+    if (p.float) {
+      const tierColor = { legendary: '#facc15', premium: '#10b981', average: '#64748b', below_avg: '#f59e0b', worst: '#ef4444' }[p.float.tier] || '#64748b';
+      cards.push(`
+        <div style="padding:14px;background:var(--bg-elevated);border-radius:10px;border-left:4px solid ${tierColor};">
+          <div style="font-size:11px;text-transform:uppercase;color:var(--text-muted);letter-spacing:.5px;margin-bottom:6px;">FLOAT TIER</div>
+          <div style="font-size:18px;font-weight:700;color:${tierColor};">${p.float.label}</div>
+          <div style="font-size:12px;color:var(--text-secondary);margin-top:4px;">Float <strong>${p.float.floatvalue.toFixed(5)}</strong> · posição ${p.float.percentile}/100 no range ${p.float.wear}</div>
+          <div style="font-size:12px;color:var(--text-secondary);margin-top:4px;">Preço ajustado: <strong>${p.float.priceFactor > 1 ? '+' : ''}${((p.float.priceFactor - 1) * 100).toFixed(0)}%</strong></div>
+        </div>`);
+    }
+    if (p.doppler) {
+      cards.push(`
+        <div style="padding:14px;background:var(--bg-elevated);border-radius:10px;border-left:4px solid ${p.doppler.color};">
+          <div style="font-size:11px;text-transform:uppercase;color:var(--text-muted);letter-spacing:.5px;margin-bottom:6px;">DOPPLER PHASE</div>
+          <div style="font-size:18px;font-weight:700;color:${p.doppler.color};">${p.doppler.phase}</div>
+          <div style="font-size:12px;color:var(--text-secondary);margin-top:4px;">Raridade: ${p.doppler.rarity}</div>
+          <div style="font-size:12px;color:var(--text-secondary);margin-top:4px;">Multiplicador: <strong>×${p.doppler.priceFactor}</strong></div>
+        </div>`);
+    }
+    if (p.blueGem?.notable) {
+      cards.push(`
+        <div style="padding:14px;background:var(--bg-elevated);border-radius:10px;border-left:4px solid #2563eb;">
+          <div style="font-size:11px;text-transform:uppercase;color:var(--text-muted);letter-spacing:.5px;margin-bottom:6px;">BLUE GEM</div>
+          <div style="font-size:18px;font-weight:700;color:#2563eb;">Tier ${p.blueGem.tier}</div>
+          <div style="font-size:12px;color:var(--text-secondary);margin-top:4px;">${p.blueGem.label}</div>
+          <div style="font-size:12px;color:var(--text-secondary);margin-top:4px;">Pattern #${p.blueGem.paintseed} · Multiplicador ×${p.blueGem.priceFactor}</div>
+        </div>`);
+    }
+    if (p.basePriceBRL && p.adjustedPriceBRL && p.combinedPriceFactor !== 1) {
+      const sign = p.combinedPriceFactor > 1 ? '+' : '';
+      cards.push(`
+        <div style="padding:14px;background:linear-gradient(135deg,rgba(139,92,246,.15),rgba(236,72,153,.1));border-radius:10px;border-left:4px solid #a855f7;grid-column:1/-1;">
+          <div style="font-size:11px;text-transform:uppercase;color:var(--text-muted);letter-spacing:.5px;margin-bottom:6px;">PREÇO ESTIMADO COM REFINAMENTO</div>
+          <div style="display:flex;align-items:baseline;gap:12px;flex-wrap:wrap;">
+            <span style="font-size:14px;color:var(--text-muted);text-decoration:line-through;">R$ ${p.basePriceBRL.toFixed(2).replace('.', ',')}</span>
+            <span style="font-size:26px;font-weight:800;color:#a855f7;">R$ ${p.adjustedPriceBRL.toFixed(2).replace('.', ',')}</span>
+            <span style="font-size:13px;color:${p.combinedPriceFactor > 1 ? '#10b981' : '#ef4444'};font-weight:700;">${sign}${((p.combinedPriceFactor - 1) * 100).toFixed(0)}%</span>
+          </div>
+          <div style="font-size:11px;color:var(--text-muted);margin-top:6px;">Heurística conservadora baseada em float tier + Doppler phase + Blue Gem tier. Mercado real pode variar.</div>
+        </div>`);
+    }
+    if (cards.length) {
+      patternHtml = `<div style="margin-top:18px;"><h3 style="font-size:14px;margin-bottom:10px;color:var(--primary-light);">💎 Análise de Pattern/Float</h3><div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:12px;">${cards.join('')}</div></div>`;
+    }
+  }
+
+  return `
+    <div class="result-card" style="margin-top:14px;">
+      <h3 style="font-size:14px;margin-bottom:12px;color:var(--primary-light);">🔬 Refinamento (opcional — dados reais da sua skin)</h3>
+      <p style="font-size:12px;color:var(--text-secondary);margin-bottom:14px;">
+        Tem uma skin específica? Ajuste os valores abaixo pra ver como float/pattern/phase afetam o preço real.
+        ${isCaseHardened ? ' Skin Case Hardened — digite o <strong>pattern</strong> pra checar se é Blue Gem.' : ''}
+        ${isDoppler ? ' Skin Doppler — digite o <strong>paintindex</strong> pra detectar a phase (Ruby, Sapphire, Phase 1-4, etc).' : ''}
+      </p>
+
+      <div style="display:grid;grid-template-columns:1fr;gap:16px;">
+        <div>
+          <div style="display:flex;justify-content:space-between;align-items:baseline;margin-bottom:6px;">
+            <label style="font-size:13px;font-weight:600;">Float</label>
+            <span id="floatValDisplay" style="font-family:'JetBrains Mono',monospace;font-size:14px;color:var(--primary-light);font-weight:700;">${currentFloat.toFixed(5)}</span>
+          </div>
+          <input type="range" id="floatSlider" min="${wearRange.min}" max="${wearRange.max}" step="0.00001" value="${currentFloat}"
+                 style="width:100%;accent-color:var(--primary);"
+                 oninput="onFloatSliderChange(this.value)">
+          <div style="display:flex;justify-content:space-between;font-size:10px;color:var(--text-muted);margin-top:4px;">
+            <span>${wearRange.min.toFixed(2)} (${wearRange.label} início)</span>
+            <span>${wearRange.max.toFixed(2)} (${wearRange.label} fim)</span>
+          </div>
+        </div>
+
+        ${(isCaseHardened || isFade || isMarbleFade) ? `
+        <div>
+          <label style="font-size:13px;font-weight:600;display:block;margin-bottom:6px;">Pattern (paintseed) <span style="font-weight:400;color:var(--text-muted);">— 0 a 1000</span></label>
+          <input type="number" id="paintseedInput" min="0" max="1000" step="1" value="${currentSeed}"
+                 placeholder="${isCaseHardened ? 'Ex: 661 (AK Blue Gem Tier 1)' : 'Ex: 387 (Karambit Blue Gem)'}"
+                 style="width:100%;padding:10px;border-radius:8px;border:1px solid rgba(139,92,246,.3);background:var(--bg-elevated);color:var(--text-primary);font-size:14px;">
+        </div>` : ''}
+
+        ${isDoppler ? `
+        <div>
+          <label style="font-size:13px;font-weight:600;display:block;margin-bottom:6px;">Paintindex <span style="font-weight:400;color:var(--text-muted);">— detecta a phase</span></label>
+          <select id="paintindexInput" style="width:100%;padding:10px;border-radius:8px;border:1px solid rgba(139,92,246,.3);background:var(--bg-elevated);color:var(--text-primary);font-size:14px;">
+            <option value="">— não sei —</option>
+            <option value="415" ${currentIdx == 415 ? 'selected' : ''}>415 — Ruby 💎 (legendary)</option>
+            <option value="416" ${currentIdx == 416 ? 'selected' : ''}>416 — Sapphire 💎 (legendary)</option>
+            <option value="417" ${currentIdx == 417 ? 'selected' : ''}>417 — Black Pearl 🖤 (legendary)</option>
+            <option value="418" ${currentIdx == 418 ? 'selected' : ''}>418 — Phase 1</option>
+            <option value="419" ${currentIdx == 419 ? 'selected' : ''}>419 — Phase 2</option>
+            <option value="420" ${currentIdx == 420 ? 'selected' : ''}>420 — Phase 3</option>
+            <option value="421" ${currentIdx == 421 ? 'selected' : ''}>421 — Phase 4</option>
+            <optgroup label="Gamma Doppler">
+              <option value="568" ${currentIdx == 568 ? 'selected' : ''}>568 — Gamma Phase 1</option>
+              <option value="569" ${currentIdx == 569 ? 'selected' : ''}>569 — Gamma Phase 2</option>
+              <option value="570" ${currentIdx == 570 ? 'selected' : ''}>570 — Gamma Phase 3</option>
+              <option value="571" ${currentIdx == 571 ? 'selected' : ''}>571 — Gamma Phase 4</option>
+              <option value="572" ${currentIdx == 572 ? 'selected' : ''}>572 — Emerald 💚 (legendary)</option>
+            </optgroup>
+          </select>
+        </div>` : ''}
+
+        <button onclick="applyRefinement()" style="padding:12px;background:var(--primary);color:#fff;border:none;border-radius:8px;font-weight:700;cursor:pointer;">
+          Re-analisar com refinamento →
+        </button>
+        ${(_refinement.floatvalue || _refinement.paintseed || _refinement.paintindex) ? `
+        <button onclick="clearRefinement()" style="padding:10px;background:transparent;color:var(--text-muted);border:1px solid rgba(255,255,255,.1);border-radius:8px;cursor:pointer;font-size:12px;">
+          Limpar refinamento
+        </button>` : ''}
+      </div>
+
+      ${patternHtml}
+    </div>`;
+}
+
+function onFloatSliderChange(v) {
+  const el = document.getElementById('floatValDisplay');
+  if (el) el.textContent = parseFloat(v).toFixed(5);
+}
+
+function applyRefinement() {
+  const floatEl = document.getElementById('floatSlider');
+  const seedEl  = document.getElementById('paintseedInput');
+  const idxEl   = document.getElementById('paintindexInput');
+  _refinement = {
+    floatvalue: floatEl ? parseFloat(floatEl.value) : null,
+    paintseed:  seedEl && seedEl.value ? parseInt(seedEl.value, 10) : null,
+    paintindex: idxEl && idxEl.value ? parseInt(idxEl.value, 10) : null,
+  };
+  // Mantém o depth atual (basic/full) — re-roda análise com refinamento
+  const depth = _lastAnalysisData?.tier || 'basic';
+  runAnalysis(depth);
+}
+
+function clearRefinement() {
+  _refinement = { floatvalue: null, paintseed: null, paintindex: null };
+  const depth = _lastAnalysisData?.tier || 'basic';
+  runAnalysis(depth);
 }
 
 function renderResult(data) {
@@ -1061,6 +1243,9 @@ function renderResult(data) {
   html += renderLockedSection('alert', 'Alerta de preço', 'Seja notificado no WhatsApp quando esta skin chegar em um preço alvo.', 3);
 
   html += `</div>`;
+
+  // Painel de refinamento (float slider + pattern input + Doppler phase) após a análise
+  html += buildRefinementPanel(data);
 
   document.getElementById('resultShell').innerHTML = html;
 
