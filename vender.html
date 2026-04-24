@@ -347,7 +347,7 @@ nav { display: flex; gap: 32px; flex: 1; margin-left: 48px; }
 
 <main class="page">
   <div class="page-header">
-    <div style="font-size: 10px; color: rgba(139,92,246,0.4); margin-bottom: 4px;">vender v2-steamid-fix</div>
+    <div style="font-size: 10px; color: rgba(139,92,246,0.4); margin-bottom: 4px;">vender v3-steam-ua</div>
     <h1 class="page-title">
       💰 <span class="page-title-gradient">Venda suas skins</span> com confiança
     </h1>
@@ -534,9 +534,16 @@ async function loadInventory() {
     if (!r.ok) {
       const err = await r.json().catch(() => ({}));
       if (r.status === 403) {
-        inventory = { error: 'private', msg: 'Seu inventário está privado. Abra ele em Steam → Perfil → Privacidade → Inventário → Público.' };
+        inventory = {
+          error: 'private',
+          msg: 'Seu inventário está privado na Steam. Abre ele em Steam → Perfil → Editar Perfil → Privacidade → Inventário → Público e recarrega.'
+        };
       } else {
-        inventory = { error: 'generic', msg: err.error || 'Erro ao carregar inventário' };
+        inventory = {
+          error: 'generic',
+          msg: err.hint || err.error || 'Erro ao carregar inventário',
+          detail: err.error,
+        };
       }
       return;
     }
