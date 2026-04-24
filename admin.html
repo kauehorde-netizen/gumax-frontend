@@ -1279,8 +1279,15 @@ function checkSession() {
         };
         showDashboard();
       } else {
-        auth.signOut();
+        // IMPORTANTE: NÃO fazer signOut aqui. Firebase Auth compartilha sessão
+        // entre abas via IndexedDB — se chamássemos signOut aqui, estaríamos
+        // deslogando users Steam (clientes) que estejam no vender.html/analise.html
+        // em outra aba. Ex: user loga no vender.html, abre admin.html por engano,
+        // admin.html faz signOut → vender.html perde a sessão.
+        // Só mostramos a tela de login do admin, sem tocar na sessão do user.
         document.getElementById('loginScreen').style.display = 'flex';
+        // Se tiver uma mensagem de erro antiga do login do Google, mostra
+        // avisando que o email não é admin (mas só se foi tentativa explícita).
       }
     } else {
       document.getElementById('loginScreen').style.display = 'flex';
