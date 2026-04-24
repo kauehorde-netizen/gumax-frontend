@@ -2547,6 +2547,9 @@ function inferWearFromName(name) {
 }
 
 let youpinSkins = [];
+let searchResults = [];     // skins vindas do backend /api/pricempire/search
+let searchInFlight = null;  // AbortController da busca em andamento
+let lastSearchQuery = '';   // pra evitar refetch da mesma query
 
 async function loadFirestoreSkins() {
   try {
@@ -2576,10 +2579,14 @@ async function loadFirestoreSkins() {
 }
 
 function getAllSkins() {
-  // Firestore (estoque próprio = Full) tem prioridade; Youpin = entrega normal 12h.
+  // Firestore (estoque próprio = Full) tem prioridade.
+  // Quando usuário tá pesquisando, usa resultados da busca no catálogo completo
+  // (searchResults) ao invés só do top-sellers (youpinSkins).
   const fsNames = firestoreSkins.map(s => s.name);
-  const youpinDeduped = youpinSkins.filter(s => !fsNames.includes(s.name));
-  return [...firestoreSkins, ...youpinDeduped];
+  const useSearch = currentSearchQuery && searchResults.length > 0;
+  const pool = useSearch ? searchResults : youpinSkins;
+  const dedup = pool.filter(s => !fsNames.includes(s.name));
+  return [...firestoreSkins, ...dedup];
 }
 
 // ============= INITIALIZATION =============
@@ -2740,6 +2747,8 @@ function filterSkins() {
 function clearSearch() {
   document.getElementById('searchInput').value = '';
   currentSearchQuery = '';
+  searchResults = [];
+  lastSearchQuery = '';
   document.getElementById('searchClear').style.display = 'none';
   hideSuggestions();
   renderSkins();
@@ -2754,12 +2763,75 @@ function onSearchInput() {
   currentSearchQuery = value.toLowerCase();
   document.getElementById('searchClear').style.display = value ? 'block' : 'none';
 
-  // Filtra o grid E mostra autocomplete ao mesmo tempo
+  // Se limpou a busca, remove resultados de busca e volta pro catálogo normal
+  if (!value) {
+    searchResults = [];
+    lastSearchQuery = '';
+    hideSuggestions();
+    renderSkins();
+    return;
+  }
+
+  // Re-render com que já temos (filtrado localmente se existir)
   renderSkins();
 
+  // Autocomplete + busca no backend (ambos com debounce)
   clearTimeout(_searchDebounce);
-  if (!value || value.length < 2) { hideSuggestions(); return; }
-  _searchDebounce = setTimeout(() => fetchSuggestions(value), 250);
+  if (value.length < 2) { hideSuggestions(); return; }
+  _searchDebounce = setTimeout(() => {
+    fetchSuggestions(value);
+    searchCatalogBackend(value);
+  }, 300);
+}
+
+// Busca no catálogo inteiro do backend (Pricempire) — pega qualquer skin,
+// não só as top-sellers. Usa AbortController pra cancelar requests antigos.
+async function searchCatalogBackend(query) {
+  if (query === lastSearchQuery) return; // mesma query, nao refaz
+  lastSearchQuery = query;
+  if (searchInFlight) {
+    try { searchInFlight.abort(); } catch {}
+  }
+  const ctrl = new AbortController();
+  searchInFlight = ctrl;
+  try {
+    const r = await fetch(
+      `${API_BASE}/api/pricempire/search?q=${encodeURIComponent(query)}&limit=40`,
+      { signal: ctrl.signal }
+    );
+    if (!r.ok) return;
+    const data = await r.json();
+    const items = Array.isArray(data.items) ? data.items : [];
+    // Converte pro formato de skin interno
+    searchResults = items
+      .filter(it => (it.saleBRL > 0 || it.price_cny > 0) && it.name)
+      .map((it, i) => {
+        const sale = parseFloat(it.saleBRL) || 0;
+        const original = parseFloat(it.originalBRL) || sale;
+        const discount = original > sale && sale > 0
+          ? Math.round((1 - sale / original) * 100)
+          : 0;
+        return {
+          id: 20000 + i,
+          name: it.name,
+          wear: inferWearFromName(it.name) || 'FT',
+          price: sale,
+          originalPrice: original,
+          rarity: it.rarity || 'Common',
+          inStock: false,
+          float: 0,
+          discount,
+          image: it.iconUrl || '',
+          source: 'search',
+          sellerName: 'Catálogo',
+        };
+      });
+    console.log(`[search] backend: ${searchResults.length} results for "${query}"`);
+    renderSkins();
+  } catch (e) {
+    if (e.name === 'AbortError') return;
+    console.log('[search] error:', e.message);
+  }
 }
 
 // Fallback local: filtra dos skins já carregados se backend falhar
@@ -2872,7 +2944,11 @@ window.addEventListener('resize', () => {
 function selectSuggestion(name) {
   document.getElementById('searchInput').value = name;
   currentSearchQuery = name.toLowerCase();
+  document.getElementById('searchClear').style.display = 'block';
   hideSuggestions();
+  // Busca específica pela skin clicada no catálogo — garante que aparece
+  // mesmo que não estivesse no top-sellers.
+  searchCatalogBackend(name);
   renderSkins();
 }
 
