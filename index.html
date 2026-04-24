@@ -2760,28 +2760,23 @@ let _suggestionIndex = -1;
 
 function onSearchInput() {
   const value = document.getElementById('searchInput').value;
-  currentSearchQuery = value.toLowerCase();
   document.getElementById('searchClear').style.display = value ? 'block' : 'none';
 
-  // Se limpou a busca, remove resultados de busca e volta pro catálogo normal
+  // Se limpou a busca, remove resultados e volta pro catálogo normal
   if (!value) {
     searchResults = [];
+    currentSearchQuery = '';
     lastSearchQuery = '';
     hideSuggestions();
     renderSkins();
     return;
   }
 
-  // Re-render com que já temos (filtrado localmente se existir)
-  renderSkins();
-
-  // Autocomplete + busca no backend (ambos com debounce)
+  // Enquanto digita, a gente NÃO filtra o grid — só dispara autocomplete.
+  // O grid só filtra quando user CLICA numa sugestão ou aperta Enter.
   clearTimeout(_searchDebounce);
   if (value.length < 2) { hideSuggestions(); return; }
-  _searchDebounce = setTimeout(() => {
-    fetchSuggestions(value);
-    searchCatalogBackend(value);
-  }, 300);
+  _searchDebounce = setTimeout(() => fetchSuggestions(value), 250);
 }
 
 // Busca no catálogo inteiro do backend (Pricempire) — pega qualquer skin,
@@ -2954,8 +2949,12 @@ function selectSuggestion(name) {
 
 function onSearchKeyDown(ev) {
   const box = document.getElementById('searchSuggestions');
-  if (!box || box.style.display === 'none') {
-    if (ev.key === 'Enter') { filterSkins(); }
+  const query = document.getElementById('searchInput').value.trim();
+  if (!box || !box.classList.contains('visible')) {
+    if (ev.key === 'Enter' && query) {
+      currentSearchQuery = query.toLowerCase();
+      searchCatalogBackend(query);
+    }
     return;
   }
   const sugs = box.querySelectorAll('.sug');
@@ -2972,9 +2971,11 @@ function onSearchKeyDown(ev) {
     if (_suggestionIndex >= 0 && sugs[_suggestionIndex]) {
       const name = sugs[_suggestionIndex].textContent;
       selectSuggestion(name);
-    } else {
+    } else if (query) {
+      // Enter sem sugestão selecionada → busca com o texto digitado
       hideSuggestions();
-      filterSkins();
+      currentSearchQuery = query.toLowerCase();
+      searchCatalogBackend(query);
     }
   } else if (ev.key === 'Escape') {
     hideSuggestions();
@@ -3018,13 +3019,18 @@ function getCategory(name) {
 
 function renderSkins() {
   const allAvailable = getAllSkins();
+  // Se estamos em modo busca (searchResults populado), o backend já fez o match.
+  // Só aplicamos filtros de delivery/category nesse caso.
+  const isSearchMode = currentSearchQuery && searchResults.length > 0;
+
   const filtered = allAvailable.filter(skin => {
     // Delivery filter
     if (currentDeliveryFilter === 'full' && !skin.inStock) return false;
     if (currentDeliveryFilter === 'normal' && skin.inStock) return false;
 
-    // Search filter
-    if (currentSearchQuery && !skin.name.toLowerCase().includes(currentSearchQuery)) return false;
+    // Search filter (só quando NÃO tem resultados do backend — busca local)
+    if (currentSearchQuery && !isSearchMode
+        && !skin.name.toLowerCase().includes(currentSearchQuery)) return false;
 
     // Category filter
     if (currentCategory !== 'Todos') {
