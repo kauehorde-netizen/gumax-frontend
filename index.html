@@ -3372,17 +3372,34 @@ function openSkinModal(skin) {
   document.getElementById('modalSkinName').textContent = skin.name;
   document.getElementById('modalRarity').innerHTML = `<span style="color: ${rarityColor}; font-weight: 600;">${skin.rarity}</span>`;
   document.getElementById('modalWear').textContent = WEAR_LABELS[skin.wear];
-  // Float exato (5 casas) + pattern se disponível
+  // Se temos float/pattern (salvos manualmente ou via enrichment), mostra.
+  // Senão, e tem inspect link → oferece botão "Ver no Steam" que abre o
+  // visualizador 3D da Valve (mostra float + pattern reais + skin girando).
   const floatParts = [];
-  if (skin.float > 0) {
-    floatParts.push(`Float: <strong>${skin.float.toFixed(5)}</strong>`);
+  if (skin.float > 0) floatParts.push(`Float: <strong>${skin.float.toFixed(5)}</strong>`);
+  if (skin.paintseed) floatParts.push(`Pattern: <strong style="color: var(--primary-light);">#${skin.paintseed}</strong>`);
+
+  let floatHtml = '';
+  if (floatParts.length) {
+    floatHtml = `<span style="font-family: 'JetBrains Mono', monospace;">${floatParts.join(' · ')}</span>`;
+  } else if (skin.inspectLink) {
+    // Botão que abre o inspect link na Steam (cliente do user)
+    floatHtml = `
+      <a href="${skin.inspectLink}" style="
+        display: inline-flex; align-items: center; gap: 6px;
+        padding: 6px 12px; border-radius: 8px;
+        background: rgba(102, 192, 244, 0.12);
+        border: 1px solid rgba(102, 192, 244, 0.3);
+        color: #66c0f4; font-size: 12px; font-weight: 600;
+        text-decoration: none; cursor: pointer;
+      " title="Abre o visualizador 3D da Steam — mostra float, pattern e skin girando">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor">
+          <path d="M11.98 0C5.7 0 .54 4.86.05 11.04l6.42 2.66c.55-.37 1.2-.59 1.91-.59.07 0 .13 0 .19.01l2.86-4.14V8.9c0-2.5 2.03-4.52 4.52-4.52 2.5 0 4.53 2.03 4.53 4.53s-2.03 4.52-4.53 4.52h-.1l-4.08 2.91c0 .05 0 .1 0 .16 0 1.87-1.51 3.4-3.39 3.4-1.63 0-3.02-1.18-3.33-2.73L.44 15.27C1.86 20.3 6.49 24 11.98 24c6.63 0 12-5.37 12-12S18.6 0 11.98 0z"/>
+        </svg>
+        Ver float na Steam
+      </a>`;
   }
-  if (skin.paintseed) {
-    floatParts.push(`Pattern: <strong style="color: var(--primary-light);">#${skin.paintseed}</strong>`);
-  }
-  document.getElementById('modalFloat').innerHTML = floatParts.length
-    ? `<span style="font-family: 'JetBrains Mono', monospace;">${floatParts.join(' · ')}</span>`
-    : '';
+  document.getElementById('modalFloat').innerHTML = floatHtml;
 
   const deliveryHtml = skin.inStock
     ? `<div class="delivery-badge full" style="margin-bottom: 12px;"><svg width="12" height="12" viewBox="0 0 24 24"><path d="M13 2L3 14h9l-1 10 10-12h-9l1-10z" fill="currentColor"/></svg> ENTREGA FULL • ATÉ 30 MIN</div>`
