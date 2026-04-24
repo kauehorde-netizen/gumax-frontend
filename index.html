@@ -3,6 +3,9 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
+<meta http-equiv="Pragma" content="no-cache">
+<meta http-equiv="Expires" content="0">
 <title>Gumax Skins | Marketplace CS2</title>
 <link rel="icon" href="https://static.wixstatic.com/media/874864_b598e856481740e7ae752771a661c242~mv2.png/v1/fill/w_64,h_64,al_c,q_85,enc_auto/874864_b598e856481740e7ae752771a661c242~mv2.png">
 <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800;900&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
@@ -496,8 +499,7 @@ nav {
   max-width: 1280px;
   margin: 0 auto;
   padding: 0 24px 20px;
-  position: relative;
-  z-index: 1;
+  /* position: relative removido — criava stacking context que prendia o dropdown */
 }
 
 .search-bar {
@@ -2126,7 +2128,7 @@ footer {
 <!-- SEARCH & FILTERS -->
 <section class="search-section" id="marketplace">
   <!-- Marca visível pra confirmar versão deployada. -->
-  <div style="font-size: 10px; color: rgba(139,92,246,0.5); text-align: right; margin-bottom: 4px;">search v6-dropdown</div>
+  <div style="font-size: 10px; color: rgba(139,92,246,0.5); text-align: right; margin-bottom: 4px;">search v7-stacking-fix</div>
   <div class="search-bar" style="position: relative;">
     <svg class="search-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>
     <input type="text" class="search-input" id="searchInput" placeholder="Buscar skins... Ex: AK-47 Redline, AWP Dragon Lore" autocomplete="off"
@@ -2908,11 +2910,19 @@ function renderSuggestions(names) {
   const box = document.getElementById('searchSuggestions');
   if (!box) return;
   if (!names.length) { hideSuggestions(); return; }
+  // Move o dropdown direto pro <body> pra escapar de stacking contexts das ancestrais.
+  // .search-section tem z-index:1 + position:relative, que cria um contexto que
+  // prende o dropdown mesmo com z-index:999999 no próprio dropdown.
+  if (box.parentElement !== document.body) {
+    document.body.appendChild(box);
+  }
   _suggestionIndex = -1;
   box.innerHTML = names.map((n, i) => `<div class="sug" data-idx="${i}" onmousedown="selectSuggestion('${n.replace(/'/g, "\\'")}')">${n}</div>`).join('');
   positionSuggestionsBox();
   box.classList.add('visible');
-  box.style.display = 'block';  // força override de qualquer CSS inline restante
+  box.style.display = 'block';
+  box.style.position = 'fixed';
+  box.style.zIndex = '2147483647'; // max int32
 }
 
 function showSuggestions() {
