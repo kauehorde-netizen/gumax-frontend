@@ -2113,7 +2113,7 @@ footer {
 <!-- SEARCH & FILTERS -->
 <section class="search-section" id="marketplace">
   <!-- Marca visível pra confirmar versão deployada. -->
-  <div style="font-size: 10px; color: rgba(139,92,246,0.5); text-align: right; margin-bottom: 4px;">search v14-categories</div>
+  <div style="font-size: 10px; color: rgba(139,92,246,0.5); text-align: right; margin-bottom: 4px;">search v15-category-api</div>
 
   <!-- BUFF-style category picker com SVG icons (Faca, Luvas, Rifle, ...).
        Clicar num modelo (ex: AK-47) filtra a grid e rola pra seção. -->
@@ -2680,13 +2680,59 @@ function _setFilterInternal(label, type, searchQuery) {
     header.innerHTML = `🔥 <span style="color: var(--primary-light);">${label}</span> — ${noun} disponíveis`;
   }
 
-  // Busca no backend pra trazer items da categoria
-  if (typeof searchCatalogBackend === 'function') {
-    searchCatalogBackend(searchQuery);
+  // Busca no backend: categorias (sticker/charm/agent) usam endpoint dedicado
+  // que filtra server-side pelo tipo. Armas usam /search normal.
+  if (type === 'weapon') {
+    if (typeof searchCatalogBackend === 'function') searchCatalogBackend(searchQuery);
+  } else {
+    fetchCategoryBackend(type);
   }
 
   renderSkins();
   document.getElementById('section-catalog')?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+}
+
+// Busca categoria (sticker/charm/agent) no backend /by-category endpoint.
+// Popula searchResults com items do Youpin do tipo pedido.
+async function fetchCategoryBackend(type) {
+  lastSearchQuery = 'category:' + type;
+  if (searchInFlight) { try { searchInFlight.abort(); } catch {} }
+  const ctrl = new AbortController();
+  searchInFlight = ctrl;
+  try {
+    const r = await fetch(`${API_BASE}/api/pricempire/by-category?type=${type}&limit=80`, { signal: ctrl.signal });
+    if (!r.ok) return;
+    const data = await r.json();
+    const items = Array.isArray(data.items) ? data.items : [];
+    // Dedupe com stock (o que Gu tem Full sobrepõe Youpin)
+    const stockNames = new Set(allStockSkins.map(s => s.name));
+    searchResults = items
+      .filter(it => (it.saleBRL > 0 || it.price_cny > 0) && it.name)
+      .filter(it => !stockNames.has(it.name))
+      .map((it, i) => {
+        const sale = parseFloat(it.saleBRL) || 0;
+        const original = parseFloat(it.originalBRL) || sale;
+        const discount = original > sale && sale > 0 ? Math.round((1 - sale / original) * 100) : 0;
+        return {
+          id: 90000 + i,
+          name: it.name,
+          wear: 'N/A',
+          price: sale,
+          originalPrice: original,
+          rarity: it.rarity || 'Common',
+          inStock: false,
+          float: 0,
+          discount,
+          image: it.iconUrl || '',
+          source: 'pricempire_category',
+          category: type,
+        };
+      });
+    console.log(`[fetchCategoryBackend] ${type}: ${searchResults.length} items`);
+    renderSkins();
+  } catch (e) {
+    if (e.name !== 'AbortError') console.log('[fetchCategoryBackend]', e.message);
+  }
 }
 
 function clearWeaponFilter() {
