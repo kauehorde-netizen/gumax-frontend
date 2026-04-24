@@ -403,14 +403,47 @@ body {
 
 <!-- Main content (hidden until logged in) -->
 <div id="mainContent" class="hidden">
-  <div class="search-shell">
+  <div class="search-shell" style="position:relative;">
     <div class="search-box">
       <span class="search-icon">🔍</span>
-      <input type="text" class="search-input" id="skinSearch" placeholder='Ex: AK-47 | Asiimov (Field-Tested)'
-             autocomplete="off" onkeypress="if(event.key==='Enter')runAnalysis()">
+      <input type="text" class="search-input" id="skinSearch" placeholder='Comece a digitar: "awp wild" e escolha a variante...'
+             autocomplete="off"
+             oninput="onAnaliseSearchInput(this.value)"
+             onkeydown="onAnaliseSearchKeyDown(event)"
+             onfocus="showAnaliseSuggestions()"
+             onblur="setTimeout(hideAnaliseSuggestions, 180)">
     </div>
-    <p class="search-hint">Digite o nome completo da skin e pressione Enter. Análise básica é grátis.</p>
+    <div id="analiseSuggestions" class="search-suggestions"></div>
+    <p class="search-hint">Escolha uma variante específica (float/wear e StatTrak™ mudam TUDO na análise). Análise básica é grátis.</p>
   </div>
+
+  <style>
+    .search-suggestions {
+      position: absolute; top: 100%; left: 0; right: 0; margin-top: 6px;
+      background: var(--bg-elevated, #1a1a2e); border: 1px solid rgba(139,92,246,.3);
+      border-radius: 10px; max-height: 380px; overflow-y: auto; z-index: 1000;
+      display: none; box-shadow: 0 12px 40px rgba(0,0,0,.45);
+    }
+    .search-suggestions.visible { display: block; }
+    .search-suggestions .sug {
+      padding: 10px 14px; cursor: pointer; font-size: 14px;
+      border-bottom: 1px solid rgba(255,255,255,.04);
+      display: flex; align-items: center; gap: 8px;
+    }
+    .search-suggestions .sug:last-child { border-bottom: none; }
+    .search-suggestions .sug:hover, .search-suggestions .sug.active {
+      background: rgba(139,92,246,.15);
+    }
+    .search-suggestions .sug .wear-tag {
+      font-size: 10px; padding: 2px 6px; border-radius: 4px;
+      background: rgba(102, 192, 244, .15); color: #66c0f4; font-weight: 600;
+      margin-left: auto;
+    }
+    .search-suggestions .sug .stat-tag {
+      font-size: 10px; padding: 2px 6px; border-radius: 4px;
+      background: rgba(207, 106, 50, .2); color: #cf6a32; font-weight: 700;
+    }
+  </style>
 
   <!-- Push notification opt-in (for price alerts) -->
   <div class="push-banner hidden" id="pushBanner">
@@ -711,11 +744,126 @@ async function refreshSubscription() {
   } catch (e) { console.log('subscription fetch error:', e); }
 }
 
+// =========== AUTOCOMPLETE ===========
+// Dropdown igual ao do index.html. Chama /api/pricempire/suggest → retorna
+// variantes específicas (ex: "AWP | Wildfire (Field-Tested)" vs "(Minimal Wear)"
+// vs "StatTrak™ AWP | Wildfire (Field-Tested)"). User ESCOLHE a variante —
+// análise só roda com nome completo, nunca com query solta. Isso elimina o
+// problema de analisar "awp wildfire" sem wear (cada wear é um mercado
+// diferente com liquidez própria).
+let _sugDebounce = null;
+let _sugIndex = -1;
+let _sugItems = [];
+
+function onAnaliseSearchInput(value) {
+  const v = (value || '').trim();
+  clearTimeout(_sugDebounce);
+  if (v.length < 2) { hideAnaliseSuggestions(); return; }
+  _sugDebounce = setTimeout(() => fetchAnaliseSuggestions(v), 250);
+}
+
+async function fetchAnaliseSuggestions(query) {
+  try {
+    const r = await fetch(`${API_BASE}/api/pricempire/suggest?q=${encodeURIComponent(query)}&limit=12`);
+    if (!r.ok) { hideAnaliseSuggestions(); return; }
+    const data = await r.json();
+    const suggestions = Array.isArray(data.suggestions) ? data.suggestions : [];
+    if (!suggestions.length) { hideAnaliseSuggestions(); return; }
+    renderAnaliseSuggestions(suggestions);
+  } catch (e) {
+    console.log('[analise suggest]', e.message);
+    hideAnaliseSuggestions();
+  }
+}
+
+function renderAnaliseSuggestions(names) {
+  const box = document.getElementById('analiseSuggestions');
+  if (!box) return;
+  _sugItems = names;
+  _sugIndex = -1;
+  box.innerHTML = names.map((name, i) => {
+    // Extrai wear tag do nome ex: "(Field-Tested)" → "FT"
+    const wearMatch = name.match(/\((Factory New|Minimal Wear|Field-Tested|Well-Worn|Battle-Scarred)\)/);
+    const wearMap = { 'Factory New':'FN', 'Minimal Wear':'MW', 'Field-Tested':'FT', 'Well-Worn':'WW', 'Battle-Scarred':'BS' };
+    const wearTag = wearMatch ? `<span class="wear-tag">${wearMap[wearMatch[1]]}</span>` : '';
+    const isStatTrak = /StatTrak™/.test(name);
+    const statTag = isStatTrak ? `<span class="stat-tag">ST</span>` : '';
+    const safeName = name.replace(/'/g, "\\'").replace(/"/g, '&quot;');
+    return `<div class="sug" data-idx="${i}" onmousedown="selectAnaliseSuggestion('${safeName}')">${statTag}<span>${name}</span>${wearTag}</div>`;
+  }).join('');
+  box.classList.add('visible');
+}
+
+function showAnaliseSuggestions() {
+  const box = document.getElementById('analiseSuggestions');
+  if (box && box.innerHTML) box.classList.add('visible');
+}
+function hideAnaliseSuggestions() {
+  const box = document.getElementById('analiseSuggestions');
+  if (box) box.classList.remove('visible');
+}
+
+function selectAnaliseSuggestion(name) {
+  document.getElementById('skinSearch').value = name;
+  hideAnaliseSuggestions();
+  // Dispara análise básica imediatamente (é grátis)
+  runAnalysis('basic');
+}
+
+function onAnaliseSearchKeyDown(event) {
+  const box = document.getElementById('analiseSuggestions');
+  const visible = box && box.classList.contains('visible');
+  if (event.key === 'Enter') {
+    if (visible && _sugIndex >= 0 && _sugItems[_sugIndex]) {
+      event.preventDefault();
+      selectAnaliseSuggestion(_sugItems[_sugIndex]);
+      return;
+    }
+    // Se o texto não é uma variante completa (não tem "(wear)"), avisa
+    const v = document.getElementById('skinSearch').value.trim();
+    if (!/\((Factory New|Minimal Wear|Field-Tested|Well-Worn|Battle-Scarred)\)/.test(v)) {
+      event.preventDefault();
+      showToast('Escolha uma variante específica (wear muda liquidez)', 'error');
+      fetchAnaliseSuggestions(v);
+      return;
+    }
+    runAnalysis('basic');
+  } else if (event.key === 'ArrowDown' && visible) {
+    event.preventDefault();
+    _sugIndex = Math.min(_sugIndex + 1, _sugItems.length - 1);
+    highlightAnaliseSuggestion();
+  } else if (event.key === 'ArrowUp' && visible) {
+    event.preventDefault();
+    _sugIndex = Math.max(_sugIndex - 1, -1);
+    highlightAnaliseSuggestion();
+  } else if (event.key === 'Escape') {
+    hideAnaliseSuggestions();
+  }
+}
+function highlightAnaliseSuggestion() {
+  const box = document.getElementById('analiseSuggestions');
+  if (!box) return;
+  box.querySelectorAll('.sug').forEach(el => el.classList.remove('active'));
+  if (_sugIndex >= 0) {
+    const el = box.querySelector(`.sug[data-idx="${_sugIndex}"]`);
+    if (el) { el.classList.add('active'); el.scrollIntoView({ block: 'nearest' }); }
+  }
+}
+
 // =========== ANALYSIS ===========
 async function runAnalysis(depth = 'basic') {
   const name = document.getElementById('skinSearch').value.trim();
   if (!name) { showToast('Digite o nome da skin', 'error'); return; }
   if (!idToken) { showToast('Entre no site pra analisar', 'error'); return; }
+
+  // Gate: exige variante específica. "awp wildfire" não dá — precisa ser
+  // "AWP | Wildfire (Field-Tested)" porque cada wear tem liquidez diferente
+  // (ex: AWP | Wildfire FT é líquido, MW pode ter quase nenhuma venda).
+  if (!/\((Factory New|Minimal Wear|Field-Tested|Well-Worn|Battle-Scarred)\)/.test(name)) {
+    showToast('Escolha uma variante do autocomplete — wear muda totalmente a análise', 'error');
+    fetchAnaliseSuggestions(name);
+    return;
+  }
 
   const shell = document.getElementById('resultShell');
   shell.innerHTML = `<div class="result-card" style="text-align:center;padding:60px;"><div class="loading-spinner"></div><p style="margin-top:14px;color:var(--text-secondary);">Analisando ${name}...</p></div>`;
