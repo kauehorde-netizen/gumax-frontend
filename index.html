@@ -2113,7 +2113,7 @@ footer {
 <!-- SEARCH & FILTERS -->
 <section class="search-section" id="marketplace">
   <!-- Marca visível pra confirmar versão deployada. -->
-  <div style="font-size: 10px; color: rgba(139,92,246,0.5); text-align: right; margin-bottom: 4px;">search v17-class-filter</div>
+  <div style="font-size: 10px; color: rgba(139,92,246,0.5); text-align: right; margin-bottom: 4px;">search v18-souvenir-x</div>
 
   <!-- BUFF-style category picker com SVG icons (Faca, Luvas, Rifle, ...).
        Clicar num modelo (ex: AK-47) filtra a grid e rola pra seção. -->
@@ -2315,7 +2315,7 @@ footer {
 
   <style>
     .weapon-filter-bar {
-      display: flex !important;
+      display: flex;
       flex-wrap: wrap;
       gap: 12px;
       align-items: center;
@@ -3255,18 +3255,38 @@ function resolveSkinImage(fullName) {
     // remove ★ no início (com espaço opcional)
     const noStar = trim(n.replace(/^★\s*/, ''));
     variants.add(noStar);
-    // remove StatTrak™ no início (com espaço opcional)
+    // remove StatTrak™ no início
     const noST = trim(n.replace(/^StatTrak™\s*/, ''));
     variants.add(noST);
+    // remove Souvenir no início
+    const noSouvenir = trim(n.replace(/^Souvenir\s+/, ''));
+    variants.add(noSouvenir);
     // remove ★ + StatTrak™ (qualquer ordem)
     const noStarST = trim(n.replace(/^★\s*StatTrak™\s*/, '').replace(/^StatTrak™\s*★\s*/, ''));
     variants.add(noStarST);
-    // combinações com noWear também
+    // Combinações agressivas: remove Souvenir + StatTrak™ + ★ em qualquer ordem
+    const fullyStripped = trim(n
+      .replace(/^Souvenir\s+/, '')
+      .replace(/^StatTrak™\s*/, '')
+      .replace(/^★\s*/, '')
+      .replace(/^StatTrak™\s*/, '')
+    );
+    variants.add(fullyStripped);
+    // Também sem wear
     const noWearInner = trim(n.replace(/\s*\([^)]+\)\s*$/, ''));
     variants.add(noWearInner);
     variants.add(trim(noWearInner.replace(/^★\s*/, '')));
     variants.add(trim(noWearInner.replace(/^StatTrak™\s*/, '')));
+    variants.add(trim(noWearInner.replace(/^Souvenir\s+/, '')));
     variants.add(trim(noWearInner.replace(/^★\s*StatTrak™\s*/, '').replace(/^StatTrak™\s*★\s*/, '')));
+    // Fully stripped + no wear
+    const fullyStrippedNoWear = trim(noWearInner
+      .replace(/^Souvenir\s+/, '')
+      .replace(/^StatTrak™\s*/, '')
+      .replace(/^★\s*/, '')
+      .replace(/^StatTrak™\s*/, '')
+    );
+    variants.add(fullyStrippedNoWear);
   }
 
   for (const v of variants) {
