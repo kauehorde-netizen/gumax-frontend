@@ -2552,6 +2552,7 @@ function inferWearFromName(name) {
 }
 
 let youpinSkins = [];
+let allStockSkins = [];     // estoque Full completo (pra busca filtrar localmente)
 let searchResults = [];     // skins vindas do backend /api/pricempire/search
 let searchInFlight = null;  // AbortController da busca em andamento
 let lastSearchQuery = '';   // pra evitar refetch da mesma query
@@ -2620,8 +2621,15 @@ async function loadFirestoreSkins() {
       };
     }).filter(s => s.price > 0); // só mostra se tem preço válido
 
-    firestoreSkins = [...manual, ...stockItems];
-    console.log(`[firestore] ${manual.length} manual + ${stockItems.length} stock = ${firestoreSkins.length} total`);
+    // Home default: mostra só as 40 mais caras do estoque Full.
+    // Assim o Gu destaca items de alto valor (dinheiro parado) e move mais rápido.
+    stockItems.sort((a, b) => b.price - a.price);
+    const topStock = stockItems.slice(0, 40);
+
+    firestoreSkins = [...manual, ...topStock];
+    // Guarda a lista COMPLETA de stock em outra var pra busca local usar
+    allStockSkins = stockItems;
+    console.log(`[firestore] ${manual.length} manual + ${topStock.length}/${stockItems.length} stock exibidos = ${firestoreSkins.length} total`);
     renderSkins();
   } catch (e) {
     console.log('Firestore skins load error:', e);
@@ -2629,14 +2637,19 @@ async function loadFirestoreSkins() {
 }
 
 function getAllSkins() {
-  // Firestore (estoque próprio = Full) tem prioridade.
-  // Quando usuário tá pesquisando, usa resultados da busca no catálogo completo
-  // (searchResults) ao invés só do top-sellers (youpinSkins).
-  const fsNames = firestoreSkins.map(s => s.name);
-  const useSearch = currentSearchQuery && searchResults.length > 0;
-  const pool = useSearch ? searchResults : youpinSkins;
-  const dedup = pool.filter(s => !fsNames.includes(s.name));
-  return [...firestoreSkins, ...dedup];
+  // Home default (sem busca): só os 40 mais caros do estoque Full (firestoreSkins já cortado).
+  // Em busca ativa: Full matching (allStockSkins completo) + Youpin sob encomenda (searchResults)
+  // pras skins que o Gu não tem.
+  if (currentSearchQuery) {
+    const q = currentSearchQuery.toLowerCase();
+    const matchingStock = allStockSkins.filter(s => s.name.toLowerCase().includes(q));
+    const stockNames = new Set(matchingStock.map(s => s.name));
+    const matchingYoupin = searchResults.filter(s => !stockNames.has(s.name));
+    // Full primeiro, Youpin depois
+    return [...matchingStock, ...matchingYoupin];
+  }
+  // Sem busca: só a lista da home (top 40 mais caros)
+  return [...firestoreSkins];
 }
 
 // ============= INITIALIZATION =============
@@ -2645,7 +2658,8 @@ document.addEventListener('DOMContentLoaded', function() {
   renderSkins();
   loadSkinImages();
   loadFirestoreSkins().then(() => loadVerdictsForVisibleSkins());
-  loadYoupinTopSellers();
+  // Youpin top-sellers NÃO carrega mais na home — só aparece na busca
+  // quando o Gu não tem o item no estoque Full.
   loadHeroConfig();
 
   // Check Steam callback
@@ -2831,8 +2845,10 @@ function onSearchInput() {
 
 // Busca no catálogo inteiro do backend (Pricempire) — pega qualquer skin,
 // não só as top-sellers. Usa AbortController pra cancelar requests antigos.
+// REGRA: se o Gu tem a skin no estoque Full, mostra ELA (Entrega 30min). Senão,
+// mostra a versão Youpin (encomenda 12h). Dedupe por nome exato.
 async function searchCatalogBackend(query) {
-  if (query === lastSearchQuery) return; // mesma query, nao refaz
+  if (query === lastSearchQuery) return;
   lastSearchQuery = query;
   if (searchInFlight) {
     try { searchInFlight.abort(); } catch {}
@@ -2847,9 +2863,14 @@ async function searchCatalogBackend(query) {
     if (!r.ok) return;
     const data = await r.json();
     const items = Array.isArray(data.items) ? data.items : [];
-    // Converte pro formato de skin interno
+
+    // Nomes que o Gu tem no estoque Full (ignora case/espaço extras)
+    const stockNames = new Set(allStockSkins.map(s => s.name));
+
+    // Converte Youpin pra formato interno, EXCLUINDO items que o Gu já tem no Full
     searchResults = items
       .filter(it => (it.saleBRL > 0 || it.price_cny > 0) && it.name)
+      .filter(it => !stockNames.has(it.name)) // Gu tem → usa o Full, não duplica
       .map((it, i) => {
         const sale = parseFloat(it.saleBRL) || 0;
         const original = parseFloat(it.originalBRL) || sale;
@@ -2863,15 +2884,15 @@ async function searchCatalogBackend(query) {
           price: sale,
           originalPrice: original,
           rarity: it.rarity || 'Common',
-          inStock: false,
+          inStock: false,         // não-Full → encomenda 12h
           float: 0,
           discount,
           image: it.iconUrl || '',
           source: 'search',
-          sellerName: 'Catálogo',
+          sellerName: 'Sob encomenda',
         };
       });
-    console.log(`[search] backend: ${searchResults.length} results for "${query}"`);
+    console.log(`[search] ${searchResults.length} Youpin + ${allStockSkins.filter(s => s.name.toLowerCase().includes(query.toLowerCase())).length} Full matching "${query}"`);
     renderSkins();
   } catch (e) {
     if (e.name === 'AbortError') return;
