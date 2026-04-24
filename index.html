@@ -2534,6 +2534,9 @@ async function loadYoupinTopSellers(limit = 40) {
           sellerName: 'Youpin Top',
         };
       });
+    // Ordena por preço desc (mais caras primeiro) — usado como "filler" da home
+    // quando o estoque Full do Gu tem menos que 40 items.
+    topSkins.sort((a, b) => (b.price || 0) - (a.price || 0));
     youpinSkins = topSkins;
     renderSkins();
   } catch (e) {
@@ -2663,18 +2666,23 @@ function skinMatchesQuery(skinName, query) {
 }
 
 function getAllSkins() {
-  // Home default (sem busca): só os 40 mais caros do estoque Full (firestoreSkins já cortado).
-  // Em busca ativa: Full matching (allStockSkins completo) + Youpin sob encomenda (searchResults)
-  // pras skins que o Gu não tem.
+  // Busca ativa: Full matching (allStockSkins completo) + Youpin sob encomenda (searchResults).
   if (currentSearchQuery) {
     const matchingStock = allStockSkins.filter(s => skinMatchesQuery(s.name, currentSearchQuery));
     const stockNames = new Set(matchingStock.map(s => s.name));
     const matchingYoupin = searchResults.filter(s => !stockNames.has(s.name));
-    // Full primeiro, Youpin depois
     return [...matchingStock, ...matchingYoupin];
   }
-  // Sem busca: só a lista da home (top 40 mais caros)
-  return [...firestoreSkins];
+  // Home default: estoque Full primeiro (até 40) + preenche com skins mais caras do Youpin
+  // até completar 40 no total. Skins do Gu sempre aparecem primeiro.
+  const HOME_GRID_SIZE = 40;
+  const stockFill = firestoreSkins.slice(0, HOME_GRID_SIZE);
+  const stockNames = new Set(stockFill.map(s => s.name));
+  const needed = Math.max(0, HOME_GRID_SIZE - stockFill.length);
+  const youpinFill = needed > 0
+    ? youpinSkins.filter(s => !stockNames.has(s.name)).slice(0, needed)
+    : [];
+  return [...stockFill, ...youpinFill];
 }
 
 // ============= INITIALIZATION =============
@@ -2683,8 +2691,9 @@ document.addEventListener('DOMContentLoaded', function() {
   renderSkins();
   loadSkinImages();
   loadFirestoreSkins().then(() => loadVerdictsForVisibleSkins());
-  // Youpin top-sellers NÃO carrega mais na home — só aparece na busca
-  // quando o Gu não tem o item no estoque Full.
+  // Carrega top-sellers do Youpin pra PREENCHER a home quando o estoque
+  // do Gu (Full) tiver menos que 40 items — fica bonito e traz tráfego.
+  loadYoupinTopSellers(80); // pede 80 pra ter sobra após dedupe
   loadHeroConfig();
 
   // Check Steam callback
