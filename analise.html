@@ -421,28 +421,88 @@ body {
     </div>
     <div id="analiseSuggestions" class="search-suggestions"></div>
     <p class="search-hint">Escolha pelo menu ou digite — depois selecione uma variante (wear muda TUDO na análise). Análise básica é grátis.</p>
-    <p style="font-size:10px;color:rgba(139,92,246,.5);margin-top:6px;text-align:center;">analise v4-buff-menu</p>
+    <p style="font-size:10px;color:rgba(139,92,246,.5);margin-top:6px;text-align:center;">analise v5-buff-inline</p>
   </div>
 
-  <script src="buff-menu.js"></script>
   <script>
-    // Quando o user clica num modelo no menu BUFF, popula a busca e dispara autocomplete
-    document.addEventListener('DOMContentLoaded', () => {
-      if (window.BuffMenu) {
-        BuffMenu.init('buffMenu', {
-          onPick: (weaponName) => {
-            const input = document.getElementById('skinSearch');
-            if (input) {
-              // Remove ★ pra busca funcionar melhor (★ é facas/luvas — backend lida)
-              const query = weaponName.replace(/^★\s*/, '');
-              input.value = query;
-              input.focus();
-              fetchAnaliseSuggestions(query);
-            }
-          }
-        });
+  // ═══ BUFF-style menu INLINE (evita 404/timing do arquivo externo) ═══
+  (function () {
+    const WEAPONS = {
+      knife:   { label: 'Faca', icon: '🔪', items: ['★ Karambit','★ M9 Bayonet','★ Butterfly Knife','★ Bayonet','★ Flip Knife','★ Gut Knife','★ Huntsman Knife','★ Falchion Knife','★ Bowie Knife','★ Shadow Daggers','★ Navaja Knife','★ Stiletto Knife','★ Talon Knife','★ Ursus Knife','★ Classic Knife','★ Nomad Knife','★ Paracord Knife','★ Skeleton Knife','★ Survival Knife','★ Kukri Knife'] },
+      gloves:  { label: 'Luvas', icon: '🧤', items: ['★ Sport Gloves','★ Driver Gloves','★ Specialist Gloves','★ Moto Gloves','★ Bloodhound Gloves','★ Hand Wraps','★ Hydra Gloves','★ Broken Fang Gloves'] },
+      rifle:   { label: 'Rifle', icon: '🎯', items: ['AK-47','M4A4','M4A1-S','AUG','SG 553','FAMAS','Galil AR','AWP','SSG 08','SCAR-20','G3SG1'] },
+      pistol:  { label: 'Pistola', icon: '🔫', items: ['Desert Eagle','USP-S','Glock-18','P2000','P250','Five-SeveN','R8 Revolver','Dual Berettas','Tec-9','CZ75-Auto','Zeus x27'] },
+      smg:     { label: 'SMG', icon: '💫', items: ['MAC-10','MP9','MP7','MP5-SD','UMP-45','P90','PP-Bizon'] },
+      shotgun: { label: 'Escopeta', icon: '💥', items: ['Nova','XM1014','Sawed-Off','MAG-7'] },
+      mg:      { label: 'Metralhadora', icon: '⚡', items: ['M249','Negev'] },
+      sticker: { label: 'Adesivo', icon: '🏷️', items: ['(Use a busca pra achar stickers)'] },
+      charm:   { label: 'Charm', icon: '✨', items: ['(Use a busca pra achar charms)'] },
+      agent:   { label: 'Agente', icon: '🎭', items: ['(Use a busca pra achar agentes)'] },
+    };
+    const CSS = `
+      .buff-menu { background: linear-gradient(180deg,rgba(20,16,40,.85),rgba(10,8,20,.7)); border: 1px solid rgba(139,92,246,.15); border-radius: 14px; padding: 14px; margin: 0 auto 24px; max-width: 1200px; }
+      .buff-cat-row { display:flex; gap:4px; flex-wrap:wrap; justify-content:center; padding-bottom:10px; border-bottom:1px solid rgba(255,255,255,.05); }
+      .buff-cat { padding:10px 14px; border-radius:10px; cursor:pointer; transition:background .15s; display:flex; flex-direction:column; align-items:center; gap:4px; min-width:80px; font-size:12px; color:var(--text-secondary,#cbd5e1); user-select:none; }
+      .buff-cat:hover, .buff-cat.active { background:rgba(139,92,246,.18); color:var(--primary-light,#a855f7); }
+      .buff-cat-icon { font-size:22px; line-height:1; }
+      .buff-cat-label { font-weight:600; }
+      .buff-dropdown { display:none; padding:14px 10px 8px; flex-wrap:wrap; gap:6px; }
+      .buff-dropdown.visible { display:flex; }
+      .buff-weapon { padding:8px 14px; background:rgba(139,92,246,.08); border:1px solid rgba(139,92,246,.18); border-radius:8px; cursor:pointer; font-size:13px; color:var(--text-primary,#e0e7ff); transition:all .15s; white-space:nowrap; }
+      .buff-weapon:hover { background:rgba(139,92,246,.22); border-color:rgba(139,92,246,.5); }
+      .buff-weapon.hint { background:transparent; border:1px dashed rgba(255,255,255,.15); color:var(--text-muted,#94a3b8); font-style:italic; cursor:default; }
+    `;
+    let currentCategory = null;
+    function renderMenu(containerId, onPick) {
+      const container = document.getElementById(containerId);
+      if (!container) { console.warn('[BuffMenu] container não encontrado:', containerId); return; }
+      if (!document.getElementById('buff-menu-css')) {
+        const style = document.createElement('style');
+        style.id = 'buff-menu-css'; style.textContent = CSS;
+        document.head.appendChild(style);
+      }
+      container.innerHTML = `<div class="buff-menu"><div class="buff-cat-row" id="buffCatRow"></div><div class="buff-dropdown" id="buffDropdown"></div></div>`;
+      const row = document.getElementById('buffCatRow');
+      Object.entries(WEAPONS).forEach(([key, cat]) => {
+        const el = document.createElement('div');
+        el.className = 'buff-cat'; el.dataset.key = key;
+        el.innerHTML = `<span class="buff-cat-icon">${cat.icon}</span><span class="buff-cat-label">${cat.label}</span>`;
+        el.addEventListener('click', () => toggleCat(key, onPick));
+        row.appendChild(el);
+      });
+    }
+    function toggleCat(key, onPick) {
+      const cat = WEAPONS[key]; if (!cat) return;
+      const dropdown = document.getElementById('buffDropdown');
+      document.querySelectorAll('.buff-cat').forEach(el => el.classList.remove('active'));
+      if (currentCategory === key) {
+        dropdown.classList.remove('visible'); dropdown.innerHTML = ''; currentCategory = null; return;
+      }
+      currentCategory = key;
+      document.querySelector(`.buff-cat[data-key="${key}"]`)?.classList.add('active');
+      dropdown.innerHTML = '';
+      cat.items.forEach(name => {
+        const el = document.createElement('span');
+        const isHint = name.startsWith('(');
+        el.className = 'buff-weapon' + (isHint ? ' hint' : '');
+        el.textContent = name;
+        if (!isHint) el.addEventListener('click', () => onPick && onPick(name));
+        dropdown.appendChild(el);
+      });
+      dropdown.classList.add('visible');
+    }
+    // Init IMEDIATO — o <div id="buffMenu"> já existe acima deste script
+    renderMenu('buffMenu', (weaponName) => {
+      const input = document.getElementById('skinSearch');
+      if (input) {
+        const query = weaponName.replace(/^★\s*/, '');
+        input.value = query;
+        input.focus();
+        if (typeof fetchAnaliseSuggestions === 'function') fetchAnaliseSuggestions(query);
       }
     });
+    console.log('[BuffMenu] inicializado em analise.html');
+  })();
   </script>
 
   <style>
