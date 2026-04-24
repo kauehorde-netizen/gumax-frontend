@@ -348,13 +348,44 @@ nav { display: flex; gap: 32px; flex: 1; margin-left: 48px; }
 <main class="page">
   <div class="page-header">
     <h1 class="page-title">
-      💰 <span class="page-title-gradient">Venda suas skins</span> por PIX
+      💰 <span class="page-title-gradient">Venda suas skins</span> com confiança
     </h1>
     <p class="page-description">
-      Recebemos suas skins e pagamos direto no seu PIX. Compramos a
-      <strong style="color: var(--text-primary);">15% abaixo do menor preço entre Youpin e Buff163</strong>.
-      Pagamento garantido após os 8 dias de trade protection da Steam.
+      Preço transparente, pagamento garantido direto no seu PIX.
+      Você vê exatamente quanto vai receber <strong style="color: var(--text-primary);">antes de confirmar</strong> —
+      nada de valores que mudam no meio do caminho, nada de taxas escondidas.
     </p>
+  </div>
+
+  <!-- TRUST BADGES -->
+  <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 12px; margin-bottom: 28px;">
+    <div style="background: var(--bg-card); border: 1px solid var(--border); border-radius: 12px; padding: 14px 16px; display: flex; align-items: center; gap: 12px;">
+      <div style="width: 38px; height: 38px; border-radius: 10px; background: rgba(16,185,129,0.15); display: flex; align-items: center; justify-content: center; flex-shrink: 0;">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#10b981" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
+      </div>
+      <div style="font-size: 13px;">
+        <div style="font-weight: 700;">Pagamento garantido</div>
+        <div style="color: var(--text-muted); font-size: 12px;">Direto no seu PIX via Mercado Pago</div>
+      </div>
+    </div>
+    <div style="background: var(--bg-card); border: 1px solid var(--border); border-radius: 12px; padding: 14px 16px; display: flex; align-items: center; gap: 12px;">
+      <div style="width: 38px; height: 38px; border-radius: 10px; background: rgba(139,92,246,0.15); display: flex; align-items: center; justify-content: center; flex-shrink: 0;">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#A78BFA" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="M9 12l2 2 4-4"/></svg>
+      </div>
+      <div style="font-size: 13px;">
+        <div style="font-weight: 700;">Preço transparente</div>
+        <div style="color: var(--text-muted); font-size: 12px;">Baseado no mercado internacional ao vivo</div>
+      </div>
+    </div>
+    <div style="background: var(--bg-card); border: 1px solid var(--border); border-radius: 12px; padding: 14px 16px; display: flex; align-items: center; gap: 12px;">
+      <div style="width: 38px; height: 38px; border-radius: 10px; background: rgba(250,204,21,0.15); display: flex; align-items: center; justify-content: center; flex-shrink: 0;">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#FACC15" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0110 0v4"/></svg>
+      </div>
+      <div style="font-size: 13px;">
+        <div style="font-weight: 700;">Trade protection Steam</div>
+        <div style="color: var(--text-muted); font-size: 12px;">Suas skins ficam seguras durante a transação</div>
+      </div>
+    </div>
   </div>
 
   <div id="mainContent"></div>
@@ -556,8 +587,17 @@ function renderMain() {
   // Layout normal: inventário + carrinho
   main.innerHTML = `
     <div class="info-card">
-      <strong>Como funciona:</strong> selecione as skins que quer vender, informe seu PIX e trade link, e confirme.
-      Após você enviar o trade, aguardamos os 8 dias de trade protection da Steam e pagamos seu PIX. Simples e seguro.
+      <strong>Como funciona em 4 passos:</strong>
+      <ol style="margin: 8px 0 0 20px; line-height: 1.8;">
+        <li>Escolha as skins do seu inventário — o valor de cada uma aparece no momento.</li>
+        <li>Informe sua chave PIX e trade link da Steam, e confirme a proposta.</li>
+        <li>Envie o trade pra nós. Suas skins entram no período de proteção da Steam.</li>
+        <li>Após o período terminar, o PIX cai na sua conta automaticamente.</li>
+      </ol>
+      <div style="margin-top: 10px; padding-top: 10px; border-top: 1px solid var(--border); font-size: 12px; color: var(--text-muted);">
+        📊 <strong style="color: var(--text-primary);">Como calculamos o valor:</strong> usamos o preço em tempo real do mercado
+        internacional (Buff163 e Youpin) convertido pra real. O valor que você vê é líquido — é exatamente o que vai cair no seu PIX.
+      </div>
     </div>
 
     <div class="vender-layout">
@@ -727,13 +767,18 @@ function showSuccess(tx) {
       <div class="tx-id">ID: ${tx.id}</div>
 
       <div class="next-steps">
-        <strong style="color: var(--text-primary);">Próximos passos:</strong>
+        <strong style="color: var(--text-primary);">O que vem agora:</strong>
         <ol style="margin: 10px 0 0 20px;">
-          <li style="margin-bottom: 6px;">Você recebe uma notificação do Gumax no Steam em até algumas horas.</li>
-          <li style="margin-bottom: 6px;">Confirma o trade (envia as skins) no seu painel da Steam.</li>
-          <li style="margin-bottom: 6px;">Espera os <strong>8 dias de trade protection</strong> da Steam.</li>
-          <li>Você recebe o <strong>PIX de R$ ${(tx.offeredTotalBRL || 0).toFixed(2).replace('.', ',')}</strong> na chave <code>${escapeHtml(tx.userPixKey || '')}</code>.</li>
+          <li style="margin-bottom: 6px;">Você recebe uma proposta de trade do Gumax no Steam em até algumas horas.</li>
+          <li style="margin-bottom: 6px;">Aceita o trade normalmente (suas skins saem do inventário).</li>
+          <li style="margin-bottom: 6px;">Aguarda o período de proteção da Steam — é uma janela de segurança obrigatória pra TODO trade de skin.</li>
+          <li>Assim que o período termina, o <strong>PIX de R$ ${(tx.offeredTotalBRL || 0).toFixed(2).replace('.', ',')}</strong> é enviado automaticamente pra chave <code>${escapeHtml(tx.userPixKey || '')}</code>.</li>
         </ol>
+        <div style="margin-top: 12px; padding-top: 12px; border-top: 1px solid rgba(255,255,255,0.06); font-size: 12px;">
+          💬 <strong style="color: var(--text-primary);">Dúvida? Problema?</strong> Chama a gente no Instagram
+          <a href="https://www.instagram.com/gumax_skins/" target="_blank" style="color: var(--primary-light);">@gumax_skins</a> —
+          resolvemos rápido.
+        </div>
       </div>
 
       <div style="margin-top: 20px;">
