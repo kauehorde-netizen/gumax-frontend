@@ -421,7 +421,7 @@ body {
     </div>
     <div id="analiseSuggestions" class="search-suggestions"></div>
     <p class="search-hint">Escolha pelo menu ou digite — depois selecione uma variante (wear muda TUDO na análise). Análise básica é grátis.</p>
-    <p style="font-size:10px;color:rgba(139,92,246,.5);margin-top:6px;text-align:center;">analise v6-pro-icons</p>
+    <p style="font-size:10px;color:rgba(139,92,246,.5);margin-top:6px;text-align:center;">analise v7-refinement-top</p>
   </div>
 
   <script>
@@ -1085,12 +1085,15 @@ function buildRefinementPanel(data) {
   }
 
   return `
-    <div class="result-card" style="margin-top:14px;">
-      <h3 style="font-size:14px;margin-bottom:12px;color:var(--primary-light);">🔬 Refinamento (opcional — dados reais da sua skin)</h3>
-      <p style="font-size:12px;color:var(--text-secondary);margin-bottom:14px;">
-        Tem uma skin específica? Ajuste os valores abaixo pra ver como float/pattern/phase afetam o preço real.
+    <div style="background: linear-gradient(135deg, rgba(139,92,246,.15), rgba(250,204,21,.04)); border: 1px solid rgba(139,92,246,.3); border-radius: 20px; padding: 24px; margin-bottom: 16px;">
+      <h3 style="font-size:16px;margin-bottom:6px;color:var(--primary-light);display:flex;align-items:center;gap:8px;">
+        🔬 Refinamento
+        <span style="font-size:11px;font-weight:500;color:var(--text-muted);text-transform:uppercase;letter-spacing:1px;">insira dados reais da sua skin pra análise precisa</span>
+      </h3>
+      <p style="font-size:12px;color:var(--text-secondary);margin-bottom:16px;">
+        Ajuste o float, paintseed (pattern) e phase pra ver como afetam o preço real da sua skin.
         ${isCaseHardened ? ' Skin Case Hardened — digite o <strong>pattern</strong> pra checar se é Blue Gem.' : ''}
-        ${isDoppler ? ' Skin Doppler — digite o <strong>paintindex</strong> pra detectar a phase (Ruby, Sapphire, Phase 1-4, etc).' : ''}
+        ${isDoppler ? ' Skin Doppler — escolha o <strong>paintindex</strong> pra detectar a phase (Ruby, Sapphire, Phase 1-4, etc).' : ''}
       </p>
 
       <div style="display:grid;grid-template-columns:1fr;gap:16px;">
@@ -1197,6 +1200,8 @@ function renderResult(data) {
                        : '1 snapshot/dia · disponível em ~7 dias';
 
   let html = `
+    ${buildRefinementPanel(data)}
+
     <div class="result-card">
       <div class="result-header">
         ${data.icon ? `<img src="${data.icon}" alt="${data.name}">` : ''}
@@ -1346,8 +1351,7 @@ function renderResult(data) {
 
   html += `</div>`;
 
-  // Painel de refinamento (float slider + pattern input + Doppler phase) após a análise
-  html += buildRefinementPanel(data);
+  // Refinamento já foi inserido no TOPO (logo após o header) pra ficar visível.
 
   document.getElementById('resultShell').innerHTML = html;
 
