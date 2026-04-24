@@ -2113,7 +2113,7 @@ footer {
 <!-- SEARCH & FILTERS -->
 <section class="search-section" id="marketplace">
   <!-- Marca visível pra confirmar versão deployada. -->
-  <div style="font-size: 10px; color: rgba(139,92,246,0.5); text-align: right; margin-bottom: 4px;">search v13-weapon-filter</div>
+  <div style="font-size: 10px; color: rgba(139,92,246,0.5); text-align: right; margin-bottom: 4px;">search v14-categories</div>
 
   <!-- BUFF-style category picker com SVG icons (Faca, Luvas, Rifle, ...).
        Clicar num modelo (ex: AK-47) filtra a grid e rola pra seção. -->
@@ -2151,6 +2151,8 @@ footer {
       agent:   '<svg viewBox="0 0 32 32" fill="currentColor"><circle cx="16" cy="10" r="5"/><path d="M6 28 C6 22 10 18 16 18 C22 18 26 22 26 28 L26 30 L6 30 Z"/></svg>',
     };
 
+    // directFilter: quando true, clicar na categoria FILTRA direto (sem dropdown).
+    // Usado pra sticker/charm/agent — não têm "modelos", são todos itens únicos.
     const WEAPONS = {
       knife:   { label: 'Faca',         items: ['★ Karambit','★ M9 Bayonet','★ Butterfly Knife','★ Bayonet','★ Flip Knife','★ Gut Knife','★ Huntsman Knife','★ Falchion Knife','★ Bowie Knife','★ Shadow Daggers','★ Navaja Knife','★ Stiletto Knife','★ Talon Knife','★ Ursus Knife','★ Classic Knife','★ Nomad Knife','★ Paracord Knife','★ Skeleton Knife','★ Survival Knife','★ Kukri Knife'] },
       gloves:  { label: 'Luvas',        items: ['★ Sport Gloves','★ Driver Gloves','★ Specialist Gloves','★ Moto Gloves','★ Bloodhound Gloves','★ Hand Wraps','★ Hydra Gloves','★ Broken Fang Gloves'] },
@@ -2159,9 +2161,9 @@ footer {
       smg:     { label: 'SMG',          items: ['MAC-10','MP9','MP7','MP5-SD','UMP-45','P90','PP-Bizon'] },
       shotgun: { label: 'Escopeta',     items: ['Nova','XM1014','Sawed-Off','MAG-7'] },
       mg:      { label: 'Metralhadora', items: ['M249','Negev'] },
-      sticker: { label: 'Adesivo',      items: ['(Use a busca pra achar stickers)'] },
-      charm:   { label: 'Charm',        items: ['(Use a busca pra achar charms)'] },
-      agent:   { label: 'Agente',       items: ['(Use a busca pra achar agentes)'] },
+      sticker: { label: 'Adesivo',      directFilter: 'sticker' },
+      charm:   { label: 'Charm',        directFilter: 'charm' },
+      agent:   { label: 'Agente',       directFilter: 'agent' },
     };
 
     const CSS = `
@@ -2206,6 +2208,23 @@ footer {
     }
     function toggleCat(key, onPick) {
       const cat = WEAPONS[key]; if (!cat) return;
+
+      // Categorias com directFilter (sticker/charm/agent) filtram direto SEM dropdown
+      if (cat.directFilter) {
+        document.querySelectorAll('.buff-cat').forEach(el => el.classList.remove('active'));
+        document.querySelector(`.buff-cat[data-key="${key}"]`)?.classList.add('active');
+        // Fecha dropdown caso esteja aberto
+        const dropdown = document.getElementById('buffDropdown');
+        dropdown.classList.remove('visible');
+        dropdown.innerHTML = '';
+        currentCategory = key;
+        if (typeof setCategoryFilter === 'function') {
+          setCategoryFilter(cat.label, cat.directFilter);
+        }
+        return;
+      }
+
+      // Comportamento original: abre dropdown com modelos
       const dropdown = document.getElementById('buffDropdown');
       document.querySelectorAll('.buff-cat').forEach(el => el.classList.remove('active'));
       if (currentCategory === key) {
@@ -2214,7 +2233,7 @@ footer {
       currentCategory = key;
       document.querySelector(`.buff-cat[data-key="${key}"]`)?.classList.add('active');
       dropdown.innerHTML = '';
-      cat.items.forEach(name => {
+      (cat.items || []).forEach(name => {
         const el = document.createElement('span');
         const isHint = name.startsWith('(');
         el.className = 'buff-weapon' + (isHint ? ' hint' : '');
@@ -2225,12 +2244,10 @@ footer {
       dropdown.classList.add('visible');
     }
     renderMenu('buffMenu', (weaponName) => {
-      // Novo fluxo: clica numa arma (ex: Karambit) → ativa filtro de arma,
-      // mostra sub-filter bar (Exterior + busca), filtra grid, rola pra ele.
+      // Clica num modelo específico (AK-47, Karambit, etc) → filtro de arma
       if (typeof setWeaponFilter === 'function') {
         setWeaponFilter(weaponName);
       } else {
-        // Fallback: só popula a busca (se setWeaponFilter não carregou)
         const input = document.getElementById('searchInput');
         if (input) {
           input.value = weaponName.replace(/^★\s*/, '');
@@ -2596,40 +2613,76 @@ let displayedSkins = [];
 let skinImages = {};
 
 // ============= WEAPON FILTER (BUFF-style) =============
-// Quando usuário escolhe uma arma no menu BUFF (ex: Karambit), ativa esse filtro.
-// Estado é independente de currentSearchQuery (que é a busca livre). A grid
-// filtra por AMBOS: nome da arma + wear selecionado + busca por nome dentro.
-let weaponFilter = null;     // ex: "Karambit" ou "★ Karambit"
-let weaponFilterWear = '';   // "Factory New" | "Minimal Wear" | ... | ""
-let weaponFilterName = '';   // busca livre dentro do filtro (ex: "Fade")
+// Dois tipos de filtro:
+//   - 'weapon': usuário escolheu modelo específico (ex: Karambit, AK-47). Tem wear.
+//   - 'category': sticker/charm/agent — filtra por TIPO do item. SEM wear.
+let weaponFilter = null;        // display label ("Karambit", "Agente", "Adesivo")
+let weaponFilterType = 'weapon'; // 'weapon' | 'agent' | 'sticker' | 'charm'
+let weaponFilterWear = '';
+let weaponFilterName = '';
 
+// Lista de "group names" que aparecem no final de nomes de agentes CS2.
+// Usada pra detectar: "Prof. Shahmat | Elite Crew" → agent, "AK-47 | Redline" → não.
+const AGENT_GROUP_NAMES = [
+  'Elite Crew','Professional','SWAT','NSWC SEAL','FBI','Phoenix',
+  'Sabre','Sabre Footsoldier','Balkan','Gendarmerie Nationale','Guerrilla Warfare',
+  'NZSAS','SAS','SEAL Frogman','TACP Cavalry','KSK','Spetsnaz','Nautilus',
+  'Brazilian 1st Battalion','FBI Sniper','FBI HRT','Ground Rebel',
+  'Sabre Footman','Seal Team 6','The Professionals'
+];
+
+function isAgent(name) {
+  if (!name) return false;
+  for (const g of AGENT_GROUP_NAMES) {
+    if (name.includes(' | ' + g)) return true;
+  }
+  return false;
+}
+function isSticker(name) { return /^Sticker\s*\|/i.test(name || '') || /^Sealed\s+Graffiti/i.test(name || ''); }
+function isCharm(name)   { return /^Charm\s*\|/i.test(name || ''); }
+
+// Chamado pelo menu BUFF quando usuário clica num modelo específico (weapon)
 function setWeaponFilter(weaponName) {
-  weaponFilter = weaponName;
+  _setFilterInternal(weaponName, 'weapon', weaponName.replace(/^★\s*/, ''));
+}
+
+// Chamado quando usuário clica numa CATEGORIA (Adesivo, Charm, Agente)
+function setCategoryFilter(label, type) {
+  _setFilterInternal(label, type, label);
+}
+
+function _setFilterInternal(label, type, searchQuery) {
+  weaponFilter = label;
+  weaponFilterType = type;
   weaponFilterWear = '';
   weaponFilterName = '';
-  // Limpa busca principal pra não conflitar com o filtro por arma
   const mainInput = document.getElementById('searchInput');
   if (mainInput) mainInput.value = '';
   currentSearchQuery = '';
   searchResults = [];
 
-  // Mostra o sub-filter bar + atualiza UI
   const bar = document.getElementById('weaponFilterBar');
   if (bar) bar.style.display = '';
-  const label = document.getElementById('wfbActiveLabel');
-  if (label) label.textContent = weaponName;
+  const labelEl = document.getElementById('wfbActiveLabel');
+  if (labelEl) labelEl.textContent = label;
   const wearSel = document.getElementById('wfbWearFilter');
   if (wearSel) wearSel.value = '';
   const nameIn = document.getElementById('wfbNameFilter');
   if (nameIn) nameIn.value = '';
 
-  // Atualiza título da seção
-  const header = document.querySelector('.section-title-inline');
-  if (header) header.innerHTML = `🔥 <span style="color: var(--primary-light);">${weaponName}</span> — variantes disponíveis`;
+  // Esconde dropdown de Exterior quando categoria não tem wear (sticker/charm/agent)
+  const wearWrap = document.querySelector('.wfb-select-wrap');
+  if (wearWrap) wearWrap.style.display = type === 'weapon' ? '' : 'none';
 
-  // Busca no backend pra trazer TODAS as variantes da arma (Youpin completo)
+  const header = document.querySelector('.section-title-inline');
+  if (header) {
+    const noun = type === 'agent' ? 'agentes' : type === 'sticker' ? 'stickers' : type === 'charm' ? 'charms' : 'variantes';
+    header.innerHTML = `🔥 <span style="color: var(--primary-light);">${label}</span> — ${noun} disponíveis`;
+  }
+
+  // Busca no backend pra trazer items da categoria
   if (typeof searchCatalogBackend === 'function') {
-    searchCatalogBackend(weaponName.replace(/^★\s*/, ''));
+    searchCatalogBackend(searchQuery);
   }
 
   renderSkins();
@@ -2638,6 +2691,7 @@ function setWeaponFilter(weaponName) {
 
 function clearWeaponFilter() {
   weaponFilter = null;
+  weaponFilterType = 'weapon';
   weaponFilterWear = '';
   weaponFilterName = '';
   const bar = document.getElementById('weaponFilterBar');
@@ -2659,24 +2713,23 @@ function onWfbNameFilterChange(value) {
   renderSkins();
 }
 
-// Aplica o filtro de weapon (nome da arma + wear + busca interna) nos skins.
-// Retorna true se o skin deve aparecer no grid considerando o filtro ativo.
+// Aplica o filtro ativo (weapon ou category).
 function weaponFilterMatches(skin) {
   if (!weaponFilter) return true;
-  const name = (skin.name || '').toLowerCase();
-  // 1. Nome da arma — tem que conter "karambit", "ak-47 |", etc
+  const name = skin.name || '';
+  const lower = name.toLowerCase();
+
+  // Busca livre por nome (comum a todos os tipos)
+  if (weaponFilterName && !lower.includes(weaponFilterName)) return false;
+
+  if (weaponFilterType === 'agent')   return isAgent(name);
+  if (weaponFilterType === 'sticker') return isSticker(name);
+  if (weaponFilterType === 'charm')   return isCharm(name);
+
+  // weaponFilterType === 'weapon' — filtra por nome da arma + wear
   const weaponKey = weaponFilter.replace(/^★\s*/, '').toLowerCase();
-  // Pra facas/luvas, checa se começa com ★ (item de faca/luva)
-  if (weaponFilter.startsWith('★')) {
-    if (!name.includes(weaponKey)) return false;
-  } else {
-    // Pra armas normais, checa "arma |" (ex: "ak-47 |")
-    if (!name.includes(weaponKey)) return false;
-  }
-  // 2. Wear (se filtro ativo)
-  if (weaponFilterWear && !name.includes('(' + weaponFilterWear.toLowerCase() + ')')) return false;
-  // 3. Busca livre dentro do filtro
-  if (weaponFilterName && !name.includes(weaponFilterName)) return false;
+  if (!lower.includes(weaponKey)) return false;
+  if (weaponFilterWear && !lower.includes('(' + weaponFilterWear.toLowerCase() + ')')) return false;
   return true;
 }
 
