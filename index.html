@@ -2558,8 +2558,15 @@ let lastSearchQuery = '';   // pra evitar refetch da mesma query
 
 async function loadFirestoreSkins() {
   try {
-    const snapshot = await db.collection('skins').where('active', '==', true).get();
-    firestoreSkins = snapshot.docs.map((doc, i) => {
+    // Busca duas coleções em paralelo:
+    //   'skins' = skins manualmente cadastradas pelo admin
+    //   'stock' = skins sincronizadas do inventário Steam do Gu (source: 'steam_inventory')
+    const [skinsSnap, stockSnap] = await Promise.all([
+      db.collection('skins').where('active', '==', true).get(),
+      db.collection('stock').where('active', '==', true).where('inStock', '==', true).get(),
+    ]);
+
+    const manual = skinsSnap.docs.map((doc, i) => {
       const data = doc.data();
       return {
         id: 1000 + i,
@@ -2577,6 +2584,44 @@ async function loadFirestoreSkins() {
         sellerId: data.sellerId || ''
       };
     });
+
+    // Stock (inventário Steam do Gu). Backend já calcula sellPriceBRL usando a config
+    // settings/stockPricing (modo surcharge OU percent, configurado no admin aba Inventário).
+    const FALLBACK_RATE = 0.78;  // só usado se sellPriceBRL estiver ausente (compat com syncs antigos)
+    const stockItems = stockSnap.docs.map((doc, i) => {
+      const data = doc.data();
+      const buyPriceCNY = parseFloat(data.buyPriceCNY) || 0;
+      const sellFromBackend = parseFloat(data.sellPriceBRL) || 0;
+      const sale = sellFromBackend > 0
+        ? sellFromBackend
+        : (buyPriceCNY > 0
+            ? Math.round(buyPriceCNY * FALLBACK_RATE * 1.10 * 100) / 100
+            : (parseFloat(data.buyPriceBRL) || 0));
+      // Strikethrough = preço Steam convertido (aprox youpin × 1.35 × fator base)
+      const original = buyPriceCNY > 0
+        ? Math.round(buyPriceCNY * 1.35 * FALLBACK_RATE * 100) / 100
+        : sale;
+      return {
+        id: 5000 + i,
+        firestoreId: doc.id,
+        name: data.name,
+        wear: data.wear || 'FT',
+        price: sale,
+        originalPrice: original,
+        rarity: data.rarity || 'Mil-Spec',
+        inStock: true,              // Full delivery
+        float: 0,
+        discount: original > sale && sale > 0
+          ? Math.round((1 - sale / original) * 100)
+          : 0,
+        image: data.iconUrl || '',
+        source: 'steam_inventory',
+        sellerName: data.ownerSteamName || 'Gumax',
+      };
+    }).filter(s => s.price > 0); // só mostra se tem preço válido
+
+    firestoreSkins = [...manual, ...stockItems];
+    console.log(`[firestore] ${manual.length} manual + ${stockItems.length} stock = ${firestoreSkins.length} total`);
     renderSkins();
   } catch (e) {
     console.log('Firestore skins load error:', e);
