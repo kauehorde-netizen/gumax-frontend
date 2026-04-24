@@ -584,15 +584,36 @@ async function doLogin(provider = 'steam') {
 
 // Steam OpenID callback handler: detecta ?steam_callback=1, extrai openid.* da URL,
 // POSTa pro backend pra validar a assinatura, recebe customToken e loga no Firebase.
+// Banner de erro visível pra diagnosticar problemas silenciosos (backend 500, token inválido).
+function _showSteamAuthError(msg) {
+  console.error('[Steam callback]', msg);
+  let banner = document.getElementById('steamAuthError');
+  if (!banner) {
+    banner = document.createElement('div');
+    banner.id = 'steamAuthError';
+    banner.style.cssText = 'position:fixed;top:0;left:0;right:0;background:#dc2626;color:#fff;padding:12px;z-index:9999;font:14px sans-serif;text-align:center;';
+    document.body.prepend(banner);
+  }
+  banner.textContent = '[Steam login] ' + msg;
+}
+
 (async function handleSteamCallback() {
   const params = new URLSearchParams(location.search);
-  if (params.get('steam_callback') !== '1') return;
+  if (params.get('steam_callback') !== '1') {
+    console.log('[Steam callback] sem steam_callback=1 — skip');
+    return;
+  }
+  console.log('[Steam callback] detectado, URL:', location.href);
 
   const openidParams = {};
   for (const [k, v] of params.entries()) {
     if (k.startsWith('openid.')) openidParams[k] = v;
   }
-  if (!openidParams['openid.claimed_id']) return;
+  if (!openidParams['openid.claimed_id']) {
+    _showSteamAuthError('openid.claimed_id ausente. Steam não retornou identidade.');
+    return;
+  }
+  console.log('[Steam callback] openid params:', Object.keys(openidParams).length);
 
   try {
     const r = await fetch(`${API_BASE}/api/steam-auth`, {
@@ -600,15 +621,33 @@ async function doLogin(provider = 'steam') {
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ action: 'verify', params: openidParams }),
     });
-    const d = await r.json();
+    console.log('[Steam callback] backend status:', r.status);
+    const text = await r.text();
+    let d;
+    try { d = JSON.parse(text); }
+    catch {
+      _showSteamAuthError('backend retornou HTML em vez de JSON. Status ' + r.status);
+      return;
+    }
+    if (!r.ok) {
+      _showSteamAuthError('backend HTTP ' + r.status + ': ' + (d.error || 'erro'));
+      return;
+    }
     if (d.success && d.firebaseCustomToken) {
-      await auth.signInWithCustomToken(d.firebaseCustomToken);
-      showToast('Login Steam bem-sucedido!', 'success');
+      console.log('[Steam callback] recebeu customToken, signIn...');
+      try {
+        await auth.signInWithCustomToken(d.firebaseCustomToken);
+        console.log('[Steam callback] ✅ signIn OK, uid:', auth.currentUser?.uid);
+        showToast('Login Steam bem-sucedido!', 'success');
+      } catch (signInErr) {
+        _showSteamAuthError('Firebase signIn: ' + signInErr.code + ' — ' + signInErr.message);
+        return;
+      }
     } else {
-      showToast('Falha no login Steam: ' + (d.error || 'inválido'), 'error');
+      _showSteamAuthError('backend não retornou customToken: ' + (d.error || JSON.stringify(d).substring(0,200)));
     }
   } catch (e) {
-    showToast('Erro Steam: ' + e.message, 'error');
+    _showSteamAuthError('fetch erro: ' + e.message);
   }
   // Limpa openid.* e steam_callback da URL
   const url = new URL(location.href);
