@@ -405,10 +405,14 @@ body {
 
 <!-- Main content (hidden until logged in) -->
 <div id="mainContent" class="hidden">
+  <!-- BUFF-style category picker: clica numa categoria → mostra modelos →
+       clica num modelo → pre-preenche a busca e dispara autocomplete. -->
+  <div id="buffMenu"></div>
+
   <div class="search-shell" style="position:relative;">
     <div class="search-box">
       <span class="search-icon">🔍</span>
-      <input type="text" class="search-input" id="skinSearch" placeholder='Comece a digitar: "awp wild" e escolha a variante...'
+      <input type="text" class="search-input" id="skinSearch" placeholder='Ou digite: "awp wild" e escolha a variante...'
              autocomplete="off"
              oninput="onAnaliseSearchInput(this.value)"
              onkeydown="onAnaliseSearchKeyDown(event)"
@@ -416,9 +420,30 @@ body {
              onblur="setTimeout(hideAnaliseSuggestions, 180)">
     </div>
     <div id="analiseSuggestions" class="search-suggestions"></div>
-    <p class="search-hint">Escolha uma variante específica (float/wear e StatTrak™ mudam TUDO na análise). Análise básica é grátis.</p>
-    <p style="font-size:10px;color:rgba(139,92,246,.5);margin-top:6px;text-align:center;">analise v3-refinement (float slider + pattern + Doppler phase)</p>
+    <p class="search-hint">Escolha pelo menu ou digite — depois selecione uma variante (wear muda TUDO na análise). Análise básica é grátis.</p>
+    <p style="font-size:10px;color:rgba(139,92,246,.5);margin-top:6px;text-align:center;">analise v4-buff-menu</p>
   </div>
+
+  <script src="buff-menu.js"></script>
+  <script>
+    // Quando o user clica num modelo no menu BUFF, popula a busca e dispara autocomplete
+    document.addEventListener('DOMContentLoaded', () => {
+      if (window.BuffMenu) {
+        BuffMenu.init('buffMenu', {
+          onPick: (weaponName) => {
+            const input = document.getElementById('skinSearch');
+            if (input) {
+              // Remove ★ pra busca funcionar melhor (★ é facas/luvas — backend lida)
+              const query = weaponName.replace(/^★\s*/, '');
+              input.value = query;
+              input.focus();
+              fetchAnaliseSuggestions(query);
+            }
+          }
+        });
+      }
+    });
+  </script>
 
   <style>
     .search-suggestions {
