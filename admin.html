@@ -1259,18 +1259,23 @@ const API_BASE_ADMIN = 'https://gumax-backend-production.up.railway.app';
 // ADMIN_API_KEY fica só no Railway; no frontend admin pedimos manualmente via prompt ou lemos de um local seguro.
 // Pra simplificar, armazenamos em sessionStorage após o primeiro input.
 
-// Retorna a admin key sem perguntar (silencioso). Usa só quando já existe em sessionStorage.
-function getAdminKeySilent() {
-  return sessionStorage.getItem('gumax_admin_key') || '';
+// Pega o Firebase ID token do user logado (admin). Zero prompt — usa a sessão Firebase
+// que já tá ativa no painel (gumaxskins@gmail.com / cauehorde@gmail.com).
+// Backend valida o token + email na whitelist.
+async function getAdminKeySilent() {
+  try {
+    const user = firebase.auth().currentUser;
+    if (!user) return '';
+    return await user.getIdToken();
+  } catch { return ''; }
 }
-// Pede a admin key com prompt — SÓ chamar quando o user explicitamente pediu pra salvar/sincronizar.
-function getAdminKey() {
-  let k = sessionStorage.getItem('gumax_admin_key');
-  if (!k) {
-    k = prompt('Cole a ADMIN_API_KEY pra autorizar esta ação (só nesta sessão):');
-    if (k) sessionStorage.setItem('gumax_admin_key', k.trim());
+// Alias — mantido pra compat com código existente. Aqui já era silencioso via Firebase.
+async function getAdminKey() {
+  const token = await getAdminKeySilent();
+  if (!token) {
+    alert('Você precisa estar logado como admin (Google) pra fazer essa ação.');
   }
-  return k;
+  return token;
 }
 
 async function loadInventoryPage() {
@@ -1363,7 +1368,7 @@ async function removeStoreSteamId(id) {
 }
 
 async function syncInventoryNow() {
-  const key = getAdminKey();
+  const key = await getAdminKey();
   if (!key) return;
   const btn = document.getElementById('syncBtn');
   const status = document.getElementById('syncStatus');
@@ -1613,7 +1618,7 @@ async function fetchLiveExchangeRate() {
 // não faz prompt. User clica em "Recarregar" se quiser forçar prompt.
 async function loadPricing(forcePrompt = false) {
   setPricingDefaults(); // sempre popula defaults primeiro
-  const key = forcePrompt ? getAdminKey() : getAdminKeySilent();
+  const key = await (forcePrompt ? getAdminKey() : getAdminKeySilent());
   if (!key) return; // sem key, fica só com defaults — sem prompt chato
 
   try {
@@ -1657,7 +1662,7 @@ async function loadPricing(forcePrompt = false) {
 }
 
 async function savePricing() {
-  const key = getAdminKey();
+  const key = await getAdminKey();
   if (!key) return;
   const mode = document.getElementById('pricingModePercent').checked ? 'percent' : 'surcharge';
   const surchargeBRL = parseFloat(document.getElementById('pricingSurcharge').value) || 0;
