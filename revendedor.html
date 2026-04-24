@@ -787,9 +787,18 @@ async function loginWithGoogle() {
 function checkAuth() {
   auth.onAuthStateChanged(async user => {
     if (user) {
+      const email = (user.email || '').toLowerCase();
+      // IMPORTANTE: Firebase Auth compartilha sessão entre abas. Se o user
+      // logou via Steam (no vender.html/analise.html) em outra aba, vai cair
+      // aqui SEM email — e não queremos auto-registrar ele como revendedor
+      // nem mostrar o dashboard. Só processa users com email (login Google).
+      if (!email) {
+        document.getElementById('loginScreen').style.display = 'flex';
+        return;
+      }
       currentUser = {
         uid: user.uid,
-        email: (user.email || '').toLowerCase(),
+        email,
         name: user.displayName || 'Revendedor',
         avatar: user.photoURL || '',
         loginTime: Date.now()
