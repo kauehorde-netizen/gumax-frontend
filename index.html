@@ -641,11 +641,31 @@ nav {
   padding: 24px;
   margin-bottom: 20px;
 }
-.skin-grid-full .skin-card {
-  border: 1px solid rgba(250, 204, 21, .2);
+.skin-grid-full .skin-card,
+.skin-card.is-full {
+  border: 2px solid rgba(250, 204, 21, .45);
+  box-shadow: 0 0 0 0 rgba(250, 204, 21, 0), 0 4px 16px rgba(250, 204, 21, .08);
+  position: relative;
 }
-.skin-grid-full .skin-card:hover {
+.skin-grid-full .skin-card:hover,
+.skin-card.is-full:hover {
   border-color: var(--accent-yellow);
+  box-shadow: 0 0 0 1px rgba(250, 204, 21, .6), 0 8px 24px rgba(250, 204, 21, .18);
+}
+/* Pequeno selo "⚡ FULL" no canto do card pra identificar visualmente */
+.skin-card.is-full::before {
+  content: '⚡ FULL';
+  position: absolute;
+  top: -1px; right: -1px;
+  padding: 4px 10px;
+  font-size: 10px;
+  font-weight: 800;
+  letter-spacing: 0.6px;
+  color: #0a0a0a;
+  background: var(--accent-yellow, #facc15);
+  border-radius: 0 14px 0 14px;
+  z-index: 2;
+  pointer-events: none;
 }
 .badge-live {
   display: inline-flex;
@@ -2124,33 +2144,23 @@ footer {
   </div>
 </section>
 
-<!-- SECTION: ENTREGA FULL (destaque) -->
-<section class="grid-section section-full" id="section-full">
+<!-- SECTION: CATÁLOGO UNIFICADO (Full + Normal misturados, Full tem borda destacada) -->
+<section class="grid-section" id="section-catalog">
   <div class="section-header-inline">
     <div>
-      <h2 class="section-title-inline">⚡ <span style="color: var(--accent-yellow);">Entrega Full</span> — em até 30 min</h2>
-      <p class="section-subtitle-inline">Skins em estoque próprio. Pagamento aprovado, entrega direto no seu inventário Steam.</p>
+      <h2 class="section-title-inline">🔥 <span style="color: var(--primary-light);">Catálogo</span> — milhares de skins</h2>
+      <p class="section-subtitle-inline">
+        Skins com <span style="color: var(--accent-yellow); font-weight: 600;">⚡ Entrega Full (30 min)</span> têm borda amarela.
+        Demais itens têm entrega em até 12h via parceiros.
+      </p>
     </div>
     <span class="badge-live">
       <span class="dot-live"></span>
-      <span id="fullCount">0</span> disponíveis
+      <span id="fullCount">0</span> Full disponíveis
     </span>
   </div>
-  <div class="skin-grid skin-grid-full" id="skinGridFull">
-    <!-- Stock / entrega Full -->
-  </div>
-</section>
-
-<!-- SECTION: MAIS VENDIDAS YOUPIN (entrega 12h) -->
-<section class="grid-section section-youpin">
-  <div class="section-header-inline">
-    <div>
-      <h2 class="section-title-inline">🔥 <span style="color: var(--primary-light);">Mais vendidas</span> — entrega em até 12h</h2>
-      <p class="section-subtitle-inline">Catálogo completo com milhares de skins populares. Entrega importada via parceiros.</p>
-    </div>
-  </div>
-  <div class="skin-grid" id="skinGridYoupin">
-    <!-- Top sellers Youpin -->
+  <div class="skin-grid" id="skinGridUnified">
+    <!-- Catálogo completo (Full + Youpin juntos) -->
   </div>
   <button class="load-more" onclick="loadMoreYoupin()" id="loadMoreYoupinBtn" style="display: none;">Carregar mais</button>
 </section>
@@ -2759,13 +2769,67 @@ function onSearchInput() {
   _searchDebounce = setTimeout(() => fetchSuggestions(value), 250);
 }
 
+// Fallback local: filtra dos skins já carregados se backend falhar
+function localSuggestions(query, limit = 10) {
+  const q = (query || '').toLowerCase().trim();
+  if (!q) return [];
+  const all = getAllSkins();
+  const seen = new Set();
+  const matches = [];
+  for (const s of all) {
+    const name = s.name;
+    if (!name || seen.has(name)) continue;
+    if (name.toLowerCase().includes(q)) {
+      matches.push(name);
+      seen.add(name);
+      if (matches.length >= limit) break;
+    }
+  }
+  return matches;
+}
+
 async function fetchSuggestions(query) {
+  // Tenta backend com timeout de 800ms; se demorar, cai pro local
+  let resolved = false;
+  const localFallback = setTimeout(() => {
+    if (resolved) return;
+    const local = localSuggestions(query);
+    if (local.length) {
+      console.log('[suggest] local fallback:', local.length);
+      renderSuggestions(local);
+    }
+  }, 800);
+
   try {
     const r = await fetch(`${API_BASE}/api/pricempire/suggest?q=${encodeURIComponent(query)}&limit=10`);
-    if (!r.ok) { hideSuggestions(); return; }
+    resolved = true;
+    clearTimeout(localFallback);
+    if (!r.ok) {
+      console.log('[suggest] backend returned', r.status, '— using local');
+      const local = localSuggestions(query);
+      if (local.length) renderSuggestions(local);
+      else hideSuggestions();
+      return;
+    }
     const data = await r.json();
-    renderSuggestions(data.suggestions || []);
-  } catch { hideSuggestions(); }
+    const suggestions = data.suggestions || [];
+    if (suggestions.length) {
+      console.log('[suggest] backend:', suggestions.length);
+      renderSuggestions(suggestions);
+    } else {
+      // Backend sem match — tenta local
+      const local = localSuggestions(query);
+      if (local.length) renderSuggestions(local);
+      else hideSuggestions();
+    }
+  } catch (e) {
+    resolved = true;
+    clearTimeout(localFallback);
+    console.log('[suggest] fetch error, using local:', e.message);
+    const local = localSuggestions(query);
+    if (local.length) renderSuggestions(local);
+    else hideSuggestions();
+  }
 }
 
 function positionSuggestionsBox() {
@@ -2903,48 +2967,39 @@ function renderSkins() {
   });
 
   displayedSkins = filtered;
-  const gridFull = document.getElementById('skinGridFull');
-  const gridYoupin = document.getElementById('skinGridYoupin');
-  const sectionFull = document.getElementById('section-full');
-  if (!gridFull || !gridYoupin) return;
+  const grid = document.getElementById('skinGridUnified');
+  if (!grid) return;
 
-  const fullItems = filtered.filter(s => s.inStock || s.source === 'steam_inventory');
-  const youpinItems = filtered.filter(s => !s.inStock && s.source !== 'steam_inventory');
+  // Identifica itens Full (estoque próprio do Gu, entrega 30min) vs Youpin (parceiros 12h)
+  const isFullItem = (s) => s.inStock || s.source === 'steam_inventory';
 
-  // Grid Full (destaque)
-  gridFull.innerHTML = '';
-  if (fullItems.length === 0) {
-    gridFull.innerHTML = `
-      <div style="grid-column: 1 / -1; padding: 40px 24px; text-align: center; background: rgba(250, 204, 21, 0.04); border: 1px dashed rgba(250, 204, 21, 0.3); border-radius: 12px;">
-        <div style="font-size: 40px; margin-bottom: 10px; opacity: 0.6;">⚡</div>
-        <h3 style="font-size: 17px; font-weight: 700; margin-bottom: 6px;">Sem skins em estoque próprio ainda</h3>
-        <p style="color: var(--text-secondary); max-width: 380px; margin: 0 auto; font-size: 13px; line-height: 1.5;">
-          ${currentSearchQuery ? 'Nenhum match de "Entrega Full" pra essa busca.' : 'Em breve skins em estoque pra entrega em 30 min. Enquanto isso, veja as opções abaixo com entrega em até 12h.'}
-        </p>
-      </div>
-    `;
-  } else {
-    fullItems.forEach((skin, i) => gridFull.appendChild(createSkinCard(skin, i)));
-  }
+  // Ordena: Full vem primeiro (mais relevante), depois Youpin
+  const sorted = [...filtered].sort((a, b) => {
+    const fa = isFullItem(a) ? 0 : 1;
+    const fb = isFullItem(b) ? 0 : 1;
+    return fa - fb;
+  });
+
+  const fullCount = filtered.filter(isFullItem).length;
   const fullCountEl = document.getElementById('fullCount');
-  if (fullCountEl) fullCountEl.textContent = fullItems.length;
+  if (fullCountEl) fullCountEl.textContent = fullCount;
 
-  // Grid Youpin / Normal
-  gridYoupin.innerHTML = '';
-  if (youpinItems.length === 0) {
-    gridYoupin.innerHTML = `
-      <div style="grid-column: 1 / -1; padding: 40px 24px; text-align: center; background: var(--bg-card); border: 1px dashed var(--border); border-radius: 12px;">
-        <div style="font-size: 40px; margin-bottom: 10px; opacity: 0.6;">🔥</div>
+  // Render
+  grid.innerHTML = '';
+  if (sorted.length === 0) {
+    grid.innerHTML = `
+      <div style="grid-column: 1 / -1; padding: 50px 24px; text-align: center; background: var(--bg-card); border: 1px dashed var(--border); border-radius: 12px;">
+        <div style="font-size: 40px; margin-bottom: 10px; opacity: 0.6;">🔍</div>
         <h3 style="font-size: 17px; font-weight: 700; margin-bottom: 6px;">
-          ${currentSearchQuery ? 'Nenhum match pra essa busca' : 'Carregando catálogo...'}
+          ${currentSearchQuery ? 'Nenhum resultado pra "' + currentSearchQuery + '"' : 'Carregando catálogo...'}
         </h3>
         <p style="color: var(--text-secondary); font-size: 13px;">
-          ${currentSearchQuery ? 'Tente variações do nome (ex: "ak redline ft")' : 'As skins mais vendidas do mercado aparecem aqui em instantes.'}
+          ${currentSearchQuery ? 'Tente variações do nome (ex: "ak redline ft") ou limpe a busca.' : 'As skins mais vendidas aparecem aqui em instantes.'}
         </p>
       </div>
     `;
   } else {
-    youpinItems.forEach((skin, i) => gridYoupin.appendChild(createSkinCard(skin, i)));
+    sorted.forEach((skin, i) => grid.appendChild(createSkinCard(skin, i)));
   }
 
   document.getElementById('resultCount').textContent = filtered.length;
@@ -2952,7 +3007,8 @@ function renderSkins() {
 
 function createSkinCard(skin, index) {
   const div = document.createElement('div');
-  div.className = 'skin-card';
+  const isFull = skin.inStock || skin.source === 'steam_inventory';
+  div.className = 'skin-card' + (isFull ? ' is-full' : '');
   div.style.animationDelay = (index * 0.05) + 's';
   div.onclick = () => openSkinModal(skin);
 
