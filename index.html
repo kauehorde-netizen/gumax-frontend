@@ -2363,6 +2363,12 @@ const firebaseConfig = {
 firebase.initializeApp(firebaseConfig);
 const db = firebase.firestore();
 const auth = firebase.auth();
+// Força persistência LOCAL explícita — evita que a sessão seja perdida entre
+// abas ou por timing issues. É o default do Firebase, mas set explícito ajuda
+// em casos de regressão.
+auth.setPersistence(firebase.auth.Auth.Persistence.LOCAL).catch(e => {
+  console.warn('[auth] setPersistence LOCAL falhou:', e.message);
+});
 
 // ============= CONSTANTS =============
 const API_BASE = 'https://gumax-backend-production.up.railway.app';
