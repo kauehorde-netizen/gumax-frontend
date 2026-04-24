@@ -421,7 +421,7 @@ body {
     </div>
     <div id="analiseSuggestions" class="search-suggestions"></div>
     <p class="search-hint">Escolha pelo menu ou digite — depois selecione uma variante (wear muda TUDO na análise). Análise básica é grátis.</p>
-    <p style="font-size:10px;color:rgba(139,92,246,.5);margin-top:6px;text-align:center;">analise v7-refinement-top</p>
+    <p style="font-size:10px;color:rgba(139,92,246,.5);margin-top:6px;text-align:center;">analise v8-full-direct</p>
   </div>
 
   <script>
@@ -695,7 +695,7 @@ auth.onAuthStateChanged(async (user) => {
 
     // Se a URL pediu auto-run (veio de um card da loja), dispara a análise automática
     if (_autoRun && _prefName) {
-      setTimeout(() => runAnalysis('basic'), 400);
+      setTimeout(() => runAnalysis('full'), 400);
     }
   } else {
     currentUser = null; idToken = null;
@@ -909,8 +909,9 @@ function hideAnaliseSuggestions() {
 function selectAnaliseSuggestion(name) {
   document.getElementById('skinSearch').value = name;
   hideAnaliseSuggestions();
-  // Dispara análise básica imediatamente (é grátis)
-  runAnalysis('basic');
+  // Dispara análise FULL direto (cobra 2 créditos logo de cara — sem preview).
+  // Se user já pagou por essa skin nas últimas 24h, backend não cobra de novo.
+  runAnalysis('full');
 }
 
 function onAnaliseSearchKeyDown(event) {
@@ -930,7 +931,7 @@ function onAnaliseSearchKeyDown(event) {
       fetchAnaliseSuggestions(v);
       return;
     }
-    runAnalysis('basic');
+    runAnalysis('full');
   } else if (event.key === 'ArrowDown' && visible) {
     event.preventDefault();
     _sugIndex = Math.min(_sugIndex + 1, _sugItems.length - 1);
@@ -959,7 +960,7 @@ function highlightAnaliseSuggestion() {
 let _lastAnalysisData = null;
 let _refinement = { floatvalue: null, paintseed: null, paintindex: null };
 
-async function runAnalysis(depth = 'basic', refinement = null) {
+async function runAnalysis(depth = 'full', refinement = null) {
   const name = document.getElementById('skinSearch').value.trim();
   if (!name) { showToast('Digite o nome da skin', 'error'); return; }
   if (!idToken) { showToast('Entre no site pra analisar', 'error'); return; }
@@ -1066,19 +1067,10 @@ function buildRefinementPanel(data) {
           <div style="font-size:12px;color:var(--text-secondary);margin-top:4px;">Pattern #${p.blueGem.paintseed} · Multiplicador ×${p.blueGem.priceFactor}</div>
         </div>`);
     }
-    if (p.basePriceBRL && p.adjustedPriceBRL && p.combinedPriceFactor !== 1) {
-      const sign = p.combinedPriceFactor > 1 ? '+' : '';
-      cards.push(`
-        <div style="padding:14px;background:linear-gradient(135deg,rgba(139,92,246,.15),rgba(236,72,153,.1));border-radius:10px;border-left:4px solid #a855f7;grid-column:1/-1;">
-          <div style="font-size:11px;text-transform:uppercase;color:var(--text-muted);letter-spacing:.5px;margin-bottom:6px;">PREÇO ESTIMADO COM REFINAMENTO</div>
-          <div style="display:flex;align-items:baseline;gap:12px;flex-wrap:wrap;">
-            <span style="font-size:14px;color:var(--text-muted);text-decoration:line-through;">R$ ${p.basePriceBRL.toFixed(2).replace('.', ',')}</span>
-            <span style="font-size:26px;font-weight:800;color:#a855f7;">R$ ${p.adjustedPriceBRL.toFixed(2).replace('.', ',')}</span>
-            <span style="font-size:13px;color:${p.combinedPriceFactor > 1 ? '#10b981' : '#ef4444'};font-weight:700;">${sign}${((p.combinedPriceFactor - 1) * 100).toFixed(0)}%</span>
-          </div>
-          <div style="font-size:11px;color:var(--text-muted);margin-top:6px;">Heurística conservadora baseada em float tier + Doppler phase + Blue Gem tier. Mercado real pode variar.</div>
-        </div>`);
-    }
+    // Card de preço estimado removido — valores eram heurísticos (multiplicador ×8 pra Blue Gem, etc).
+    // Usuário vê os PREÇOS REAIS na tabela "Análise completa" (Buff, Youpin, C5Game, CSFloat, etc) +
+    // os tiers acima (info sobre raridade). Pattern+float específicos requerem scraping live de
+    // listings — disponível em versão futura.
     if (cards.length) {
       patternHtml = `<div style="margin-top:18px;"><h3 style="font-size:14px;margin-bottom:10px;color:var(--primary-light);">💎 Análise de Pattern/Float</h3><div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:12px;">${cards.join('')}</div></div>`;
     }
@@ -1316,9 +1308,10 @@ function renderResult(data) {
           </div>` : ''}
       </div>
     `;
-  } else {
-    html += renderLockedSection('full', 'Análise completa + Recomendação', 'COMPRAR / ESPERAR / EVITAR + breakdown de 6 marketplaces + Gumax Shield (48h).', 2);
   }
+  // Não há mais locked section pra 'full' — análise já roda full de cara (2 créditos cobrados
+  // imediatamente). Se data.breakdown estiver vazio, é porque o backend retornou um erro —
+  // mensagem de erro já foi mostrada acima.
 
   // HISTORY (if paid) — aceita tanto {points: []} (novo) quanto array direto (legacy)
   const historyPoints = Array.isArray(data.history) ? data.history
