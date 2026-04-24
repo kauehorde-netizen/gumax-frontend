@@ -488,10 +488,12 @@ auth.onAuthStateChanged(async (user) => {
   if (user) {
     currentUser = user;
     idToken = await user.getIdToken();
-    document.getElementById('loginBtn').classList.add('hidden');
+    // Todos com optional chaining pra não matar o handler se algum elemento não
+    // existir (ex: analise.html só tem loginSteamBtn, não tem loginBtn).
+    document.getElementById('loginBtn')?.classList.add('hidden');
     document.getElementById('loginSteamBtn')?.classList.add('hidden');
-    document.getElementById('creditWidget').classList.remove('hidden');
-    document.getElementById('userWidget').classList.remove('hidden');
+    document.getElementById('creditWidget')?.classList.remove('hidden');
+    document.getElementById('userWidget')?.classList.remove('hidden');
     // Nome + avatar: tenta provider → Firestore users/{uid} → refresh Steam → fallback
     let displayName = user.displayName || user.email?.split('@')[0] || '';
     let photoURL = user.photoURL || '';
@@ -555,13 +557,13 @@ auth.onAuthStateChanged(async (user) => {
     }
   } else {
     currentUser = null; idToken = null;
-    document.getElementById('loginBtn').classList.remove('hidden');
+    document.getElementById('loginBtn')?.classList.remove('hidden');
     document.getElementById('loginSteamBtn')?.classList.remove('hidden');
-    document.getElementById('creditWidget').classList.add('hidden');
-    document.getElementById('planWidget').classList.add('hidden');
-    document.getElementById('userWidget').classList.add('hidden');
-    document.getElementById('loginEmpty').classList.remove('hidden');
-    document.getElementById('mainContent').classList.add('hidden');
+    document.getElementById('creditWidget')?.classList.add('hidden');
+    document.getElementById('planWidget')?.classList.add('hidden');
+    document.getElementById('userWidget')?.classList.add('hidden');
+    document.getElementById('loginEmpty')?.classList.remove('hidden');
+    document.getElementById('mainContent')?.classList.add('hidden');
   }
 });
 
