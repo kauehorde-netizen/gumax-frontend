@@ -2751,21 +2751,14 @@ let _suggestionIndex = -1;
 
 function onSearchInput() {
   const value = document.getElementById('searchInput').value;
+  currentSearchQuery = value.toLowerCase();
   document.getElementById('searchClear').style.display = value ? 'block' : 'none';
 
-  // NÃO filtra o grid enquanto user digita — só mostra autocomplete.
-  // Filtro só rola quando user clica numa sugestão ou aperta Enter.
-  // Se o campo ficou vazio, limpa o filtro pra mostrar todas as skins de novo.
-  if (!value) {
-    currentSearchQuery = '';
-    renderSkins();
-    hideSuggestions();
-    return;
-  }
+  // Filtra o grid E mostra autocomplete ao mesmo tempo
+  renderSkins();
 
-  // Autocomplete com debounce de 250ms
   clearTimeout(_searchDebounce);
-  if (value.length < 2) { hideSuggestions(); return; }
+  if (!value || value.length < 2) { hideSuggestions(); return; }
   _searchDebounce = setTimeout(() => fetchSuggestions(value), 250);
 }
 
