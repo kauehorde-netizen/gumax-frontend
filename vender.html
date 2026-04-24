@@ -347,6 +347,7 @@ nav { display: flex; gap: 32px; flex: 1; margin-left: 48px; }
 
 <main class="page">
   <div class="page-header">
+    <div style="font-size: 10px; color: rgba(139,92,246,0.4); margin-bottom: 4px;">vender v2-steamid-fix</div>
     <h1 class="page-title">
       💰 <span class="page-title-gradient">Venda suas skins</span> com confiança
     </h1>
@@ -422,14 +423,37 @@ auth.onAuthStateChanged(async user => {
   currentUser = user;
   renderHeader();
   if (user) {
-    steamId = user.providerData?.[0]?.uid || user.uid;
-    // Busca o perfil no Firestore (pra pegar steamId real + PIX salvo)
+    // Pra vender skin precisamos do SteamID64 (17 dígitos). Quando o user loga
+    // via Steam OpenID, o backend cria um Firebase custom token com UID = steamId
+    // e salva a claim 'steamId' no token. Quando loga via Google (ex: admin),
+    // user.uid é um ID Firebase random que NÃO é SteamID.
+    steamId = null;
+    // 1) Se user.uid for 17 dígitos (login Steam), é o próprio steamId.
+    if (/^\d{17}$/.test(user.uid || '')) {
+      steamId = user.uid;
+    } else {
+      // 2) Tenta pegar das custom claims do token.
+      try {
+        const tokenResult = await user.getIdTokenResult();
+        if (tokenResult.claims?.steamId && /^\d{17}$/.test(String(tokenResult.claims.steamId))) {
+          steamId = String(tokenResult.claims.steamId);
+        }
+      } catch {}
+    }
+    // 3) Busca perfil no Firestore (PIX salvo + fallback steamId)
     try {
-      const doc = await db.collection('users').doc(user.uid).get();
+      const lookupId = steamId || user.uid;
+      const doc = await db.collection('users').doc(lookupId).get();
       userProfile = doc.exists ? doc.data() : {};
-      steamId = userProfile.steamId || steamId;
+      if (!steamId && userProfile.steamId && /^\d{17}$/.test(String(userProfile.steamId))) {
+        steamId = String(userProfile.steamId);
+      }
     } catch { userProfile = {}; }
-    await loadInventory();
+
+    if (steamId) {
+      await loadInventory();
+    }
+    // Se não tem steamId, renderMain vai mostrar um aviso pedindo login Steam
   }
   renderMain();
 });
@@ -469,6 +493,11 @@ async function loginSteam() {
 async function logout() {
   await auth.signOut();
   location.reload();
+}
+
+async function logoutAndLoginSteam() {
+  try { await auth.signOut(); } catch {}
+  loginSteam();
 }
 
 // Steam callback handling (igual no index.html)
@@ -551,6 +580,26 @@ function renderMain() {
           <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor"><path d="M11.98 0C5.7 0 .54 4.86.05 11.04l6.42 2.66c.55-.37 1.2-.59 1.91-.59.07 0 .13 0 .19.01l2.86-4.14V8.9c0-2.5 2.03-4.52 4.52-4.52 2.5 0 4.53 2.03 4.53 4.53s-2.03 4.52-4.53 4.52h-.1l-4.08 2.91c0 .05 0 .1 0 .16 0 1.87-1.51 3.4-3.39 3.4-1.63 0-3.02-1.18-3.33-2.73L.44 15.27C1.86 20.3 6.49 24 11.98 24c6.63 0 12-5.37 12-12S18.6 0 11.98 0z"/></svg>
           Entrar com Steam
         </button>
+      </div>
+    `;
+    return;
+  }
+
+  // User logado mas SEM steamId (entrou com Google em vez de Steam)
+  if (!steamId) {
+    main.innerHTML = `
+      <div class="login-cta">
+        <div style="font-size: 48px; margin-bottom: 16px;">⚠️</div>
+        <h2>Precisa entrar com a Steam</h2>
+        <p>Você tá logado com outra conta (Google). Pra vender skins precisa estar logado pela <strong>Steam</strong>,
+        pra gente ler seu inventário. Faz logout e entra com Steam.</p>
+        <div style="display: flex; gap: 10px; justify-content: center; flex-wrap: wrap;">
+          <button class="btn btn-secondary" onclick="logout()">Sair</button>
+          <button class="btn btn-primary" onclick="logoutAndLoginSteam()">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor"><path d="M11.98 0C5.7 0 .54 4.86.05 11.04l6.42 2.66c.55-.37 1.2-.59 1.91-.59.07 0 .13 0 .19.01l2.86-4.14V8.9c0-2.5 2.03-4.52 4.52-4.52 2.5 0 4.53 2.03 4.53 4.53s-2.03 4.52-4.53 4.52h-.1l-4.08 2.91c0 .05 0 .1 0 .16 0 1.87-1.51 3.4-3.39 3.4-1.63 0-3.02-1.18-3.33-2.73L.44 15.27C1.86 20.3 6.49 24 11.98 24c6.63 0 12-5.37 12-12S18.6 0 11.98 0z"/></svg>
+            Sair e entrar com Steam
+          </button>
+        </div>
       </div>
     `;
     return;
