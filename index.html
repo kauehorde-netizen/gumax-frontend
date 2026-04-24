@@ -2044,9 +2044,12 @@ footer {
         <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor"><path d="M11.979 0C5.678 0 .511 4.86.022 11.037l6.432 2.658c.545-.371 1.203-.59 1.912-.59.063 0 .125.004.188.006l2.861-4.142V8.91c0-2.495 2.028-4.524 4.524-4.524 2.494 0 4.524 2.031 4.524 4.527s-2.03 4.525-4.524 4.525h-.105l-4.076 2.911c0 .052.004.105.004.159 0 1.875-1.515 3.396-3.39 3.396-1.635 0-3.016-1.173-3.331-2.727L.436 15.27C1.862 20.307 6.486 24 11.979 24c6.627 0 11.999-5.373 11.999-12S18.605 0 11.979 0zM7.54 18.21l-1.473-.61c.262.543.714.999 1.314 1.25 1.297.539 2.793-.076 3.332-1.375.263-.63.264-1.322.005-1.955-.258-.632-.725-1.123-1.354-1.384a2.47 2.47 0 00-1.29-.211l1.523.63c.956.4 1.409 1.5 1.013 2.457-.397.96-1.494 1.412-2.45 1.013l-1.62-.815zm8.4-5.685c-1.665 0-3.023-1.358-3.023-3.025 0-1.665 1.358-3.024 3.023-3.024 1.665 0 3.024 1.359 3.024 3.024 0 1.667-1.359 3.025-3.024 3.025zm0-5.443c-1.336 0-2.42 1.084-2.42 2.42 0 1.334 1.084 2.418 2.42 2.418s2.42-1.084 2.42-2.418c0-1.336-1.084-2.42-2.42-2.42z"/></svg>
         Entrar com Steam
       </button>
-      <div id="headerProfileArea" style="display: none; align-items: center; gap: 8px;">
-        <a class="btn btn-small" href="perfil.html" style="background: rgba(139,92,246,0.12); border: 1px solid rgba(139,92,246,0.35); color: var(--primary-light);">👤 Meu perfil</a>
-        <button class="btn btn-small" onclick="logoutUser()" style="background: transparent; border: 1px solid var(--border); color: var(--text-muted);">Sair</button>
+      <div id="headerProfileArea" style="display: none; align-items: center; gap: 10px;">
+        <a href="perfil.html" title="Meu perfil" style="display:inline-flex;align-items:center;gap:10px;padding:5px 12px 5px 5px;border-radius:24px;background:var(--bg-card);border:1px solid var(--border);text-decoration:none;color:var(--text-primary);transition:border-color .15s;" onmouseover="this.style.borderColor='var(--primary-light)'" onmouseout="this.style.borderColor='var(--border)'">
+          <img id="headerUserAvatar" src="https://www.gravatar.com/avatar?d=mp" alt="avatar" style="width:32px;height:32px;border-radius:50%;object-fit:cover;">
+          <span id="headerUserName" style="font-size:14px;font-weight:600;">user</span>
+        </a>
+        <button onclick="logoutUser()" style="background:transparent;border:none;color:var(--text-muted);font-size:12px;cursor:pointer;padding:6px 10px;" title="Sair">Sair</button>
       </div>
     </div>
   </div>
@@ -2113,7 +2116,7 @@ footer {
 <!-- SEARCH & FILTERS -->
 <section class="search-section" id="marketplace">
   <!-- Marca visível pra confirmar versão deployada. -->
-  <div style="font-size: 10px; color: rgba(139,92,246,0.5); text-align: right; margin-bottom: 4px;">search v18-souvenir-x</div>
+  <div style="font-size: 10px; color: rgba(139,92,246,0.5); text-align: right; margin-bottom: 4px;">search v20-user-widget</div>
 
   <!-- BUFF-style category picker com SVG icons (Faca, Luvas, Rifle, ...).
        Clicar num modelo (ex: AK-47) filtra a grid e rola pra seção. -->
@@ -3139,14 +3142,50 @@ document.addEventListener('DOMContentLoaded', function() {
     handleSteamCallback();
   }
 
-  // Auth state listener — mostra "Meu perfil" + botão sair quando logado
-  auth.onAuthStateChanged(user => {
+  // Auth state listener — mostra nome + avatar da Steam quando logado
+  auth.onAuthStateChanged(async user => {
     const loginBtn = document.getElementById('headerLoginBtn');
     const profileArea = document.getElementById('headerProfileArea');
     if (!loginBtn || !profileArea) return;
     if (user) {
       loginBtn.style.display = 'none';
       profileArea.style.display = 'flex';
+
+      // Popula nome + avatar: tenta provider → Firestore users/{uid} → Steam refresh
+      let displayName = user.displayName || user.email?.split('@')[0] || '';
+      let photoURL = user.photoURL || '';
+      try {
+        const udoc = await db.collection('users').doc(user.uid).get();
+        if (udoc.exists) {
+          const d = udoc.data() || {};
+          displayName = d.steamName || d.fullName || displayName;
+          photoURL = d.steamAvatar || d.photoURL || photoURL;
+        }
+      } catch {}
+
+      const isSteamUid = /^\d{17}$/.test(user.uid);
+      // Se Steam user sem avatar cacheado, pede refresh no backend (puxa da Steam Web API)
+      if (isSteamUid && !photoURL) {
+        try {
+          const idToken = await user.getIdToken();
+          const r = await fetch(`${API_BASE}/api/steam-auth`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${idToken}` },
+            body: JSON.stringify({ action: 'refresh-profile' }),
+          });
+          const d = await r.json();
+          if (d.success) {
+            displayName = d.steamName || displayName;
+            photoURL = d.steamAvatar || photoURL;
+          }
+        } catch {}
+      }
+      if (!displayName && isSteamUid) displayName = 'Steam ' + user.uid.slice(-4);
+
+      const avatarEl = document.getElementById('headerUserAvatar');
+      const nameEl = document.getElementById('headerUserName');
+      if (avatarEl) avatarEl.src = photoURL || 'https://www.gravatar.com/avatar?d=mp';
+      if (nameEl) nameEl.textContent = displayName || 'user';
     } else {
       loginBtn.style.display = '';
       profileArea.style.display = 'none';
@@ -3229,6 +3268,61 @@ async function fetchSkinImagesFresh(silent) {
   } catch { /* quota exceeded */ }
   console.log(`[skin images] ${totalLoaded} loaded (weapons + stickers + agents + keychains)`);
   if (!silent) renderSkins(); else renderSkins();
+}
+
+// Fallback de imagem: quando <img> falha ao carregar, consulta o backend
+// /api/skin-icon que busca no Steam Market direto (acha QUALQUER skin existente).
+// Resultado é cacheado em memória pra não pedir duas vezes a mesma skin.
+const _iconFallbackCache = new Map();
+const _iconFallbackInFlight = new Map();
+async function gumaxImgFallback(imgEl) {
+  if (!imgEl || imgEl.dataset.fallbackTried === '1') {
+    // Se já tentou fallback e ainda falhou, mostra shimmer ao invés da img quebrada
+    if (imgEl) {
+      const parent = imgEl.parentElement;
+      if (parent && !parent.querySelector('.skin-shimmer')) {
+        imgEl.style.display = 'none';
+        const shim = document.createElement('div');
+        shim.className = 'skin-shimmer';
+        parent.appendChild(shim);
+      }
+    }
+    return;
+  }
+  imgEl.dataset.fallbackTried = '1';
+  const name = imgEl.dataset.name || imgEl.alt || '';
+  if (!name) return;
+
+  // Cache hit?
+  if (_iconFallbackCache.has(name)) {
+    const cached = _iconFallbackCache.get(name);
+    if (cached) imgEl.src = cached;
+    return;
+  }
+  // Request em andamento pra esta skin? Aguarda.
+  if (_iconFallbackInFlight.has(name)) {
+    const icon = await _iconFallbackInFlight.get(name);
+    if (icon) imgEl.src = icon;
+    return;
+  }
+  // Dispara request
+  const promise = (async () => {
+    try {
+      const r = await fetch(`${API_BASE}/api/skin-icon`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ name }),
+      });
+      const d = await r.json();
+      const icon = d?.icon || null;
+      _iconFallbackCache.set(name, icon);
+      return icon;
+    } catch { _iconFallbackCache.set(name, null); return null; }
+  })();
+  _iconFallbackInFlight.set(name, promise);
+  const icon = await promise;
+  _iconFallbackInFlight.delete(name);
+  if (icon) imgEl.src = icon;
 }
 
 // Resolve imagem pra um market_hash_name testando múltiplas variantes.
@@ -3707,8 +3801,8 @@ function createSkinCard(skin, index) {
     </div>
     <div class="skin-image">
       ${image
-        ? `<img src="${image}" alt="${skin.name}">`
-        : `<div class="skin-shimmer"></div>`
+        ? `<img src="${image}" alt="${skin.name}" data-name="${skin.name.replace(/"/g, '&quot;')}" onerror="gumaxImgFallback(this)">`
+        : `<div class="skin-shimmer" data-name="${skin.name.replace(/"/g, '&quot;')}"></div>`
       }
     </div>
     <div class="skin-info">
@@ -3795,7 +3889,7 @@ function updateCartUI() {
       return `
         <div class="cart-item">
           <div class="cart-item-image">
-            ${image ? `<img src="${image}" alt="${item.name}">` : ''}
+            ${image ? `<img src="${image}" alt="${item.name}" data-name="${item.name.replace(/"/g, '&quot;')}" onerror="gumaxImgFallback(this)">` : ''}
           </div>
           <div class="cart-item-details">
             <div class="cart-item-name">${item.name}</div>
@@ -3876,7 +3970,7 @@ function openSkinModal(skin) {
   document.getElementById('deliveryBadgeModal').innerHTML = deliveryHtml;
 
   const imageHtml = image
-    ? `<img src="${image}" alt="${skin.name}">`
+    ? `<img src="${image}" alt="${skin.name}" data-name="${skin.name.replace(/"/g, '&quot;')}" onerror="gumaxImgFallback(this)">`
     : `<div class="skin-shimmer" style="width: 160px; height: 100px;"></div>`;
   document.getElementById('modalImage').innerHTML = imageHtml;
 
