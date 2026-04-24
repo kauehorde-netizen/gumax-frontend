@@ -2598,10 +2598,12 @@ async function loadFirestoreSkins() {
         : (buyPriceCNY > 0
             ? Math.round(buyPriceCNY * FALLBACK_RATE * 1.10 * 100) / 100
             : (parseFloat(data.buyPriceBRL) || 0));
-      // Strikethrough = preço Steam convertido (aprox youpin × 1.35 × fator base)
       const original = buyPriceCNY > 0
         ? Math.round(buyPriceCNY * 1.35 * FALLBACK_RATE * 100) / 100
         : sale;
+      // Float exato (vem do CSFloat via enrichStockWithFloats). Pode tá null
+      // temporariamente enquanto o background enrichment tá rodando após sync.
+      const floatValue = parseFloat(data.floatvalue);
       return {
         id: 5000 + i,
         firestoreId: doc.id,
@@ -2610,8 +2612,10 @@ async function loadFirestoreSkins() {
         price: sale,
         originalPrice: original,
         rarity: data.rarity || 'Mil-Spec',
-        inStock: true,              // Full delivery
-        float: 0,
+        inStock: true,
+        float: isFinite(floatValue) ? floatValue : 0,
+        paintseed: parseInt(data.paintseed, 10) || null,
+        inspectLink: data.inspectLink || null,
         discount: original > sale && sale > 0
           ? Math.round((1 - sale / original) * 100)
           : 0,
@@ -2619,7 +2623,7 @@ async function loadFirestoreSkins() {
         source: 'steam_inventory',
         sellerName: data.ownerSteamName || 'Gumax',
       };
-    }).filter(s => s.price > 0); // só mostra se tem preço válido
+    }).filter(s => s.price > 0);
 
     // Home default: mostra só as 40 mais caras do estoque Full.
     // Assim o Gu destaca items de alto valor (dinheiro parado) e move mais rápido.
@@ -3234,8 +3238,14 @@ function createSkinCard(skin, index) {
       <div class="skin-name">${skin.name}</div>
       <div class="skin-meta">
         <span>${WEAR_LABELS[skin.wear]}</span>
-        <span style="color: var(--border);">•</span>
-        <span class="skin-float">FV ${skin.float.toFixed(3)}</span>
+        ${skin.float > 0 ? `
+          <span style="color: var(--border);">•</span>
+          <span class="skin-float" title="Float value">FV ${skin.float.toFixed(5)}</span>
+        ` : ''}
+        ${skin.paintseed ? `
+          <span style="color: var(--border);">•</span>
+          <span class="skin-float" title="Pattern (paint seed)" style="color: var(--primary-light);">#${skin.paintseed}</span>
+        ` : ''}
       </div>
       <div class="skin-footer">
         <div class="skin-pricing">
@@ -3353,7 +3363,17 @@ function openSkinModal(skin) {
   document.getElementById('modalSkinName').textContent = skin.name;
   document.getElementById('modalRarity').innerHTML = `<span style="color: ${rarityColor}; font-weight: 600;">${skin.rarity}</span>`;
   document.getElementById('modalWear').textContent = WEAR_LABELS[skin.wear];
-  document.getElementById('modalFloat').innerHTML = `<span style="font-family: 'JetBrains Mono', monospace;">Float: ${skin.float.toFixed(3)}</span>`;
+  // Float exato (5 casas) + pattern se disponível
+  const floatParts = [];
+  if (skin.float > 0) {
+    floatParts.push(`Float: <strong>${skin.float.toFixed(5)}</strong>`);
+  }
+  if (skin.paintseed) {
+    floatParts.push(`Pattern: <strong style="color: var(--primary-light);">#${skin.paintseed}</strong>`);
+  }
+  document.getElementById('modalFloat').innerHTML = floatParts.length
+    ? `<span style="font-family: 'JetBrains Mono', monospace;">${floatParts.join(' · ')}</span>`
+    : '';
 
   const deliveryHtml = skin.inStock
     ? `<div class="delivery-badge full" style="margin-bottom: 12px;"><svg width="12" height="12" viewBox="0 0 24 24"><path d="M13 2L3 14h9l-1 10 10-12h-9l1-10z" fill="currentColor"/></svg> ENTREGA FULL • ATÉ 30 MIN</div>`
