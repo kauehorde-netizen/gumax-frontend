@@ -2132,7 +2132,7 @@ footer {
 <!-- SEARCH & FILTERS -->
 <section class="search-section" id="marketplace">
   <!-- Marca visível pra confirmar versão deployada. -->
-  <div style="font-size: 10px; color: rgba(139,92,246,0.5); text-align: right; margin-bottom: 4px;">search v22-no-hero</div>
+  <div style="font-size: 10px; color: rgba(139,92,246,0.5); text-align: right; margin-bottom: 4px;">search v23-hero-strict</div>
 
   <!-- BUFF-style category picker com SVG icons (Faca, Luvas, Rifle, ...).
        Clicar num modelo (ex: AK-47) filtra a grid e rola pra seção. -->
@@ -2905,19 +2905,15 @@ async function loadVerdictsForVisibleSkins() {
   renderSkins(); // re-render pra incluir os chips
 }
 
-// Carrega hero da collection settings/hero. Hero é OPT-IN: por default está
-// escondido (display:none no HTML). Só mostra se o Gu cadastrar conteúdo
-// (title/subtitle/imagem) E setar enabled !== false no painel admin.
+// Hero é STRICT OPT-IN: por default está escondido (display:none no HTML).
+// SO mostra se o doc settings/hero tiver enabled === true (explícito).
+// Qualquer outro caso (sem doc, enabled false, enabled undefined) → fica escondido.
 async function loadHeroConfig() {
   try {
     const doc = await db.collection('settings').doc('hero').get();
-    if (!doc.exists) return; // sem doc → fica escondido
+    if (!doc.exists) return;
     const d = doc.data() || {};
-    // Gate: precisa ter conteúdo significativo OU enabled true
-    const hasContent = !!(d.title || d.subtitle || d.imageDataUrl || d.imageUrl);
-    const explicitlyEnabled = d.enabled === true;
-    if (!hasContent && !explicitlyEnabled) return; // sem conteúdo → não mostra
-    if (d.enabled === false) return; // explicitamente desabilitado
+    if (d.enabled !== true) return; // STRICT: precisa ser literal true
 
     if (d.title) document.getElementById('heroTitleEl').innerHTML = d.title;
     if (d.subtitle) document.getElementById('heroSubtitleEl').textContent = d.subtitle;
@@ -2933,7 +2929,7 @@ async function loadHeroConfig() {
       const src = document.getElementById('heroSourceMobile');
       if (src) src.srcset = mobileSrc;
     }
-    // Tudo OK — mostra o hero
+    // Mostra o hero só se chegou até aqui (passou no gate enabled === true)
     const heroSection = document.getElementById('hero');
     if (heroSection) heroSection.style.display = '';
   } catch (e) {
