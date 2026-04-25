@@ -973,6 +973,19 @@ select.form-control {
         </div>
       </div>
 
+      <!-- Card: Toggle Hero -->
+      <div class="data-table-wrapper" style="padding: 24px; margin-bottom: 16px;">
+        <h3 style="margin-bottom: 8px;">Hero (cabeçalho da home)</h3>
+        <p style="color: var(--text-muted); font-size: 13px; margin-bottom: 14px;">
+          Por padrão, o hero está <strong>desativado</strong> (a home começa direto no catálogo, com o vídeo de fundo).
+          Ative se quiser mostrar título, subtítulo e imagem grande no topo.
+        </p>
+        <label style="display: inline-flex; align-items: center; gap: 10px; cursor: pointer;">
+          <input type="checkbox" id="heroEnabled" style="width: 18px; height: 18px;">
+          <span>Mostrar hero na home</span>
+        </label>
+      </div>
+
       <!-- Card: Textos -->
       <div class="data-table-wrapper" style="padding: 24px; margin-bottom: 16px;">
         <h3 style="margin-bottom: 16px;">Textos do cabeçalho</h3>
@@ -1666,6 +1679,8 @@ async function loadAppearance() {
   try {
     const doc = await db.collection(APPEARANCE_DOC.col).doc(APPEARANCE_DOC.id).get();
     const d = doc.exists ? (doc.data() || {}) : {};
+    // Toggle hero (default: false — escondido)
+    document.getElementById('heroEnabled').checked = d.enabled === true;
     document.getElementById('heroTitle').value = d.title || 'Skins CS2 com os melhores preços';
     document.getElementById('heroSubtitle').value = d.subtitle || 'Entrega rápida e segura. Pagamento via PIX.';
     document.getElementById('heroCta').value = d.cta || 'Ver Skins';
@@ -1690,8 +1705,9 @@ async function saveAppearance() {
   const cta = document.getElementById('heroCta').value.trim() || 'Ver Skins';
   if (!title) { alert('Título não pode ficar vazio'); return; }
 
+  const enabled = document.getElementById('heroEnabled').checked;
   const payload = {
-    title, subtitle, cta,
+    enabled, title, subtitle, cta,
     updatedAt: new Date().toISOString(),
     updatedBy: (firebase.auth().currentUser?.email) || 'admin',
   };
