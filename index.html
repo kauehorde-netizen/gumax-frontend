@@ -2132,13 +2132,13 @@ footer {
 <!-- SEARCH & FILTERS -->
 <section class="search-section" id="marketplace">
   <!-- Marca visível pra confirmar versão deployada. -->
-  <div style="font-size: 10px; color: rgba(139,92,246,0.5); text-align: right; margin-bottom: 4px;">search v25-hero-back-FORCED</div>
+  <div style="font-size: 10px; color: rgba(139,92,246,0.5); text-align: right; margin-bottom: 4px;">search v26-sort-and-hide-bar</div>
 
   <!-- BUFF-style category picker com SVG icons (Faca, Luvas, Rifle, ...).
        Clicar num modelo (ex: AK-47) filtra a grid e rola pra seção. -->
   <div id="buffMenu"></div>
 
-  <div class="search-bar" style="position: relative;">
+  <div class="search-bar" id="mainSearchBar" style="position: relative;">
     <svg class="search-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>
     <input type="text" class="search-input" id="searchInput" placeholder="Ou digite: AK-47 Redline, AWP Dragon Lore..." autocomplete="off"
            oninput="onSearchInput()" onkeydown="onSearchKeyDown(event)" onfocus="showSuggestions()" onblur="setTimeout(hideSuggestions, 200)">
@@ -2329,6 +2329,13 @@ footer {
     <div class="wfb-search">
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" style="width:14px;height:14px;opacity:.6;"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>
       <input type="text" id="wfbNameFilter" placeholder="Busca por nome (ex: Fade, Redline)" oninput="onWfbNameFilterChange(this.value)">
+    </div>
+    <div class="wfb-select-wrap">
+      <label>Ordenar:</label>
+      <select id="wfbSortFilter" onchange="onSortFilterChange(this.value)">
+        <option value="price_desc">Mais caros primeiro</option>
+        <option value="price_asc">Mais baratos primeiro</option>
+      </select>
     </div>
   </div>
 
@@ -2725,6 +2732,10 @@ function _setFilterInternal(label, type, searchQuery) {
 
   const bar = document.getElementById('weaponFilterBar');
   if (bar) bar.style.display = '';
+  // Esconde a barra de busca principal (que tem o placeholder "Ou digite: AK-47 Redline...")
+  // — a busca por nome agora fica DENTRO do weaponFilterBar.
+  const mainBar = document.getElementById('mainSearchBar');
+  if (mainBar) mainBar.style.display = 'none';
   const labelEl = document.getElementById('wfbActiveLabel');
   if (labelEl) labelEl.textContent = label;
   const wearSel = document.getElementById('wfbWearFilter');
@@ -2813,6 +2824,9 @@ function clearWeaponFilter() {
   weaponFilterName = '';
   const bar = document.getElementById('weaponFilterBar');
   if (bar) bar.style.display = 'none';
+  // Volta a mostrar a barra de busca principal
+  const mainBar = document.getElementById('mainSearchBar');
+  if (mainBar) mainBar.style.display = '';
   const header = document.querySelector('.section-title-inline');
   if (header) header.innerHTML = `🔥 <span style="color: var(--primary-light);">Catálogo</span> — milhares de skins`;
   searchResults = [];
@@ -2827,6 +2841,13 @@ function onWearFilterChange(value) {
 
 function onWfbNameFilterChange(value) {
   weaponFilterName = (value || '').trim().toLowerCase();
+  renderSkins();
+}
+
+// Ordenação: 'price_desc' (default) ou 'price_asc'.
+let weaponFilterSort = 'price_desc';
+function onSortFilterChange(value) {
+  weaponFilterSort = value || 'price_desc';
   renderSkins();
 }
 
@@ -3750,11 +3771,18 @@ function renderSkins() {
   // Identifica itens Full (estoque próprio do Gu, entrega 30min) vs Youpin (parceiros 12h)
   const isFullItem = (s) => s.inStock || s.source === 'steam_inventory';
 
-  // Ordena: Full vem primeiro (mais relevante), depois Youpin
+  // Ordena: Full sempre primeiro (mais relevante).
+  // Depois: se weaponFilter ativo, aplica sort do user (price asc/desc); senão deixa default.
   const sorted = [...filtered].sort((a, b) => {
     const fa = isFullItem(a) ? 0 : 1;
     const fb = isFullItem(b) ? 0 : 1;
-    return fa - fb;
+    if (fa !== fb) return fa - fb;
+    if (weaponFilter && weaponFilterSort) {
+      const pa = parseFloat(a.price) || 0;
+      const pb = parseFloat(b.price) || 0;
+      return weaponFilterSort === 'price_asc' ? pa - pb : pb - pa;
+    }
+    return 0;
   });
 
   // "Full disponíveis" mostra o TOTAL real de items Full no estoque (não só os 40 visíveis).
