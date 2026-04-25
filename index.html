@@ -2132,7 +2132,7 @@ footer {
 <!-- SEARCH & FILTERS -->
 <section class="search-section" id="marketplace">
   <!-- Marca visível pra confirmar versão deployada. -->
-  <div style="font-size: 10px; color: rgba(139,92,246,0.5); text-align: right; margin-bottom: 4px;">search v26-sort-and-hide-bar</div>
+  <div style="font-size: 10px; color: rgba(139,92,246,0.5); text-align: right; margin-bottom: 4px;">search v27-buff-hover-real-icons</div>
 
   <!-- BUFF-style category picker com SVG icons (Faca, Luvas, Rifle, ...).
        Clicar num modelo (ex: AK-47) filtra a grid e rola pra seção. -->
@@ -2155,18 +2155,33 @@ footer {
   <script>
   // ═══ BUFF-style menu INLINE com SVG icons profissionais ═══
   (function () {
-    // SVG weapon silhouettes — monocromáticos, estilo BUFF (sem emojis infantis).
-    // Cada um é um path simples mas reconhecível no tamanho 28x28.
+    // Imagens reais estilo BUFF163 — usa CDN do CSGO-API (ByMykel) com renders
+    // isométricos das armas vanilla. Bem mais profissional que SVG simples.
+    // Cada categoria é representada pela arma mais icônica dela.
+    const IMG = {
+      knife:   'https://raw.githubusercontent.com/ByMykel/CSGO-API/main/public/images/econ/weapons/base_weapons/weapon_knife_karam.png',
+      gloves:  'https://raw.githubusercontent.com/ByMykel/CSGO-API/main/public/images/econ/weapons/base_weapons/weapon_bloodhound_gloves.png',
+      rifle:   'https://raw.githubusercontent.com/ByMykel/CSGO-API/main/public/images/econ/weapons/base_weapons/weapon_ak47.png',
+      pistol:  'https://raw.githubusercontent.com/ByMykel/CSGO-API/main/public/images/econ/weapons/base_weapons/weapon_deagle.png',
+      smg:     'https://raw.githubusercontent.com/ByMykel/CSGO-API/main/public/images/econ/weapons/base_weapons/weapon_p90.png',
+      shotgun: 'https://raw.githubusercontent.com/ByMykel/CSGO-API/main/public/images/econ/weapons/base_weapons/weapon_xm1014.png',
+      mg:      'https://raw.githubusercontent.com/ByMykel/CSGO-API/main/public/images/econ/weapons/base_weapons/weapon_m249.png',
+      sticker: 'https://raw.githubusercontent.com/ByMykel/CSGO-API/main/public/images/econ/stickers/0/3530.png',
+      charm:   'https://raw.githubusercontent.com/ByMykel/CSGO-API/main/public/images/econ/keychains/1/keychain_pendant_01.png',
+      agent:   'https://raw.githubusercontent.com/ByMykel/CSGO-API/main/public/images/econ/characters/customplayer_tm_phoenix_varianta_png.png',
+    };
+
+    // SVG fallbacks caso a imagem CDN falhe (mantém UX funcionando).
     const SVG = {
-      knife:   '<svg viewBox="0 0 32 32" fill="currentColor"><path d="M4 27 L23 8 L27 12 L8 31 L5 31 L5 28 Z" opacity=".9"/><path d="M20 11 L24 15" stroke="currentColor" stroke-width="1.5" fill="none"/></svg>',
+      knife:   '<svg viewBox="0 0 32 32" fill="currentColor"><path d="M4 27 L23 8 L27 12 L8 31 L5 31 L5 28 Z"/><path d="M20 11 L24 15" stroke="currentColor" stroke-width="1.5" fill="none"/></svg>',
       gloves:  '<svg viewBox="0 0 32 32" fill="currentColor"><path d="M10 4 C9 4 8 5 8 6 L8 14 L7 14 C5 14 4 15 4 17 L4 22 C4 26 7 29 11 29 L21 29 C24 29 26 27 26 24 L26 14 C26 12 25 11 23 11 L23 6 C23 5 22 4 21 4 C20 4 19 5 19 6 L19 11 L17 11 L17 4 C17 3 16 2 15 2 C14 2 13 3 13 4 L13 11 L12 11 L12 6 C12 5 11 4 10 4 Z"/></svg>',
       rifle:   '<svg viewBox="0 0 32 20" fill="currentColor"><path d="M2 10 L22 10 L26 7 L30 8 L30 12 L26 13 L22 13 L22 15 L19 15 L19 13 L15 13 L14 17 L11 17 L11 13 L2 13 Z"/><rect x="8" y="4" width="2" height="6"/></svg>',
       pistol:  '<svg viewBox="0 0 32 24" fill="currentColor"><path d="M6 7 L20 7 L22 5 L24 5 L24 10 L22 10 L22 14 L16 14 L16 20 L14 22 L9 22 L9 14 L6 14 Z"/></svg>',
       smg:     '<svg viewBox="0 0 32 22" fill="currentColor"><path d="M3 10 L18 10 L20 8 L24 8 L24 12 L20 12 L20 14 L17 14 L15 18 L11 18 L11 14 L3 14 Z"/><rect x="6" y="2" width="2" height="8"/></svg>',
-      shotgun: '<svg viewBox="0 0 32 18" fill="currentColor"><path d="M2 8 L26 8 L28 6 L30 8 L30 11 L28 13 L26 13 L22 13 L22 15 L18 15 L18 13 L2 13 Z"/><rect x="10" y="11" width="6" height="2"/></svg>',
-      mg:      '<svg viewBox="0 0 32 22" fill="currentColor"><path d="M3 9 L22 9 L26 6 L30 9 L30 13 L26 16 L22 13 L22 15 L18 15 L18 17 L12 17 L12 13 L3 13 Z"/><circle cx="26" cy="11" r="1.5" fill="rgba(0,0,0,.4)"/></svg>',
-      sticker: '<svg viewBox="0 0 32 32" fill="currentColor"><path d="M6 6 L22 6 L26 10 L26 26 L6 26 Z M22 6 L22 10 L26 10" fill="currentColor" opacity=".85"/><circle cx="16" cy="18" r="4" fill="rgba(0,0,0,.35)"/></svg>',
-      charm:   '<svg viewBox="0 0 32 32" fill="none" stroke="currentColor" stroke-width="2.5"><circle cx="10" cy="10" r="5"/><circle cx="10" cy="10" r="1.5" fill="currentColor"/><path d="M14 14 L24 24" stroke-linecap="round"/><path d="M22 22 L26 24 L24 26 Z" fill="currentColor" stroke="none"/></svg>',
+      shotgun: '<svg viewBox="0 0 32 18" fill="currentColor"><path d="M2 8 L26 8 L28 6 L30 8 L30 11 L28 13 L26 13 L22 13 L22 15 L18 15 L18 13 L2 13 Z"/></svg>',
+      mg:      '<svg viewBox="0 0 32 22" fill="currentColor"><path d="M3 9 L22 9 L26 6 L30 9 L30 13 L26 16 L22 13 L22 15 L18 15 L18 17 L12 17 L12 13 L3 13 Z"/></svg>',
+      sticker: '<svg viewBox="0 0 32 32" fill="currentColor"><path d="M6 6 L22 6 L26 10 L26 26 L6 26 Z"/></svg>',
+      charm:   '<svg viewBox="0 0 32 32" fill="none" stroke="currentColor" stroke-width="2.5"><circle cx="10" cy="10" r="5"/><path d="M14 14 L24 24" stroke-linecap="round"/></svg>',
       agent:   '<svg viewBox="0 0 32 32" fill="currentColor"><circle cx="16" cy="10" r="5"/><path d="M6 28 C6 22 10 18 16 18 C22 18 26 22 26 28 L26 30 L6 30 Z"/></svg>',
     };
 
@@ -2187,12 +2202,14 @@ footer {
 
     const CSS = `
       .buff-menu { background: linear-gradient(180deg,rgba(20,16,40,.85),rgba(10,8,20,.7)); border: 1px solid rgba(139,92,246,.15); border-radius: 14px; padding: 18px 14px; margin: 0 auto 24px; max-width: 1200px; }
-      .buff-cat-row { display:flex; gap:4px; flex-wrap:wrap; justify-content:center; padding-bottom:14px; border-bottom:1px solid rgba(255,255,255,.05); }
-      .buff-cat { padding:12px 18px; border-radius:10px; cursor:pointer; transition:background .15s, color .15s, transform .1s; display:flex; flex-direction:column; align-items:center; gap:6px; min-width:88px; font-size:11px; text-transform:uppercase; letter-spacing:.4px; color:var(--text-secondary,#8e8a9f); user-select:none; }
+      .buff-cat-row { display:flex; gap:4px; flex-wrap:wrap; justify-content:center; padding-bottom:14px; border-bottom:1px solid rgba(255,255,255,.05); position:relative; }
+      .buff-cat { padding:10px 18px 12px; border-radius:10px; cursor:pointer; transition:background .15s, color .15s, transform .1s; display:flex; flex-direction:column; align-items:center; gap:6px; min-width:96px; font-size:11px; text-transform:uppercase; letter-spacing:.4px; color:var(--text-secondary,#8e8a9f); user-select:none; }
       .buff-cat:hover { background:rgba(139,92,246,.10); color:var(--text-primary,#e0e7ff); }
       .buff-cat.active { background:rgba(139,92,246,.22); color:var(--primary-light,#a78bfa); }
-      .buff-cat-icon { width:28px; height:28px; line-height:0; display:flex; align-items:center; justify-content:center; }
-      .buff-cat-icon svg { width:100%; height:100%; }
+      .buff-cat-icon { width:48px; height:48px; line-height:0; display:flex; align-items:center; justify-content:center; }
+      .buff-cat-icon img { width:100%; height:100%; object-fit:contain; filter: drop-shadow(0 1px 2px rgba(0,0,0,.45)); transition: transform .15s, filter .15s; }
+      .buff-cat:hover .buff-cat-icon img { transform: scale(1.08); filter: drop-shadow(0 2px 6px rgba(167,139,250,.5)); }
+      .buff-cat-icon svg { width:80%; height:80%; }
       .buff-cat-label { font-weight:700; }
       .buff-dropdown { display:none; padding:16px 10px 4px; flex-wrap:wrap; gap:8px; justify-content:center; }
       .buff-dropdown.visible { display:flex; }
@@ -2202,7 +2219,7 @@ footer {
       .buff-weapon.hint:hover { transform:none; }
       @media (max-width: 720px) {
         .buff-cat { min-width:64px; padding:8px 10px; font-size:10px; }
-        .buff-cat-icon { width:22px; height:22px; }
+        .buff-cat-icon { width:36px; height:36px; }
       }
     `;
     let currentCategory = null;
@@ -2217,13 +2234,58 @@ footer {
       }
       container.innerHTML = `<div class="buff-menu"><div class="buff-cat-row" id="buffCatRow"></div><div class="buff-dropdown" id="buffDropdown"></div></div>`;
       const row = document.getElementById('buffCatRow');
+      const buffMenu = container.querySelector('.buff-menu');
       Object.entries(WEAPONS).forEach(([key, cat]) => {
         const el = document.createElement('div');
         el.className = 'buff-cat'; el.dataset.key = key;
-        el.innerHTML = `<span class="buff-cat-icon">${SVG[key] || ''}</span><span class="buff-cat-label">${cat.label}</span>`;
-        el.addEventListener('click', () => toggleCat(key, onPick));
+        // <img> com fallback pra SVG inline caso a CDN falhe — onerror substitui o img pelo svg.
+        const imgUrl = IMG[key] || '';
+        const svgFallback = (SVG[key] || '').replace(/"/g, '&quot;');
+        const iconHtml = imgUrl
+          ? `<span class="buff-cat-icon"><img src="${imgUrl}" alt="${cat.label}" loading="lazy" onerror="this.outerHTML='${svgFallback}'"></span>`
+          : `<span class="buff-cat-icon">${SVG[key] || ''}</span>`;
+        el.innerHTML = `${iconHtml}<span class="buff-cat-label">${cat.label}</span>`;
+        // ═══ HOVER-trigger estilo BUFF163: passar mouse abre o dropdown ═══
+        // Click ainda funciona como fallback (mobile/touch + acessibilidade).
+        el.addEventListener('mouseenter', () => openCat(key, onPick));
+        el.addEventListener('click',      () => toggleCat(key, onPick));
         row.appendChild(el);
       });
+      // Fecha o dropdown só quando o mouse sai do container TODO (cat-row + dropdown).
+      // Assim o user pode descer da categoria pro modelo sem o dropdown sumir.
+      buffMenu.addEventListener('mouseleave', () => closeDropdown(false));
+    }
+    // Abre o submenu sem mexer no filtro ativo (UX hover).
+    // toggleCat é o comportamento de click: abre/fecha + dispara filtro.
+    function openCat(key, onPick) {
+      const cat = WEAPONS[key]; if (!cat) return;
+      // directFilter (sticker/charm/agent) só funciona com click — hover ignora.
+      if (cat.directFilter) return;
+      if (currentCategory === key) return; // já aberto
+      currentCategory = key;
+      document.querySelectorAll('.buff-cat').forEach(el => el.classList.remove('active'));
+      document.querySelector(`.buff-cat[data-key="${key}"]`)?.classList.add('active');
+      const dropdown = document.getElementById('buffDropdown');
+      dropdown.innerHTML = '';
+      (cat.items || []).forEach(name => {
+        const el = document.createElement('span');
+        const isHint = name.startsWith('(');
+        el.className = 'buff-weapon' + (isHint ? ' hint' : '');
+        el.textContent = name;
+        if (!isHint) el.addEventListener('click', () => onPick && onPick(name));
+        dropdown.appendChild(el);
+      });
+      dropdown.classList.add('visible');
+    }
+    // Fecha o dropdown E limpa filtro de categoria (se applyFilterClear for true).
+    function closeDropdown(applyFilterClear) {
+      const dropdown = document.getElementById('buffDropdown');
+      if (!dropdown) return;
+      dropdown.classList.remove('visible');
+      dropdown.innerHTML = '';
+      document.querySelectorAll('.buff-cat').forEach(el => el.classList.remove('active'));
+      currentCategory = null;
+      if (applyFilterClear && typeof clearWeaponFilter === 'function') clearWeaponFilter();
     }
     function toggleCat(key, onPick) {
       const cat = WEAPONS[key]; if (!cat) return;
