@@ -3800,10 +3800,13 @@ function createSkinCard(skin, index) {
       <div class="discount-badge">-${skin.discount}%</div>
     </div>
     <div class="skin-image">
-      ${image
-        ? `<img src="${image}" alt="${skin.name}" data-name="${skin.name.replace(/"/g, '&quot;')}" onerror="gumaxImgFallback(this)">`
-        : `<div class="skin-shimmer" data-name="${skin.name.replace(/"/g, '&quot;')}"></div>`
-      }
+      <!-- Sempre renderizamos um <img>, mesmo sem imagem conhecida. Quando a src
+           falha (404, about:blank, vazia), onerror dispara gumaxImgFallback que
+           busca a imagem no backend via Steam Market e substitui a src. -->
+      <img src="${image || 'about:blank'}"
+           alt="${skin.name}"
+           data-name="${skin.name.replace(/"/g, '&quot;')}"
+           onerror="gumaxImgFallback(this)">
     </div>
     <div class="skin-info">
       <div class="skin-rarity" style="color: ${rarityColor};">${skin.rarity}</div>
