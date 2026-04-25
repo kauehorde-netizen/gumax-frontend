@@ -2071,8 +2071,8 @@ footer {
   </div>
 </header>
 
-<!-- HERO SECTION -->
-<section class="hero" id="hero">
+<!-- HERO SECTION (escondido por padrao - Gu pode ativar pelo admin em settings/hero) -->
+<section class="hero" id="hero" style="display:none;">
   <div class="hero-left">
     <div class="hero-badge">
       <svg width="14" height="14" viewBox="0 0 24 24"><path d="M13 2L3 14h9l-1 10 10-12h-9l1-10z" fill="currentColor"/></svg>
@@ -2132,7 +2132,7 @@ footer {
 <!-- SEARCH & FILTERS -->
 <section class="search-section" id="marketplace">
   <!-- Marca visível pra confirmar versão deployada. -->
-  <div style="font-size: 10px; color: rgba(139,92,246,0.5); text-align: right; margin-bottom: 4px;">search v21-video-bg</div>
+  <div style="font-size: 10px; color: rgba(139,92,246,0.5); text-align: right; margin-bottom: 4px;">search v22-no-hero</div>
 
   <!-- BUFF-style category picker com SVG icons (Faca, Luvas, Rifle, ...).
        Clicar num modelo (ex: AK-47) filtra a grid e rola pra seção. -->
@@ -2905,29 +2905,37 @@ async function loadVerdictsForVisibleSkins() {
   renderSkins(); // re-render pra incluir os chips
 }
 
-// Carrega título/subtítulo/CTA/imagem do hero da collection settings/hero.
-// Se o doc não existe ou falhar, mantém os valores hardcoded (default).
+// Carrega hero da collection settings/hero. Hero é OPT-IN: por default está
+// escondido (display:none no HTML). Só mostra se o Gu cadastrar conteúdo
+// (title/subtitle/imagem) E setar enabled !== false no painel admin.
 async function loadHeroConfig() {
   try {
     const doc = await db.collection('settings').doc('hero').get();
-    if (!doc.exists) return;
+    if (!doc.exists) return; // sem doc → fica escondido
     const d = doc.data() || {};
+    // Gate: precisa ter conteúdo significativo OU enabled true
+    const hasContent = !!(d.title || d.subtitle || d.imageDataUrl || d.imageUrl);
+    const explicitlyEnabled = d.enabled === true;
+    if (!hasContent && !explicitlyEnabled) return; // sem conteúdo → não mostra
+    if (d.enabled === false) return; // explicitamente desabilitado
+
     if (d.title) document.getElementById('heroTitleEl').innerHTML = d.title;
     if (d.subtitle) document.getElementById('heroSubtitleEl').textContent = d.subtitle;
     if (d.cta) document.getElementById('heroCtaBtn').textContent = d.cta;
-    // Desktop: dataUrl (base64) > url externa > hero.png local
     const desktopSrc = d.imageDataUrl || d.imageUrl;
     if (desktopSrc) {
       const img = document.getElementById('heroImageEl');
       img.src = desktopSrc;
       img.style.display = '';
     }
-    // Mobile: se tiver, sobrescreve em viewports <= 768px
     const mobileSrc = d.imageMobileDataUrl || d.imageMobileUrl;
     if (mobileSrc) {
       const src = document.getElementById('heroSourceMobile');
       if (src) src.srcset = mobileSrc;
     }
+    // Tudo OK — mostra o hero
+    const heroSection = document.getElementById('hero');
+    if (heroSection) heroSection.style.display = '';
   } catch (e) {
     console.log('[hero] Firestore settings not available:', e.message);
   }
