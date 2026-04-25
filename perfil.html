@@ -29,14 +29,17 @@ body {
   line-height: 1.5;
 }
 
+/* NAV — padronizado com index.html: bar full-width + conteúdo interno limitado a 1280 */
 .nav {
   display: flex; align-items: center; justify-content: space-between;
-  padding: 20px 40px; border-bottom: 1px solid var(--border);
-  background: rgba(8, 6, 14, .8); backdrop-filter: blur(12px);
+  height: 72px;
+  padding: 0 max(24px, calc((100% - 1280px) / 2));
+  border-bottom: 1px solid var(--border);
+  background: rgba(8, 6, 14, .95); backdrop-filter: blur(20px);
   position: sticky; top: 0; z-index: 100;
 }
 .nav-brand { font-size: 22px; font-weight: 800; color: var(--primary-light); letter-spacing: -0.5px; text-decoration: none; }
-.nav-links { display: flex; gap: 28px; }
+.nav-links { display: flex; gap: 32px; flex: 1; margin-left: 48px; }
 .nav-link { color: var(--text-secondary); text-decoration: none; font-weight: 500; transition: color .2s; }
 .nav-link:hover { color: var(--primary-light); }
 .nav-link.active { color: var(--primary-light); }
