@@ -2071,8 +2071,8 @@ footer {
   </div>
 </header>
 
-<!-- HERO SECTION (escondido por padrao - Gu pode ativar pelo admin em settings/hero) -->
-<section class="hero" id="hero" style="display:none;">
+<!-- HERO SECTION (texto sempre visivel; imagem PNG opt-in pelo admin) -->
+<section class="hero" id="hero">
   <div class="hero-left">
     <div class="hero-badge">
       <svg width="14" height="14" viewBox="0 0 24 24"><path d="M13 2L3 14h9l-1 10 10-12h-9l1-10z" fill="currentColor"/></svg>
@@ -2103,10 +2103,10 @@ footer {
       </div>
     </div>
   </div>
-  <div class="hero-right">
+  <div class="hero-right" id="heroRight" style="display:none;">
     <picture>
       <source id="heroSourceMobile" media="(max-width: 768px)" srcset="">
-      <img id="heroImageEl" src="hero.png" alt="CS2" class="hero-image" onerror="this.style.display='none'">
+      <img id="heroImageEl" src="" alt="CS2" class="hero-image" onerror="this.style.display='none'">
     </picture>
   </div>
 </section>
@@ -2132,7 +2132,7 @@ footer {
 <!-- SEARCH & FILTERS -->
 <section class="search-section" id="marketplace">
   <!-- Marca visível pra confirmar versão deployada. -->
-  <div style="font-size: 10px; color: rgba(139,92,246,0.5); text-align: right; margin-bottom: 4px;">search v23-hero-strict</div>
+  <div style="font-size: 10px; color: rgba(139,92,246,0.5); text-align: right; margin-bottom: 4px;">search v24-hero-text-only</div>
 
   <!-- BUFF-style category picker com SVG icons (Faca, Luvas, Rifle, ...).
        Clicar num modelo (ex: AK-47) filtra a grid e rola pra seção. -->
@@ -2905,33 +2905,35 @@ async function loadVerdictsForVisibleSkins() {
   renderSkins(); // re-render pra incluir os chips
 }
 
-// Hero é STRICT OPT-IN: por default está escondido (display:none no HTML).
-// SO mostra se o doc settings/hero tiver enabled === true (explícito).
-// Qualquer outro caso (sem doc, enabled false, enabled undefined) → fica escondido.
+// Hero TEXTO sempre aparece (com defaults hardcoded ou customizado pelo admin).
+// Hero IMAGEM (PNG) é opt-in: só aparece se o admin cadastrar uma imagem
+// no painel (settings/hero.imageDataUrl ou imageUrl). Sem imagem cadastrada,
+// só o texto fica visível e o vídeo de fundo passa atrás — limpo.
 async function loadHeroConfig() {
   try {
     const doc = await db.collection('settings').doc('hero').get();
     if (!doc.exists) return;
     const d = doc.data() || {};
-    if (d.enabled !== true) return; // STRICT: precisa ser literal true
 
+    // Textos: sobrescreve defaults se admin customizou
     if (d.title) document.getElementById('heroTitleEl').innerHTML = d.title;
     if (d.subtitle) document.getElementById('heroSubtitleEl').textContent = d.subtitle;
     if (d.cta) document.getElementById('heroCtaBtn').textContent = d.cta;
+
+    // Imagem: só mostra se houver source cadastrado no admin
     const desktopSrc = d.imageDataUrl || d.imageUrl;
     if (desktopSrc) {
       const img = document.getElementById('heroImageEl');
       img.src = desktopSrc;
       img.style.display = '';
+      const heroRight = document.getElementById('heroRight');
+      if (heroRight) heroRight.style.display = '';
     }
     const mobileSrc = d.imageMobileDataUrl || d.imageMobileUrl;
     if (mobileSrc) {
       const src = document.getElementById('heroSourceMobile');
       if (src) src.srcset = mobileSrc;
     }
-    // Mostra o hero só se chegou até aqui (passou no gate enabled === true)
-    const heroSection = document.getElementById('hero');
-    if (heroSection) heroSection.style.display = '';
   } catch (e) {
     console.log('[hero] Firestore settings not available:', e.message);
   }
