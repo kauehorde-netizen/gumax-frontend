@@ -735,7 +735,40 @@ nav {
   display: grid;
   grid-template-columns: repeat(6, 1fr);
   gap: 14px;
-  margin-bottom: 48px;
+  margin-bottom: 24px;
+}
+
+/* Paginação no fim do catálogo */
+.pagination-bar {
+  display: flex; align-items: center; justify-content: center;
+  flex-wrap: wrap; gap: 6px;
+  padding: 16px 24px 32px;
+  font-size: 14px;
+  color: var(--text-secondary);
+}
+.pg-btn {
+  background: rgba(139,92,246,.08);
+  border: 1px solid rgba(139,92,246,.22);
+  color: var(--text-primary);
+  padding: 8px 14px; border-radius: 6px; cursor: pointer;
+  font-size: 13px; font-weight: 600; min-width: 38px;
+  transition: all .12s;
+}
+.pg-btn:hover:not(:disabled):not(.active) {
+  background: rgba(139,92,246,.22);
+  border-color: rgba(167,139,250,.6);
+}
+.pg-btn.active {
+  background: var(--primary, #8B5CF6);
+  border-color: var(--primary-light, #a78bfa);
+  color: #fff; cursor: default;
+}
+.pg-btn:disabled { opacity: .35; cursor: not-allowed; }
+.pg-arrow { font-size: 18px; line-height: 1; padding: 6px 12px; }
+.pg-ellipsis { padding: 0 4px; color: var(--text-muted, #64607a); }
+.pg-info { margin-left: 12px; font-size: 12px; color: var(--text-muted, #64607a); }
+@media (max-width: 720px) {
+  .pg-info { display: none; }
 }
 
 .skin-card {
@@ -2117,28 +2150,10 @@ footer {
   </div>
 </section>
 
-<!-- DELIVERY BANNERS -->
-<section class="delivery-section">
-  <div class="delivery-card full">
-    <div class="delivery-icon">⚡</div>
-    <div class="delivery-content">
-      <div>⚡ ENTREGA FULL</div>
-      <div>Skins em estoque • Entrega em até <strong>30 minutos</strong></div>
-    </div>
-  </div>
-  <div class="delivery-card normal">
-    <div class="delivery-icon">🚚</div>
-    <div class="delivery-content">
-      <div>ENTREGA NORMAL</div>
-      <div>Catálogo completo • Entrega em até <strong>12 horas</strong></div>
-    </div>
-  </div>
-</section>
-
 <!-- SEARCH & FILTERS -->
 <section class="search-section" id="marketplace">
   <!-- Marca visível pra confirmar versão deployada. -->
-  <div style="font-size: 10px; color: rgba(139,92,246,0.5); text-align: right; margin-bottom: 4px;">search v28-c5-icons-6cols-square-chips</div>
+  <div style="font-size: 10px; color: rgba(139,92,246,0.5); text-align: right; margin-bottom: 4px;">search v29-pagination-no-delivery-banners</div>
 
   <!-- BUFF-style category picker com SVG icons (Faca, Luvas, Rifle, ...).
        Clicar num modelo (ex: AK-47) filtra a grid e rola pra seção. -->
@@ -2192,8 +2207,8 @@ footer {
     };
 
     const CSS = `
-      .buff-menu { background: linear-gradient(180deg,rgba(20,16,40,.85),rgba(10,8,20,.7)); border: 1px solid rgba(139,92,246,.15); border-radius: 14px; padding: 14px 14px; margin: 0 auto 24px; max-width: 1200px; }
-      .buff-cat-row { display:flex; gap:2px; flex-wrap:wrap; justify-content:center; padding-bottom:10px; border-bottom:1px solid rgba(255,255,255,.05); position:relative; }
+      .buff-menu { background: linear-gradient(180deg,rgba(20,16,40,.85),rgba(10,8,20,.7)); border: 1px solid rgba(139,92,246,.15); border-radius: 14px; padding: 14px 24px; margin: 0 auto 24px; max-width: 1280px; }
+      .buff-cat-row { display:flex; gap:2px; flex-wrap:wrap; justify-content:space-between; padding-bottom:10px; border-bottom:1px solid rgba(255,255,255,.05); position:relative; }
       .buff-cat { padding:6px 12px 8px; border-radius:8px; cursor:pointer; transition:background .15s, color .15s, transform .1s; display:flex; flex-direction:column; align-items:center; gap:2px; min-width:96px; font-size:11px; text-transform:uppercase; letter-spacing:.4px; color:var(--text-secondary,#8e8a9f); user-select:none; }
       .buff-cat:hover { background:rgba(139,92,246,.12); color:var(--text-primary,#e0e7ff); }
       .buff-cat.active { background:rgba(139,92,246,.22); color:var(--primary-light,#a78bfa); }
@@ -2354,9 +2369,6 @@ footer {
   })();
   </script>
 
-  <div class="results-count">
-    Exibindo <strong id="resultCount">0</strong> skins
-  </div>
 </section>
 
 <!-- SECTION: CATÁLOGO UNIFICADO (Full + Normal misturados, Full tem borda destacada) -->
@@ -2461,6 +2473,7 @@ footer {
   <div class="skin-grid" id="skinGridUnified">
     <!-- Catálogo completo (Full + Youpin juntos) -->
   </div>
+  <div id="paginationBar" class="pagination-bar"></div>
   <button class="load-more" onclick="loadMoreYoupin()" id="loadMoreYoupinBtn" style="display: none;">Carregar mais</button>
 </section>
 
@@ -2788,6 +2801,7 @@ function setCategoryFilter(label, type) {
 }
 
 function _setFilterInternal(label, type, searchQuery) {
+  currentPage = 1; // novo filtro → volta pra primeira página
   weaponFilter = label;
   weaponFilterType = type;
   weaponFilterWear = '';
@@ -3171,15 +3185,14 @@ async function loadFirestoreSkins() {
       };
     }).filter(s => s.price > 0);
 
-    // Home default: mostra só as 40 mais caras do estoque Full.
-    // Assim o Gu destaca items de alto valor (dinheiro parado) e move mais rápido.
+    // Home: carrega TODOS os items do Full ordenados por preço (mais caros primeiro).
+    // A paginação no client-side cuida de mostrar só PAGE_SIZE por vez.
     stockItems.sort((a, b) => b.price - a.price);
-    const topStock = stockItems.slice(0, 40);
 
-    firestoreSkins = [...manual, ...topStock];
+    firestoreSkins = [...manual, ...stockItems];
     // Guarda a lista COMPLETA de stock em outra var pra busca local usar
     allStockSkins = stockItems;
-    console.log(`[firestore] ${manual.length} manual + ${topStock.length}/${stockItems.length} stock exibidos = ${firestoreSkins.length} total`);
+    console.log(`[firestore] ${manual.length} manual + ${stockItems.length} stock = ${firestoreSkins.length} total (paginado no render)`);
     renderSkins();
   } catch (e) {
     console.log('Firestore skins load error:', e);
@@ -3503,6 +3516,7 @@ function resolveSkinImage(fullName) {
 function filterSkins() {
   const query = document.getElementById('searchInput').value.toLowerCase();
   currentSearchQuery = query;
+  currentPage = 1; // nova busca → volta pra primeira página
 
   const clearBtn = document.getElementById('searchClear');
   if (query) clearBtn.style.display = 'block';
@@ -3856,6 +3870,14 @@ function renderSkins() {
   const fullCountEl = document.getElementById('fullCount');
   if (fullCountEl) fullCountEl.textContent = allStockSkins?.length || 0;
 
+  // Paginação client-side: 60 cards por página (10 linhas × 6 colunas).
+  // Quando user filtra/busca, currentPage volta pra 1 (controlado nos handlers).
+  if (typeof currentPage !== 'number' || currentPage < 1) currentPage = 1;
+  const totalPages = Math.max(1, Math.ceil(sorted.length / PAGE_SIZE));
+  if (currentPage > totalPages) currentPage = totalPages;
+  const pageStart = (currentPage - 1) * PAGE_SIZE;
+  const pageItems = sorted.slice(pageStart, pageStart + PAGE_SIZE);
+
   // Render
   grid.innerHTML = '';
   if (sorted.length === 0) {
@@ -3871,10 +3893,46 @@ function renderSkins() {
       </div>
     `;
   } else {
-    sorted.forEach((skin, i) => grid.appendChild(createSkinCard(skin, i)));
+    pageItems.forEach((skin, i) => grid.appendChild(createSkinCard(skin, i)));
   }
+  renderPagination(totalPages, sorted.length);
+}
 
-  document.getElementById('resultCount').textContent = filtered.length;
+// ═══ PAGINAÇÃO ═══
+const PAGE_SIZE = 60; // 10 linhas × 6 colunas no desktop
+let currentPage = 1;
+
+function goToPage(p) {
+  const total = Math.max(1, Math.ceil((displayedSkins?.length || 0) / PAGE_SIZE));
+  currentPage = Math.max(1, Math.min(p, total));
+  renderSkins();
+  // scroll suave pro topo do grid pra usuário ver a nova página
+  document.getElementById('section-catalog')?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+}
+
+function renderPagination(totalPages, totalItems) {
+  const bar = document.getElementById('paginationBar');
+  if (!bar) return;
+  if (totalPages <= 1) { bar.innerHTML = ''; return; }
+  // Janela deslizante: mostra current ± 2, sempre 1 e last, com "…" entre.
+  const pages = new Set([1, totalPages, currentPage]);
+  for (let i = 1; i <= 2; i++) {
+    if (currentPage - i >= 1) pages.add(currentPage - i);
+    if (currentPage + i <= totalPages) pages.add(currentPage + i);
+  }
+  const sortedPages = [...pages].sort((a,b) => a-b);
+  let html = '';
+  // Anterior
+  html += `<button class="pg-btn pg-arrow" ${currentPage === 1 ? 'disabled' : ''} onclick="goToPage(${currentPage - 1})">‹</button>`;
+  let prev = 0;
+  sortedPages.forEach(p => {
+    if (p - prev > 1) html += `<span class="pg-ellipsis">…</span>`;
+    html += `<button class="pg-btn ${p === currentPage ? 'active' : ''}" onclick="goToPage(${p})">${p}</button>`;
+    prev = p;
+  });
+  html += `<button class="pg-btn pg-arrow" ${currentPage === totalPages ? 'disabled' : ''} onclick="goToPage(${currentPage + 1})">›</button>`;
+  html += `<span class="pg-info">${totalItems} skins • página ${currentPage}/${totalPages}</span>`;
+  bar.innerHTML = html;
 }
 
 function createSkinCard(skin, index) {
