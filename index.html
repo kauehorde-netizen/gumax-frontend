@@ -2131,7 +2131,7 @@ footer {
 <!-- SEARCH & FILTERS -->
 <section class="search-section" id="marketplace">
   <!-- Marca visível pra confirmar versão deployada. -->
-  <div style="font-size: 10px; color: rgba(139,92,246,0.5); text-align: right; margin-bottom: 4px;">search v40-modal-preserve-full</div>
+  <div style="font-size: 10px; color: rgba(139,92,246,0.5); text-align: right; margin-bottom: 4px;">search v41-inspect-generic-via-market</div>
 
   <!-- BUFF-style category picker com SVG icons (Faca, Luvas, Rifle, ...).
        Clicar num modelo (ex: AK-47) filtra a grid e rola pra seção. -->
@@ -4241,9 +4241,9 @@ function renderModalPrice(skin) {
     inspectLabel.textContent = 'Visualizar no jogo (skin exata)';
     inspectBtn.title = 'Abre o CS2 e mostra essa skin específica do estoque com float, pattern, stickers e charm reais';
   } else {
-    // Skin do catálogo Youpin — abre Steam Market onde tem listagens com inspect link
-    inspectLabel.textContent = 'Ver no Steam Market';
-    inspectBtn.title = 'Abre a página da skin no Steam Market — clique em "Inspecionar no Jogo" em qualquer listagem pra ver no CS2';
+    // Skin do catálogo Youpin — backend busca listagem real do Steam Market
+    inspectLabel.textContent = 'Visualizar no jogo (skin similar)';
+    inspectBtn.title = 'Abre o CS2 com uma skin igual a essa (modelo 3D, padrão, cores) — float pode ser diferente';
   }
 }
 
@@ -4358,13 +4358,14 @@ function analyzeFromModal() {
   window.open(url, '_blank');
 }
 
-// Visualizar no CS2 — 2 caminhos:
-//   1) inspectLink direto (skins do Full do Gu) → abre cliente Steam, mostra a SKIN EXATA
-//      com float real, pattern, stickers, charm.
-//   2) Sem inspectLink → abre Steam Community Market da skin. Lá o user vê todas as
-//      listagens reais (com screenshots e preços) e pode clicar em "Inspect in Game"
-//      em qualquer listagem pra abrir no CS2.
-function inspectInCS2() {
+// Visualizar no CS2 — 3 caminhos em ordem:
+//   1) inspectLink direto (skins Full do Gu) → abre cliente Steam com a SKIN EXATA
+//      (float real, pattern, stickers, charm).
+//   2) Sem inspectLink → backend busca uma listagem real no Steam Market e devolve
+//      um inspect link genérico → abre cliente Steam com uma skin daquela definição
+//      (float aleatório, mas o modelo 3D é igual).
+//   3) Fallback: abre página da skin no Steam Market (sempre funciona).
+async function inspectInCS2() {
   if (!currentModal) return;
   const skin = currentModal;
 
@@ -4374,9 +4375,32 @@ function inspectInCS2() {
     return;
   }
 
-  // 2) Steam Community Market — sempre funciona pra qualquer skin do CS2
-  const marketUrl = `https://steamcommunity.com/market/listings/730/${encodeURIComponent(skin.name)}`;
-  window.open(marketUrl, '_blank');
+  // 2) Pede pro backend resolver um inspect link genérico via Steam Market
+  const btn = document.getElementById('modalInspectBtn');
+  const labelEl = document.getElementById('modalInspectBtnLabel');
+  const originalLabel = labelEl.textContent;
+  labelEl.textContent = 'Buscando skin disponível…';
+  btn.disabled = true;
+  try {
+    const r = await fetch(`${API_BASE}/api/inspect-link?name=${encodeURIComponent(skin.name)}`);
+    if (r.ok) {
+      const data = await r.json();
+      if (data.inspectLink) {
+        window.open(data.inspectLink, '_blank');
+        return;
+      }
+    }
+    // 3) Fallback: Steam Market direto
+    const marketUrl = `https://steamcommunity.com/market/listings/730/${encodeURIComponent(skin.name)}`;
+    window.open(marketUrl, '_blank');
+  } catch (e) {
+    // Último fallback
+    const marketUrl = `https://steamcommunity.com/market/listings/730/${encodeURIComponent(skin.name)}`;
+    window.open(marketUrl, '_blank');
+  } finally {
+    labelEl.textContent = originalLabel;
+    btn.disabled = false;
+  }
 }
 
 // Categoria humanizada pra header do modal (Faca, Rifle, etc)
