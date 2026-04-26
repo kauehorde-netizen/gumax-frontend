@@ -2131,7 +2131,7 @@ footer {
 <!-- SEARCH & FILTERS -->
 <section class="search-section" id="marketplace">
   <!-- Marca visível pra confirmar versão deployada. -->
-  <div style="font-size: 10px; color: rgba(139,92,246,0.5); text-align: right; margin-bottom: 4px;">search v35-page-size-40</div>
+  <div style="font-size: 10px; color: rgba(139,92,246,0.5); text-align: right; margin-bottom: 4px;">search v36-home-160-items-4pages</div>
 
   <!-- BUFF-style category picker com SVG icons (Faca, Luvas, Rifle, ...).
        Clicar num modelo (ex: AK-47) filtra a grid e rola pra seção. -->
@@ -3242,9 +3242,10 @@ function getAllSkins() {
     const matchingYoupin = searchResults.filter(s => !stockNames.has(s.name));
     return [...matchingStock, ...matchingYoupin];
   }
-  // Home default: estoque Full primeiro (até 40) + preenche com skins mais caras do Youpin
-  // até completar 40 no total. Skins do Gu sempre aparecem primeiro.
-  const HOME_GRID_SIZE = 40;
+  // Home default: estoque Full primeiro + preenche com skins mais caras do Youpin
+  // até completar HOME_GRID_SIZE no total (4 páginas × 40 = 160).
+  // Skins do Gu sempre aparecem primeiro; o restante é Youpin (entrega 12h).
+  const HOME_GRID_SIZE = 160;
   const stockFill = firestoreSkins.slice(0, HOME_GRID_SIZE);
   const stockNames = new Set(stockFill.map(s => s.name));
   const needed = Math.max(0, HOME_GRID_SIZE - stockFill.length);
@@ -3262,7 +3263,7 @@ document.addEventListener('DOMContentLoaded', function() {
   loadFirestoreSkins().then(() => loadVerdictsForVisibleSkins());
   // Carrega top-sellers do Youpin pra PREENCHER a home quando o estoque
   // do Gu (Full) tiver menos que 40 items — fica bonito e traz tráfego.
-  loadYoupinTopSellers(80); // pede 80 pra ter sobra após dedupe
+  loadYoupinTopSellers(200); // pede 200 pra preencher 4 páginas × 40 com sobra após dedupe
   loadHeroConfig();
 
   // Check Steam callback
