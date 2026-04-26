@@ -2065,14 +2065,15 @@ footer {
 <body>
 
 <!-- VIDEO BACKGROUND (20% opacity, fixed, atrás de tudo).
+     Começa em top:72px pra NÃO ficar atrás do header (que é opaco e cortaria o vídeo).
      muted+autoplay+playsinline são obrigatórios pra autoplay no Chrome/Safari mobile.
      Loop e preload=auto pro vídeo começar instantâneo. -->
 <video autoplay muted loop playsinline preload="auto"
-       style="position:fixed;top:0;left:0;width:100vw;height:100vh;object-fit:cover;z-index:-2;opacity:.2;pointer-events:none;">
+       style="position:fixed;top:72px;left:0;width:100vw;height:calc(100vh - 72px);object-fit:cover;z-index:-2;opacity:.2;pointer-events:none;">
   <source src="fundo.mp4" type="video/mp4">
 </video>
 <!-- Overlay sutil pra escurecer só um pouco e manter contraste do conteúdo -->
-<div style="position:fixed;inset:0;background:rgba(8,6,14,0.35);z-index:-1;pointer-events:none;"></div>
+<div style="position:fixed;top:72px;left:0;width:100vw;height:calc(100vh - 72px);background:rgba(8,6,14,0.35);z-index:-1;pointer-events:none;"></div>
 
 <!-- DYNAMIC BACKGROUND -->
 <div class="bg-blur-1"></div>
@@ -2119,28 +2120,6 @@ footer {
     </div>
     <h1 class="hero-title" id="heroTitleEl">Suas skins de CS2 <span class="hero-title-gradient">com o melhor preço</span> do mercado</h1>
     <p class="hero-description" id="heroSubtitleEl">Compre skins com segurança, pagamento via PIX e entrega direta no seu inventário Steam. Milhares de skins disponíveis.</p>
-    <div class="hero-buttons">
-      <button class="btn btn-primary" id="heroCtaBtn" onclick="scrollToSection('marketplace')">Explorar Skins</button>
-      <button class="btn btn-secondary" onclick="scrollToSection('how')">Como Funciona</button>
-    </div>
-    <div class="hero-stats">
-      <div class="stat-item">
-        <div class="stat-value">2.400+</div>
-        <div class="stat-label">Skins disponíveis</div>
-      </div>
-      <div class="stat-item">
-        <div class="stat-value">30min</div>
-        <div class="stat-label">Entrega Full</div>
-      </div>
-      <div class="stat-item">
-        <div class="stat-value">100%</div>
-        <div class="stat-label">Seguro</div>
-      </div>
-      <div class="stat-item">
-        <div class="stat-value">PIX</div>
-        <div class="stat-label">Pagamento instantâneo</div>
-      </div>
-    </div>
   </div>
   <div class="hero-right" id="heroRight" style="display:none;">
     <picture>
@@ -2153,7 +2132,7 @@ footer {
 <!-- SEARCH & FILTERS -->
 <section class="search-section" id="marketplace">
   <!-- Marca visível pra confirmar versão deployada. -->
-  <div style="font-size: 10px; color: rgba(139,92,246,0.5); text-align: right; margin-bottom: 4px;">search v29-pagination-no-delivery-banners</div>
+  <div style="font-size: 10px; color: rgba(139,92,246,0.5); text-align: right; margin-bottom: 4px;">search v30-clean-hero-video-below-header</div>
 
   <!-- BUFF-style category picker com SVG icons (Faca, Luvas, Rifle, ...).
        Clicar num modelo (ex: AK-47) filtra a grid e rola pra seção. -->
