@@ -2132,7 +2132,7 @@ footer {
 <!-- SEARCH & FILTERS -->
 <section class="search-section" id="marketplace">
   <!-- Marca visível pra confirmar versão deployada. -->
-  <div style="font-size: 10px; color: rgba(139,92,246,0.5); text-align: right; margin-bottom: 4px;">search v31-tight-hero-spacing</div>
+  <div style="font-size: 10px; color: rgba(139,92,246,0.5); text-align: right; margin-bottom: 4px;">search v32-auto-hero-gradient</div>
 
   <!-- BUFF-style category picker com SVG icons (Faca, Luvas, Rifle, ...).
        Clicar num modelo (ex: AK-47) filtra a grid e rola pra seção. -->
@@ -2996,10 +2996,38 @@ async function loadHeroConfig() {
     if (!doc.exists) return;
     const d = doc.data() || {};
 
-    // Textos: sobrescreve defaults se admin customizou
-    if (d.title) document.getElementById('heroTitleEl').innerHTML = d.title;
+    // Textos: sobrescreve defaults se admin customizou.
+    // Se o admin escreveu o título sem o <span class="hero-title-gradient">,
+    // aplicamos auto-highlight: pega a parte a partir de "com" (ou últimas 3 palavras)
+    // e envolve no span pra manter o efeito de gradiente roxo→amarelo do design.
+    if (d.title) {
+      const titleEl = document.getElementById('heroTitleEl');
+      const raw = String(d.title);
+      if (raw.includes('hero-title-gradient')) {
+        titleEl.innerHTML = raw; // admin já caprichou no HTML
+      } else {
+        // Heurística: divide pelo " com " (case-insensitive). Se não tiver,
+        // pega as últimas 3 palavras pra colorir.
+        const lower = raw.toLowerCase();
+        const idx = lower.lastIndexOf(' com ');
+        let head, tail;
+        if (idx > 0) {
+          head = raw.slice(0, idx + 1);            // "Skins CS2 "
+          tail = raw.slice(idx + 1);               // "com os melhores preços"
+        } else {
+          const words = raw.trim().split(/\s+/);
+          const splitAt = Math.max(1, words.length - 3);
+          head = words.slice(0, splitAt).join(' ') + ' ';
+          tail = words.slice(splitAt).join(' ');
+        }
+        // Escapa HTML pra evitar XSS — admin é confiável, mas defesa em profundidade.
+        const esc = (s) => s.replace(/[&<>]/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;'}[c]));
+        titleEl.innerHTML = esc(head) + '<span class="hero-title-gradient">' + esc(tail) + '</span>';
+      }
+    }
     if (d.subtitle) document.getElementById('heroSubtitleEl').textContent = d.subtitle;
-    if (d.cta) document.getElementById('heroCtaBtn').textContent = d.cta;
+    const ctaEl = document.getElementById('heroCtaBtn');
+    if (d.cta && ctaEl) ctaEl.textContent = d.cta;
 
     // Imagem: só mostra se houver source cadastrado no admin
     const desktopSrc = d.imageDataUrl || d.imageUrl;
