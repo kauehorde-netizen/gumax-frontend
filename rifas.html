@@ -123,7 +123,85 @@ body {
 .progress-bar { height: 100%; background: linear-gradient(90deg, var(--primary), var(--accent-yellow)); transition: width .4s; }
 .progress-info { font-size: 12px; color: var(--text-secondary); margin-bottom: 18px; text-align: right; }
 
-/* Buy controls */
+/* Cartela de números — visual estilo bingo */
+.numbers-card {
+  background: var(--bg-card); border: 1px solid var(--border); border-radius: 16px;
+  padding: 24px; margin-bottom: 24px;
+}
+.numbers-header {
+  display: flex; justify-content: space-between; align-items: center;
+  margin-bottom: 18px; flex-wrap: wrap; gap: 12px;
+}
+.numbers-header h3 { font-size: 18px; font-weight: 700; }
+.numbers-controls { display: flex; gap: 8px; flex-wrap: wrap; }
+.numbers-grid {
+  display: grid; grid-template-columns: repeat(auto-fill, minmax(58px, 1fr));
+  gap: 8px;
+}
+.number-cell {
+  aspect-ratio: 1;
+  display: flex; align-items: center; justify-content: center;
+  background: var(--bg-elevated); border: 2px solid transparent;
+  border-radius: 10px; cursor: pointer; user-select: none;
+  font-weight: 700; font-size: 15px; color: var(--text-primary);
+  transition: all .15s; position: relative;
+}
+.number-cell:hover:not(.taken):not(.selected) {
+  background: rgba(139,92,246,.12);
+  border-color: rgba(139,92,246,.4);
+  transform: translateY(-2px);
+}
+.number-cell.selected {
+  background: linear-gradient(135deg, var(--primary), var(--primary-dark));
+  color: white;
+  border-color: var(--primary-light);
+  box-shadow: 0 4px 16px rgba(139,92,246,.4);
+}
+.number-cell.taken.paid {
+  background: rgba(16,185,129,.10);
+  color: var(--text-muted);
+  cursor: not-allowed;
+  border-color: rgba(16,185,129,.25);
+  opacity: .55;
+}
+.number-cell.taken.pending {
+  background: rgba(250,204,21,.10);
+  color: var(--text-muted);
+  cursor: not-allowed;
+  border-color: rgba(250,204,21,.25);
+  opacity: .55;
+}
+.number-cell.taken::after {
+  content: '✕';
+  position: absolute; top: 2px; right: 4px;
+  font-size: 9px; opacity: .6;
+}
+
+/* Legenda */
+.legend { display: flex; gap: 16px; margin-top: 14px; flex-wrap: wrap; font-size: 12px; color: var(--text-secondary); }
+.legend-item { display: flex; align-items: center; gap: 6px; }
+.legend-dot { width: 12px; height: 12px; border-radius: 3px; }
+.legend-dot.available { background: var(--bg-elevated); border: 1px solid var(--border); }
+.legend-dot.selected  { background: var(--primary); }
+.legend-dot.paid      { background: rgba(16,185,129,.4); }
+.legend-dot.pending   { background: rgba(250,204,21,.4); }
+
+/* Sticky checkout bar */
+.checkout-bar {
+  position: sticky; bottom: 0; left: 0; right: 0;
+  background: linear-gradient(180deg, transparent, var(--bg) 30%);
+  padding: 16px 0 0; margin-top: 18px; z-index: 50;
+}
+.checkout-inner {
+  background: var(--bg-card); border: 1px solid var(--border); border-radius: 12px;
+  padding: 14px 18px; display: flex; align-items: center; justify-content: space-between; gap: 14px; flex-wrap: wrap;
+}
+.checkout-info { display: flex; align-items: baseline; gap: 14px; flex-wrap: wrap; }
+.checkout-qty { font-size: 13px; color: var(--text-secondary); }
+.checkout-qty strong { color: var(--primary-light); font-size: 18px; }
+.checkout-total { font-size: 22px; font-weight: 800; color: var(--accent-yellow); }
+
+/* Buy controls (legado, mantido pra compat se precisar) */
 .buy-controls { display: flex; align-items: center; gap: 12px; flex-wrap: wrap; }
 .qty-input {
   background: var(--bg-input); border: 1px solid var(--border); border-radius: 8px;
@@ -258,13 +336,38 @@ body {
         </div>
         <div class="progress-wrap"><div class="progress-bar" id="raffleProgress" style="width:0%;"></div></div>
         <div class="progress-info" id="raffleProgressInfo">— vendidos</div>
-        <div class="buy-controls">
-          <label style="font-size:13px; color:var(--text-secondary);">Qtd:</label>
-          <input type="number" min="2" max="100" value="2" id="qtyInput" class="qty-input" oninput="updateBuyTotal()">
-          <button class="btn btn-primary" id="buyBtn" onclick="buyTickets()">Comprar bilhetes</button>
-          <span class="total-display" id="buyTotal">Total: R$ —</span>
+        <p style="font-size:13px; color:var(--text-secondary); margin-top:6px;">
+          👇 Escolha seus números na cartela abaixo. <strong style="color:var(--accent-yellow);">Mínimo 2 bilhetes</strong> por compra.
+        </p>
+      </div>
+    </div>
+
+    <!-- Cartela de números -->
+    <div class="numbers-card">
+      <div class="numbers-header">
+        <h3>🎟 Escolha seus números</h3>
+        <div class="numbers-controls">
+          <button class="btn btn-ghost" onclick="clearSelection()" style="font-size:13px; padding:8px 14px;">Limpar</button>
+          <button class="btn btn-ghost" onclick="randomSelection()" style="font-size:13px; padding:8px 14px;">🎲 Aleatório (2)</button>
         </div>
-        <p style="font-size:12px; color:var(--text-muted); margin-top:10px;">Mínimo: 2 bilhetes por compra. Pagamento via PIX.</p>
+      </div>
+      <div class="numbers-grid" id="numbersGrid"></div>
+      <div class="legend">
+        <div class="legend-item"><span class="legend-dot available"></span> Disponível</div>
+        <div class="legend-item"><span class="legend-dot selected"></span> Selecionado</div>
+        <div class="legend-item"><span class="legend-dot pending"></span> Reservado (aguardando pagto)</div>
+        <div class="legend-item"><span class="legend-dot paid"></span> Vendido</div>
+      </div>
+    </div>
+
+    <!-- Sticky checkout bar (aparece quando user seleciona números) -->
+    <div class="checkout-bar" id="checkoutBar" style="display:none;">
+      <div class="checkout-inner">
+        <div class="checkout-info">
+          <div class="checkout-qty"><strong id="ckQty">0</strong> bilhete(s) selecionado(s)</div>
+          <div class="checkout-total" id="ckTotal">R$ 0,00</div>
+        </div>
+        <button class="btn btn-primary" id="buyBtn" onclick="buyTickets()" disabled>Pagar com PIX</button>
       </div>
     </div>
 
@@ -334,6 +437,8 @@ const db = firebase.firestore();
 const API_BASE = 'https://gumax-backend-production.up.railway.app';
 
 let _activeRaffle = null;
+let _takenNumbers = new Map(); // n → 'paid' | 'pending'
+let _selected = new Set();     // números escolhidos pelo cliente
 
 function showToast(msg, type = '') {
   const t = document.getElementById('toast');
@@ -350,7 +455,9 @@ async function loadAll() {
     document.getElementById('loadingArea').style.display = 'none';
     if (data.active && data.active.status === 'active') {
       _activeRaffle = data.active;
+      _takenNumbers = new Map((data.takenNumbers || []).map(t => [t.n, t.status]));
       renderActiveRaffle(data.active);
+      renderNumbersGrid();
       document.getElementById('raffleActiveArea').style.display = '';
       loadMyTickets();
     } else {
@@ -423,12 +530,76 @@ function renderVideo(url) {
   wrap.innerHTML = `<div class="video-placeholder"><div class="icon">▶</div><a href="${escapeHtml(url)}" target="_blank" style="color:var(--primary-light);">Abrir vídeo</a></div>`;
 }
 
-function updateBuyTotal() {
+// Renderiza a cartela de números (1..totalTickets) com estado:
+// disponível, selecionado, reservado, vendido.
+function renderNumbersGrid() {
   if (!_activeRaffle) return;
-  const qty = parseInt(document.getElementById('qtyInput').value, 10) || 0;
-  const total = qty * _activeRaffle.pricePerTicket;
-  document.getElementById('buyTotal').textContent = `Total: R$ ${total.toFixed(2)}`;
-  document.getElementById('buyBtn').disabled = qty < 2;
+  const grid = document.getElementById('numbersGrid');
+  const total = _activeRaffle.totalTickets;
+  let html = '';
+  for (let n = 1; n <= total; n++) {
+    const taken = _takenNumbers.get(n);
+    const isSelected = _selected.has(n);
+    const cls = ['number-cell'];
+    if (taken) cls.push('taken', taken);
+    else if (isSelected) cls.push('selected');
+    html += `<div class="${cls.join(' ')}" data-n="${n}" onclick="toggleNumber(${n})">${n}</div>`;
+  }
+  grid.innerHTML = html;
+  updateCheckoutBar();
+}
+
+function toggleNumber(n) {
+  if (_takenNumbers.has(n)) return; // vendido/reservado
+  if (_selected.has(n)) _selected.delete(n);
+  else _selected.add(n);
+  renderNumbersGrid();
+}
+
+function clearSelection() {
+  _selected.clear();
+  renderNumbersGrid();
+}
+
+function randomSelection() {
+  // Escolhe 2 números disponíveis aleatoriamente
+  if (!_activeRaffle) return;
+  const total = _activeRaffle.totalTickets;
+  const available = [];
+  for (let n = 1; n <= total; n++) {
+    if (!_takenNumbers.has(n)) available.push(n);
+  }
+  if (available.length < 2) {
+    showToast('Sem bilhetes disponíveis suficientes', 'error');
+    return;
+  }
+  _selected.clear();
+  for (let i = 0; i < 2; i++) {
+    const idx = Math.floor(Math.random() * available.length);
+    _selected.add(available.splice(idx, 1)[0]);
+  }
+  renderNumbersGrid();
+}
+
+function updateCheckoutBar() {
+  const bar = document.getElementById('checkoutBar');
+  const qty = _selected.size;
+  if (qty === 0) {
+    bar.style.display = 'none';
+    return;
+  }
+  bar.style.display = '';
+  document.getElementById('ckQty').textContent = qty;
+  const total = qty * (_activeRaffle?.pricePerTicket || 0);
+  document.getElementById('ckTotal').textContent = `R$ ${total.toFixed(2).replace('.', ',')}`;
+  const btn = document.getElementById('buyBtn');
+  if (qty < 2) {
+    btn.disabled = true;
+    btn.textContent = `Selecione mais ${2 - qty} bilhete(s)`;
+  } else {
+    btn.disabled = false;
+    btn.textContent = `Pagar R$ ${total.toFixed(2)} via PIX`;
+  }
 }
 
 async function buyTickets() {
@@ -438,8 +609,7 @@ async function buyTickets() {
     setTimeout(() => window.location.href = 'index.html', 1500);
     return;
   }
-  const qty = parseInt(document.getElementById('qtyInput').value, 10) || 0;
-  if (qty < 2) { showToast('Mínimo 2 bilhetes', 'error'); return; }
+  if (_selected.size < 2) { showToast('Selecione pelo menos 2 bilhetes', 'error'); return; }
 
   const btn = document.getElementById('buyBtn');
   btn.disabled = true; btn.textContent = 'Gerando PIX...';
@@ -449,20 +619,23 @@ async function buyTickets() {
     const r = await fetch(`${API_BASE}/api/raffles/buy`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
-      body: JSON.stringify({ qty }),
+      body: JSON.stringify({ numbers: [..._selected] }),
     });
     const data = await r.json();
     if (data.error) {
       showToast(data.message || data.error, 'error');
+      // Se foi conflito de número (alguém pegou primeiro), recarrega
+      if (data.error === 'invalid_qty' || data.message?.includes('já foi escolhido')) {
+        loadAll();
+      }
       return;
     }
     openPixModal(data);
-    // Polling pra ver quando o pagamento aprova → atualiza Meus bilhetes
     pollTicketStatus(data.ticketId);
   } catch (e) {
     showToast('Erro: ' + e.message, 'error');
   } finally {
-    btn.disabled = false; btn.textContent = 'Comprar bilhetes';
+    updateCheckoutBar(); // restaura texto do botão
   }
 }
 
