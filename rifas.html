@@ -3,9 +3,12 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Gumax Skins | Rifa — AWP Dragon Lore</title>
+<title>Gumax Skins | Rifas</title>
 <link rel="icon" href="https://static.wixstatic.com/media/874864_b598e856481740e7ae752771a661c242~mv2.png/v1/fill/w_64,h_64,al_c,q_85,enc_auto/874864_b598e856481740e7ae752771a661c242~mv2.png">
 <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800;900&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<script src="https://www.gstatic.com/firebasejs/10.5.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.5.0/firebase-auth-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.5.0/firebase-firestore-compat.js"></script>
 
 <style>
 * { box-sizing: border-box; margin: 0; padding: 0; }
@@ -14,567 +17,536 @@
   --text-primary: #ece8f4; --text-secondary: #9890a8; --text-muted: #5e5670;
   --border: #241e35; --primary: #8B5CF6; --primary-dark: #7C3AED; --primary-light: #A78BFA;
   --accent-yellow: #FACC15; --accent-green: #10b981; --accent-red: #ef4444;
-  --accent-gold: #eb4b4b;
 }
 body {
   background: var(--bg);
   background-image:
-    radial-gradient(ellipse at 50% 0%, rgba(235, 75, 75, .09) 0%, transparent 50%),
-    radial-gradient(ellipse at 80% 100%, rgba(250, 204, 21, .04) 0%, transparent 40%);
+    radial-gradient(ellipse at 50% 0%, rgba(139, 92, 246, .07) 0%, transparent 50%),
+    radial-gradient(ellipse at 80% 100%, rgba(250, 204, 21, .03) 0%, transparent 40%);
   color: var(--text-primary);
   font-family: 'Outfit', 'Segoe UI', sans-serif;
   min-height: 100vh;
   line-height: 1.5;
 }
 
-/* NAV */
+/* NAV — padronizado com index.html */
 .nav {
   display: flex; align-items: center; justify-content: space-between;
-  padding: 12px 32px; border-bottom: 1px solid var(--border);
-  background: rgba(8, 6, 14, .8); backdrop-filter: blur(12px);
+  height: 72px;
+  padding: 0 max(24px, calc((100% - 1280px) / 2));
+  border-bottom: 1px solid var(--border);
+  background: rgba(8, 6, 14, .95); backdrop-filter: blur(20px);
   position: sticky; top: 0; z-index: 100;
 }
-.nav-brand img { height: 26px; width: auto; display: block; }
-.nav-links { display: flex; gap: 24px; }
-.nav-link {
-  color: var(--text-secondary); text-decoration: none; font-weight: 500;
-  transition: color .2s; cursor: pointer; font-size: 14px;
-}
+.nav-brand { font-size: 22px; font-weight: 800; color: var(--primary-light); letter-spacing: -0.5px; text-decoration: none; }
+.nav-links { display: flex; gap: 32px; flex: 1; margin-left: 48px; }
+.nav-link { color: var(--text-secondary); text-decoration: none; font-weight: 500; transition: color .2s; }
 .nav-link:hover { color: var(--primary-light); }
-.nav-link.active { color: var(--accent-gold); }
+.nav-link.active { color: var(--primary-light); }
 
-.container { max-width: 1080px; margin: 0 auto; padding: 16px 20px 80px; }
+.container { max-width: 1080px; margin: 32px auto; padding: 0 24px 80px; }
 
-/* HERO */
-.rifa-hero {
-  display: grid; grid-template-columns: 0.8fr 1.2fr; gap: 16px;
+.page-title { font-size: 28px; font-weight: 800; margin-bottom: 6px; letter-spacing: -0.5px; }
+.page-subtitle { color: var(--text-secondary); margin-bottom: 28px; font-size: 14px; }
+
+/* Loader / empty */
+.loader { border: 3px solid var(--border); border-top: 3px solid var(--primary); border-radius: 50%; width: 36px; height: 36px; animation: spin 1s linear infinite; margin: 80px auto; }
+@keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+
+.empty-state {
+  background: var(--bg-card); border: 1px dashed var(--border); border-radius: 16px;
+  padding: 60px 24px; text-align: center; color: var(--text-secondary);
+}
+.empty-state h2 { font-size: 22px; font-weight: 700; color: var(--text-primary); margin-bottom: 8px; }
+
+/* Vídeo do Gu */
+.video-card {
   background: var(--bg-card); border: 1px solid var(--border);
-  border-radius: 14px; padding: 14px; margin-bottom: 12px;
+  border-radius: 16px; overflow: hidden; margin-bottom: 24px;
+}
+.video-card-header {
+  padding: 14px 20px; border-bottom: 1px solid var(--border);
+  display: flex; align-items: center; gap: 10px;
+  font-weight: 700; font-size: 14px; color: var(--accent-yellow);
+}
+.video-wrap {
+  position: relative; padding-bottom: 56.25%; /* 16:9 */ height: 0;
+  background: #000;
+}
+.video-wrap iframe, .video-wrap video {
+  position: absolute; top: 0; left: 0; width: 100%; height: 100%;
+  border: 0;
+}
+.video-placeholder {
+  position: absolute; inset: 0; display: flex; align-items: center; justify-content: center;
+  flex-direction: column; gap: 12px; color: var(--text-muted);
+  background: linear-gradient(135deg, rgba(139,92,246,.08), rgba(250,204,21,.04));
+}
+.video-placeholder .icon { font-size: 56px; opacity: .4; }
+
+/* Card da rifa */
+.raffle-card {
+  background: var(--bg-card); border: 1px solid var(--border);
+  border-radius: 16px; padding: 24px; margin-bottom: 24px;
+  display: grid; grid-template-columns: 320px 1fr; gap: 28px;
   position: relative; overflow: hidden;
 }
-.rifa-hero::before {
+.raffle-card::before {
   content: ''; position: absolute; inset: 0;
-  background: radial-gradient(circle at 80% 30%, rgba(235, 75, 75, .18), transparent 60%);
+  background: radial-gradient(circle at 90% 10%, rgba(139, 92, 246, .12), transparent 60%);
   pointer-events: none;
 }
-.rifa-image-wrap {
-  display: flex; align-items: center; justify-content: center;
-  background: linear-gradient(135deg, rgba(235, 75, 75, .12), rgba(235, 75, 75, .02));
-  border-radius: 12px; padding: 16px; position: relative;
-  border: 1px solid rgba(235, 75, 75, .25); min-height: 200px;
+.raffle-img-wrap {
+  background: linear-gradient(135deg, rgba(139,92,246,.12), rgba(139,92,246,.02));
+  border: 1px solid rgba(139,92,246,.25);
+  border-radius: 14px; padding: 20px;
+  display: flex; align-items: center; justify-content: center; min-height: 240px;
 }
-.rifa-image-wrap img {
-  width: 100%; max-width: 280px; filter: drop-shadow(0 0 24px rgba(235, 75, 75, .35));
+.raffle-img-wrap img { width: 100%; max-width: 280px; filter: drop-shadow(0 0 28px rgba(139,92,246,.4)); }
+.raffle-info { display: flex; flex-direction: column; justify-content: center; position: relative; }
+.raffle-tag {
+  display: inline-block; padding: 4px 10px; border-radius: 999px;
+  background: rgba(250,204,21,.15); color: var(--accent-yellow);
+  font-weight: 700; font-size: 11px; letter-spacing: .6px;
+  width: fit-content; text-transform: uppercase; margin-bottom: 10px;
 }
-.rifa-info { display: flex; flex-direction: column; justify-content: center; position: relative; }
-.rarity-tag {
-  display: inline-block; padding: 3px 10px; border-radius: 999px;
-  background: rgba(235, 75, 75, .15); color: var(--accent-gold);
-  font-weight: 700; font-size: 11px; letter-spacing: .6px; margin-bottom: 8px;
-  width: fit-content; text-transform: uppercase;
-}
-.rifa-title {
-  font-size: 24px; font-weight: 800; letter-spacing: -0.5px;
-  line-height: 1.1; margin-bottom: 6px;
-}
-.rifa-subtitle { color: var(--text-secondary); margin-bottom: 14px; font-size: 12px; line-height: 1.4; }
-.rifa-stats {
-  display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px;
-  margin: 10px 0 14px;
-}
-.stat-box {
-  background: var(--bg-elevated); border: 1px solid var(--border);
-  border-radius: 8px; padding: 8px 10px; text-align: center;
-}
-.stat-box .value {
-  font-size: 17px; font-weight: 800; color: var(--primary-light);
-  font-family: 'JetBrains Mono', monospace;
-}
-.stat-box .label {
-  font-size: 10px; color: var(--text-muted); text-transform: uppercase;
-  letter-spacing: .4px; margin-top: 2px;
-}
-.ticket-price {
-  display: flex; align-items: center; justify-content: space-between;
-  background: var(--bg-elevated); border: 1px solid var(--border);
-  border-radius: 10px; padding: 10px 14px; margin-bottom: 10px;
-}
-.ticket-price .label { font-size: 12px; color: var(--text-secondary); }
-.ticket-price .price {
-  font-size: 20px; font-weight: 800; color: var(--accent-yellow);
-  font-family: 'JetBrains Mono', monospace;
-}
-.progress-wrap {
-  background: var(--bg-elevated); border-radius: 999px; height: 6px;
-  overflow: hidden; margin-bottom: 6px;
-}
-.progress-bar {
-  height: 100%; background: linear-gradient(90deg, var(--accent-gold), var(--accent-yellow));
-  transition: width .3s;
-}
-.progress-text { font-size: 11px; color: var(--text-secondary); text-align: right; }
+.raffle-name { font-size: 22px; font-weight: 800; margin-bottom: 4px; letter-spacing: -0.3px; }
+.raffle-skin { color: var(--text-secondary); margin-bottom: 18px; font-size: 14px; }
+.raffle-stats { display: grid; grid-template-columns: repeat(2, 1fr); gap: 16px; margin-bottom: 18px; }
+.stat { background: var(--bg-elevated); padding: 12px 14px; border-radius: 10px; }
+.stat-label { font-size: 11px; color: var(--text-secondary); text-transform: uppercase; letter-spacing: .5px; margin-bottom: 4px; }
+.stat-value { font-size: 18px; font-weight: 700; }
+.stat-value.gold { color: var(--accent-yellow); }
+.stat-value.purple { color: var(--primary-light); }
 
-/* NUMBER GRID */
-.grid-section {
+.progress-wrap { background: var(--bg-elevated); border-radius: 8px; height: 12px; overflow: hidden; margin-bottom: 6px; }
+.progress-bar { height: 100%; background: linear-gradient(90deg, var(--primary), var(--accent-yellow)); transition: width .4s; }
+.progress-info { font-size: 12px; color: var(--text-secondary); margin-bottom: 18px; text-align: right; }
+
+/* Buy controls */
+.buy-controls { display: flex; align-items: center; gap: 12px; flex-wrap: wrap; }
+.qty-input {
+  background: var(--bg-input); border: 1px solid var(--border); border-radius: 8px;
+  padding: 10px 12px; color: var(--text-primary); font-family: inherit; font-size: 16px;
+  font-weight: 700; width: 80px; text-align: center;
+}
+.qty-input:focus { outline: none; border-color: var(--primary); }
+.btn {
+  display: inline-flex; align-items: center; gap: 8px;
+  border: none; border-radius: 10px; padding: 12px 22px;
+  font-family: inherit; font-weight: 600; font-size: 14px;
+  cursor: pointer; transition: background .2s, transform .1s, opacity .2s;
+}
+.btn-primary { background: var(--primary); color: white; }
+.btn-primary:hover:not(:disabled) { background: var(--primary-dark); }
+.btn-primary:disabled { opacity: .4; cursor: not-allowed; }
+.btn-ghost { background: transparent; border: 1px solid var(--border); color: var(--text-secondary); }
+.btn-ghost:hover { border-color: var(--primary); color: var(--primary-light); }
+.total-display { color: var(--accent-yellow); font-weight: 700; font-size: 16px; margin-left: 8px; }
+
+/* Meus bilhetes */
+.section-title { font-size: 18px; font-weight: 700; margin: 32px 0 14px 0; }
+.tickets-list {
   background: var(--bg-card); border: 1px solid var(--border);
-  border-radius: 16px; padding: 18px 20px; margin-bottom: 16px;
+  border-radius: 14px; overflow: hidden;
 }
-.grid-header {
-  display: flex; align-items: center; justify-content: space-between;
-  margin-bottom: 14px; flex-wrap: wrap; gap: 10px;
+.ticket-row {
+  padding: 14px 18px; border-bottom: 1px solid var(--border);
+  display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 8px;
 }
-.grid-title { font-size: 17px; font-weight: 700; }
-.grid-subtitle { font-size: 12px; color: var(--text-secondary); margin-top: 2px; }
-.grid-legend { display: flex; gap: 14px; font-size: 11px; color: var(--text-secondary); }
-.legend-dot { display: inline-block; width: 10px; height: 10px; border-radius: 3px; margin-right: 5px; vertical-align: middle; }
-.legend-dot.available { background: var(--bg-input); border: 1px solid var(--border); }
-.legend-dot.selected { background: var(--primary); }
-.legend-dot.taken { background: var(--accent-red); opacity: 0.6; }
+.ticket-row:last-child { border-bottom: none; }
+.ticket-numbers { font-family: 'JetBrains Mono', monospace; font-size: 13px; color: var(--primary-light); font-weight: 600; }
+.ticket-status { padding: 4px 10px; border-radius: 6px; font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: .5px; }
+.ticket-status.paid { background: rgba(16,185,129,.15); color: var(--accent-green); }
+.ticket-status.pending { background: rgba(250,204,21,.15); color: var(--accent-yellow); }
+.ticket-status.expired { background: rgba(239,68,68,.15); color: var(--accent-red); }
 
-.number-grid {
-  display: grid; grid-template-columns: repeat(10, 1fr); gap: 5px;
+/* PIX modal */
+.modal-backdrop {
+  position: fixed; inset: 0; background: rgba(0,0,0,.7); z-index: 200;
+  display: none; align-items: center; justify-content: center; padding: 20px;
 }
-.num {
-  height: 42px; border-radius: 6px; background: var(--bg-input);
-  border: 1px solid var(--border); display: flex; align-items: center; justify-content: center;
-  font-weight: 700; font-size: 13px; font-family: 'JetBrains Mono', monospace;
-  cursor: pointer; transition: all .15s; user-select: none;
+.modal-backdrop.show { display: flex; }
+.modal-content {
+  background: var(--bg-card); border: 1px solid var(--border); border-radius: 16px;
+  padding: 28px; max-width: 480px; width: 100%; text-align: center;
+  position: relative; max-height: 90vh; overflow-y: auto;
 }
-.num:hover:not(.taken) { border-color: var(--primary); transform: translateY(-1px); color: var(--primary-light); }
-.num.selected {
-  background: var(--primary); color: white; border-color: var(--primary-dark);
-  box-shadow: 0 3px 10px rgba(139, 92, 246, .35);
+.modal-content h2 { font-size: 22px; font-weight: 800; margin-bottom: 8px; }
+.modal-content .qr-img { background: white; padding: 12px; border-radius: 12px; margin: 20px auto; max-width: 280px; }
+.modal-content .qr-img img { width: 100%; display: block; }
+.copypaste-box {
+  background: var(--bg-input); border: 1px solid var(--border); border-radius: 8px;
+  padding: 10px 12px; font-family: 'JetBrains Mono', monospace; font-size: 11px;
+  word-break: break-all; margin: 12px 0; color: var(--text-secondary);
+  text-align: left; max-height: 80px; overflow-y: auto;
 }
-.num.taken {
-  background: rgba(239, 68, 68, .15); color: var(--accent-red);
-  border-color: rgba(239, 68, 68, .3); cursor: not-allowed;
-  text-decoration: line-through; opacity: 0.55;
-}
-
-/* CHECKOUT */
-.checkout-bar {
-  position: sticky; bottom: 10px; z-index: 50;
-  background: var(--bg-card); border: 1px solid var(--border);
-  border-radius: 12px; padding: 10px 16px; box-shadow: 0 6px 24px rgba(0, 0, 0, .4);
-  display: flex; align-items: center; justify-content: space-between;
-  flex-wrap: wrap; gap: 12px;
-}
-.checkout-summary {
-  display: flex; align-items: center; gap: 18px; flex-wrap: wrap;
-}
-.checkout-label { font-size: 10px; color: var(--text-muted); text-transform: uppercase; letter-spacing: .4px; }
-.checkout-value { font-size: 16px; font-weight: 800; }
-.checkout-value.big { color: var(--accent-yellow); font-family: 'JetBrains Mono', monospace; font-size: 18px; }
-.checkout-selected {
-  color: var(--primary-light); font-family: 'JetBrains Mono', monospace;
-  font-size: 12px; max-width: 360px; word-break: break-all;
-}
-.btn-buy {
-  background: linear-gradient(135deg, var(--primary), var(--primary-dark));
-  color: white; border: none; padding: 10px 24px; border-radius: 10px;
-  font-family: inherit; font-weight: 700; font-size: 14px; cursor: pointer;
-  transition: transform .1s, filter .2s;
-}
-.btn-buy:hover:not(:disabled) { transform: translateY(-2px); filter: brightness(1.1); }
-.btn-buy:disabled { opacity: .4; cursor: not-allowed; }
-
-/* MODAL */
-.modal-overlay {
-  position: fixed; inset: 0; background: rgba(8, 6, 14, .85);
-  display: flex; align-items: center; justify-content: center;
-  padding: 24px; z-index: 1000; backdrop-filter: blur(8px);
-}
-.modal-overlay.hidden { display: none; }
-.modal {
-  background: var(--bg-card); border: 1px solid var(--border);
-  border-radius: 20px; padding: 32px; max-width: 520px; width: 100%;
-  max-height: 90vh; overflow-y: auto; position: relative;
-}
-.modal h2 {
-  font-size: 24px; font-weight: 800; margin-bottom: 8px; letter-spacing: -0.5px;
-}
-.modal .sub { color: var(--text-secondary); margin-bottom: 24px; font-size: 14px; }
 .modal-close {
-  position: absolute; top: 16px; right: 16px; background: transparent;
-  border: 1px solid var(--border); color: var(--text-muted); width: 32px; height: 32px;
-  border-radius: 8px; cursor: pointer; font-size: 18px;
+  position: absolute; top: 14px; right: 14px; background: transparent; border: none;
+  color: var(--text-secondary); cursor: pointer; font-size: 24px;
 }
-.modal-close:hover { color: var(--text-primary); }
-.pix-box {
-  background: var(--bg-elevated); border: 1px dashed var(--primary);
-  border-radius: 12px; padding: 24px; text-align: center; margin-bottom: 16px;
-}
-.pix-qr {
-  width: 200px; height: 200px; margin: 0 auto 16px;
-  background: white; border-radius: 12px; padding: 12px;
-  display: flex; align-items: center; justify-content: center;
-}
-.pix-qr svg { width: 100%; height: 100%; }
-.pix-code {
-  background: var(--bg-input); padding: 10px; border-radius: 8px;
-  font-family: 'JetBrains Mono', monospace; font-size: 11px;
-  word-break: break-all; color: var(--text-secondary); margin-bottom: 8px;
-}
-.pix-copy-btn {
-  background: var(--primary); color: white; border: none; padding: 10px 18px;
-  border-radius: 8px; font-family: inherit; font-weight: 600; font-size: 13px;
-  cursor: pointer; transition: background .2s;
-}
-.pix-copy-btn:hover { background: var(--primary-dark); }
-.success-screen { text-align: center; }
-.success-icon {
-  width: 72px; height: 72px; margin: 0 auto 16px;
-  background: rgba(16, 185, 129, .15); border-radius: 50%;
-  display: flex; align-items: center; justify-content: center;
-  font-size: 36px; color: var(--accent-green);
-}
+
+/* Histórico */
+.history-table { width: 100%; border-collapse: collapse; background: var(--bg-card); border-radius: 14px; overflow: hidden; }
+.history-table th, .history-table td { padding: 12px 16px; text-align: left; font-size: 13px; }
+.history-table th { background: var(--bg-elevated); color: var(--text-secondary); text-transform: uppercase; font-size: 11px; letter-spacing: .5px; }
+.history-table td { border-top: 1px solid var(--border); }
 
 .toast {
   position: fixed; bottom: 30px; left: 50%; transform: translateX(-50%) translateY(30px);
   background: var(--bg-elevated); border: 1px solid var(--border);
   padding: 12px 24px; border-radius: 10px; color: var(--text-primary);
-  font-weight: 500; opacity: 0; transition: all .3s; z-index: 2000;
+  font-weight: 500; opacity: 0; transition: all .3s; z-index: 1000;
   pointer-events: none; font-size: 14px;
 }
 .toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
+.toast.error { border-color: var(--accent-red); color: var(--accent-red); }
+.toast.success { border-color: var(--accent-green); color: var(--accent-green); }
 
 @media (max-width: 720px) {
-  .rifa-hero { grid-template-columns: 1fr; }
-  .number-grid { grid-template-columns: repeat(5, 1fr); }
-  .rifa-title { font-size: 24px; }
-  .nav { padding: 16px 20px; }
-  .nav-links { display: none; }
-  .checkout-bar { flex-direction: column; align-items: stretch; }
-  .btn-buy { width: 100%; }
-}
-
-.badge-status {
-  display: inline-flex; align-items: center; gap: 6px;
-  padding: 4px 10px; border-radius: 999px; font-size: 11px;
-  background: rgba(16, 185, 129, .15); color: var(--accent-green);
-  font-weight: 600; text-transform: uppercase; letter-spacing: .5px;
-}
-.badge-status::before {
-  content: ''; width: 6px; height: 6px; border-radius: 50%;
-  background: var(--accent-green); animation: pulse 1.5s infinite;
-}
-@keyframes pulse {
-  0%, 100% { opacity: 1; } 50% { opacity: .3; }
+  .raffle-card { grid-template-columns: 1fr; }
+  .raffle-stats { grid-template-columns: 1fr 1fr; }
 }
 </style>
 </head>
 <body>
 
 <nav class="nav">
-  <a href="index.html" class="nav-brand">
-    <img src="https://static.wixstatic.com/media/874864_b598e856481740e7ae752771a661c242~mv2.png/v1/fill/w_300,h_118,al_c,q_85,enc_auto/874864_b598e856481740e7ae752771a661c242~mv2.png" alt="Gumax Skins">
-  </a>
+  <a class="nav-brand" href="index.html">Gumax Skins</a>
   <div class="nav-links">
     <a class="nav-link" href="index.html">🛒 Mercado</a>
     <a class="nav-link" href="vender.html" style="color:var(--accent-yellow,#facc15);font-weight:600;">💰 Vender</a>
     <a class="nav-link" href="analise.html">📊 Análise</a>
     <a class="nav-link active" href="rifas.html">🎰 Rifas</a>
+    <a class="nav-link" href="perfil.html">👤 Perfil</a>
   </div>
-  <div>
-    <span class="badge-status">Sorteio ao vivo</span>
-  </div>
+  <div></div>
 </nav>
 
 <div class="container">
+  <h1 class="page-title">🎰 Rifas Gumax</h1>
+  <p class="page-subtitle">Concorra a skins de alto valor pagando pouco. Transparente, automático e seguro.</p>
 
-  <!-- HERO DA RIFA -->
-  <section class="rifa-hero">
-    <div class="rifa-image-wrap" id="skinImageWrap">
-      <img src="dragonlore.png" alt="AWP Dragon Lore"
-        style="width:100%;max-width:260px;filter:drop-shadow(0 0 18px rgba(235,75,75,0.4));"
-        onerror="this.parentElement.innerHTML=fallbackPlaceholder();">
+  <!-- Vídeo do Gu explicando -->
+  <div class="video-card">
+    <div class="video-card-header">▶ Como funciona — explicado pelo Gu</div>
+    <div class="video-wrap" id="videoWrap">
+      <div class="video-placeholder">
+        <div class="icon">🎬</div>
+        <div>Vídeo do Gu em breve</div>
+      </div>
     </div>
-    <div class="rifa-info">
-      <span class="rarity-tag">Cobiçada · Factory New</span>
-      <h1 class="rifa-title">AWP | Dragon Lore</h1>
-      <p class="rifa-subtitle">Uma das AWPs mais raras do CS2 — acabou de ser adicionada à rifa. Pegue seus números antes que acabe.</p>
+  </div>
 
-      <div class="rifa-stats">
-        <div class="stat-box">
-          <div class="value">R$ 38.4k</div>
-          <div class="label">Valor da skin</div>
+  <div id="loadingArea"><div class="loader"></div></div>
+
+  <!-- Estado: rifa ativa -->
+  <div id="raffleActiveArea" style="display:none;">
+    <div class="raffle-card">
+      <div class="raffle-img-wrap">
+        <img id="raffleImg" src="" alt="">
+      </div>
+      <div class="raffle-info">
+        <span class="raffle-tag">🔥 Rifa ativa</span>
+        <h2 class="raffle-name" id="raffleName">—</h2>
+        <p class="raffle-skin" id="raffleSkin">—</p>
+        <div class="raffle-stats">
+          <div class="stat"><div class="stat-label">Valor da skin</div><div class="stat-value gold" id="raffleValue">—</div></div>
+          <div class="stat"><div class="stat-label">Preço por bilhete</div><div class="stat-value purple" id="rafflePrice">—</div></div>
+          <div class="stat"><div class="stat-label">Bilhetes vendidos</div><div class="stat-value" id="raffleSold">—</div></div>
+          <div class="stat"><div class="stat-label">Sorteio</div><div class="stat-value" id="raffleDraw" style="font-size:14px;">—</div></div>
         </div>
-        <div class="stat-box">
-          <div class="value" id="ticketsTaken">0</div>
-          <div class="label">Números vendidos</div>
+        <div class="progress-wrap"><div class="progress-bar" id="raffleProgress" style="width:0%;"></div></div>
+        <div class="progress-info" id="raffleProgressInfo">— vendidos</div>
+        <div class="buy-controls">
+          <label style="font-size:13px; color:var(--text-secondary);">Qtd:</label>
+          <input type="number" min="2" max="100" value="2" id="qtyInput" class="qty-input" oninput="updateBuyTotal()">
+          <button class="btn btn-primary" id="buyBtn" onclick="buyTickets()">Comprar bilhetes</button>
+          <span class="total-display" id="buyTotal">Total: R$ —</span>
         </div>
-        <div class="stat-box">
-          <div class="value" id="ticketsLeft">50</div>
-          <div class="label">Disponíveis</div>
-        </div>
-      </div>
-
-      <div class="ticket-price">
-        <span class="label">Cada número custa</span>
-        <span class="price" id="pricePerTicket">R$ 19,90</span>
-      </div>
-
-      <div class="progress-wrap"><div class="progress-bar" id="progressBar" style="width: 0%"></div></div>
-      <div class="progress-text"><span id="progressPercent">0%</span> completo · sorteio quando bater 100%</div>
-    </div>
-  </section>
-
-  <!-- GRID DE NÚMEROS -->
-  <section class="grid-section">
-    <div class="grid-header">
-      <div>
-        <div class="grid-title">Escolha seus números da sorte</div>
-        <div style="font-size:13px;color:var(--text-secondary);margin-top:4px;">Clique nos números pra selecionar. Cada um custa R$ 19,90.</div>
-      </div>
-      <div class="grid-legend">
-        <span><span class="legend-dot available"></span>Disponível</span>
-        <span><span class="legend-dot selected"></span>Selecionado</span>
-        <span><span class="legend-dot taken"></span>Já vendido</span>
+        <p style="font-size:12px; color:var(--text-muted); margin-top:10px;">Mínimo: 2 bilhetes por compra. Pagamento via PIX.</p>
       </div>
     </div>
-    <div class="number-grid" id="numberGrid"></div>
-  </section>
 
-  <!-- BARRA DE CHECKOUT -->
-  <div class="checkout-bar">
-    <div class="checkout-summary">
-      <div>
-        <div class="checkout-label">Números selecionados</div>
-        <div class="checkout-selected" id="selectedNums">Nenhum ainda</div>
-      </div>
-      <div>
-        <div class="checkout-label">Total</div>
-        <div class="checkout-value big" id="totalValue">R$ 0,00</div>
-      </div>
+    <!-- Meus bilhetes nesta rifa -->
+    <div id="myTicketsArea" style="display:none;">
+      <h3 class="section-title">🎟 Meus bilhetes</h3>
+      <div class="tickets-list" id="myTicketsList"></div>
     </div>
-    <button class="btn-buy" id="buyBtn" onclick="openCheckout()" disabled>Comprar números selecionados</button>
+  </div>
+
+  <!-- Estado: nenhuma rifa ativa -->
+  <div id="noRaffleArea" class="empty-state" style="display:none;">
+    <h2>Nenhuma rifa ativa no momento</h2>
+    <p>Fique de olho! O Gu cria rifas novas frequentemente. Próxima vai ser monstra. 👀</p>
+  </div>
+
+  <!-- Histórico -->
+  <div id="historyArea" style="display:none;">
+    <h3 class="section-title">📋 Rifas anteriores</h3>
+    <table class="history-table">
+      <thead>
+        <tr>
+          <th>Skin</th>
+          <th>Bilhetes</th>
+          <th>Status</th>
+          <th>Vencedor</th>
+        </tr>
+      </thead>
+      <tbody id="historyTbody"></tbody>
+    </table>
   </div>
 </div>
 
-<!-- MODAL CHECKOUT -->
-<div class="modal-overlay hidden" id="checkoutModal" onclick="closeCheckout(event)">
-  <div class="modal" onclick="event.stopPropagation()">
-    <button class="modal-close" onclick="closeCheckout()">×</button>
-    <div id="modalContent"></div>
+<!-- Modal PIX -->
+<div class="modal-backdrop" id="pixModal">
+  <div class="modal-content">
+    <button class="modal-close" onclick="closePixModal()">×</button>
+    <h2>Pague via PIX</h2>
+    <p style="color:var(--text-secondary); font-size:13px;">Bilhetes: <strong id="pixModalNumbers" style="color:var(--primary-light);">—</strong></p>
+    <p style="color:var(--accent-yellow); font-size:18px; font-weight:700; margin: 12px 0;">R$ <span id="pixModalTotal">—</span></p>
+    <div class="qr-img"><img id="pixQrImg" src=""></div>
+    <p style="font-size:12px; color:var(--text-secondary);">Ou copie e cole no app do banco:</p>
+    <div class="copypaste-box" id="pixCopyPaste">—</div>
+    <button class="btn btn-ghost" onclick="copyPixCode()">📋 Copiar código</button>
+    <p style="font-size:11px; color:var(--text-muted); margin-top:14px;">
+      Após pagar, seus bilhetes aparecem em "Meus bilhetes" automaticamente.
+      Não feche essa janela até o pagamento confirmar.
+    </p>
   </div>
 </div>
 
 <div class="toast" id="toast"></div>
 
 <script>
-// ============ ESTADO ============
-const TOTAL_NUMBERS = 50;
-const TICKET_PRICE = 19.90;
+const firebaseConfig = {
+  apiKey: "AIzaSyCN0TV59kJNQMsaQ-5d9dSTowirxFcuHG0",
+  authDomain: "gumax-skins.firebaseapp.com",
+  projectId: "gumax-skins",
+  storageBucket: "gumax-skins.firebasestorage.app",
+  messagingSenderId: "678525908778",
+  appId: "1:678525908778:web:56ee6d6a809c013b341053"
+};
+firebase.initializeApp(firebaseConfig);
+const auth = firebase.auth();
+const db = firebase.firestore();
 
-// Números "já vendidos" pra dar sensação de movimento (simulação).
-// Em produção isso virá do Firestore.
-const TAKEN_NUMBERS = new Set([3, 7, 12, 15, 18, 22, 27, 31, 33, 38, 42, 47]);
+const API_BASE = 'https://gumax-backend-production.up.railway.app';
 
-const selected = new Set();
+let _activeRaffle = null;
 
-// ============ RENDER GRID ============
-function renderGrid() {
-  const grid = document.getElementById('numberGrid');
-  grid.innerHTML = '';
-  for (let i = 1; i <= TOTAL_NUMBERS; i++) {
-    const btn = document.createElement('div');
-    btn.className = 'num';
-    if (TAKEN_NUMBERS.has(i)) btn.classList.add('taken');
-    if (selected.has(i)) btn.classList.add('selected');
-    btn.textContent = String(i).padStart(2, '0');
-    btn.dataset.num = i;
-    btn.onclick = () => toggleNumber(i);
-    grid.appendChild(btn);
-  }
-
-  // Stats
-  document.getElementById('ticketsTaken').textContent = TAKEN_NUMBERS.size;
-  document.getElementById('ticketsLeft').textContent = TOTAL_NUMBERS - TAKEN_NUMBERS.size;
-  const pct = Math.round((TAKEN_NUMBERS.size / TOTAL_NUMBERS) * 100);
-  document.getElementById('progressBar').style.width = pct + '%';
-  document.getElementById('progressPercent').textContent = pct + '%';
-}
-
-function toggleNumber(n) {
-  if (TAKEN_NUMBERS.has(n)) {
-    showToast('Esse número já foi vendido');
-    return;
-  }
-  if (selected.has(n)) selected.delete(n);
-  else selected.add(n);
-  renderGrid();
-  updateCheckoutBar();
-}
-
-function updateCheckoutBar() {
-  const arr = [...selected].sort((a, b) => a - b);
-  const label = arr.length === 0
-    ? 'Nenhum ainda'
-    : arr.map(n => String(n).padStart(2, '0')).join(', ');
-  document.getElementById('selectedNums').textContent = label;
-  const total = arr.length * TICKET_PRICE;
-  document.getElementById('totalValue').textContent = 'R$ ' + total.toFixed(2).replace('.', ',');
-  document.getElementById('buyBtn').disabled = arr.length === 0;
-}
-
-// ============ CHECKOUT ============
-function openCheckout() {
-  if (selected.size === 0) return;
-  const arr = [...selected].sort((a, b) => a - b);
-  const total = arr.length * TICKET_PRICE;
-  const modal = document.getElementById('checkoutModal');
-  const content = document.getElementById('modalContent');
-
-  content.innerHTML = `
-    <h2>Confirmar compra</h2>
-    <p class="sub">Você está comprando ${arr.length} número${arr.length > 1 ? 's' : ''} da rifa AWP Dragon Lore.</p>
-
-    <div style="background:var(--bg-elevated);border:1px solid var(--border);border-radius:12px;padding:16px;margin-bottom:20px;">
-      <div style="font-size:12px;color:var(--text-muted);text-transform:uppercase;letter-spacing:.5px;margin-bottom:8px;">Seus números</div>
-      <div style="font-family:'JetBrains Mono',monospace;font-size:15px;color:var(--primary-light);word-break:break-all;">
-        ${arr.map(n => String(n).padStart(2, '0')).join(' · ')}
-      </div>
-    </div>
-
-    <div style="display:flex;justify-content:space-between;padding:12px 0;border-top:1px solid var(--border);border-bottom:1px solid var(--border);margin-bottom:20px;">
-      <span style="color:var(--text-secondary);">Total a pagar</span>
-      <strong style="font-size:20px;color:var(--accent-yellow);font-family:'JetBrains Mono',monospace;">R$ ${total.toFixed(2).replace('.', ',')}</strong>
-    </div>
-
-    <button class="btn-buy" style="width:100%;" onclick="proceedToPix(${total})">Pagar com PIX</button>
-
-    <p style="font-size:11px;color:var(--text-muted);margin-top:14px;text-align:center;">
-      Pagamento 100% seguro via Mercado Pago. Seus números ficam reservados por 15 min pra conclusão.
-    </p>
-  `;
-  modal.classList.remove('hidden');
-}
-
-function closeCheckout(ev) {
-  if (ev && ev.target.id !== 'checkoutModal') return;
-  document.getElementById('checkoutModal').classList.add('hidden');
-}
-
-function proceedToPix(total) {
-  const content = document.getElementById('modalContent');
-  // PIX copia-cola fictício. Em produção virá do backend via /api/create-order
-  const pixCode = '00020126580014br.gov.bcb.pix0136e7b4ba05-4d9a-4b84-a8f6-gumax-rifa5204000053039865406' + total.toFixed(2).replace('.', '') + '5802BR5913Gumax Skins6009SAO PAULO62070503***6304A1B2';
-
-  content.innerHTML = `
-    <h2>Pagamento via PIX</h2>
-    <p class="sub">Escaneie o QR Code ou copie o código abaixo no seu app de banco.</p>
-
-    <div class="pix-box">
-      <div class="pix-qr">${fakeQr()}</div>
-      <div style="font-size:28px;font-weight:800;color:var(--accent-yellow);font-family:'JetBrains Mono',monospace;margin-bottom:12px;">
-        R$ ${total.toFixed(2).replace('.', ',')}
-      </div>
-      <div class="pix-code" id="pixCode">${pixCode}</div>
-      <button class="pix-copy-btn" onclick="copyPix()">Copiar código PIX</button>
-    </div>
-
-    <p style="font-size:12px;color:var(--text-secondary);text-align:center;margin-bottom:16px;">
-      O pagamento é confirmado em segundos. Assim que cair, seus números ficam reservados.
-    </p>
-
-    <div style="display:flex;gap:8px;">
-      <button class="btn-buy" style="flex:1;background:transparent;border:1px solid var(--border);color:var(--text-secondary);" onclick="closeCheckout()">Cancelar</button>
-      <button class="btn-buy" style="flex:1;" onclick="simulatePaid()">Simular pagamento confirmado</button>
-    </div>
-  `;
-}
-
-function copyPix() {
-  const code = document.getElementById('pixCode').textContent;
-  navigator.clipboard.writeText(code).then(() => showToast('Código PIX copiado!'));
-}
-
-function simulatePaid() {
-  const arr = [...selected].sort((a, b) => a - b);
-  // Marca como taken localmente (simulando confirmação)
-  arr.forEach(n => TAKEN_NUMBERS.add(n));
-  selected.clear();
-
-  const content = document.getElementById('modalContent');
-  content.innerHTML = `
-    <div class="success-screen">
-      <div class="success-icon">✓</div>
-      <h2>Pagamento confirmado!</h2>
-      <p class="sub">Seus números estão garantidos na rifa. Se vc ganhar, a skin é entregue direto no seu inventário Steam.</p>
-      <div style="background:var(--bg-elevated);border:1px solid var(--border);border-radius:12px;padding:16px;margin-bottom:20px;text-align:left;">
-        <div style="font-size:12px;color:var(--text-muted);text-transform:uppercase;letter-spacing:.5px;margin-bottom:8px;">Seus números confirmados</div>
-        <div style="font-family:'JetBrains Mono',monospace;font-size:15px;color:var(--accent-green);word-break:break-all;">
-          ${arr.map(n => String(n).padStart(2, '0')).join(' · ')}
-        </div>
-      </div>
-      <button class="btn-buy" style="width:100%;" onclick="closeCheckout();renderGrid();updateCheckoutBar();">Voltar à rifa</button>
-    </div>
-  `;
-}
-
-// QR code fake (placeholder estilizado — em produção usar biblioteca qrcode.js com o pixCode real)
-function fakeQr() {
-  const pattern = [];
-  for (let i = 0; i < 20; i++) {
-    for (let j = 0; j < 20; j++) {
-      const corner = (i < 3 && j < 3) || (i < 3 && j > 16) || (i > 16 && j < 3);
-      const isDark = corner || (Math.sin(i * 7.3 + j * 5.1) > 0);
-      if (isDark) pattern.push(`<rect x="${j*10}" y="${i*10}" width="10" height="10" fill="#0a0a0a"/>`);
-    }
-  }
-  return `<svg viewBox="0 0 200 200" xmlns="http://www.w3.org/2000/svg">${pattern.join('')}</svg>`;
-}
-
-function showToast(msg) {
+function showToast(msg, type = '') {
   const t = document.getElementById('toast');
   t.textContent = msg;
-  t.className = 'toast show';
-  setTimeout(() => t.classList.remove('show'), 2500);
+  t.className = 'toast show ' + type;
+  setTimeout(() => t.classList.remove('show'), 3000);
 }
 
-// Carrega imagem da skin via nossa própria API. Tenta várias fontes em ordem.
-async function loadSkinImage() {
-  const wrap = document.getElementById('skinImageWrap');
-  const SKIN_NAME = 'AWP | Dragon Lore (Factory New)';
-
-  const renderImg = (url) => {
-    wrap.innerHTML = `<img src="${url}" alt="${SKIN_NAME}" style="width:100%;max-width:220px;filter:drop-shadow(0 0 18px rgba(235,75,75,0.35));"
-      onerror="this.parentElement.innerHTML=fallbackPlaceholder();">`;
-  };
-
-  // 1. Tenta skin-detail (Pricempire retorna icon URL direto)
+async function loadAll() {
   try {
-    const r = await fetch('https://gumax-backend-production.up.railway.app/api/skin-detail', {
-      method: 'POST', headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ name: SKIN_NAME })
-    });
-    if (r.ok) {
-      const d = await r.json();
-      if (d.icon) {
-        const url = d.icon.startsWith('http') ? d.icon
-          : `https://community.cloudflare.steamstatic.com/economy/image/${d.icon}/360fx360f`;
-        renderImg(url);
-        return;
-      }
+    // Rifa ativa
+    const r = await fetch(`${API_BASE}/api/raffles/active`);
+    const data = await r.json();
+    document.getElementById('loadingArea').style.display = 'none';
+    if (data.active && data.active.status === 'active') {
+      _activeRaffle = data.active;
+      renderActiveRaffle(data.active);
+      document.getElementById('raffleActiveArea').style.display = '';
+      loadMyTickets();
+    } else {
+      document.getElementById('noRaffleArea').style.display = '';
     }
-  } catch (e) { /* tenta próximo */ }
+  } catch (e) {
+    document.getElementById('loadingArea').style.display = 'none';
+    document.getElementById('noRaffleArea').style.display = '';
+    console.error('[rifas] active error', e);
+  }
 
-  // 2. Fallback: placeholder estilizado
-  wrap.innerHTML = fallbackPlaceholder();
+  // Histórico
+  try {
+    const r = await fetch(`${API_BASE}/api/raffles/history?limit=10`);
+    const data = await r.json();
+    if (data.items && data.items.length > 0) {
+      document.getElementById('historyArea').style.display = '';
+      document.getElementById('historyTbody').innerHTML = data.items.map(item => {
+        const winner = item.winnerSteamName || item.winnerSteamId || '—';
+        const status = item.status === 'drawn'
+          ? '<span style="color:var(--accent-green);">✓ Sorteada</span>'
+          : '<span style="color:var(--accent-red);">✕ Cancelada</span>';
+        return `
+          <tr>
+            <td>${escapeHtml(item.skinName || '—')}</td>
+            <td>${item.soldTickets || 0} / ${item.totalTickets}</td>
+            <td>${status}</td>
+            <td>${item.status === 'drawn' ? `<strong>#${item.winningTicketNumber || '?'}</strong> · ${escapeHtml(winner)}` : '—'}</td>
+          </tr>
+        `;
+      }).join('');
+    }
+  } catch (e) {
+    console.error('[rifas] history error', e);
+  }
 }
 
-function fallbackPlaceholder() {
-  return `
-    <div style="width:100%;max-width:260px;aspect-ratio:16/10;display:flex;flex-direction:column;align-items:center;justify-content:center;background:linear-gradient(135deg,rgba(235,75,75,0.22),rgba(212,160,23,0.18));border-radius:12px;border:1px solid rgba(235,75,75,0.35);">
-      <div style="font-size:42px;font-weight:900;color:#eb4b4b;line-height:1;letter-spacing:2px;font-family:'JetBrains Mono',monospace;">AWP</div>
-      <div style="font-size:13px;color:#fac619;margin-top:6px;letter-spacing:1.5px;font-weight:600;">DRAGON LORE</div>
-    </div>
-  `;
+function renderActiveRaffle(raffle) {
+  document.getElementById('raffleImg').src = raffle.skinImage || '';
+  document.getElementById('raffleName').textContent = raffle.name;
+  document.getElementById('raffleSkin').textContent = raffle.skinName;
+  document.getElementById('raffleValue').textContent = `R$ ${(raffle.skinValueBRL || 0).toFixed(2)}`;
+  document.getElementById('rafflePrice').textContent = `R$ ${(raffle.pricePerTicket || 0).toFixed(2)}`;
+  document.getElementById('raffleSold').textContent = `${raffle.soldTickets || 0} / ${raffle.totalTickets}`;
+  const drawStr = raffle.drawDate ? new Date(raffle.drawDate).toLocaleString('pt-BR') : 'A definir';
+  document.getElementById('raffleDraw').textContent = drawStr;
+  const pct = ((raffle.soldTickets || 0) / raffle.totalTickets) * 100;
+  document.getElementById('raffleProgress').style.width = pct + '%';
+  document.getElementById('raffleProgressInfo').textContent =
+    `${(raffle.soldTickets || 0)} de ${raffle.totalTickets} vendidos (${pct.toFixed(1)}%)`;
+  updateBuyTotal();
+  // Vídeo
+  if (raffle.videoUrl) renderVideo(raffle.videoUrl);
 }
 
-// ============ INIT ============
-renderGrid();
-updateCheckoutBar();
+function renderVideo(url) {
+  const wrap = document.getElementById('videoWrap');
+  // YouTube embed
+  const ytMatch = url.match(/(?:youtu\.be\/|youtube\.com\/(?:watch\?v=|embed\/|v\/))([^&?\/]+)/);
+  if (ytMatch) {
+    wrap.innerHTML = `<iframe src="https://www.youtube.com/embed/${ytMatch[1]}" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>`;
+    return;
+  }
+  // MP4 ou outro vídeo direto
+  if (/\.(mp4|webm|ogg)(\?|$)/i.test(url)) {
+    wrap.innerHTML = `<video controls preload="metadata" src="${escapeHtml(url)}"></video>`;
+    return;
+  }
+  // Fallback: link clicável
+  wrap.innerHTML = `<div class="video-placeholder"><div class="icon">▶</div><a href="${escapeHtml(url)}" target="_blank" style="color:var(--primary-light);">Abrir vídeo</a></div>`;
+}
+
+function updateBuyTotal() {
+  if (!_activeRaffle) return;
+  const qty = parseInt(document.getElementById('qtyInput').value, 10) || 0;
+  const total = qty * _activeRaffle.pricePerTicket;
+  document.getElementById('buyTotal').textContent = `Total: R$ ${total.toFixed(2)}`;
+  document.getElementById('buyBtn').disabled = qty < 2;
+}
+
+async function buyTickets() {
+  const user = auth.currentUser;
+  if (!user) {
+    showToast('Faça login com Steam primeiro', 'error');
+    setTimeout(() => window.location.href = 'index.html', 1500);
+    return;
+  }
+  const qty = parseInt(document.getElementById('qtyInput').value, 10) || 0;
+  if (qty < 2) { showToast('Mínimo 2 bilhetes', 'error'); return; }
+
+  const btn = document.getElementById('buyBtn');
+  btn.disabled = true; btn.textContent = 'Gerando PIX...';
+
+  try {
+    const token = await user.getIdToken();
+    const r = await fetch(`${API_BASE}/api/raffles/buy`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
+      body: JSON.stringify({ qty }),
+    });
+    const data = await r.json();
+    if (data.error) {
+      showToast(data.message || data.error, 'error');
+      return;
+    }
+    openPixModal(data);
+    // Polling pra ver quando o pagamento aprova → atualiza Meus bilhetes
+    pollTicketStatus(data.ticketId);
+  } catch (e) {
+    showToast('Erro: ' + e.message, 'error');
+  } finally {
+    btn.disabled = false; btn.textContent = 'Comprar bilhetes';
+  }
+}
+
+function openPixModal(data) {
+  document.getElementById('pixModalNumbers').textContent = (data.numbers || []).join(', ');
+  document.getElementById('pixModalTotal').textContent = (data.totalBRL || 0).toFixed(2);
+  document.getElementById('pixQrImg').src = `data:image/png;base64,${data.qrCodeBase64}`;
+  document.getElementById('pixCopyPaste').textContent = data.copyPaste || '';
+  document.getElementById('pixModal').classList.add('show');
+}
+
+function closePixModal() {
+  document.getElementById('pixModal').classList.remove('show');
+  loadMyTickets(); // recarrega lista de bilhetes pra refletir status
+  loadAll();      // recarrega progresso da rifa
+}
+
+function copyPixCode() {
+  const code = document.getElementById('pixCopyPaste').textContent;
+  navigator.clipboard.writeText(code).then(() => showToast('Copiado!', 'success'));
+}
+
+async function pollTicketStatus(ticketId, attempts = 60) {
+  if (attempts <= 0) return;
+  await new Promise(r => setTimeout(r, 5000)); // 5s entre cada poll
+  const user = auth.currentUser;
+  if (!user) return;
+  try {
+    const token = await user.getIdToken();
+    const r = await fetch(`${API_BASE}/api/raffles/my-tickets`, {
+      headers: { 'Authorization': `Bearer ${token}` },
+    });
+    const data = await r.json();
+    const tk = (data.items || []).find(t => t.id === ticketId);
+    if (tk && tk.status === 'paid') {
+      showToast('🎉 Pagamento confirmado! Bilhetes garantidos.', 'success');
+      closePixModal();
+      return;
+    }
+  } catch {}
+  pollTicketStatus(ticketId, attempts - 1);
+}
+
+async function loadMyTickets() {
+  const user = auth.currentUser;
+  if (!user) return;
+  try {
+    const token = await user.getIdToken();
+    const r = await fetch(`${API_BASE}/api/raffles/my-tickets`, {
+      headers: { 'Authorization': `Bearer ${token}` },
+    });
+    const data = await r.json();
+    if (!data.items || data.items.length === 0) {
+      document.getElementById('myTicketsArea').style.display = 'none';
+      return;
+    }
+    document.getElementById('myTicketsArea').style.display = '';
+    document.getElementById('myTicketsList').innerHTML = data.items.map(t => {
+      const numbers = (t.ticketNumbers || []).join(', ');
+      const created = t.createdAt?.seconds ? new Date(t.createdAt.seconds * 1000).toLocaleString('pt-BR') : '—';
+      return `
+        <div class="ticket-row">
+          <div>
+            <div class="ticket-numbers">#${escapeHtml(numbers)}</div>
+            <div style="font-size:11px; color:var(--text-muted); margin-top:2px;">${escapeHtml(t.raffleSnapshot?.skinName || '')} · ${created}</div>
+          </div>
+          <div style="display:flex; align-items:center; gap:10px;">
+            <span style="font-size:13px; color:var(--text-secondary);">R$ ${(t.totalPriceBRL || 0).toFixed(2)}</span>
+            <span class="ticket-status ${t.status}">${t.status === 'paid' ? 'Pago' : t.status === 'pending' ? 'Pendente' : t.status === 'expired' ? 'Expirado' : t.status}</span>
+          </div>
+        </div>
+      `;
+    }).join('');
+  } catch (e) {
+    console.error('[rifas] my-tickets error', e);
+  }
+}
+
+function escapeHtml(s) {
+  return String(s || '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+}
+
+auth.onAuthStateChanged(() => loadAll());
+loadAll();
 </script>
 
 </body>
