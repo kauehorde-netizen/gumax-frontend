@@ -2131,7 +2131,7 @@ footer {
 <!-- SEARCH & FILTERS -->
 <section class="search-section" id="marketplace">
   <!-- Marca visível pra confirmar versão deployada. -->
-  <div style="font-size: 10px; color: rgba(139,92,246,0.5); text-align: right; margin-bottom: 4px;">search v46-badge-overlay-no-resize</div>
+  <div style="font-size: 10px; color: rgba(139,92,246,0.5); text-align: right; margin-bottom: 4px;">search v47-inspect-cs2-first</div>
 
   <!-- BUFF-style category picker com SVG icons (Faca, Luvas, Rifle, ...).
        Clicar num modelo (ex: AK-47) filtra a grid e rola pra seção. -->
@@ -4373,36 +4373,30 @@ function analyzeFromModal() {
 // Visualizar no CS2 — 4 caminhos em ordem de preferência:
 //   1) inspectLink direto (Full com link sincronizado): abre cliente Steam com SKIN EXATA
 //      (float real, pattern, stickers, charm).
-//   2) Full sem inspectLink mas com assetid+ownerSteamId: abre o INVENTÁRIO PÚBLICO do
-//      Gu na Steam direto na skin → user clica "Inspect" lá pra ver a skin EXATA.
-//   3) Skin Youpin (não-Full): backend resolve inspect link via primeira listagem real
+//   2) Sem inspectLink direto: backend resolve inspect link via primeira listagem real
 //      do Steam Market → abre cliente Steam com uma skin SIMILAR (modelo idêntico).
-//   4) Fallback: página da skin no Steam Market.
+//      → SEMPRE tenta isso antes do inventário, pra garantir que o CS2 abra direto.
+//   3) Fallback Full: se API falhar mas a skin é Full e tem assetid+ownerSteamId,
+//      abre o INVENTÁRIO PÚBLICO do Gu na Steam → user clica "Inspect" lá.
+//   4) Fallback final: página da skin no Steam Market (web).
 async function inspectInCS2() {
   if (!currentModal) return;
   const skin = currentModal;
   const isFull = skin.inStock || skin.source === 'steam_inventory';
 
-  // 1) inspect link direto (caso ideal pra Full)
+  // 1) inspect link direto (caso ideal pra Full sincronizada)
   if (skin.inspectLink) {
     window.open(skin.inspectLink, '_blank');
     return;
   }
 
-  // 2) Full sem link direto: abre o inventário público do Gu na Steam apontando
-  //    pra essa skin específica (pelo assetid). User clica "Inspect" lá pra
-  //    visualizar a skin EXATA com float/pattern reais.
-  if (isFull && skin.ownerSteamId && skin.assetid) {
-    const url = `https://steamcommunity.com/profiles/${skin.ownerSteamId}/inventory/#730_2_${skin.assetid}`;
-    window.open(url, '_blank');
-    return;
-  }
-
-  // 3) Skin Youpin: backend busca inspect link real do Steam Market (skin similar)
+  // 2) Sem inspectLink: pede pro backend resolver via Steam Market.
+  //    Mesmo pra Full sem link, isso abre o CS2 direto com uma skin SIMILAR
+  //    (mesmo modelo/wear) — UX muito melhor que jogar o user no inventário.
   const btn = document.getElementById('modalInspectBtn');
   const labelEl = document.getElementById('modalInspectBtnLabel');
   const originalLabel = labelEl.textContent;
-  labelEl.textContent = 'Buscando skin disponível…';
+  labelEl.textContent = 'Buscando skin no CS2…';
   btn.disabled = true;
   try {
     const r = await fetch(`${API_BASE}/api/inspect-link?name=${encodeURIComponent(skin.name)}`);
@@ -4413,12 +4407,24 @@ async function inspectInCS2() {
         return;
       }
     }
-    // 4) Fallback final: Steam Market
+    // 3) Fallback Full: inventário público do Gu (skin EXATA, mas precisa clicar Inspect)
+    if (isFull && skin.ownerSteamId && skin.assetid) {
+      const url = `https://steamcommunity.com/profiles/${skin.ownerSteamId}/inventory/#730_2_${skin.assetid}`;
+      window.open(url, '_blank');
+      return;
+    }
+    // 4) Fallback final: Steam Market (web)
     const marketUrl = `https://steamcommunity.com/market/listings/730/${encodeURIComponent(skin.name)}`;
     window.open(marketUrl, '_blank');
   } catch (e) {
-    const marketUrl = `https://steamcommunity.com/market/listings/730/${encodeURIComponent(skin.name)}`;
-    window.open(marketUrl, '_blank');
+    // Erro de rede: tenta inventário do Gu se for Full, senão Steam Market
+    if (isFull && skin.ownerSteamId && skin.assetid) {
+      const url = `https://steamcommunity.com/profiles/${skin.ownerSteamId}/inventory/#730_2_${skin.assetid}`;
+      window.open(url, '_blank');
+    } else {
+      const marketUrl = `https://steamcommunity.com/market/listings/730/${encodeURIComponent(skin.name)}`;
+      window.open(marketUrl, '_blank');
+    }
   } finally {
     labelEl.textContent = originalLabel;
     btn.disabled = false;
