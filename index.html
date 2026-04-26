@@ -2131,7 +2131,7 @@ footer {
 <!-- SEARCH & FILTERS -->
 <section class="search-section" id="marketplace">
   <!-- Marca visível pra confirmar versão deployada. -->
-  <div style="font-size: 10px; color: rgba(139,92,246,0.5); text-align: right; margin-bottom: 4px;">search v38-modal-inspect-cs2</div>
+  <div style="font-size: 10px; color: rgba(139,92,246,0.5); text-align: right; margin-bottom: 4px;">search v40-modal-preserve-full</div>
 
   <!-- BUFF-style category picker com SVG icons (Faca, Luvas, Rifle, ...).
        Clicar num modelo (ex: AK-47) filtra a grid e rola pra seção. -->
@@ -4241,9 +4241,9 @@ function renderModalPrice(skin) {
     inspectLabel.textContent = 'Visualizar no jogo (skin exata)';
     inspectBtn.title = 'Abre o CS2 e mostra essa skin específica do estoque com float, pattern, stickers e charm reais';
   } else {
-    // Skin do catálogo Youpin — só temos modelo genérico
-    inspectLabel.textContent = 'Ver modelo 3D';
-    inspectBtn.title = 'Visualizador 3D web (CSFloat) — mostra o modelo da skin, mas sem o float específico';
+    // Skin do catálogo Youpin — abre Steam Market onde tem listagens com inspect link
+    inspectLabel.textContent = 'Ver no Steam Market';
+    inspectBtn.title = 'Abre a página da skin no Steam Market — clique em "Inspecionar no Jogo" em qualquer listagem pra ver no CS2';
   }
 }
 
@@ -4292,7 +4292,31 @@ async function loadWearVariantsForModal(baseName, currentWear, originalSkin) {
     renderWearTabs(currentWear, baseName);
     return;
   }
-  WEAR_VARIANTS_CACHE[baseName] = { [currentWear]: originalSkin }; // garante o atual
+  WEAR_VARIANTS_CACHE[baseName] = {};
+  const origIsStatTrak = /StatTrak™/.test(originalSkin.name);
+
+  // 1) Procura PRIMEIRO no estoque Full do Gu — se houver outras wear da mesma
+  //    skin disponíveis no Full, mostra elas com inspectLink + entrega 30min.
+  //    Inclui a skin original que veio do Full no momento do click.
+  const allFull = (typeof allStockSkins !== 'undefined' ? allStockSkins : []) || [];
+  allFull.forEach(s => {
+    const wear = extractWearFromName(s.name);
+    if (!wear) return;
+    if (extractBaseName(s.name) !== baseName) return;
+    if (origIsStatTrak !== /StatTrak™/.test(s.name)) return;
+    // Se já tem variante Full pra essa wear, não sobrescreve (pega a primeira)
+    if (WEAR_VARIANTS_CACHE[baseName][wear]) return;
+    WEAR_VARIANTS_CACHE[baseName][wear] = s;
+  });
+  // Garante que a skin que abriu o modal está lá (por ex. veio de seller específico)
+  if (!WEAR_VARIANTS_CACHE[baseName][currentWear]) {
+    WEAR_VARIANTS_CACHE[baseName][currentWear] = originalSkin;
+  }
+  renderWearTabs(currentWear, baseName);
+
+  // 2) Busca outras wears no backend (Youpin) — APENAS pra preencher as wears
+  //    que NÃO existem no Full. Não sobrescreve as Full pra preservar o
+  //    inspectLink + badge "Entrega Full".
   document.getElementById('modalWearLoading').style.display = '';
   try {
     const r = await fetch(`${API_BASE}/api/pricempire/search?q=${encodeURIComponent(baseName)}&limit=50`);
@@ -4302,14 +4326,11 @@ async function loadWearVariantsForModal(baseName, currentWear, originalSkin) {
     items.forEach(it => {
       const wear = extractWearFromName(it.name);
       if (!wear) return;
-      // Match: o nome base deve ser igual (sem ★ / StatTrak™)
-      const itBase = extractBaseName(it.name);
-      if (itBase !== baseName) return;
-      // Pula StatTrak/Souvenir se o original NÃO é
-      const origIsStatTrak = /StatTrak™/.test(originalSkin.name);
-      const itIsStatTrak = /StatTrak™/.test(it.name);
-      if (origIsStatTrak !== itIsStatTrak) return;
-      // Cria objeto skin compatível
+      if (extractBaseName(it.name) !== baseName) return;
+      if (origIsStatTrak !== /StatTrak™/.test(it.name)) return;
+      // 🔒 NÃO sobrescreve variante Full do Gu (preserva inspectLink + entrega 30min)
+      const existing = WEAR_VARIANTS_CACHE[baseName][wear];
+      if (existing && (existing.inStock || existing.source === 'steam_inventory')) return;
       WEAR_VARIANTS_CACHE[baseName][wear] = {
         name: it.name,
         wear,
@@ -4319,7 +4340,7 @@ async function loadWearVariantsForModal(baseName, currentWear, originalSkin) {
           ? Math.round((1 - it.saleBRL / it.originalBRL) * 100) : 0,
         image: it.iconUrl || originalSkin.image,
         rarity: it.rarity || originalSkin.rarity,
-        inStock: false, // veio do search backend = não-Full
+        inStock: false, // Youpin → não-Full
         source: 'pricempire_search',
       };
     });
@@ -4337,46 +4358,25 @@ function analyzeFromModal() {
   window.open(url, '_blank');
 }
 
-// Visualizar no CS2 — abre 3 caminhos em ordem de preferência:
-//   1) inspectLink direto (skins do Full do Gu, com ?owner=&assetid=&d=) — abre cliente Steam,
-//      mostra a SKIN EXATA do estoque com float real, pattern, stickers, charm.
-//   2) Sem inspectLink → abre csfloat.com/db (visualizador 3D web da skin GENÉRICA dela —
-//      mostra o modelo 3D rodando, mas sem stickers/wear específico).
-//   3) Fallback: Steam Community Market da skin (lista de listings, cliente pode inspecionar
-//      qualquer uma delas).
+// Visualizar no CS2 — 2 caminhos:
+//   1) inspectLink direto (skins do Full do Gu) → abre cliente Steam, mostra a SKIN EXATA
+//      com float real, pattern, stickers, charm.
+//   2) Sem inspectLink → abre Steam Community Market da skin. Lá o user vê todas as
+//      listagens reais (com screenshots e preços) e pode clicar em "Inspect in Game"
+//      em qualquer listagem pra abrir no CS2.
 function inspectInCS2() {
   if (!currentModal) return;
   const skin = currentModal;
 
-  // 1) Tem inspect link direto? Esse é o ideal — abre o cliente Steam local
+  // 1) Tem inspect link direto? Ideal — abre o cliente Steam local
   if (skin.inspectLink) {
     window.open(skin.inspectLink, '_blank');
     return;
   }
 
-  // 2) Tenta abrir no CSFloat DB (visualizador 3D web da skin)
-  // CSFloat DB usa o nome em lowercase com - como separador
-  const csfloatUrl = buildCsfloatDbUrl(skin.name);
-  if (csfloatUrl) {
-    if (confirm('Esta skin não tem visualização direta (estoque externo). Abrir o visualizador 3D web da CSFloat?')) {
-      window.open(csfloatUrl, '_blank');
-    }
-    return;
-  }
-
-  // 3) Fallback final: Steam Community Market — user vê listagens e pode inspecionar uma
+  // 2) Steam Community Market — sempre funciona pra qualquer skin do CS2
   const marketUrl = `https://steamcommunity.com/market/listings/730/${encodeURIComponent(skin.name)}`;
   window.open(marketUrl, '_blank');
-}
-
-function buildCsfloatDbUrl(skinName) {
-  // CSFloat DB URL: https://csfloat.com/db/<weapon>/<skin>
-  // Ex: "AK-47 | Redline (Field-Tested)" → https://csfloat.com/db/ak-47/redline
-  const m = String(skinName).match(/^(?:★\s*)?(?:StatTrak™\s*)?(?:Souvenir\s*)?(.+?)\s*\|\s*(.+?)\s*\(/);
-  if (!m) return null;
-  const weapon = m[1].toLowerCase().replace(/\s+/g, '-').replace(/★|⭐/g, '').trim();
-  const skin = m[2].toLowerCase().replace(/\s+/g, '-').trim();
-  return `https://csfloat.com/db/${encodeURIComponent(weapon)}/${encodeURIComponent(skin)}`;
 }
 
 // Categoria humanizada pra header do modal (Faca, Rifle, etc)
