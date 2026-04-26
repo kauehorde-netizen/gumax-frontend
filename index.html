@@ -2131,7 +2131,7 @@ footer {
 <!-- SEARCH & FILTERS -->
 <section class="search-section" id="marketplace">
   <!-- Marca visível pra confirmar versão deployada. -->
-  <div style="font-size: 10px; color: rgba(139,92,246,0.5); text-align: right; margin-bottom: 4px;">search v47-inspect-cs2-first</div>
+  <div style="font-size: 10px; color: rgba(139,92,246,0.5); text-align: right; margin-bottom: 4px;">search v48-inspect-debug-logs</div>
 
   <!-- BUFF-style category picker com SVG icons (Faca, Luvas, Rifle, ...).
        Clicar num modelo (ex: AK-47) filtra a grid e rola pra seção. -->
@@ -4384,45 +4384,67 @@ async function inspectInCS2() {
   const skin = currentModal;
   const isFull = skin.inStock || skin.source === 'steam_inventory';
 
+  console.group('🔎 [inspectInCS2] DIAGNÓSTICO');
+  console.log('Skin:', skin.name);
+  console.log('isFull:', isFull, '| inStock:', skin.inStock, '| source:', skin.source);
+  console.log('inspectLink (Firestore):', skin.inspectLink || '(null/vazio)');
+  console.log('ownerSteamId:', skin.ownerSteamId || '(none)', '| assetid:', skin.assetid || '(none)');
+
   // 1) inspect link direto (caso ideal pra Full sincronizada)
   if (skin.inspectLink) {
+    console.log('✅ CAMINHO 1: abrindo inspectLink direto do Firestore');
+    console.log('URL:', skin.inspectLink);
+    console.groupEnd();
     window.open(skin.inspectLink, '_blank');
     return;
   }
 
   // 2) Sem inspectLink: pede pro backend resolver via Steam Market.
-  //    Mesmo pra Full sem link, isso abre o CS2 direto com uma skin SIMILAR
-  //    (mesmo modelo/wear) — UX muito melhor que jogar o user no inventário.
   const btn = document.getElementById('modalInspectBtn');
   const labelEl = document.getElementById('modalInspectBtnLabel');
   const originalLabel = labelEl.textContent;
   labelEl.textContent = 'Buscando skin no CS2…';
   btn.disabled = true;
   try {
-    const r = await fetch(`${API_BASE}/api/inspect-link?name=${encodeURIComponent(skin.name)}`);
-    if (r.ok) {
-      const data = await r.json();
-      if (data.inspectLink) {
-        window.open(data.inspectLink, '_blank');
-        return;
-      }
+    const apiUrl = `${API_BASE}/api/inspect-link?name=${encodeURIComponent(skin.name)}`;
+    console.log('📡 CAMINHO 2: chamando API →', apiUrl);
+    const r = await fetch(apiUrl);
+    console.log('📡 API response status:', r.status);
+    let data = null;
+    try { data = await r.json(); } catch {}
+    console.log('📡 API response body:', data);
+    if (r.ok && data?.inspectLink) {
+      console.log('✅ CAMINHO 2: API devolveu inspectLink, abrindo CS2');
+      console.log('URL:', data.inspectLink);
+      console.groupEnd();
+      window.open(data.inspectLink, '_blank');
+      return;
     }
-    // 3) Fallback Full: inventário público do Gu (skin EXATA, mas precisa clicar Inspect)
+    console.warn('⚠️ CAMINHO 2 falhou (status', r.status, ', inspectLink:', data?.inspectLink, ')');
+    // 3) Fallback Full: inventário público do Gu
     if (isFull && skin.ownerSteamId && skin.assetid) {
       const url = `https://steamcommunity.com/profiles/${skin.ownerSteamId}/inventory/#730_2_${skin.assetid}`;
+      console.warn('⚠️ CAMINHO 3 (fallback): abrindo inventário do Gu →', url);
+      console.groupEnd();
       window.open(url, '_blank');
       return;
     }
     // 4) Fallback final: Steam Market (web)
     const marketUrl = `https://steamcommunity.com/market/listings/730/${encodeURIComponent(skin.name)}`;
+    console.warn('⚠️ CAMINHO 4 (último fallback): Steam Market web →', marketUrl);
+    console.groupEnd();
     window.open(marketUrl, '_blank');
   } catch (e) {
-    // Erro de rede: tenta inventário do Gu se for Full, senão Steam Market
+    console.error('❌ ERRO de rede no fetch da API:', e);
     if (isFull && skin.ownerSteamId && skin.assetid) {
       const url = `https://steamcommunity.com/profiles/${skin.ownerSteamId}/inventory/#730_2_${skin.assetid}`;
+      console.warn('⚠️ Fallback após erro: inventário do Gu →', url);
+      console.groupEnd();
       window.open(url, '_blank');
     } else {
       const marketUrl = `https://steamcommunity.com/market/listings/730/${encodeURIComponent(skin.name)}`;
+      console.warn('⚠️ Fallback após erro: Steam Market →', marketUrl);
+      console.groupEnd();
       window.open(marketUrl, '_blank');
     }
   } finally {
