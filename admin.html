@@ -481,6 +481,14 @@ select.form-control {
         <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 16V8a2 2 0 00-1-1.73l-7-4a2 2 0 00-2 0l-7 4A2 2 0 003 8v8a2 2 0 001 1.73l7 4a2 2 0 002 0l7-4A2 2 0 0021 16z"/><polyline points="3.27 6.96 12 12.01 20.73 6.96"/><line x1="12" y1="22.08" x2="12" y2="12"/></svg>
         <span>Inventário</span>
       </li>
+      <li onclick="switchSection('clientes')">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 00-3-3.87"/><path d="M16 3.13a4 4 0 010 7.75"/></svg>
+        <span>Clientes</span>
+      </li>
+      <li onclick="switchSection('raffles')">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M12 6v6l4 2"/></svg>
+        <span>Rifas</span>
+      </li>
       <li onclick="switchSection('appearance')">
         <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 19l7-7 3 3-7 7-3-3z"/><path d="M18 13l-1.5-7.5L2 2l3.5 14.5L13 18l5-5z"/><path d="M2 2l7.586 7.586"/><circle cx="11" cy="11" r="2"/></svg>
         <span>Aparência</span>
@@ -862,6 +870,117 @@ select.form-control {
           🔄 Sincronizar inventário
         </button>
         <div id="syncStatus" style="margin-top: 16px;"></div>
+      </div>
+    </div>
+
+    <!-- CLIENTES SECTION (dashboard de cadastrados) -->
+    <div class="section" id="section-clientes">
+      <div class="page-header">
+        <div>
+          <h1>Clientes</h1>
+          <div class="subtitle">Todos os usuários cadastrados via Steam — com tradelink e WhatsApp pra entrega.</div>
+        </div>
+        <div style="display:flex; gap:8px; align-items:center;">
+          <input type="text" id="clientesSearch" placeholder="🔍 Buscar por nome ou SteamID…" oninput="renderClientes()"
+            style="background:var(--bg-input); border:1px solid var(--border); border-radius:8px; padding:8px 12px; color:var(--text-primary); font-size:13px; min-width:280px;">
+          <button class="btn btn-ghost" onclick="loadClientes()">↻ Atualizar</button>
+        </div>
+      </div>
+      <div style="display:grid; grid-template-columns: repeat(4, 1fr); gap:12px; margin-bottom:20px;">
+        <div class="card" style="padding:14px 16px;">
+          <div style="color:var(--text-secondary); font-size:11px; text-transform:uppercase; letter-spacing:.5px;">Total</div>
+          <div style="font-size:24px; font-weight:800; margin-top:4px;" id="clientesStatTotal">—</div>
+        </div>
+        <div class="card" style="padding:14px 16px;">
+          <div style="color:var(--text-secondary); font-size:11px; text-transform:uppercase; letter-spacing:.5px;">Cadastros completos</div>
+          <div style="font-size:24px; font-weight:800; margin-top:4px; color:var(--accent-green);" id="clientesStatCompletos">—</div>
+        </div>
+        <div class="card" style="padding:14px 16px;">
+          <div style="color:var(--text-secondary); font-size:11px; text-transform:uppercase; letter-spacing:.5px;">Incompletos</div>
+          <div style="font-size:24px; font-weight:800; margin-top:4px; color:var(--accent-yellow);" id="clientesStatIncompletos">—</div>
+        </div>
+        <div class="card" style="padding:14px 16px;">
+          <div style="color:var(--text-secondary); font-size:11px; text-transform:uppercase; letter-spacing:.5px;">Cadastros (7d)</div>
+          <div style="font-size:24px; font-weight:800; margin-top:4px;" id="clientesStat7d">—</div>
+        </div>
+      </div>
+      <div class="data-table-wrapper">
+        <table class="data-table">
+          <thead>
+            <tr>
+              <th>Cliente</th>
+              <th>SteamID</th>
+              <th>WhatsApp</th>
+              <th>Tradelink</th>
+              <th>Cadastro</th>
+              <th>Status</th>
+            </tr>
+          </thead>
+          <tbody id="clientesTbody">
+            <tr><td colspan="6" style="text-align:center; color:var(--text-muted); padding:30px;">Carregando…</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- RAFFLES SECTION (gerencia rifa ativa) -->
+    <div class="section" id="section-raffles">
+      <div class="page-header">
+        <div>
+          <h1>Rifas</h1>
+          <div class="subtitle">Crie, acompanhe e sorteie rifas. Mostra na página /rifas.html. Apenas 1 rifa ativa por vez.</div>
+        </div>
+        <button class="btn btn-primary" onclick="openCreateRaffleModal()">+ Nova rifa</button>
+      </div>
+
+      <!-- Estado atual da rifa -->
+      <div class="card" id="rafflesActiveCard" style="display:none;">
+        <h3 style="margin-bottom:14px;">🎰 Rifa ativa</h3>
+        <div style="display:grid; grid-template-columns: 200px 1fr; gap:24px; align-items:center;">
+          <img id="rafflesActiveImg" src="" alt="" style="width:100%; max-width:200px; border-radius:10px; background:var(--bg-elevated); padding:12px;">
+          <div>
+            <div style="font-size:18px; font-weight:700;" id="rafflesActiveName">—</div>
+            <div style="color:var(--text-secondary); margin-top:4px;" id="rafflesActiveSkin">—</div>
+            <div style="display:flex; gap:24px; margin-top:14px; flex-wrap:wrap;">
+              <div><div style="font-size:11px; color:var(--text-secondary); text-transform:uppercase;">Valor da skin</div><div style="font-size:18px; font-weight:700; margin-top:2px;" id="rafflesActiveValue">—</div></div>
+              <div><div style="font-size:11px; color:var(--text-secondary); text-transform:uppercase;">Preço/bilhete</div><div style="font-size:18px; font-weight:700; margin-top:2px;" id="rafflesActivePrice">—</div></div>
+              <div><div style="font-size:11px; color:var(--text-secondary); text-transform:uppercase;">Vendidos</div><div style="font-size:18px; font-weight:700; margin-top:2px;" id="rafflesActiveSold">—</div></div>
+              <div><div style="font-size:11px; color:var(--text-secondary); text-transform:uppercase;">Sorteio</div><div style="font-size:14px; font-weight:600; margin-top:6px;" id="rafflesActiveDraw">—</div></div>
+            </div>
+            <!-- progress bar -->
+            <div style="margin-top:16px; background:var(--bg-elevated); border-radius:6px; height:10px; overflow:hidden;">
+              <div id="rafflesActiveProgress" style="height:100%; background:linear-gradient(90deg, var(--primary), var(--accent-yellow)); width:0%; transition:width .3s;"></div>
+            </div>
+            <div style="display:flex; gap:8px; margin-top:18px;">
+              <button class="btn btn-yellow" id="rafflesDrawBtn" onclick="drawRaffleNow()">🎲 Sortear agora</button>
+              <button class="btn btn-ghost" onclick="cancelActiveRaffle()" style="color:var(--accent-red);">✕ Cancelar rifa</button>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="card" id="rafflesEmptyCard">
+        <p style="color:var(--text-secondary); text-align:center; padding:30px;">Nenhuma rifa ativa. Clique em <strong>+ Nova rifa</strong> pra criar.</p>
+      </div>
+
+      <!-- Histórico -->
+      <h3 style="margin: 28px 0 14px 0;">Histórico de rifas</h3>
+      <div class="data-table-wrapper">
+        <table class="data-table">
+          <thead>
+            <tr>
+              <th>Skin</th>
+              <th>Bilhetes</th>
+              <th>Arrecadado</th>
+              <th>Status</th>
+              <th>Sorteio</th>
+              <th>Vencedor</th>
+            </tr>
+          </thead>
+          <tbody id="rafflesHistoryTbody">
+            <tr><td colspan="6" style="text-align:center; color:var(--text-muted); padding:30px;">Sem histórico ainda.</td></tr>
+          </tbody>
+        </table>
       </div>
     </div>
 
@@ -1322,13 +1441,137 @@ function switchSection(name) {
   document.getElementById('section-' + name).classList.add('active');
 
   const items = document.querySelectorAll('.sidebar-nav li');
-  const names = ['overview', 'skins', 'resellers', 'orders', 'commissions', 'inventory', 'appearance', 'settings'];
+  const names = ['overview', 'skins', 'resellers', 'orders', 'commissions', 'inventory', 'clientes', 'raffles', 'appearance', 'settings'];
   const index = names.indexOf(name);
   if (index >= 0 && items[index]) items[index].classList.add('active');
 
   if (name === 'appearance') loadAppearance();
   if (name === 'inventory')  { loadInventoryPage(); loadStockPricing(); }
   if (name === 'settings')   loadPricing();
+  if (name === 'clientes')   loadClientes();
+  if (name === 'raffles')    loadRafflesAdmin();
+}
+
+// ============= CLIENTES (aba Dashboard) =============
+let _clientesCache = [];
+
+async function loadClientes() {
+  const tbody = document.getElementById('clientesTbody');
+  tbody.innerHTML = `<tr><td colspan="6" style="text-align:center; color:var(--text-muted); padding:30px;">Carregando…</td></tr>`;
+  try {
+    // Pega TODOS users (sem filtro server-side por enquanto — vamos paginar se ficar grande).
+    const snap = await db.collection('users').orderBy('updatedAt', 'desc').limit(500).get();
+    _clientesCache = snap.docs.map(d => ({ uid: d.id, ...d.data() }));
+    // Stats
+    const now = Date.now();
+    const seven = now - 7 * 24 * 60 * 60 * 1000;
+    const completos = _clientesCache.filter(c => c.tradeLink && c.whatsapp).length;
+    const novos7d = _clientesCache.filter(c => {
+      const t = c.createdAt || c.updatedAt;
+      const ts = t ? (typeof t === 'string' ? new Date(t).getTime() : (t.seconds ? t.seconds * 1000 : 0)) : 0;
+      return ts >= seven;
+    }).length;
+    document.getElementById('clientesStatTotal').textContent      = _clientesCache.length;
+    document.getElementById('clientesStatCompletos').textContent  = completos;
+    document.getElementById('clientesStatIncompletos').textContent = _clientesCache.length - completos;
+    document.getElementById('clientesStat7d').textContent         = novos7d;
+    renderClientes();
+  } catch (e) {
+    console.error('[clientes] load error', e);
+    tbody.innerHTML = `<tr><td colspan="6" style="text-align:center; color:var(--accent-red); padding:30px;">Erro ao carregar: ${e.message}</td></tr>`;
+  }
+}
+
+function renderClientes() {
+  const tbody = document.getElementById('clientesTbody');
+  if (!tbody) return;
+  const search = (document.getElementById('clientesSearch')?.value || '').toLowerCase().trim();
+  const filtered = !search ? _clientesCache : _clientesCache.filter(c =>
+    (c.fullName || '').toLowerCase().includes(search) ||
+    (c.steamName || '').toLowerCase().includes(search) ||
+    (c.steamId || c.uid || '').includes(search)
+  );
+  if (filtered.length === 0) {
+    tbody.innerHTML = `<tr><td colspan="6" style="text-align:center; color:var(--text-muted); padding:30px;">Nenhum cliente encontrado.</td></tr>`;
+    return;
+  }
+  tbody.innerHTML = filtered.map(c => {
+    const complete = !!(c.tradeLink && c.whatsapp);
+    const created = c.createdAt || c.updatedAt;
+    const dateStr = created ? formatClientDate(created) : '—';
+    const wa = c.whatsapp || '';
+    const waLink = wa ? `https://wa.me/55${wa.replace(/\D/g,'')}` : '';
+    const waCell = wa
+      ? `<a href="${waLink}" target="_blank" style="color:var(--primary-light); text-decoration:none;">${formatWA(wa)}</a>`
+      : '<span style="color:var(--text-muted);">—</span>';
+    const tradeCell = c.tradeLink
+      ? `<a href="${c.tradeLink}" target="_blank" style="color:var(--primary-light); text-decoration:none;">Abrir trade</a>`
+      : '<span style="color:var(--text-muted);">não cadastrado</span>';
+    const avatar = c.steamAvatar || c.photoURL || '';
+    const name = c.fullName || c.steamName || c.uid?.slice(0, 8) || 'Sem nome';
+    return `
+      <tr>
+        <td style="display:flex; align-items:center; gap:10px;">
+          ${avatar ? `<img src="${avatar}" style="width:32px; height:32px; border-radius:50%; object-fit:cover;">` : `<div style="width:32px; height:32px; border-radius:50%; background:var(--bg-elevated);"></div>`}
+          <div>
+            <div style="font-weight:600;">${escapeHtml(name)}</div>
+            ${c.steamName && c.steamName !== c.fullName ? `<div style="color:var(--text-muted); font-size:11px;">${escapeHtml(c.steamName)}</div>` : ''}
+          </div>
+        </td>
+        <td style="font-family: 'JetBrains Mono', monospace; font-size:12px;">${c.steamId || c.uid || '—'}</td>
+        <td>${waCell}</td>
+        <td>${tradeCell}</td>
+        <td style="font-size:12px; color:var(--text-secondary);">${dateStr}</td>
+        <td>
+          ${complete
+            ? '<span style="background:rgba(16,185,129,.15); color:var(--accent-green); padding:3px 8px; border-radius:4px; font-size:11px; font-weight:600;">✓ Completo</span>'
+            : '<span style="background:rgba(250,204,21,.15); color:var(--accent-yellow); padding:3px 8px; border-radius:4px; font-size:11px; font-weight:600;">⚠ Incompleto</span>'}
+        </td>
+      </tr>
+    `;
+  }).join('');
+}
+
+function formatClientDate(ts) {
+  let d;
+  if (typeof ts === 'string') d = new Date(ts);
+  else if (ts && ts.seconds) d = new Date(ts.seconds * 1000);
+  else if (ts && ts.toDate) d = ts.toDate();
+  else return '—';
+  return d.toLocaleDateString('pt-BR') + ' ' + d.toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' });
+}
+
+function formatWA(v) {
+  const d = String(v).replace(/\D/g, '').slice(0, 11);
+  if (d.length <= 2) return d;
+  if (d.length <= 6) return `(${d.slice(0,2)}) ${d.slice(2)}`;
+  if (d.length <= 10) return `(${d.slice(0,2)}) ${d.slice(2,6)}-${d.slice(6)}`;
+  return `(${d.slice(0,2)}) ${d.slice(2,7)}-${d.slice(7)}`;
+}
+
+function escapeHtml(s) {
+  return String(s).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+}
+
+// ============= RAFFLES (aba Rifas) — placeholder; backend ainda não implementado =============
+async function loadRafflesAdmin() {
+  // TODO: depois de implementar backend/functions/raffles.js, conectar:
+  //  - GET /api/raffles/active → preencher rafflesActiveCard
+  //  - GET /api/raffles/history → preencher rafflesHistoryTbody
+  document.getElementById('rafflesEmptyCard').style.display = '';
+  document.getElementById('rafflesActiveCard').style.display = 'none';
+}
+
+function openCreateRaffleModal() {
+  alert('Em breve: backend de rifas ainda não foi implementado. Estamos trabalhando nisso!');
+}
+
+function drawRaffleNow() {
+  alert('Em breve: backend de rifas ainda não foi implementado.');
+}
+
+function cancelActiveRaffle() {
+  alert('Em breve: backend de rifas ainda não foi implementado.');
 }
 
 // ============= STOCK PRICING (aba Inventário) =============
