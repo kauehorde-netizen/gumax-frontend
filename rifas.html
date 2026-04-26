@@ -305,17 +305,6 @@ body {
   <h1 class="page-title">🎰 Rifas Gumax</h1>
   <p class="page-subtitle">Concorra a skins de alto valor pagando pouco. Transparente, automático e seguro.</p>
 
-  <!-- Vídeo do Gu explicando -->
-  <div class="video-card">
-    <div class="video-card-header">▶ Como funciona — explicado pelo Gu</div>
-    <div class="video-wrap" id="videoWrap">
-      <div class="video-placeholder">
-        <div class="icon">🎬</div>
-        <div>Vídeo do Gu em breve</div>
-      </div>
-    </div>
-  </div>
-
   <div id="loadingArea"><div class="loader"></div></div>
 
   <!-- Estado: rifa ativa -->
@@ -371,6 +360,12 @@ body {
       </div>
     </div>
 
+    <!-- Vídeo do sorteio (Twitch live ou VOD) — só aparece se admin cadastrou link -->
+    <div class="video-card" id="drawVideoCard" style="display:none; margin-top:24px;">
+      <div class="video-card-header">📺 Sorteio ao vivo (Twitch)</div>
+      <div class="video-wrap" id="drawVideoWrap"></div>
+    </div>
+
     <!-- Meus bilhetes nesta rifa -->
     <div id="myTicketsArea" style="display:none;">
       <h3 class="section-title">🎟 Meus bilhetes</h3>
@@ -394,10 +389,25 @@ body {
           <th>Bilhetes</th>
           <th>Status</th>
           <th>Vencedor</th>
+          <th>Sorteio</th>
         </tr>
       </thead>
       <tbody id="historyTbody"></tbody>
     </table>
+  </div>
+
+  <!-- Vídeo explicativo (FIXO no rodapé — explica como funciona o sistema de rifas) -->
+  <div class="video-card" style="margin-top:32px;">
+    <div class="video-card-header">▶ Como funciona — explicado pelo Gu</div>
+    <div class="video-wrap" id="explanationVideoWrap">
+      <div class="video-placeholder">
+        <div class="icon">🎬</div>
+        <div>Vídeo do Gu em breve</div>
+        <div style="font-size:11px; color:var(--text-muted); max-width:340px; text-align:center; margin-top:6px;">
+          O Gu vai gravar um vídeo explicando passo a passo como funcionam as rifas.
+        </div>
+      </div>
+    </div>
   </div>
 </div>
 
@@ -480,12 +490,16 @@ async function loadAll() {
         const status = item.status === 'drawn'
           ? '<span style="color:var(--accent-green);">✓ Sorteada</span>'
           : '<span style="color:var(--accent-red);">✕ Cancelada</span>';
+        const drawLink = item.videoUrl
+          ? `<a href="${escapeHtml(item.videoUrl)}" target="_blank" style="color:var(--primary-light); text-decoration:none;">📺 Ver gravação</a>`
+          : '<span style="color:var(--text-muted);">—</span>';
         return `
           <tr>
             <td>${escapeHtml(item.skinName || '—')}</td>
             <td>${item.soldTickets || 0} / ${item.totalTickets}</td>
             <td>${status}</td>
             <td>${item.status === 'drawn' ? `<strong>#${item.winningTicketNumber || '?'}</strong> · ${escapeHtml(winner)}` : '—'}</td>
+            <td>${drawLink}</td>
           </tr>
         `;
       }).join('');
@@ -508,26 +522,56 @@ function renderActiveRaffle(raffle) {
   document.getElementById('raffleProgress').style.width = pct + '%';
   document.getElementById('raffleProgressInfo').textContent =
     `${(raffle.soldTickets || 0)} de ${raffle.totalTickets} vendidos (${pct.toFixed(1)}%)`;
-  updateBuyTotal();
-  // Vídeo
-  if (raffle.videoUrl) renderVideo(raffle.videoUrl);
+  // Vídeo do sorteio (Twitch live ou VOD) — só aparece se admin cadastrou link
+  if (raffle.videoUrl) {
+    document.getElementById('drawVideoCard').style.display = '';
+    renderVideoInto('drawVideoWrap', raffle.videoUrl);
+  } else {
+    document.getElementById('drawVideoCard').style.display = 'none';
+  }
 }
 
-function renderVideo(url) {
-  const wrap = document.getElementById('videoWrap');
+// Renderiza um vídeo (YouTube, Twitch, MP4 direto) dentro do container indicado.
+function renderVideoInto(containerId, url) {
+  const wrap = document.getElementById(containerId);
+  if (!wrap || !url) return;
+  // Twitch: usa player oficial em iframe
+  const twitchMatch = url.match(/twitch\.tv\/([a-zA-Z0-9_]+)(?:\/video\/(\d+))?/);
+  if (twitchMatch) {
+    const channel = twitchMatch[1];
+    const videoId = twitchMatch[2];
+    const parent = location.hostname || 'localhost';
+    const src = videoId
+      ? `https://player.twitch.tv/?video=${videoId}&parent=${parent}&autoplay=false`
+      : `https://player.twitch.tv/?channel=${channel}&parent=${parent}&autoplay=false`;
+    wrap.innerHTML = `<iframe src="${src}" allowfullscreen></iframe>`;
+    return;
+  }
   // YouTube embed
   const ytMatch = url.match(/(?:youtu\.be\/|youtube\.com\/(?:watch\?v=|embed\/|v\/))([^&?\/]+)/);
   if (ytMatch) {
     wrap.innerHTML = `<iframe src="https://www.youtube.com/embed/${ytMatch[1]}" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>`;
     return;
   }
-  // MP4 ou outro vídeo direto
+  // MP4/WebM direto
   if (/\.(mp4|webm|ogg)(\?|$)/i.test(url)) {
     wrap.innerHTML = `<video controls preload="metadata" src="${escapeHtml(url)}"></video>`;
     return;
   }
   // Fallback: link clicável
   wrap.innerHTML = `<div class="video-placeholder"><div class="icon">▶</div><a href="${escapeHtml(url)}" target="_blank" style="color:var(--primary-light);">Abrir vídeo</a></div>`;
+}
+
+// Carrega vídeo explicativo (fixo, configurado pelo admin em settings/raffles.explanationVideoUrl).
+async function loadExplanationVideo() {
+  try {
+    const doc = await db.collection('settings').doc('raffles').get();
+    if (!doc.exists) return;
+    const url = doc.data()?.explanationVideoUrl;
+    if (url) renderVideoInto('explanationVideoWrap', url);
+  } catch (e) {
+    console.warn('[rifas] explanation video load skipped:', e.message);
+  }
 }
 
 // Renderiza a cartela de números (1..totalTickets) com estado:
@@ -720,6 +764,7 @@ function escapeHtml(s) {
 
 auth.onAuthStateChanged(() => loadAll());
 loadAll();
+loadExplanationVideo(); // vídeo fixo do rodapé (admin configura via settings/raffles.explanationVideoUrl)
 </script>
 
 </body>
