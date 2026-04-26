@@ -2131,7 +2131,7 @@ footer {
 <!-- SEARCH & FILTERS -->
 <section class="search-section" id="marketplace">
   <!-- Marca visível pra confirmar versão deployada. -->
-  <div style="font-size: 10px; color: rgba(139,92,246,0.5); text-align: right; margin-bottom: 4px;">search v36-home-160-items-4pages</div>
+  <div style="font-size: 10px; color: rgba(139,92,246,0.5); text-align: right; margin-bottom: 4px;">search v38-modal-inspect-cs2</div>
 
   <!-- BUFF-style category picker com SVG icons (Faca, Luvas, Rifle, ...).
        Clicar num modelo (ex: AK-47) filtra a grid e rola pra seção. -->
@@ -2554,35 +2554,72 @@ footer {
 
 <!-- SKIN DETAIL MODAL -->
 <div class="modal-overlay hidden" id="skinModal" onclick="closeSkinModal(event)">
-  <div class="modal-box" onclick="event.stopPropagation()">
+  <div class="modal-box" onclick="event.stopPropagation()" style="max-width: 880px; width: 100%;">
     <div class="modal-header-bar" id="modalRarityBar"></div>
-    <div class="modal-content">
+    <div class="modal-content" style="padding: 28px;">
+      <!-- HEADER: nome + close -->
       <div class="modal-top">
         <div class="modal-left">
           <div id="deliveryBadgeModal"></div>
-          <h3 class="modal-title" id="modalSkinName"></h3>
-          <div class="modal-meta">
+          <h3 class="modal-title" id="modalSkinName" style="font-size: 22px; font-weight: 800;"></h3>
+          <div class="modal-meta" style="margin-top: 8px;">
             <span id="modalRarity"></span>
-            <span id="modalWear"></span>
-            <span id="modalFloat"></span>
+            <span id="modalCategory" style="color: var(--text-muted); font-size: 12px;"></span>
           </div>
         </div>
         <button class="modal-close" onclick="closeSkinModal()">×</button>
       </div>
-      <div class="modal-image" id="modalImage"></div>
-      <div class="modal-price-section">
-        <div class="price-info">
-          <div>Preço</div>
-          <div class="price-display">
-            <span class="original-price" id="modalOriginalPrice"></span>
-            <span class="sale-price" id="modalSalePrice"></span>
-            <span class="discount-tag" id="modalDiscount"></span>
+
+      <!-- BODY: imagem + info lado-a-lado -->
+      <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 24px; margin-top: 20px;" id="modalBodyGrid">
+        <!-- Lado esquerdo: imagem grande -->
+        <div>
+          <div class="modal-image" id="modalImage" style="background: var(--bg-elevated); border-radius: 12px; padding: 24px; display: flex; align-items: center; justify-content: center; min-height: 240px;"></div>
+          <!-- Float / Pattern (se disponível) -->
+          <div id="modalFloatBox" style="margin-top: 12px; padding: 10px 14px; background: var(--bg-elevated); border-radius: 8px; font-size: 13px; display: none;"></div>
+        </div>
+
+        <!-- Lado direito: abas de wear + preço + botões -->
+        <div style="display: flex; flex-direction: column; gap: 16px;">
+          <!-- Abas de wear -->
+          <div>
+            <div style="font-size: 11px; color: var(--text-secondary); text-transform: uppercase; letter-spacing: .4px; margin-bottom: 8px; font-weight: 600;">Selecione o exterior</div>
+            <div id="modalWearTabs" style="display: flex; flex-wrap: wrap; gap: 6px;"></div>
+          </div>
+
+          <!-- Card de preço (atualiza quando troca de aba) -->
+          <div id="modalPriceCard" style="background: linear-gradient(135deg, rgba(139,92,246,.12), rgba(139,92,246,.04)); border: 1px solid rgba(139,92,246,.25); border-radius: 12px; padding: 16px;">
+            <div style="font-size: 11px; color: var(--text-secondary); text-transform: uppercase; letter-spacing: .5px; margin-bottom: 4px;">Preço Gumax</div>
+            <div class="price-display" style="display: flex; align-items: baseline; gap: 10px; flex-wrap: wrap;">
+              <span class="original-price" id="modalOriginalPrice" style="text-decoration: line-through; color: var(--text-muted); font-size: 14px;"></span>
+              <span class="sale-price" id="modalSalePrice" style="color: var(--accent-yellow); font-size: 26px; font-weight: 800;"></span>
+              <span class="discount-tag" id="modalDiscount" style="background: var(--accent-red); color: white; padding: 2px 8px; border-radius: 6px; font-size: 11px; font-weight: 700;"></span>
+            </div>
+            <div id="modalDeliveryInfo" style="margin-top: 8px; font-size: 12px; color: var(--text-secondary);"></div>
+          </div>
+
+          <!-- Botões de ação -->
+          <div style="display: flex; flex-direction: column; gap: 8px;">
+            <button class="btn btn-primary buy-button" onclick="addToCartFromModal()" id="modalBuyBtn" style="width: 100%;">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="9" cy="21" r="1"/><circle cx="20" cy="21" r="1"/><path d="M1 1h4l2.68 13.39a2 2 0 002 1.61h9.72a2 2 0 002-1.61L23 6H6"/></svg>
+              <span id="modalBuyBtnLabel">Adicionar ao carrinho</span>
+            </button>
+            <!-- Visualizar no CS2 (inspect link Steam ou Steam Market) -->
+            <button onclick="inspectInCS2()" id="modalInspectBtn"
+              style="width: 100%; padding: 12px; border-radius: 10px; background: linear-gradient(135deg, rgba(102,192,244,.18), rgba(102,192,244,.06)); border: 1px solid rgba(102,192,244,.4); color: #66c0f4; font-family: inherit; font-weight: 700; cursor: pointer; font-size: 14px; display: flex; align-items: center; justify-content: center; gap: 8px;">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor"><path d="M11.98 0C5.7 0 .54 4.86.05 11.04l6.42 2.66c.55-.37 1.2-.59 1.91-.59.07 0 .13 0 .19.01l2.86-4.14V8.9c0-2.5 2.03-4.52 4.52-4.52 2.5 0 4.53 2.03 4.53 4.53s-2.03 4.52-4.53 4.52h-.1l-4.08 2.91c0 .05 0 .1 0 .16 0 1.87-1.51 3.4-3.39 3.4-1.63 0-3.02-1.18-3.33-2.73L.44 15.27C1.86 20.3 6.49 24 11.98 24c6.63 0 12-5.37 12-12S18.6 0 11.98 0z"/></svg>
+              <span id="modalInspectBtnLabel">Visualizar no CS2</span>
+            </button>
+            <button onclick="analyzeFromModal()" style="width: 100%; padding: 12px; border-radius: 10px; background: transparent; border: 1px solid var(--border); color: var(--text-primary); font-family: inherit; font-weight: 600; cursor: pointer; font-size: 14px; display: flex; align-items: center; justify-content: center; gap: 8px;">
+              📊 Analisar com IA
+            </button>
+          </div>
+
+          <!-- Loading state ao trocar wear -->
+          <div id="modalWearLoading" style="display:none; text-align:center; padding:8px; color:var(--text-muted); font-size:12px;">
+            <span>Buscando preços dos exteriores…</span>
           </div>
         </div>
-        <button class="btn btn-primary buy-button" onclick="addToCartFromModal()">
-          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="9" cy="21" r="1"/><circle cx="20" cy="21" r="1"/><path d="M1 1h4l2.68 13.39a2 2 0 002 1.61h9.72a2 2 0 002-1.61L23 6H6"/></svg>
-          Comprar
-        </button>
       </div>
     </div>
   </div>
@@ -4106,64 +4143,257 @@ function fmtR(n) {
 }
 
 // ============= MODAL MANAGEMENT =============
-function openSkinModal(skin) {
+// Cache de variantes de wear por baseName (evita refetch quando user troca de aba).
+// Estrutura: { "AK-47 | Redline": { "Field-Tested": skinObj, "Minimal Wear": skinObj, ... } }
+const WEAR_VARIANTS_CACHE = {};
+const ALL_WEARS = ['Factory New', 'Minimal Wear', 'Field-Tested', 'Well-Worn', 'Battle-Scarred'];
+const WEAR_SHORT = { 'Factory New': 'FN', 'Minimal Wear': 'MW', 'Field-Tested': 'FT', 'Well-Worn': 'WW', 'Battle-Scarred': 'BS' };
+
+// Extrai "AK-47 | Redline" de "★ StatTrak™ AK-47 | Redline (Field-Tested)"
+function extractBaseName(fullName) {
+  return String(fullName)
+    .replace(/^★\s*/, '')
+    .replace(/^StatTrak™\s*/, '')
+    .replace(/^Souvenir\s*/, '')
+    .replace(/\s*\((Factory New|Minimal Wear|Field-Tested|Well-Worn|Battle-Scarred)\)\s*$/i, '')
+    .trim();
+}
+
+// Extrai o wear atual do nome
+function extractWearFromName(fullName) {
+  const m = String(fullName).match(/\((Factory New|Minimal Wear|Field-Tested|Well-Worn|Battle-Scarred)\)\s*$/i);
+  return m ? m[1] : null;
+}
+
+async function openSkinModal(skin) {
   currentModal = skin;
   const rarityColor = RARITY_COLORS[skin.rarity] || '#8847ff';
-  const originalPrice = (skin.originalPrice && skin.originalPrice > skin.price)
-    ? skin.originalPrice.toFixed(2)
-    : (skin.discount > 0
-        ? (skin.price / (1 - skin.discount / 100)).toFixed(2)
-        : skin.price.toFixed(2));
-  const image = skin.image || resolveSkinImage(skin.name);
+  const baseName = extractBaseName(skin.name);
+  const currentWear = extractWearFromName(skin.name) || skin.wear || 'Field-Tested';
 
+  // Header
   document.getElementById('modalRarityBar').style.color = rarityColor;
-  document.getElementById('modalSkinName').textContent = skin.name;
-  document.getElementById('modalRarity').innerHTML = `<span style="color: ${rarityColor}; font-weight: 600;">${skin.rarity}</span>`;
-  document.getElementById('modalWear').textContent = WEAR_LABELS[skin.wear];
-  // Se temos float/pattern (salvos manualmente ou via enrichment), mostra.
-  // Senão, e tem inspect link → oferece botão "Ver no Steam" que abre o
-  // visualizador 3D da Valve (mostra float + pattern reais + skin girando).
-  const floatParts = [];
-  if (skin.float > 0) floatParts.push(`Float: <strong>${skin.float.toFixed(5)}</strong>`);
-  if (skin.paintseed) floatParts.push(`Pattern: <strong style="color: var(--primary-light);">#${skin.paintseed}</strong>`);
+  document.getElementById('modalSkinName').textContent = baseName + (skin.name.startsWith('★') || /StatTrak/.test(skin.name) ? ' ' + skin.name.match(/^(★\s*StatTrak™|★|StatTrak™|Souvenir)/)?.[0] || '' : '');
+  document.getElementById('modalSkinName').textContent = skin.name; // mantém nome completo
+  document.getElementById('modalRarity').innerHTML = `<span style="color: ${rarityColor}; font-weight: 600;">${skin.rarity || 'Common'}</span>`;
+  const cat = getCategoryFromSkinName(skin.name);
+  document.getElementById('modalCategory').textContent = cat ? '· ' + cat : '';
 
-  let floatHtml = '';
-  if (floatParts.length) {
-    floatHtml = `<span style="font-family: 'JetBrains Mono', monospace;">${floatParts.join(' · ')}</span>`;
-  } else if (skin.inspectLink) {
-    // Botão que abre o inspect link na Steam (cliente do user)
-    floatHtml = `
-      <a href="${skin.inspectLink}" style="
-        display: inline-flex; align-items: center; gap: 6px;
-        padding: 6px 12px; border-radius: 8px;
-        background: rgba(102, 192, 244, 0.12);
-        border: 1px solid rgba(102, 192, 244, 0.3);
-        color: #66c0f4; font-size: 12px; font-weight: 600;
-        text-decoration: none; cursor: pointer;
-      " title="Abre o visualizador 3D da Steam — mostra float, pattern e skin girando">
-        <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor">
-          <path d="M11.98 0C5.7 0 .54 4.86.05 11.04l6.42 2.66c.55-.37 1.2-.59 1.91-.59.07 0 .13 0 .19.01l2.86-4.14V8.9c0-2.5 2.03-4.52 4.52-4.52 2.5 0 4.53 2.03 4.53 4.53s-2.03 4.52-4.53 4.52h-.1l-4.08 2.91c0 .05 0 .1 0 .16 0 1.87-1.51 3.4-3.39 3.4-1.63 0-3.02-1.18-3.33-2.73L.44 15.27C1.86 20.3 6.49 24 11.98 24c6.63 0 12-5.37 12-12S18.6 0 11.98 0z"/>
-        </svg>
-        Ver float na Steam
-      </a>`;
-  }
-  document.getElementById('modalFloat').innerHTML = floatHtml;
-
-  const deliveryHtml = skin.inStock
-    ? `<div class="delivery-badge full" style="margin-bottom: 12px;"><svg width="12" height="12" viewBox="0 0 24 24"><path d="M13 2L3 14h9l-1 10 10-12h-9l1-10z" fill="currentColor"/></svg> ENTREGA FULL • ATÉ 30 MIN</div>`
-    : '';
-  document.getElementById('deliveryBadgeModal').innerHTML = deliveryHtml;
-
+  // Imagem
+  const image = skin.image || resolveSkinImage(skin.name);
   const imageHtml = image
-    ? `<img src="${image}" alt="${skin.name}" data-name="${skin.name.replace(/"/g, '&quot;')}" onerror="gumaxImgFallback(this)">`
-    : `<div class="skin-shimmer" style="width: 160px; height: 100px;"></div>`;
+    ? `<img src="${image}" alt="${skin.name}" data-name="${skin.name.replace(/"/g, '&quot;')}" onerror="gumaxImgFallback(this)" style="max-width: 280px; max-height: 200px;">`
+    : `<div class="skin-shimmer" style="width: 280px; height: 180px;"></div>`;
   document.getElementById('modalImage').innerHTML = imageHtml;
 
+  // Float / pattern (se disponível)
+  const floatBox = document.getElementById('modalFloatBox');
+  const floatParts = [];
+  if (skin.float > 0) floatParts.push(`Float: <strong style="color:var(--accent-yellow); font-family:'JetBrains Mono',monospace;">${skin.float.toFixed(5)}</strong>`);
+  if (skin.paintseed) floatParts.push(`Pattern: <strong style="color: var(--primary-light); font-family:'JetBrains Mono',monospace;">#${skin.paintseed}</strong>`);
+  if (floatParts.length || skin.inspectLink) {
+    let html = floatParts.join(' · ');
+    if (skin.inspectLink) {
+      html += (html ? ' · ' : '') + `<a href="${skin.inspectLink}" style="color:#66c0f4; text-decoration:none; font-size:12px;">Ver na Steam ↗</a>`;
+    }
+    floatBox.innerHTML = html;
+    floatBox.style.display = '';
+  } else {
+    floatBox.style.display = 'none';
+  }
+
+  // Preço inicial (com base na skin que ele clicou)
+  renderModalPrice(skin);
+
+  // Renderiza abas placeholder enquanto busca outros wears
+  renderWearTabs(currentWear, baseName);
+
+  // Mostra modal já — busca de wears é assíncrona
+  document.getElementById('skinModal').classList.remove('hidden');
+
+  // Busca/cache as variantes de wear desse modelo
+  await loadWearVariantsForModal(baseName, currentWear, skin);
+}
+
+function renderModalPrice(skin) {
+  const originalPrice = (skin.originalPrice && skin.originalPrice > skin.price)
+    ? skin.originalPrice.toFixed(2)
+    : (skin.discount > 0 ? (skin.price / (1 - skin.discount / 100)).toFixed(2) : skin.price.toFixed(2));
   document.getElementById('modalOriginalPrice').textContent = `R$ ${originalPrice.replace('.', ',')}`;
   document.getElementById('modalSalePrice').textContent = `R$ ${skin.price.toFixed(2).replace('.', ',')}`;
-  document.getElementById('modalDiscount').textContent = `-${skin.discount}%`;
+  document.getElementById('modalDiscount').textContent = skin.discount > 0 ? `-${skin.discount}%` : '';
+  document.getElementById('modalDiscount').style.display = skin.discount > 0 ? '' : 'none';
+  // Delivery info
+  const isFull = skin.inStock || skin.source === 'steam_inventory';
+  const deliveryHtml = isFull
+    ? '⚡ <strong style="color:var(--accent-yellow);">Entrega Full</strong> · até 30 min'
+    : '🚚 Entrega normal · até 12h via parceiros';
+  document.getElementById('modalDeliveryInfo').innerHTML = deliveryHtml;
+  // Delivery badge no header
+  document.getElementById('deliveryBadgeModal').innerHTML = isFull
+    ? `<div class="delivery-badge full" style="display:inline-flex; padding:3px 10px; border-radius:5px; background:rgba(250,204,21,.15); color:var(--accent-yellow); font-size:10px; font-weight:700; margin-bottom:6px;">⚡ ENTREGA FULL</div>`
+    : '';
+  // Label do botão "Visualizar no CS2" — muda conforme disponibilidade do inspect link
+  const inspectBtn = document.getElementById('modalInspectBtn');
+  const inspectLabel = document.getElementById('modalInspectBtnLabel');
+  if (skin.inspectLink) {
+    // Skin Full do Gu — abre cliente Steam direto (visualização da SKIN EXATA com float real)
+    inspectLabel.textContent = 'Visualizar no jogo (skin exata)';
+    inspectBtn.title = 'Abre o CS2 e mostra essa skin específica do estoque com float, pattern, stickers e charm reais';
+  } else {
+    // Skin do catálogo Youpin — só temos modelo genérico
+    inspectLabel.textContent = 'Ver modelo 3D';
+    inspectBtn.title = 'Visualizador 3D web (CSFloat) — mostra o modelo da skin, mas sem o float específico';
+  }
+}
 
-  document.getElementById('skinModal').classList.remove('hidden');
+function renderWearTabs(activeWear, baseName) {
+  const container = document.getElementById('modalWearTabs');
+  const variants = WEAR_VARIANTS_CACHE[baseName] || {};
+  container.innerHTML = ALL_WEARS.map(wear => {
+    const variant = variants[wear];
+    const isActive = wear === activeWear;
+    const isAvailable = !!variant;
+    const price = variant ? `R$ ${variant.price.toFixed(2)}` : '—';
+    const bg = isActive
+      ? 'background:var(--primary); color:white; border-color:var(--primary-light);'
+      : isAvailable
+      ? 'background:var(--bg-elevated); color:var(--text-primary); border-color:var(--border);'
+      : 'background:transparent; color:var(--text-muted); border-color:var(--border); opacity:.5; cursor:not-allowed;';
+    return `
+      <button onclick="${isAvailable ? `switchWearTab('${baseName.replace(/'/g, "\\'")}', '${wear}')` : ''}"
+        ${!isAvailable ? 'disabled' : ''}
+        style="flex:1; min-width:90px; padding:8px 10px; border-radius:8px; border:1px solid; cursor:${isAvailable && !isActive ? 'pointer' : isAvailable ? 'default' : 'not-allowed'}; ${bg} font-family:inherit; font-size:11px; font-weight:600; transition:all .15s; display:flex; flex-direction:column; align-items:center; gap:2px;"
+        title="${WEAR_LABELS[wear] || wear}">
+        <span style="font-size:13px; font-weight:700;">${WEAR_SHORT[wear]}</span>
+        <span style="font-size:10px; opacity:.85;">${price}</span>
+      </button>
+    `;
+  }).join('');
+}
+
+function switchWearTab(baseName, wear) {
+  const variants = WEAR_VARIANTS_CACHE[baseName] || {};
+  const variant = variants[wear];
+  if (!variant) return;
+  currentModal = variant;
+  renderModalPrice(variant);
+  renderWearTabs(wear, baseName);
+  // Atualiza imagem se a variante tiver outra
+  if (variant.image) {
+    document.getElementById('modalImage').innerHTML =
+      `<img src="${variant.image}" alt="${variant.name}" onerror="gumaxImgFallback(this)" style="max-width: 280px; max-height: 200px;">`;
+  }
+}
+
+async function loadWearVariantsForModal(baseName, currentWear, originalSkin) {
+  // Já tem em cache?
+  if (WEAR_VARIANTS_CACHE[baseName]) {
+    renderWearTabs(currentWear, baseName);
+    return;
+  }
+  WEAR_VARIANTS_CACHE[baseName] = { [currentWear]: originalSkin }; // garante o atual
+  document.getElementById('modalWearLoading').style.display = '';
+  try {
+    const r = await fetch(`${API_BASE}/api/pricempire/search?q=${encodeURIComponent(baseName)}&limit=50`);
+    if (!r.ok) return;
+    const data = await r.json();
+    const items = Array.isArray(data.items) ? data.items : [];
+    items.forEach(it => {
+      const wear = extractWearFromName(it.name);
+      if (!wear) return;
+      // Match: o nome base deve ser igual (sem ★ / StatTrak™)
+      const itBase = extractBaseName(it.name);
+      if (itBase !== baseName) return;
+      // Pula StatTrak/Souvenir se o original NÃO é
+      const origIsStatTrak = /StatTrak™/.test(originalSkin.name);
+      const itIsStatTrak = /StatTrak™/.test(it.name);
+      if (origIsStatTrak !== itIsStatTrak) return;
+      // Cria objeto skin compatível
+      WEAR_VARIANTS_CACHE[baseName][wear] = {
+        name: it.name,
+        wear,
+        price: parseFloat(it.saleBRL) || 0,
+        originalPrice: parseFloat(it.originalBRL) || parseFloat(it.saleBRL) || 0,
+        discount: it.originalBRL && it.saleBRL && it.originalBRL > it.saleBRL
+          ? Math.round((1 - it.saleBRL / it.originalBRL) * 100) : 0,
+        image: it.iconUrl || originalSkin.image,
+        rarity: it.rarity || originalSkin.rarity,
+        inStock: false, // veio do search backend = não-Full
+        source: 'pricempire_search',
+      };
+    });
+    renderWearTabs(currentWear, baseName);
+  } catch (e) {
+    console.warn('[modal] wear variants fetch failed:', e.message);
+  } finally {
+    document.getElementById('modalWearLoading').style.display = 'none';
+  }
+}
+
+function analyzeFromModal() {
+  if (!currentModal) return;
+  const url = `analise.html?skin=${encodeURIComponent(currentModal.name)}`;
+  window.open(url, '_blank');
+}
+
+// Visualizar no CS2 — abre 3 caminhos em ordem de preferência:
+//   1) inspectLink direto (skins do Full do Gu, com ?owner=&assetid=&d=) — abre cliente Steam,
+//      mostra a SKIN EXATA do estoque com float real, pattern, stickers, charm.
+//   2) Sem inspectLink → abre csfloat.com/db (visualizador 3D web da skin GENÉRICA dela —
+//      mostra o modelo 3D rodando, mas sem stickers/wear específico).
+//   3) Fallback: Steam Community Market da skin (lista de listings, cliente pode inspecionar
+//      qualquer uma delas).
+function inspectInCS2() {
+  if (!currentModal) return;
+  const skin = currentModal;
+
+  // 1) Tem inspect link direto? Esse é o ideal — abre o cliente Steam local
+  if (skin.inspectLink) {
+    window.open(skin.inspectLink, '_blank');
+    return;
+  }
+
+  // 2) Tenta abrir no CSFloat DB (visualizador 3D web da skin)
+  // CSFloat DB usa o nome em lowercase com - como separador
+  const csfloatUrl = buildCsfloatDbUrl(skin.name);
+  if (csfloatUrl) {
+    if (confirm('Esta skin não tem visualização direta (estoque externo). Abrir o visualizador 3D web da CSFloat?')) {
+      window.open(csfloatUrl, '_blank');
+    }
+    return;
+  }
+
+  // 3) Fallback final: Steam Community Market — user vê listagens e pode inspecionar uma
+  const marketUrl = `https://steamcommunity.com/market/listings/730/${encodeURIComponent(skin.name)}`;
+  window.open(marketUrl, '_blank');
+}
+
+function buildCsfloatDbUrl(skinName) {
+  // CSFloat DB URL: https://csfloat.com/db/<weapon>/<skin>
+  // Ex: "AK-47 | Redline (Field-Tested)" → https://csfloat.com/db/ak-47/redline
+  const m = String(skinName).match(/^(?:★\s*)?(?:StatTrak™\s*)?(?:Souvenir\s*)?(.+?)\s*\|\s*(.+?)\s*\(/);
+  if (!m) return null;
+  const weapon = m[1].toLowerCase().replace(/\s+/g, '-').replace(/★|⭐/g, '').trim();
+  const skin = m[2].toLowerCase().replace(/\s+/g, '-').trim();
+  return `https://csfloat.com/db/${encodeURIComponent(weapon)}/${encodeURIComponent(skin)}`;
+}
+
+// Categoria humanizada pra header do modal (Faca, Rifle, etc)
+function getCategoryFromSkinName(name) {
+  const lower = String(name).toLowerCase();
+  if (/^★/.test(name) || /knife|bayonet|karambit|daggers/i.test(name)) {
+    if (/glove|wraps/i.test(name)) return 'Luvas';
+    return 'Faca';
+  }
+  if (/ak-47|m4a4|m4a1|aug|sg 553|famas|galil|awp|ssg|scar-20|g3sg1/i.test(name)) return 'Rifle';
+  if (/desert eagle|usp|glock|p2000|p250|five-seven|r8|berettas|tec-9|cz75|zeus/i.test(name)) return 'Pistola';
+  if (/mac-10|mp9|mp7|mp5|ump|p90|pp-bizon/i.test(name)) return 'SMG';
+  if (/nova|xm1014|sawed-off|mag-7/i.test(name)) return 'Escopeta';
+  if (/m249|negev/i.test(name)) return 'Metralhadora';
+  if (/sticker/i.test(lower)) return 'Adesivo';
+  if (/charm|pendant/i.test(lower)) return 'Charm';
+  return '';
 }
 
 function closeSkinModal(event) {
