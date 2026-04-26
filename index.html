@@ -2131,7 +2131,7 @@ footer {
 <!-- SEARCH & FILTERS -->
 <section class="search-section" id="marketplace">
   <!-- Marca visível pra confirmar versão deployada. -->
-  <div style="font-size: 10px; color: rgba(139,92,246,0.5); text-align: right; margin-bottom: 4px;">search v45-inspect-link-multilang</div>
+  <div style="font-size: 10px; color: rgba(139,92,246,0.5); text-align: right; margin-bottom: 4px;">search v46-badge-overlay-no-resize</div>
 
   <!-- BUFF-style category picker com SVG icons (Faca, Luvas, Rifle, ...).
        Clicar num modelo (ex: AK-47) filtra a grid e rola pra seção. -->
@@ -2557,10 +2557,9 @@ footer {
   <div class="modal-box" onclick="event.stopPropagation()" style="max-width: 880px; width: 100%;">
     <div class="modal-header-bar" id="modalRarityBar"></div>
     <div class="modal-content" style="padding: 28px;">
-      <!-- HEADER: nome + close -->
+      <!-- HEADER: nome + close (sem badge — ela vai como overlay na imagem) -->
       <div class="modal-top">
         <div class="modal-left">
-          <div id="deliveryBadgeModal"></div>
           <h3 class="modal-title" id="modalSkinName" style="font-size: 22px; font-weight: 800;"></h3>
           <div class="modal-meta" style="margin-top: 8px;">
             <span id="modalRarity"></span>
@@ -2572,9 +2571,15 @@ footer {
 
       <!-- BODY: imagem + info lado-a-lado -->
       <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 24px; margin-top: 20px;" id="modalBodyGrid">
-        <!-- Lado esquerdo: imagem grande -->
+        <!-- Lado esquerdo: wrapper relativo com imagem + badge overlay -->
         <div>
-          <div class="modal-image" id="modalImage" style="background: var(--bg-elevated); border-radius: 12px; padding: 24px; display: flex; align-items: center; justify-content: center; min-height: 240px;"></div>
+          <div style="position: relative;">
+            <div class="modal-image" id="modalImage" style="background: var(--bg-elevated); border-radius: 12px; padding: 24px; display: flex; align-items: center; justify-content: center; min-height: 240px;"></div>
+            <!-- Badge "ENTREGA FULL" como OVERLAY no canto da imagem.
+                 Fica fora do innerHTML do modalImage, então switchWearTab não a apaga.
+                 Quando vazio (skin não-Full), fica invisível mas o layout não muda. -->
+            <div id="deliveryBadgeModal" style="position: absolute; top: 10px; left: 10px; z-index: 2; pointer-events: none;"></div>
+          </div>
           <!-- Float / Pattern (se disponível) -->
           <div id="modalFloatBox" style="margin-top: 12px; padding: 10px 14px; background: var(--bg-elevated); border-radius: 8px; font-size: 13px; display: none;"></div>
         </div>
