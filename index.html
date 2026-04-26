@@ -2131,7 +2131,7 @@ footer {
 <!-- SEARCH & FILTERS -->
 <section class="search-section" id="marketplace">
   <!-- Marca visível pra confirmar versão deployada. -->
-  <div style="font-size: 10px; color: rgba(139,92,246,0.5); text-align: right; margin-bottom: 4px;">search v48-inspect-debug-logs</div>
+  <div style="font-size: 10px; color: rgba(139,92,246,0.5); text-align: right; margin-bottom: 4px;">search v49-inspect-html-fallback</div>
 
   <!-- BUFF-style category picker com SVG icons (Faca, Luvas, Rifle, ...).
        Clicar num modelo (ex: AK-47) filtra a grid e rola pra seção. -->
@@ -4413,6 +4413,10 @@ async function inspectInCS2() {
     let data = null;
     try { data = await r.json(); } catch {}
     console.log('📡 API response body:', data);
+    if (data?.diag) {
+      console.warn('🔧 DIAG do backend (passos tentados):');
+      console.table(data.diag);
+    }
     if (r.ok && data?.inspectLink) {
       console.log('✅ CAMINHO 2: API devolveu inspectLink, abrindo CS2');
       console.log('URL:', data.inspectLink);
