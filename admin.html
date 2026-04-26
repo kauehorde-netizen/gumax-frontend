@@ -914,10 +914,12 @@ select.form-control {
               <th>Tradelink</th>
               <th>Cadastro</th>
               <th>Status</th>
+              <th>Créditos</th>
+              <th>Ações</th>
             </tr>
           </thead>
           <tbody id="clientesTbody">
-            <tr><td colspan="6" style="text-align:center; color:var(--text-muted); padding:30px;">Carregando…</td></tr>
+            <tr><td colspan="8" style="text-align:center; color:var(--text-muted); padding:30px;">Carregando…</td></tr>
           </tbody>
         </table>
       </div>
@@ -992,12 +994,12 @@ select.form-control {
               style="width:100%; background:var(--bg-input); border:1px solid var(--border); border-radius:8px; padding:10px 12px; color:var(--text-primary); font-family:inherit; font-size:14px;">
           </div>
 
-          <!-- URL vídeo -->
+          <!-- URL vídeo do sorteio (Twitch live ou VOD) -->
           <div style="margin-bottom:18px;">
-            <label style="display:block; font-size:12px; font-weight:600; color:var(--text-secondary); text-transform:uppercase; letter-spacing:.4px; margin-bottom:6px;">Link do vídeo explicativo (opcional)</label>
-            <input type="url" id="raffleVideoUrlInput" placeholder="https://youtu.be/... ou https://.../video.mp4"
+            <label style="display:block; font-size:12px; font-weight:600; color:var(--text-secondary); text-transform:uppercase; letter-spacing:.4px; margin-bottom:6px;">Link do sorteio ao vivo (Twitch)</label>
+            <input type="url" id="raffleVideoUrlInput" placeholder="https://twitch.tv/seu_canal ou link do VOD"
               style="width:100%; background:var(--bg-input); border:1px solid var(--border); border-radius:8px; padding:10px 12px; color:var(--text-primary); font-family:inherit; font-size:14px;">
-            <div style="font-size:11px; color:var(--text-muted); margin-top:6px;">Aceita YouTube, MP4 direto, etc. Aparece no topo da página /rifas.html.</div>
+            <div style="font-size:11px; color:var(--text-muted); margin-top:6px;">Twitch live na hora do sorteio. Após o sorteio, troque pra URL do VOD pra ficar registrado no histórico. Aparece junto com a cartela quando a rifa tá ativa.</div>
           </div>
 
           <div style="display:flex; gap:12px; justify-content:flex-end;">
@@ -1542,11 +1544,20 @@ let _clientesCache = [];
 
 async function loadClientes() {
   const tbody = document.getElementById('clientesTbody');
-  tbody.innerHTML = `<tr><td colspan="6" style="text-align:center; color:var(--text-muted); padding:30px;">Carregando…</td></tr>`;
+  tbody.innerHTML = `<tr><td colspan="8" style="text-align:center; color:var(--text-muted); padding:30px;">Carregando…</td></tr>`;
   try {
-    // Pega TODOS users (sem filtro server-side por enquanto — vamos paginar se ficar grande).
-    const snap = await db.collection('users').orderBy('updatedAt', 'desc').limit(500).get();
-    _clientesCache = snap.docs.map(d => ({ uid: d.id, ...d.data() }));
+    // Pega TODOS users + créditos em paralelo (sem filtro server-side — pagina depois se crescer).
+    const [usersSnap, creditsSnap] = await Promise.all([
+      db.collection('users').orderBy('updatedAt', 'desc').limit(500).get(),
+      db.collection('credits').limit(500).get(),
+    ]);
+    const creditsMap = new Map(creditsSnap.docs.map(d => [d.id, d.data()]));
+    _clientesCache = usersSnap.docs.map(d => {
+      const u = { uid: d.id, ...d.data() };
+      const c = creditsMap.get(d.id);
+      u._credits = c ? ((c.subscriptionBalance || 0) + (c.purchasedBalance || 0) || c.balance || 0) : 0;
+      return u;
+    });
     // Stats
     const now = Date.now();
     const seven = now - 7 * 24 * 60 * 60 * 1000;
@@ -1577,7 +1588,7 @@ function renderClientes() {
     (c.steamId || c.uid || '').includes(search)
   );
   if (filtered.length === 0) {
-    tbody.innerHTML = `<tr><td colspan="6" style="text-align:center; color:var(--text-muted); padding:30px;">Nenhum cliente encontrado.</td></tr>`;
+    tbody.innerHTML = `<tr><td colspan="8" style="text-align:center; color:var(--text-muted); padding:30px;">Nenhum cliente encontrado.</td></tr>`;
     return;
   }
   tbody.innerHTML = filtered.map(c => {
@@ -1594,6 +1605,12 @@ function renderClientes() {
       : '<span style="color:var(--text-muted);">não cadastrado</span>';
     const avatar = c.steamAvatar || c.photoURL || '';
     const name = c.fullName || c.steamName || c.uid?.slice(0, 8) || 'Sem nome';
+    const isVip = !!c.unlimitedCredits;
+    const creditsCell = isVip
+      ? '<span style="background:rgba(167,139,250,.18); color:var(--primary-light); padding:3px 8px; border-radius:4px; font-size:11px; font-weight:700;">∞ VIP</span>'
+      : `<span style="font-weight:600;">${c._credits || 0}</span>`;
+    const escapedUid = escapeHtml(c.uid);
+    const escapedName = escapeHtml(name).replace(/'/g, "&#39;");
     return `
       <tr>
         <td style="display:flex; align-items:center; gap:10px;">
@@ -1612,9 +1629,58 @@ function renderClientes() {
             ? '<span style="background:rgba(16,185,129,.15); color:var(--accent-green); padding:3px 8px; border-radius:4px; font-size:11px; font-weight:600;">✓ Completo</span>'
             : '<span style="background:rgba(250,204,21,.15); color:var(--accent-yellow); padding:3px 8px; border-radius:4px; font-size:11px; font-weight:600;">⚠ Incompleto</span>'}
         </td>
+        <td>${creditsCell}</td>
+        <td style="white-space:nowrap;">
+          <button onclick="grantCreditsTo('${escapedUid}', '${escapedName}')"
+            style="background:var(--bg-elevated); border:1px solid var(--border); color:var(--text-primary); padding:5px 10px; border-radius:6px; cursor:pointer; font-size:11px; margin-right:4px;">+ Créditos</button>
+          <button onclick="toggleVipFor('${escapedUid}', '${escapedName}', ${isVip})"
+            style="background:${isVip ? 'rgba(167,139,250,.25)' : 'var(--bg-elevated)'}; border:1px solid ${isVip ? 'var(--primary-light)' : 'var(--border)'}; color:${isVip ? 'var(--primary-light)' : 'var(--text-secondary)'}; padding:5px 10px; border-radius:6px; cursor:pointer; font-size:11px; font-weight:600;">${isVip ? '✓ VIP' : 'VIP'}</button>
+        </td>
       </tr>
     `;
   }).join('');
+}
+
+// Dar créditos manualmente (Gu libera pra influencer/brinde)
+async function grantCreditsTo(uid, name) {
+  const amountStr = prompt(`Quantos créditos dar pra "${name}"?`);
+  if (!amountStr) return;
+  const amount = parseInt(amountStr, 10);
+  if (!amount || amount <= 0) { alert('Valor inválido'); return; }
+  const reason = prompt(`Motivo (ex: "Influencer Lucas Gaming"):`, 'admin_grant');
+  if (!reason) return;
+  try {
+    const r = await fetch(`${RAFFLES_API}/api/credits/admin/grant`, {
+      method: 'POST',
+      headers: await adminAuthHeaders(),
+      body: JSON.stringify({ uid, amount, reason }),
+    });
+    const data = await r.json();
+    if (data.error) { alert('Erro: ' + (data.message || data.error)); return; }
+    alert(`✓ ${amount} créditos liberados pra ${name}`);
+    loadClientes();
+  } catch (e) {
+    alert('Erro: ' + e.message);
+  }
+}
+
+// Toggle VIP (créditos ilimitados)
+async function toggleVipFor(uid, name, currentlyVip) {
+  const action = currentlyVip ? 'REMOVER' : 'ATIVAR';
+  if (!confirm(`${action} créditos ilimitados (VIP) pra "${name}"?`)) return;
+  try {
+    const r = await fetch(`${RAFFLES_API}/api/credits/admin/set-vip`, {
+      method: 'POST',
+      headers: await adminAuthHeaders(),
+      body: JSON.stringify({ uid, unlimited: !currentlyVip }),
+    });
+    const data = await r.json();
+    if (data.error) { alert('Erro: ' + (data.message || data.error)); return; }
+    alert(`✓ ${name} agora ${!currentlyVip ? 'É VIP (créditos infinitos)' : 'NÃO é mais VIP'}`);
+    loadClientes();
+  } catch (e) {
+    alert('Erro: ' + e.message);
+  }
 }
 
 function formatClientDate(ts) {
