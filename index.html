@@ -2132,7 +2132,7 @@ footer {
 <!-- SEARCH & FILTERS -->
 <section class="search-section" id="marketplace">
   <!-- Marca visível pra confirmar versão deployada. -->
-  <div style="font-size: 10px; color: rgba(139,92,246,0.5); text-align: right; margin-bottom: 4px;">search v32-auto-hero-gradient</div>
+  <div style="font-size: 10px; color: rgba(139,92,246,0.5); text-align: right; margin-bottom: 4px;">search v33-search-limit-200</div>
 
   <!-- BUFF-style category picker com SVG icons (Faca, Luvas, Rifle, ...).
        Clicar num modelo (ex: AK-47) filtra a grid e rola pra seção. -->
@@ -3581,7 +3581,7 @@ async function searchCatalogBackend(query) {
   searchInFlight = ctrl;
   try {
     const r = await fetch(
-      `${API_BASE}/api/pricempire/search?q=${encodeURIComponent(query)}&limit=40`,
+      `${API_BASE}/api/pricempire/search?q=${encodeURIComponent(query)}&limit=200`,
       { signal: ctrl.signal }
     );
     if (!r.ok) return;
