@@ -1553,25 +1553,139 @@ function escapeHtml(s) {
   return String(s).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 }
 
-// ============= RAFFLES (aba Rifas) — placeholder; backend ainda não implementado =============
+// ============= RAFFLES (aba Rifas) — ligado ao backend /api/raffles ==========
+const RAFFLES_API = (window.API_BASE || 'https://gumax-backend-production.up.railway.app');
+
+async function adminAuthHeaders() {
+  // Pega ID token do user logado (admin) pra mandar no header
+  const user = firebase.auth().currentUser;
+  if (!user) throw new Error('Faça login admin primeiro');
+  const token = await user.getIdToken();
+  return { 'Authorization': `Bearer ${token}`, 'Content-Type': 'application/json' };
+}
+
 async function loadRafflesAdmin() {
-  // TODO: depois de implementar backend/functions/raffles.js, conectar:
-  //  - GET /api/raffles/active → preencher rafflesActiveCard
-  //  - GET /api/raffles/history → preencher rafflesHistoryTbody
-  document.getElementById('rafflesEmptyCard').style.display = '';
-  document.getElementById('rafflesActiveCard').style.display = 'none';
+  // 1) Carrega rifa ativa
+  try {
+    const r = await fetch(`${RAFFLES_API}/api/raffles/active`);
+    const data = await r.json();
+    const active = data.active;
+    if (active && active.status === 'active') {
+      document.getElementById('rafflesEmptyCard').style.display = 'none';
+      document.getElementById('rafflesActiveCard').style.display = '';
+      document.getElementById('rafflesActiveImg').src = active.skinImage || '';
+      document.getElementById('rafflesActiveName').textContent = active.name;
+      document.getElementById('rafflesActiveSkin').textContent = active.skinName;
+      document.getElementById('rafflesActiveValue').textContent = `R$ ${(active.skinValueBRL || 0).toFixed(2)}`;
+      document.getElementById('rafflesActivePrice').textContent = `R$ ${(active.pricePerTicket || 0).toFixed(2)}`;
+      document.getElementById('rafflesActiveSold').textContent = `${active.soldTickets || 0} / ${active.totalTickets}`;
+      const drawDateStr = active.drawDate ? new Date(active.drawDate).toLocaleString('pt-BR') : '—';
+      document.getElementById('rafflesActiveDraw').textContent = drawDateStr;
+      const pct = ((active.soldTickets || 0) / active.totalTickets) * 100;
+      document.getElementById('rafflesActiveProgress').style.width = pct + '%';
+    } else {
+      document.getElementById('rafflesEmptyCard').style.display = '';
+      document.getElementById('rafflesActiveCard').style.display = 'none';
+    }
+  } catch (e) {
+    console.error('[raffles] active load error', e);
+  }
+
+  // 2) Histórico
+  try {
+    const r = await fetch(`${RAFFLES_API}/api/raffles/history?limit=10`);
+    const data = await r.json();
+    const tbody = document.getElementById('rafflesHistoryTbody');
+    if (!data.items || data.items.length === 0) {
+      tbody.innerHTML = `<tr><td colspan="6" style="text-align:center; color:var(--text-muted); padding:30px;">Sem histórico ainda.</td></tr>`;
+      return;
+    }
+    tbody.innerHTML = data.items.map(r => {
+      const arrecadado = (r.soldTickets || 0) * (r.pricePerTicket || 0);
+      const drawn = r.drawnAt ? (r.drawnAt.seconds ? new Date(r.drawnAt.seconds * 1000) : new Date(r.drawnAt)) : null;
+      const drawnStr = drawn ? drawn.toLocaleDateString('pt-BR') : '—';
+      const winner = r.winnerSteamName || r.winnerSteamId || '—';
+      const statusBadge = r.status === 'drawn'
+        ? '<span style="color:var(--accent-green);">✓ Sorteada</span>'
+        : '<span style="color:var(--accent-red);">✕ Cancelada</span>';
+      return `
+        <tr>
+          <td>${escapeHtml(r.skinName || '—')}</td>
+          <td>${r.soldTickets || 0} / ${r.totalTickets}</td>
+          <td>R$ ${arrecadado.toFixed(2)}</td>
+          <td>${statusBadge}</td>
+          <td>${drawnStr}</td>
+          <td>${r.status === 'drawn' ? `<strong>#${r.winningTicketNumber || '?'}</strong> — ${escapeHtml(winner)}` : '—'}</td>
+        </tr>
+      `;
+    }).join('');
+  } catch (e) {
+    console.error('[raffles] history load error', e);
+  }
 }
 
-function openCreateRaffleModal() {
-  alert('Em breve: backend de rifas ainda não foi implementado. Estamos trabalhando nisso!');
+async function openCreateRaffleModal() {
+  // Modal simples inline — pede dados básicos via prompt encadeado.
+  // (Pra UX melhor depois pode virar modal HTML completo.)
+  const name = prompt('Nome da rifa (ex: "Rifa Dezembro AK Redline"):');
+  if (!name) return;
+  const skinName = prompt('Nome completo da skin (ex: "AK-47 | Redline (Field-Tested)"):');
+  if (!skinName) return;
+  const skinImage = prompt('URL da imagem da skin (cole o link da imagem):', '');
+  const skinValueBRL = parseFloat(prompt('Valor da skin em R$ (ex: 250.00):'));
+  if (!skinValueBRL) return;
+  const pricePerTicket = parseFloat(prompt('Preço por bilhete em R$ (ex: 5.00):'));
+  if (!pricePerTicket) return;
+  const totalTickets = parseInt(prompt('Total de bilhetes (entre 10 e 10000):'), 10);
+  if (!totalTickets) return;
+  const drawDate = prompt('Data do sorteio (formato: 2026-12-31T20:00) — pode deixar vazio:', '');
+  const videoUrl = prompt('URL do vídeo do Gu explicando (YouTube ou direto) — pode deixar vazio:', '');
+
+  try {
+    const r = await fetch(`${RAFFLES_API}/api/raffles/admin/create`, {
+      method: 'POST',
+      headers: await adminAuthHeaders(),
+      body: JSON.stringify({ name, skinName, skinImage, skinValueBRL, pricePerTicket, totalTickets, drawDate, videoUrl }),
+    });
+    const data = await r.json();
+    if (data.error) { alert('Erro: ' + (data.message || data.error)); return; }
+    alert('Rifa criada com sucesso!');
+    loadRafflesAdmin();
+  } catch (e) {
+    alert('Erro: ' + e.message);
+  }
 }
 
-function drawRaffleNow() {
-  alert('Em breve: backend de rifas ainda não foi implementado.');
+async function drawRaffleNow() {
+  if (!confirm('Tem certeza que quer SORTEAR agora? Isso vai escolher o ganhador e finalizar a rifa.')) return;
+  try {
+    const r = await fetch(`${RAFFLES_API}/api/raffles/admin/draw`, {
+      method: 'POST',
+      headers: await adminAuthHeaders(),
+    });
+    const data = await r.json();
+    if (data.error) { alert('Erro: ' + (data.message || data.error)); return; }
+    alert(`🎉 Vencedor:\n\nTicket #${data.winner.ticketNumber}\nSteam: ${data.winner.steamName || data.winner.steamId}\nWhatsApp: ${data.winner.whatsapp || '—'}`);
+    loadRafflesAdmin();
+  } catch (e) {
+    alert('Erro: ' + e.message);
+  }
 }
 
-function cancelActiveRaffle() {
-  alert('Em breve: backend de rifas ainda não foi implementado.');
+async function cancelActiveRaffle() {
+  if (!confirm('Cancelar a rifa ativa? Sem refund automático — você precisa contatar os clientes manualmente.')) return;
+  try {
+    const r = await fetch(`${RAFFLES_API}/api/raffles/admin/cancel`, {
+      method: 'POST',
+      headers: await adminAuthHeaders(),
+    });
+    const data = await r.json();
+    if (data.error) { alert('Erro: ' + (data.message || data.error)); return; }
+    alert('Rifa cancelada.');
+    loadRafflesAdmin();
+  } catch (e) {
+    alert('Erro: ' + e.message);
+  }
 }
 
 // ============= STOCK PRICING (aba Inventário) =============
