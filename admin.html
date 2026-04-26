@@ -923,6 +923,91 @@ select.form-control {
       </div>
     </div>
 
+    <!-- ═════════ MODAL: CRIAR/EDITAR RIFA ═════════ -->
+    <div id="raffleModalBackdrop" style="display:none; position:fixed; inset:0; background:rgba(0,0,0,.75); z-index:300; align-items:center; justify-content:center; padding:20px;">
+      <div style="background:var(--bg-card); border:1px solid var(--border); border-radius:16px; max-width:680px; width:100%; max-height:92vh; overflow-y:auto; padding:28px;">
+        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:20px;">
+          <h2 style="font-size:22px; font-weight:800;">🎰 Nova rifa</h2>
+          <button onclick="closeRaffleModal()" style="background:transparent; border:none; color:var(--text-secondary); cursor:pointer; font-size:28px; line-height:1;">×</button>
+        </div>
+
+        <form id="raffleForm" onsubmit="submitRaffleForm(event)">
+          <!-- Upload de imagem -->
+          <div style="margin-bottom:18px;">
+            <label style="display:block; font-size:12px; font-weight:600; color:var(--text-secondary); text-transform:uppercase; letter-spacing:.4px; margin-bottom:8px;">Arte da rifa (imagem da skin)</label>
+            <div id="raffleImgPreviewWrap" style="background:var(--bg-elevated); border:2px dashed var(--border); border-radius:12px; padding:20px; text-align:center; cursor:pointer; transition:border-color .2s; min-height:160px; display:flex; align-items:center; justify-content:center;" onclick="document.getElementById('raffleImgInput').click()">
+              <div id="raffleImgPlaceholder">
+                <div style="font-size:40px; opacity:.4; margin-bottom:8px;">🖼</div>
+                <div style="color:var(--text-secondary); font-size:13px;">Clique pra fazer upload da arte da skin</div>
+                <div style="color:var(--text-muted); font-size:11px; margin-top:4px;">PNG, JPG ou WebP (máx 2MB)</div>
+              </div>
+              <img id="raffleImgPreview" style="display:none; max-width:280px; max-height:200px; object-fit:contain;">
+            </div>
+            <input type="file" id="raffleImgInput" accept="image/*" style="display:none;" onchange="handleRaffleImgUpload(event)">
+            <input type="hidden" id="raffleImgUrl">
+          </div>
+
+          <!-- Nome da rifa -->
+          <div style="margin-bottom:14px;">
+            <label style="display:block; font-size:12px; font-weight:600; color:var(--text-secondary); text-transform:uppercase; letter-spacing:.4px; margin-bottom:6px;">Nome da rifa</label>
+            <input type="text" id="raffleNameInput" required maxlength="80" placeholder="ex: Rifa Dezembro AK Redline"
+              style="width:100%; background:var(--bg-input); border:1px solid var(--border); border-radius:8px; padding:10px 12px; color:var(--text-primary); font-family:inherit; font-size:14px;">
+          </div>
+
+          <!-- Nome da skin -->
+          <div style="margin-bottom:14px;">
+            <label style="display:block; font-size:12px; font-weight:600; color:var(--text-secondary); text-transform:uppercase; letter-spacing:.4px; margin-bottom:6px;">Nome completo da skin</label>
+            <input type="text" id="raffleSkinNameInput" required maxlength="200" placeholder="ex: AK-47 | Redline (Field-Tested)"
+              style="width:100%; background:var(--bg-input); border:1px solid var(--border); border-radius:8px; padding:10px 12px; color:var(--text-primary); font-family:inherit; font-size:14px;">
+          </div>
+
+          <!-- Valor + preço por bilhete + total -->
+          <div style="display:grid; grid-template-columns:repeat(3, 1fr); gap:12px; margin-bottom:14px;">
+            <div>
+              <label style="display:block; font-size:12px; font-weight:600; color:var(--text-secondary); text-transform:uppercase; letter-spacing:.4px; margin-bottom:6px;">Valor da skin (R$)</label>
+              <input type="number" id="raffleSkinValueInput" required min="0" step="0.01" placeholder="250.00"
+                style="width:100%; background:var(--bg-input); border:1px solid var(--border); border-radius:8px; padding:10px 12px; color:var(--text-primary); font-family:inherit; font-size:14px;">
+            </div>
+            <div>
+              <label style="display:block; font-size:12px; font-weight:600; color:var(--text-secondary); text-transform:uppercase; letter-spacing:.4px; margin-bottom:6px;">Preço/bilhete (R$)</label>
+              <input type="number" id="rafflePriceInput" required min="1" step="0.01" placeholder="5.00" oninput="updateRaffleTotalPreview()"
+                style="width:100%; background:var(--bg-input); border:1px solid var(--border); border-radius:8px; padding:10px 12px; color:var(--text-primary); font-family:inherit; font-size:14px;">
+            </div>
+            <div>
+              <label style="display:block; font-size:12px; font-weight:600; color:var(--text-secondary); text-transform:uppercase; letter-spacing:.4px; margin-bottom:6px;">Total bilhetes</label>
+              <input type="number" id="raffleTotalInput" required min="10" max="10000" placeholder="50" value="50" oninput="updateRaffleTotalPreview()"
+                style="width:100%; background:var(--bg-input); border:1px solid var(--border); border-radius:8px; padding:10px 12px; color:var(--text-primary); font-family:inherit; font-size:14px;">
+            </div>
+          </div>
+
+          <!-- Preview do total arrecadado -->
+          <div style="background:var(--bg-elevated); border-radius:8px; padding:10px 14px; margin-bottom:14px; font-size:13px; color:var(--text-secondary);">
+            Arrecadação total potencial: <strong style="color:var(--accent-yellow);" id="raffleTotalPreview">R$ —</strong>
+          </div>
+
+          <!-- Data sorteio -->
+          <div style="margin-bottom:14px;">
+            <label style="display:block; font-size:12px; font-weight:600; color:var(--text-secondary); text-transform:uppercase; letter-spacing:.4px; margin-bottom:6px;">Data do sorteio (opcional)</label>
+            <input type="datetime-local" id="raffleDrawDateInput"
+              style="width:100%; background:var(--bg-input); border:1px solid var(--border); border-radius:8px; padding:10px 12px; color:var(--text-primary); font-family:inherit; font-size:14px;">
+          </div>
+
+          <!-- URL vídeo -->
+          <div style="margin-bottom:18px;">
+            <label style="display:block; font-size:12px; font-weight:600; color:var(--text-secondary); text-transform:uppercase; letter-spacing:.4px; margin-bottom:6px;">Link do vídeo explicativo (opcional)</label>
+            <input type="url" id="raffleVideoUrlInput" placeholder="https://youtu.be/... ou https://.../video.mp4"
+              style="width:100%; background:var(--bg-input); border:1px solid var(--border); border-radius:8px; padding:10px 12px; color:var(--text-primary); font-family:inherit; font-size:14px;">
+            <div style="font-size:11px; color:var(--text-muted); margin-top:6px;">Aceita YouTube, MP4 direto, etc. Aparece no topo da página /rifas.html.</div>
+          </div>
+
+          <div style="display:flex; gap:12px; justify-content:flex-end;">
+            <button type="button" class="btn btn-ghost" onclick="closeRaffleModal()">Cancelar</button>
+            <button type="submit" class="btn btn-primary" id="raffleSubmitBtn">Criar rifa</button>
+          </div>
+        </form>
+      </div>
+    </div>
+
     <!-- RAFFLES SECTION (gerencia rifa ativa) -->
     <div class="section" id="section-raffles">
       <div class="page-header">
@@ -1624,35 +1709,77 @@ async function loadRafflesAdmin() {
   }
 }
 
-async function openCreateRaffleModal() {
-  // Modal simples inline — pede dados básicos via prompt encadeado.
-  // (Pra UX melhor depois pode virar modal HTML completo.)
-  const name = prompt('Nome da rifa (ex: "Rifa Dezembro AK Redline"):');
-  if (!name) return;
-  const skinName = prompt('Nome completo da skin (ex: "AK-47 | Redline (Field-Tested)"):');
-  if (!skinName) return;
-  const skinImage = prompt('URL da imagem da skin (cole o link da imagem):', '');
-  const skinValueBRL = parseFloat(prompt('Valor da skin em R$ (ex: 250.00):'));
-  if (!skinValueBRL) return;
-  const pricePerTicket = parseFloat(prompt('Preço por bilhete em R$ (ex: 5.00):'));
-  if (!pricePerTicket) return;
-  const totalTickets = parseInt(prompt('Total de bilhetes (entre 10 e 10000):'), 10);
-  if (!totalTickets) return;
-  const drawDate = prompt('Data do sorteio (formato: 2026-12-31T20:00) — pode deixar vazio:', '');
-  const videoUrl = prompt('URL do vídeo do Gu explicando (YouTube ou direto) — pode deixar vazio:', '');
+function openCreateRaffleModal() {
+  document.getElementById('raffleModalBackdrop').style.display = 'flex';
+  // Reset form
+  document.getElementById('raffleForm').reset();
+  document.getElementById('raffleTotalInput').value = 50;
+  document.getElementById('raffleImgPreview').style.display = 'none';
+  document.getElementById('raffleImgPlaceholder').style.display = '';
+  document.getElementById('raffleImgUrl').value = '';
+  updateRaffleTotalPreview();
+}
+
+function closeRaffleModal() {
+  document.getElementById('raffleModalBackdrop').style.display = 'none';
+}
+
+function updateRaffleTotalPreview() {
+  const price = parseFloat(document.getElementById('rafflePriceInput').value) || 0;
+  const total = parseInt(document.getElementById('raffleTotalInput').value, 10) || 0;
+  document.getElementById('raffleTotalPreview').textContent = `R$ ${(price * total).toFixed(2)} (${total} bilhetes)`;
+}
+
+async function handleRaffleImgUpload(ev) {
+  const file = ev.target.files[0];
+  if (!file) return;
+  if (file.size > 2 * 1024 * 1024) {
+    alert('Imagem muito grande (máx 2MB). Comprime antes de enviar.');
+    return;
+  }
+  // Converte pra base64 (Firestore guarda string ≤ 1MB; suficiente pra arte da rifa)
+  const reader = new FileReader();
+  reader.onload = (e) => {
+    const dataUrl = e.target.result;
+    document.getElementById('raffleImgPreview').src = dataUrl;
+    document.getElementById('raffleImgPreview').style.display = '';
+    document.getElementById('raffleImgPlaceholder').style.display = 'none';
+    document.getElementById('raffleImgUrl').value = dataUrl;
+  };
+  reader.readAsDataURL(file);
+}
+
+async function submitRaffleForm(ev) {
+  ev.preventDefault();
+  const btn = document.getElementById('raffleSubmitBtn');
+  btn.disabled = true; btn.textContent = 'Criando...';
+
+  const payload = {
+    name:           document.getElementById('raffleNameInput').value.trim(),
+    skinName:       document.getElementById('raffleSkinNameInput').value.trim(),
+    skinImage:      document.getElementById('raffleImgUrl').value || '',
+    skinValueBRL:   parseFloat(document.getElementById('raffleSkinValueInput').value) || 0,
+    pricePerTicket: parseFloat(document.getElementById('rafflePriceInput').value) || 0,
+    totalTickets:   parseInt(document.getElementById('raffleTotalInput').value, 10) || 0,
+    drawDate:       document.getElementById('raffleDrawDateInput').value || null,
+    videoUrl:       document.getElementById('raffleVideoUrlInput').value.trim() || '',
+  };
 
   try {
     const r = await fetch(`${RAFFLES_API}/api/raffles/admin/create`, {
       method: 'POST',
       headers: await adminAuthHeaders(),
-      body: JSON.stringify({ name, skinName, skinImage, skinValueBRL, pricePerTicket, totalTickets, drawDate, videoUrl }),
+      body: JSON.stringify(payload),
     });
     const data = await r.json();
     if (data.error) { alert('Erro: ' + (data.message || data.error)); return; }
-    alert('Rifa criada com sucesso!');
+    closeRaffleModal();
     loadRafflesAdmin();
+    alert('🎉 Rifa criada com sucesso!');
   } catch (e) {
     alert('Erro: ' + e.message);
+  } finally {
+    btn.disabled = false; btn.textContent = 'Criar rifa';
   }
 }
 
