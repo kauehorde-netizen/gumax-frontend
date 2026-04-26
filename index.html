@@ -2131,7 +2131,7 @@ footer {
 <!-- SEARCH & FILTERS -->
 <section class="search-section" id="marketplace">
   <!-- Marca visível pra confirmar versão deployada. -->
-  <div style="font-size: 10px; color: rgba(139,92,246,0.5); text-align: right; margin-bottom: 4px;">search v49-inspect-html-fallback</div>
+  <div style="font-size: 10px; color: rgba(139,92,246,0.5); text-align: right; margin-bottom: 4px;">search v50-flat-logs</div>
 
   <!-- BUFF-style category picker com SVG icons (Faca, Luvas, Rifle, ...).
        Clicar num modelo (ex: AK-47) filtra a grid e rola pra seção. -->
@@ -4384,17 +4384,19 @@ async function inspectInCS2() {
   const skin = currentModal;
   const isFull = skin.inStock || skin.source === 'steam_inventory';
 
-  console.group('🔎 [inspectInCS2] DIAGNÓSTICO');
-  console.log('Skin:', skin.name);
-  console.log('isFull:', isFull, '| inStock:', skin.inStock, '| source:', skin.source);
-  console.log('inspectLink (Firestore):', skin.inspectLink || '(null/vazio)');
-  console.log('ownerSteamId:', skin.ownerSteamId || '(none)', '| assetid:', skin.assetid || '(none)');
+  console.log('═══════════════════════════════════════════');
+  console.log('🔎 [inspectInCS2] DIAGNÓSTICO');
+  console.log('   Skin:', skin.name);
+  console.log('   isFull:', isFull, '| inStock:', skin.inStock, '| source:', skin.source);
+  console.log('   inspectLink (Firestore):', skin.inspectLink || '(null/vazio)');
+  console.log('   ownerSteamId:', skin.ownerSteamId || '(none)', '| assetid:', skin.assetid || '(none)');
+  console.log('═══════════════════════════════════════════');
 
   // 1) inspect link direto (caso ideal pra Full sincronizada)
   if (skin.inspectLink) {
     console.log('✅ CAMINHO 1: abrindo inspectLink direto do Firestore');
     console.log('URL:', skin.inspectLink);
-    console.groupEnd();
+    // (sem groupEnd)
     window.open(skin.inspectLink, '_blank');
     return;
   }
@@ -4420,7 +4422,7 @@ async function inspectInCS2() {
     if (r.ok && data?.inspectLink) {
       console.log('✅ CAMINHO 2: API devolveu inspectLink, abrindo CS2');
       console.log('URL:', data.inspectLink);
-      console.groupEnd();
+      // (sem groupEnd)
       window.open(data.inspectLink, '_blank');
       return;
     }
@@ -4429,26 +4431,26 @@ async function inspectInCS2() {
     if (isFull && skin.ownerSteamId && skin.assetid) {
       const url = `https://steamcommunity.com/profiles/${skin.ownerSteamId}/inventory/#730_2_${skin.assetid}`;
       console.warn('⚠️ CAMINHO 3 (fallback): abrindo inventário do Gu →', url);
-      console.groupEnd();
+      // (sem groupEnd)
       window.open(url, '_blank');
       return;
     }
     // 4) Fallback final: Steam Market (web)
     const marketUrl = `https://steamcommunity.com/market/listings/730/${encodeURIComponent(skin.name)}`;
     console.warn('⚠️ CAMINHO 4 (último fallback): Steam Market web →', marketUrl);
-    console.groupEnd();
+    // (sem groupEnd)
     window.open(marketUrl, '_blank');
   } catch (e) {
     console.error('❌ ERRO de rede no fetch da API:', e);
     if (isFull && skin.ownerSteamId && skin.assetid) {
       const url = `https://steamcommunity.com/profiles/${skin.ownerSteamId}/inventory/#730_2_${skin.assetid}`;
       console.warn('⚠️ Fallback após erro: inventário do Gu →', url);
-      console.groupEnd();
+      // (sem groupEnd)
       window.open(url, '_blank');
     } else {
       const marketUrl = `https://steamcommunity.com/market/listings/730/${encodeURIComponent(skin.name)}`;
       console.warn('⚠️ Fallback após erro: Steam Market →', marketUrl);
-      console.groupEnd();
+      // (sem groupEnd)
       window.open(marketUrl, '_blank');
     }
   } finally {
