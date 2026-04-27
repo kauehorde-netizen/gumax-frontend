@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Lobbies — Gumax Skins</title>
+<title>GMAX LEAGUE — Gumax</title>
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
 <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-auth-compat.js"></script>
@@ -27,14 +27,27 @@
 * { box-sizing: border-box; margin: 0; padding: 0; }
 body { font-family: 'Inter', sans-serif; background: var(--bg-primary); color: var(--text-primary); min-height: 100vh; }
 
-/* ── Topbar (mesma estética do resto do site) ── */
-.topbar { display:flex; align-items:center; justify-content:space-between; padding:14px 28px; background:linear-gradient(180deg,rgba(20,16,40,.85),rgba(10,8,20,.7)); border-bottom:1px solid var(--border); position:sticky; top:0; z-index:50; }
-.topbar .logo { font-weight:800; font-size:22px; background:linear-gradient(135deg,var(--primary),#ff79c6); -webkit-background-clip:text; -webkit-text-fill-color:transparent; cursor:pointer; }
-.nav-links { display:flex; gap:6px; }
-.nav-link { padding:8px 14px; border-radius:8px; font-size:13px; color:var(--text-secondary); text-decoration:none; transition:all .15s; }
-.nav-link:hover { background:rgba(139,92,246,.1); color:var(--text-primary); }
-.nav-link.active { background:rgba(139,92,246,.2); color:var(--primary-light); }
-.user-avatar-mini { width:34px; height:34px; border-radius:50%; border:2px solid var(--primary); }
+/* ── Header padrão do site (mesma estética do index/rifas) ── */
+header { background: rgba(8,6,14,0.85); backdrop-filter: blur(20px); border-bottom: 1px solid var(--border); position: sticky; top: 0; z-index: 100; }
+.header-content { max-width: 1400px; margin: 0 auto; padding: 12px 24px; display: flex; align-items: center; justify-content: space-between; gap: 24px; }
+.header-content .logo { width: 80px; height: auto; cursor: pointer; }
+.header-content nav { display: flex; gap: 4px; flex: 1; justify-content: center; }
+.nav-link { padding: 8px 14px; border-radius: 8px; font-size: 14px; color: var(--text-secondary); text-decoration: none; cursor: pointer; transition: all .15s; font-weight: 500; display: inline-flex; align-items: center; gap: 6px; }
+.nav-link:hover { background: rgba(139,92,246,.1); color: var(--text-primary); }
+.nav-link.active { background: rgba(139,92,246,.2); color: var(--primary-light); }
+.header-actions { display: flex; align-items: center; gap: 10px; }
+.btn-primary-small { padding: 8px 16px; background: linear-gradient(135deg, var(--primary), var(--accent-cyan)); border: none; color: #fff; border-radius: 10px; font-weight: 700; cursor: pointer; font-size: 13px; box-shadow: 0 4px 12px rgba(139,92,246,.3); display:inline-flex; align-items:center; gap:6px; }
+.profile-area { display: flex; align-items: center; gap: 10px; }
+.profile-link { display:inline-flex; align-items:center; gap:10px; padding:5px 12px 5px 5px; border-radius:24px; background:var(--bg-elevated); border:1px solid var(--border); text-decoration:none; color:var(--text-primary); transition:border-color .15s; }
+.profile-link:hover { border-color: var(--primary-light); }
+.profile-avatar { width:32px; height:32px; border-radius:50%; object-fit:cover; }
+.profile-name { font-size:14px; font-weight:600; }
+.btn-logout { background:transparent; border:none; color:var(--text-muted); font-size:12px; cursor:pointer; padding:6px 10px; }
+.btn-logout:hover { color: var(--accent-red); }
+/* Botão GMAX LEAGUE — visualmente separado da loja, identidade própria */
+.btn-league { padding:8px 16px; background:linear-gradient(135deg, #facc15 0%, #f97316 50%, #ef4444 100%); color:#0a0612; border:none; border-radius:24px; font-weight:800; cursor:pointer; font-size:13px; text-decoration:none; display:inline-flex; align-items:center; gap:6px; box-shadow:0 4px 14px rgba(249,115,22,.35); transition:transform .15s, filter .15s; letter-spacing:.4px; text-transform:uppercase; }
+.btn-league:hover { transform:translateY(-1px); filter:brightness(1.1); }
+.btn-league.active { box-shadow:0 0 0 2px rgba(250,204,21,.6), 0 4px 14px rgba(249,115,22,.5); }
 
 /* ── Layout principal ── */
 .lobby-shell { display:grid; grid-template-columns: 280px 1fr; gap:24px; padding:28px; max-width:1400px; margin:0 auto; }
@@ -108,17 +121,29 @@ body { font-family: 'Inter', sans-serif; background: var(--bg-primary); color: v
 </head>
 <body>
 
-<header class="topbar">
-  <div class="logo" onclick="location.href='index.html'">GUMAX SKINS</div>
-  <nav class="nav-links">
-    <a class="nav-link" href="index.html">🛒 Mercado</a>
-    <a class="nav-link" href="vender.html">💰 Vender</a>
-    <a class="nav-link" href="analise.html">📊 Análise</a>
-    <a class="nav-link active" href="lobbies.html">🎮 Lobbies</a>
-    <a class="nav-link" href="rifas.html">🎰 Rifas</a>
-  </nav>
-  <div id="userArea">
-    <button class="btn-create" onclick="doLogin()">Entrar com Steam</button>
+<header>
+  <div class="header-content">
+    <img src="https://static.wixstatic.com/media/874864_b598e856481740e7ae752771a661c242~mv2.png/v1/fill/w_600,h_235,al_c,q_85,enc_auto/874864_b598e856481740e7ae752771a661c242~mv2.png" alt="Gumax Skins" class="logo" onclick="location.href='index.html'">
+    <nav>
+      <a class="nav-link" href="index.html">🛒 Mercado</a>
+      <a class="nav-link" href="vender.html" style="color: var(--accent-yellow); font-weight: 600;">💰 Vender</a>
+      <a class="nav-link" href="analise.html">📊 Análise</a>
+      <a class="nav-link" href="rifas.html" style="background:linear-gradient(135deg,#8B5CF6,#FACC15);-webkit-background-clip:text;-webkit-text-fill-color:transparent;font-weight:700;">🎰 Rifas</a>
+    </nav>
+    <div class="header-actions">
+      <a class="btn-league active" href="lobbies.html" title="Plataforma de campeonatos CS2">🏆 GMAX LEAGUE</a>
+      <button class="btn-primary-small" id="headerLoginBtn" onclick="doLogin()">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><path d="M11.979 0C5.678 0 .511 4.86.022 11.037l6.432 2.658c.545-.371 1.203-.59 1.912-.59.063 0 .125.004.188.006l2.861-4.142V8.91c0-2.495 2.028-4.524 4.524-4.524 2.494 0 4.524 2.031 4.524 4.527s-2.03 4.525-4.524 4.525h-.105l-4.076 2.911c0 .052.004.105.004.159 0 1.875-1.515 3.396-3.39 3.396-1.635 0-3.016-1.173-3.331-2.727L.436 15.27C1.862 20.307 6.486 24 11.979 24c6.627 0 11.999-5.373 11.999-12S18.605 0 11.979 0z"/></svg>
+        Entrar com Steam
+      </button>
+      <div class="profile-area" id="headerProfileArea" style="display:none;">
+        <a href="perfil.html" class="profile-link" title="Meu perfil">
+          <img id="headerUserAvatar" class="profile-avatar" src="https://www.gravatar.com/avatar?d=mp" alt="avatar">
+          <span class="profile-name" id="headerUserName">user</span>
+        </a>
+        <button class="btn-logout" onclick="doLogout()" title="Sair">Sair</button>
+      </div>
+    </div>
   </div>
 </header>
 
@@ -206,17 +231,45 @@ function toast(msg, type = '') {
   setTimeout(() => t.classList.remove('show'), 2800);
 }
 
-// ─── Auth ───
+// ─── Auth state — espelha o padrão do index.html ───
+// Sessão Firebase persiste em localStorage por default → quando user loga em
+// index.html, lobbies.html já pega via onAuthStateChanged sem precisar relogar.
 auth.onAuthStateChanged(async user => {
+  const loginBtn = document.getElementById('headerLoginBtn');
+  const profileArea = document.getElementById('headerProfileArea');
+  const createBtn = document.getElementById('btnCreateLobby');
+
   if (!user) {
-    document.getElementById('userArea').innerHTML = '<button class="btn-create" onclick="doLogin()">Entrar com Steam</button>';
-    document.getElementById('btnCreateLobby').style.display = 'none';
+    if (loginBtn) loginBtn.style.display = '';
+    if (profileArea) profileArea.style.display = 'none';
+    if (createBtn) createBtn.style.display = 'none';
     return;
   }
+
   _user = user;
-  _idToken = await user.getIdToken();
-  document.getElementById('userArea').innerHTML = `<img src="${user.photoURL || ''}" class="user-avatar-mini" onerror="this.style.display='none'">`;
-  document.getElementById('btnCreateLobby').style.display = '';
+  try { _idToken = await user.getIdToken(); } catch {}
+
+  // Header: avatar + nome (mesma lógica do index)
+  if (loginBtn) loginBtn.style.display = 'none';
+  if (profileArea) profileArea.style.display = 'flex';
+  let displayName = user.displayName || user.email?.split('@')[0] || '';
+  let photoURL = user.photoURL || '';
+  try {
+    const udoc = await db.collection('users').doc(user.uid).get();
+    if (udoc.exists) {
+      const d = udoc.data() || {};
+      displayName = d.steamName || d.fullName || displayName;
+      photoURL = d.steamAvatar || d.photoURL || photoURL;
+    }
+  } catch {}
+  const isSteamUid = /^\d{17}$/.test(user.uid);
+  if (!displayName && isSteamUid) displayName = 'Steam ' + user.uid.slice(-4);
+  const avatarEl = document.getElementById('headerUserAvatar');
+  const nameEl = document.getElementById('headerUserName');
+  if (avatarEl) avatarEl.src = photoURL || 'https://www.gravatar.com/avatar?d=mp';
+  if (nameEl) nameEl.textContent = displayName || 'user';
+
+  if (createBtn) createBtn.style.display = '';
   await loadMyLobby();
   startPolling();
 });
@@ -227,6 +280,11 @@ async function doLogin() {
     const d = await r.json();
     if (d.loginUrl) location.href = d.loginUrl;
   } catch (e) { toast('Erro Steam: ' + e.message, 'error'); }
+}
+
+async function doLogout() {
+  try { await auth.signOut(); } catch {}
+  location.href = 'index.html';
 }
 
 // ─── Polling 3s ───
