@@ -4499,7 +4499,7 @@ function closeSkinModal(event) {
 }
 
 // ============= CHECKOUT FLOW =============
-function startCheckout() {
+async function startCheckout() {
   if (cart.length === 0) {
     showToast('Carrinho vazio');
     return;
@@ -4510,6 +4510,31 @@ function startCheckout() {
     showToast('Faça login com Steam primeiro');
     closeSteamLogin();
     return;
+  }
+
+  // Bloqueia checkout se perfil incompleto (sem nome, WhatsApp ou tradeLink).
+  // Sem esses dados a equipe Gu não consegue: 1) confirmar identidade, 2) avisar
+  // sobre status do pedido via WhatsApp, 3) enviar a skin via Steam Trade.
+  try {
+    const fbUser = firebase.auth().currentUser;
+    if (fbUser) {
+      const doc = await firebase.firestore().collection('users').doc(fbUser.uid).get();
+      const data = doc.data() || {};
+      if (!data.profileComplete) {
+        const proceed = confirm(
+          '📋 Pra finalizar a compra, precisamos completar seu perfil:\n\n' +
+          '• Nome completo\n' +
+          '• WhatsApp (pra avisar sobre o pedido)\n' +
+          '• Trade URL Steam (pra enviar a skin)\n\n' +
+          'Deseja completar agora?'
+        );
+        if (proceed) window.location.href = 'perfil.html?return=index.html';
+        return;
+      }
+    }
+  } catch (e) {
+    console.warn('[checkout] profileComplete check falhou:', e.message);
+    // Em caso de erro de leitura, deixa passar — ruim travar o user por bug nosso.
   }
 
   document.getElementById('checkoutModal').classList.remove('hidden');
