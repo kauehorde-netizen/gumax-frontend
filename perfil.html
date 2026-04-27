@@ -287,6 +287,9 @@ async function saveProfile(ev) {
   try {
     await db.collection('users').doc(user.uid).set({
       fullName, whatsapp, tradeLink, email,
+      // Flag usada por index.html (cart) e rifas.html pra liberar compras.
+      // Setado true só quando todos os 3 campos passaram nas validações acima.
+      profileComplete: true,
       updatedAt: new Date().toISOString(),
     }, { merge: true });
     showToast('Perfil salvo com sucesso!', 'success');
