@@ -1,0 +1,485 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Lobbies — Gumax Skins</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-auth-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-firestore-compat.js"></script>
+<style>
+:root {
+  --bg-primary: #0a0612;
+  --bg-secondary: #110a1f;
+  --bg-elevated: #1a0f2e;
+  --primary: #8b5cf6;
+  --primary-light: #a78bfa;
+  --accent-cyan: #22d3ee;
+  --accent-yellow: #facc15;
+  --accent-red: #ef4444;
+  --accent-green: #10b981;
+  --text-primary: #e0e7ff;
+  --text-secondary: #a5a3b8;
+  --text-muted: #6b6885;
+  --border: rgba(139,92,246,.15);
+}
+* { box-sizing: border-box; margin: 0; padding: 0; }
+body { font-family: 'Inter', sans-serif; background: var(--bg-primary); color: var(--text-primary); min-height: 100vh; }
+
+/* ── Topbar (mesma estética do resto do site) ── */
+.topbar { display:flex; align-items:center; justify-content:space-between; padding:14px 28px; background:linear-gradient(180deg,rgba(20,16,40,.85),rgba(10,8,20,.7)); border-bottom:1px solid var(--border); position:sticky; top:0; z-index:50; }
+.topbar .logo { font-weight:800; font-size:22px; background:linear-gradient(135deg,var(--primary),#ff79c6); -webkit-background-clip:text; -webkit-text-fill-color:transparent; cursor:pointer; }
+.nav-links { display:flex; gap:6px; }
+.nav-link { padding:8px 14px; border-radius:8px; font-size:13px; color:var(--text-secondary); text-decoration:none; transition:all .15s; }
+.nav-link:hover { background:rgba(139,92,246,.1); color:var(--text-primary); }
+.nav-link.active { background:rgba(139,92,246,.2); color:var(--primary-light); }
+.user-avatar-mini { width:34px; height:34px; border-radius:50%; border:2px solid var(--primary); }
+
+/* ── Layout principal ── */
+.lobby-shell { display:grid; grid-template-columns: 280px 1fr; gap:24px; padding:28px; max-width:1400px; margin:0 auto; }
+@media (max-width: 880px) { .lobby-shell { grid-template-columns: 1fr; } }
+
+/* Sidebar com a sala do user */
+.my-lobby-card { background:linear-gradient(135deg,rgba(139,92,246,.10),rgba(34,211,238,.05)); border:1px solid var(--border); border-radius:14px; padding:18px; min-height:220px; }
+.my-lobby-card h3 { font-size:13px; color:var(--text-muted); text-transform:uppercase; letter-spacing:.5px; margin-bottom:12px; }
+.slot-row { display:flex; gap:8px; align-items:center; padding:6px 0; border-bottom:1px solid rgba(255,255,255,.04); }
+.slot-row:last-child { border-bottom:none; }
+.slot-avatar { width:36px; height:36px; border-radius:50%; background:rgba(139,92,246,.2); display:flex; align-items:center; justify-content:center; font-size:14px; color:var(--text-muted); }
+.slot-avatar img { width:100%; height:100%; border-radius:50%; object-fit:cover; }
+.slot-name { flex:1; font-size:13px; }
+.slot-empty .slot-name { color:var(--text-muted); font-style:italic; }
+.slot-kick { background:transparent; border:none; color:var(--accent-red); cursor:pointer; font-size:11px; opacity:.6; }
+.slot-kick:hover { opacity:1; }
+
+.btn-leave { width:100%; padding:9px; margin-top:12px; background:transparent; border:1px solid rgba(239,68,68,.4); color:var(--accent-red); border-radius:8px; cursor:pointer; font-size:12px; font-weight:600; }
+.btn-leave:hover { background:rgba(239,68,68,.1); }
+
+/* Header da grid */
+.grid-header { display:flex; justify-content:space-between; align-items:center; margin-bottom:18px; flex-wrap:wrap; gap:12px; }
+.grid-title { font-size:18px; font-weight:700; }
+.grid-stats { display:flex; gap:14px; font-size:12px; color:var(--text-muted); }
+.grid-stats strong { color:var(--primary-light); }
+.btn-create { padding:11px 20px; background:linear-gradient(135deg,var(--primary),var(--accent-cyan)); border:none; color:#fff; border-radius:10px; font-weight:700; cursor:pointer; font-size:13px; box-shadow:0 4px 12px rgba(139,92,246,.3); }
+
+/* Cards de lobbies */
+.lobbies-grid { display:grid; grid-template-columns:repeat(auto-fill, minmax(220px, 1fr)); gap:14px; }
+.lobby-card { background:var(--bg-elevated); border:1px solid var(--border); border-radius:14px; padding:16px; transition:transform .15s, border-color .15s; }
+.lobby-card:hover { transform:translateY(-2px); border-color:rgba(139,92,246,.4); }
+.lobby-card.full { border-color: rgba(34,211,238,.4); }
+.lobby-card.challenged { border-color: rgba(250,204,21,.5); animation:pulse 2s ease-in-out infinite; }
+@keyframes pulse { 0%,100% { box-shadow:0 0 0 0 rgba(250,204,21,.3); } 50% { box-shadow:0 0 0 8px rgba(250,204,21,0); } }
+.lobby-name { font-size:14px; font-weight:700; margin-bottom:10px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+.lobby-slots { display:flex; gap:5px; margin-bottom:14px; }
+.lobby-slot { flex:1; aspect-ratio:1; border-radius:50%; background:rgba(139,92,246,.08); border:1.5px dashed rgba(139,92,246,.25); display:flex; align-items:center; justify-content:center; font-size:10px; color:var(--text-muted); }
+.lobby-slot.filled { border:2px solid var(--primary); background:rgba(139,92,246,.15); border-style:solid; }
+.lobby-slot.filled img { width:100%; height:100%; border-radius:50%; object-fit:cover; }
+.lobby-action { width:100%; padding:8px; border:none; border-radius:8px; font-weight:700; font-size:12px; cursor:pointer; transition:all .15s; }
+.lobby-action.btn-join    { background:rgba(139,92,246,.2); color:var(--primary-light); border:1px solid rgba(139,92,246,.4); }
+.lobby-action.btn-join:hover { background:rgba(139,92,246,.35); }
+.lobby-action.btn-challenge { background:linear-gradient(135deg,var(--primary),var(--accent-cyan)); color:#fff; }
+.lobby-action.btn-challenge:hover { filter:brightness(1.1); }
+.lobby-action.btn-disabled { background:rgba(100,100,120,.15); color:var(--text-muted); cursor:not-allowed; }
+
+.empty-state { padding:60px 20px; text-align:center; color:var(--text-muted); border:1px dashed var(--border); border-radius:14px; }
+
+/* Banner não-logado */
+.login-required { padding:40px; text-align:center; background:var(--bg-elevated); border-radius:14px; border:1px solid var(--border); margin:40px auto; max-width:520px; }
+.login-required h2 { margin-bottom:8px; font-size:20px; }
+.login-required p { color:var(--text-secondary); margin-bottom:18px; font-size:14px; }
+.login-required .btn-create { display:inline-flex; align-items:center; gap:8px; }
+
+/* Toast */
+.toast { position:fixed; bottom:24px; left:50%; transform:translateX(-50%); padding:12px 20px; background:var(--bg-elevated); border:1px solid var(--border); border-radius:10px; font-size:13px; opacity:0; pointer-events:none; transition:opacity .2s; z-index:100; }
+.toast.show { opacity:1; }
+.toast.error { border-color:rgba(239,68,68,.4); color:var(--accent-red); }
+.toast.success { border-color:rgba(16,185,129,.4); color:var(--accent-green); }
+
+/* Modal */
+.modal-backdrop { position:fixed; inset:0; background:rgba(0,0,0,.7); display:none; align-items:center; justify-content:center; z-index:200; }
+.modal-backdrop.show { display:flex; }
+.modal-box { background:var(--bg-elevated); border:1px solid var(--border); border-radius:14px; padding:24px; width:90%; max-width:420px; }
+.modal-box h2 { margin-bottom:14px; }
+.modal-box input { width:100%; padding:11px 14px; background:var(--bg-secondary); border:1px solid var(--border); border-radius:8px; color:var(--text-primary); font-size:14px; margin-bottom:14px; }
+.modal-box .btn-row { display:flex; gap:8px; }
+.modal-box .btn-row button { flex:1; padding:11px; border-radius:8px; border:none; cursor:pointer; font-weight:700; }
+.btn-secondary { background:transparent; border:1px solid var(--border) !important; color:var(--text-secondary); }
+</style>
+</head>
+<body>
+
+<header class="topbar">
+  <div class="logo" onclick="location.href='index.html'">GUMAX SKINS</div>
+  <nav class="nav-links">
+    <a class="nav-link" href="index.html">🛒 Mercado</a>
+    <a class="nav-link" href="vender.html">💰 Vender</a>
+    <a class="nav-link" href="analise.html">📊 Análise</a>
+    <a class="nav-link active" href="lobbies.html">🎮 Lobbies</a>
+    <a class="nav-link" href="rifas.html">🎰 Rifas</a>
+  </nav>
+  <div id="userArea">
+    <button class="btn-create" onclick="doLogin()">Entrar com Steam</button>
+  </div>
+</header>
+
+<main>
+<div class="lobby-shell">
+
+  <!-- Sidebar: minha sala -->
+  <aside id="myLobbySidebar" class="my-lobby-card">
+    <h3>Minha Sala</h3>
+    <div id="myLobbyContent">
+      <p style="font-size:13px;color:var(--text-muted);">Você não está em nenhuma sala. <strong style="color:var(--primary-light);">Crie uma</strong> ou entre numa aberta →</p>
+    </div>
+  </aside>
+
+  <section>
+    <!-- Header com stats + criar -->
+    <div class="grid-header">
+      <div>
+        <div class="grid-title">🎮 Lobbies abertos</div>
+        <div class="grid-stats" style="margin-top:6px;">
+          <span><strong id="statOpen">0</strong> salas abertas</span>
+          <span><strong id="statFull">0</strong> cheias procurando</span>
+          <span><strong id="statTotal">0</strong> jogadores online</span>
+        </div>
+      </div>
+      <button class="btn-create" id="btnCreateLobby" onclick="openCreateModal()">+ Criar Sala</button>
+    </div>
+
+    <!-- Grid de lobbies -->
+    <div id="lobbiesGrid" class="lobbies-grid"></div>
+    <div id="lobbiesEmpty" class="empty-state" style="display:none;">
+      Nenhuma sala aberta no momento.<br>
+      <strong style="color:var(--primary-light);">Seja o primeiro</strong> — clica em "Criar Sala".
+    </div>
+  </section>
+
+</div>
+</main>
+
+<!-- Modal: criar sala -->
+<div class="modal-backdrop" id="createModal">
+  <div class="modal-box">
+    <h2>Nova Sala</h2>
+    <input type="text" id="lobbyNameInput" placeholder="Nome da sala (ex: 'Sala dos brabo')" maxlength="40">
+    <div class="btn-row">
+      <button class="btn-secondary" onclick="closeCreateModal()">Cancelar</button>
+      <button class="btn-create" onclick="submitCreate()">Criar</button>
+    </div>
+  </div>
+</div>
+
+<!-- Toast -->
+<div class="toast" id="toast"></div>
+
+<script>
+// =================================================================
+// MARKER
+// =================================================================
+//   lobby v1-mvp-skeleton
+// =================================================================
+
+const firebaseConfig = {
+  apiKey: "AIzaSyCN0TV59kJNQMsaQ-5d9dSTowirxFcuHG0",
+  authDomain: "gumax-skins.firebaseapp.com",
+  projectId: "gumax-skins",
+  storageBucket: "gumax-skins.firebasestorage.app",
+  messagingSenderId: "678525908778",
+  appId: "1:678525908778:web:56ee6d6a809c013b341053"
+};
+firebase.initializeApp(firebaseConfig);
+const auth = firebase.auth();
+const db = firebase.firestore();
+
+const API_BASE = 'https://gumax-backend-production.up.railway.app';
+
+let _user = null;
+let _idToken = null;
+let _myLobbyId = null;
+
+// ─── Toast ───
+function toast(msg, type = '') {
+  const t = document.getElementById('toast');
+  t.textContent = msg;
+  t.className = 'toast show ' + type;
+  setTimeout(() => t.classList.remove('show'), 2800);
+}
+
+// ─── Auth ───
+auth.onAuthStateChanged(async user => {
+  if (!user) {
+    document.getElementById('userArea').innerHTML = '<button class="btn-create" onclick="doLogin()">Entrar com Steam</button>';
+    document.getElementById('btnCreateLobby').style.display = 'none';
+    return;
+  }
+  _user = user;
+  _idToken = await user.getIdToken();
+  document.getElementById('userArea').innerHTML = `<img src="${user.photoURL || ''}" class="user-avatar-mini" onerror="this.style.display='none'">`;
+  document.getElementById('btnCreateLobby').style.display = '';
+  await loadMyLobby();
+  startPolling();
+});
+
+async function doLogin() {
+  try {
+    const r = await fetch(`${API_BASE}/api/steam-auth?action=login&returnTo=${encodeURIComponent(location.origin + location.pathname)}`);
+    const d = await r.json();
+    if (d.loginUrl) location.href = d.loginUrl;
+  } catch (e) { toast('Erro Steam: ' + e.message, 'error'); }
+}
+
+// ─── Polling 3s ───
+let _pollTimer = null;
+function startPolling() {
+  if (_pollTimer) clearInterval(_pollTimer);
+  loadList();
+  loadMyLobby();
+  _pollTimer = setInterval(() => {
+    loadList();
+    if (_myLobbyId) loadMyLobby();
+  }, 3000);
+}
+
+// ─── Listar lobbies ───
+async function loadList() {
+  try {
+    const r = await fetch(`${API_BASE}/api/lobby/list`);
+    const data = await r.json();
+    renderList(data.lobbies || []);
+  } catch (e) {
+    console.error('[lobby:list]', e);
+  }
+}
+
+function renderList(lobbies) {
+  const grid = document.getElementById('lobbiesGrid');
+  const empty = document.getElementById('lobbiesEmpty');
+  if (!lobbies.length) { grid.innerHTML = ''; empty.style.display = ''; updateStats([]); return; }
+  empty.style.display = 'none';
+
+  // Filtra: não mostra meu próprio lobby na lista (já tá na sidebar)
+  const others = lobbies.filter(l => l.id !== _myLobbyId);
+  grid.innerHTML = others.map(l => renderLobbyCard(l)).join('');
+  updateStats(lobbies);
+}
+
+function renderLobbyCard(lobby) {
+  const slots = (lobby.slots || []).map(s => s
+    ? `<div class="lobby-slot filled" title="${escHtml(s.name)}">${s.avatar ? `<img src="${s.avatar}" onerror="this.style.display='none'">` : ''}</div>`
+    : `<div class="lobby-slot">·</div>`
+  ).join('');
+  const isFull = lobby.filled === 5;
+  const cls = lobby.status === 'challenged' ? 'challenged' : (isFull ? 'full' : '');
+
+  // Botão de ação varia de acordo com estado:
+  //   - Sala não cheia → "Entrar"
+  //   - Sala cheia + EU NÃO TENHO LOBBY → não posso desafiar (preciso de sala minha cheia também)
+  //   - Sala cheia + EU TENHO LOBBY CHEIO → "Desafiar"
+  //   - Sala em desafio → "Aguardando..."
+  let actionHtml;
+  if (lobby.status === 'challenged') {
+    actionHtml = `<button class="lobby-action btn-disabled" disabled>Em desafio…</button>`;
+  } else if (isFull) {
+    if (_myLobbyFilled === 5 && _myLobbyOwner) {
+      actionHtml = `<button class="lobby-action btn-challenge" onclick="challengeLobby('${lobby.id}')">⚔️ Desafiar</button>`;
+    } else {
+      actionHtml = `<button class="lobby-action btn-disabled" disabled title="Crie uma sala cheia (5/5) pra desafiar">Cheia 5/5</button>`;
+    }
+  } else {
+    actionHtml = `<button class="lobby-action btn-join" onclick="joinLobby('${lobby.id}')">Entrar (${lobby.filled}/5)</button>`;
+  }
+
+  return `
+    <div class="lobby-card ${cls}">
+      <div class="lobby-name">${escHtml(lobby.name)}</div>
+      <div class="lobby-slots">${slots}</div>
+      ${actionHtml}
+    </div>
+  `;
+}
+
+function updateStats(lobbies) {
+  const open = lobbies.filter(l => l.status === 'open').length;
+  const full = lobbies.filter(l => l.status === 'full').length;
+  const total = lobbies.reduce((sum, l) => sum + (l.filled || 0), 0);
+  document.getElementById('statOpen').textContent = open;
+  document.getElementById('statFull').textContent = full;
+  document.getElementById('statTotal').textContent = total;
+}
+
+// ─── Minha sala (sidebar) ───
+let _myLobbyFilled = 0;
+let _myLobbyOwner = false;
+
+async function loadMyLobby() {
+  if (!_idToken) return;
+  try {
+    const r = await fetch(`${API_BASE}/api/lobby/mine`, {
+      headers: { 'Authorization': 'Bearer ' + _idToken }
+    });
+    const data = await r.json();
+    renderMyLobby(data.lobby);
+  } catch (e) {
+    console.error('[lobby:mine]', e);
+  }
+}
+
+function renderMyLobby(lobby) {
+  const container = document.getElementById('myLobbyContent');
+  if (!lobby) {
+    _myLobbyId = null; _myLobbyFilled = 0; _myLobbyOwner = false;
+    container.innerHTML = '<p style="font-size:13px;color:var(--text-muted);">Você não está em nenhuma sala. <strong style="color:var(--primary-light);">Crie uma</strong> ou entre numa aberta →</p>';
+    return;
+  }
+  _myLobbyId = lobby.id;
+  _myLobbyFilled = (lobby.slots || []).filter(s => s != null).length;
+  _myLobbyOwner = lobby.ownerId === (_user && _user.uid);
+
+  // Detecta desafio recebido pra mostrar popup
+  if (lobby.challengedBy && _myLobbyOwner) {
+    showChallengePopup(lobby.challengedBy, lobby.challengeExpiresAt);
+  }
+  // Detecta match criado (status in_match) — redireciona pra match.html
+  if (lobby.status === 'in_match' && lobby.matchId) {
+    location.href = `match.html?id=${lobby.matchId}`;
+    return;
+  }
+
+  const slotsHtml = (lobby.slots || []).map((s, i) => {
+    if (!s) return `<div class="slot-row slot-empty"><div class="slot-avatar">?</div><div class="slot-name">vazio</div></div>`;
+    const kickBtn = (_myLobbyOwner && s.uid !== _user.uid)
+      ? `<button class="slot-kick" onclick="kickPlayer('${s.uid}')" title="Remover">×</button>` : '';
+    return `<div class="slot-row">
+      <div class="slot-avatar">${s.avatar ? `<img src="${s.avatar}" onerror="this.style.display='none'">` : (s.name || '?').charAt(0).toUpperCase()}</div>
+      <div class="slot-name">${escHtml(s.name || '—')}${s.uid === lobby.ownerId ? ' 👑' : ''}</div>
+      ${kickBtn}
+    </div>`;
+  }).join('');
+
+  container.innerHTML = `
+    <div style="font-weight:700;margin-bottom:8px;">${escHtml(lobby.name)}</div>
+    ${slotsHtml}
+    <button class="btn-leave" onclick="leaveMyLobby()">${_myLobbyOwner ? '🏁 Encerrar Sala' : '🚪 Sair'}</button>
+  `;
+}
+
+// ─── Ações ───
+function openCreateModal() {
+  document.getElementById('lobbyNameInput').value = '';
+  document.getElementById('createModal').classList.add('show');
+}
+function closeCreateModal() { document.getElementById('createModal').classList.remove('show'); }
+
+async function submitCreate() {
+  if (!_idToken) { toast('Faça login primeiro', 'error'); return; }
+  const name = document.getElementById('lobbyNameInput').value.trim();
+  try {
+    const r = await fetch(`${API_BASE}/api/lobby/create`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + _idToken },
+      body: JSON.stringify({ name })
+    });
+    const data = await r.json();
+    if (data.error) { toast(data.error === 'already_in_lobby' ? 'Você já tá numa sala' : data.error, 'error'); return; }
+    closeCreateModal();
+    toast('Sala criada!', 'success');
+    loadMyLobby(); loadList();
+  } catch (e) { toast('Erro: ' + e.message, 'error'); }
+}
+
+async function joinLobby(lobbyId) {
+  if (!_idToken) { toast('Faça login', 'error'); return; }
+  try {
+    const r = await fetch(`${API_BASE}/api/lobby/${lobbyId}/join`, {
+      method: 'POST',
+      headers: { 'Authorization': 'Bearer ' + _idToken }
+    });
+    const data = await r.json();
+    if (data.error) { toast(data.error, 'error'); return; }
+    toast('Entrou na sala!', 'success');
+    loadMyLobby(); loadList();
+  } catch (e) { toast('Erro: ' + e.message, 'error'); }
+}
+
+async function leaveMyLobby() {
+  if (!_myLobbyId || !_idToken) return;
+  if (_myLobbyOwner && !confirm('Você é o dono. Encerrar a sala vai expulsar todos. Confirma?')) return;
+  try {
+    await fetch(`${API_BASE}/api/lobby/${_myLobbyId}/leave`, {
+      method: 'POST',
+      headers: { 'Authorization': 'Bearer ' + _idToken }
+    });
+    _myLobbyId = null;
+    loadMyLobby(); loadList();
+  } catch (e) { toast('Erro: ' + e.message, 'error'); }
+}
+
+async function kickPlayer(targetUid) {
+  if (!_myLobbyId || !_idToken) return;
+  if (!confirm('Remover esse jogador da sala?')) return;
+  try {
+    await fetch(`${API_BASE}/api/lobby/${_myLobbyId}/kick`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + _idToken },
+      body: JSON.stringify({ targetUid })
+    });
+    loadMyLobby();
+  } catch (e) { toast('Erro: ' + e.message, 'error'); }
+}
+
+async function challengeLobby(targetLobbyId) {
+  if (!_myLobbyId || !_idToken) return;
+  try {
+    const r = await fetch(`${API_BASE}/api/lobby/${_myLobbyId}/challenge`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + _idToken },
+      body: JSON.stringify({ targetLobbyId })
+    });
+    const data = await r.json();
+    if (data.error) { toast(data.error, 'error'); return; }
+    toast('Desafio enviado! Aguardando resposta…', 'success');
+    loadMyLobby(); loadList();
+  } catch (e) { toast('Erro: ' + e.message, 'error'); }
+}
+
+// Popup de desafio recebido (debounce visual — só mostra uma vez)
+let _challengePopupShown = null;
+function showChallengePopup(challengerLobbyId, expiresAt) {
+  if (_challengePopupShown === challengerLobbyId) return;
+  _challengePopupShown = challengerLobbyId;
+  const accept = confirm('⚔️ Você foi DESAFIADO por outra sala!\n\nAceitar partida 5v5?');
+  if (accept) acceptChallenge();
+  else declineChallenge();
+}
+
+async function acceptChallenge() {
+  try {
+    const r = await fetch(`${API_BASE}/api/lobby/${_myLobbyId}/accept-challenge`, {
+      method: 'POST',
+      headers: { 'Authorization': 'Bearer ' + _idToken }
+    });
+    const data = await r.json();
+    if (data.error) { toast(data.error, 'error'); return; }
+    toast('Match criado! Indo pra confirmação…', 'success');
+    if (data.matchId) location.href = `match.html?id=${data.matchId}`;
+  } catch (e) { toast('Erro: ' + e.message, 'error'); }
+}
+
+async function declineChallenge() {
+  try {
+    await fetch(`${API_BASE}/api/lobby/${_myLobbyId}/decline-challenge`, {
+      method: 'POST',
+      headers: { 'Authorization': 'Bearer ' + _idToken }
+    });
+    _challengePopupShown = null;
+    loadMyLobby();
+  } catch (e) {}
+}
+
+// ─── Helpers ───
+function escHtml(s) { return String(s || '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'})[c]); }
+</script>
+
+</body>
+</html>
