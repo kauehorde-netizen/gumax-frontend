@@ -1145,7 +1145,123 @@ function buildRefinementPanel(data) {
       </div>
 
       ${patternHtml}
+
+      <!-- 🎯 Verificar Overpay (CSPriceAPI Trader Pro feature) -->
+      <!-- Compara o preço pedido pelo vendedor com o preço esperado pra esse float
+           específico (via /v2/prices/float-ranged) + listing Youpin + buyorder.
+           Devolve veredito: OVERPAY_ALTO/MODERADO, PRECO_JUSTO, BOM_DEAL, EXCELENTE_DEAL. -->
+      <div style="margin-top:18px;padding:16px;background:var(--bg-elevated);border-radius:12px;border:1px solid rgba(250,204,21,.2);">
+        <h3 style="font-size:14px;margin-bottom:10px;color:#facc15;display:flex;align-items:center;gap:8px;">
+          🎯 Verificar Overpay
+          <span style="font-size:10px;font-weight:500;color:var(--text-muted);text-transform:uppercase;letter-spacing:1px;">é deal ou overpay?</span>
+        </h3>
+        <p style="font-size:12px;color:var(--text-secondary);margin-bottom:12px;">
+          Cole quanto o vendedor está pedindo (em CNY ou R$) e a gente cruza com o preço esperado pro float ${_refinement.floatvalue != null ? '<strong>' + _refinement.floatvalue.toFixed(5) + '</strong>' : 'do refinement acima'}.
+        </p>
+        <div style="display:flex;gap:8px;align-items:flex-end;flex-wrap:wrap;">
+          <div style="flex:1;min-width:140px;">
+            <label style="font-size:11px;color:var(--text-muted);display:block;margin-bottom:4px;">Preço pedido</label>
+            <input type="number" id="overpayPrice" step="0.01" placeholder="Ex: 250" min="0"
+                   style="width:100%;padding:10px;border-radius:8px;border:1px solid rgba(250,204,21,.3);background:var(--bg-secondary);color:var(--text-primary);font-size:14px;">
+          </div>
+          <div style="min-width:90px;">
+            <label style="font-size:11px;color:var(--text-muted);display:block;margin-bottom:4px;">Moeda</label>
+            <select id="overpayCurrency" style="width:100%;padding:10px;border-radius:8px;border:1px solid rgba(250,204,21,.3);background:var(--bg-secondary);color:var(--text-primary);font-size:14px;">
+              <option value="CNY">CNY (¥)</option>
+              <option value="BRL">BRL (R$)</option>
+            </select>
+          </div>
+          <button onclick="checkOverpay()" style="padding:10px 16px;background:#facc15;color:#000;border:none;border-radius:8px;font-weight:700;cursor:pointer;font-size:13px;">
+            Verificar
+          </button>
+        </div>
+        <div id="overpayResult" style="margin-top:12px;"></div>
+      </div>
     </div>`;
+}
+
+// Veredito visual da análise de overpay. Chamado pelo botão "Verificar".
+async function checkOverpay() {
+  const name = document.getElementById('skinSearch').value.trim();
+  const priceInput = parseFloat(document.getElementById('overpayPrice').value);
+  const currency = document.getElementById('overpayCurrency').value;
+  const resultDiv = document.getElementById('overpayResult');
+
+  if (!name) { resultDiv.innerHTML = '<p style="color:var(--accent-red);font-size:12px;">Digite o nome da skin antes</p>'; return; }
+  if (!priceInput || priceInput <= 0) { resultDiv.innerHTML = '<p style="color:var(--accent-red);font-size:12px;">Digite um preço válido</p>'; return; }
+
+  // Converte BRL → CNY se preciso. Usa cotação aproximada (1 BRL ≈ 1.35 CNY no momento;
+  // o ideal seria usar /api/exchange-rate, mas pra simplificar usa aprox).
+  let askingPriceCNY = priceInput;
+  if (currency === 'BRL') {
+    // Cotação aproximada CNY/BRL — pra ser preciso busca exchange-rate em runtime.
+    try {
+      const fxResp = await fetch(`${API_BASE}/api/exchange-rate`);
+      const fx = await fxResp.json();
+      const cnyToBrl = fx?.rate || 0.74; // fallback
+      askingPriceCNY = priceInput / cnyToBrl;
+    } catch {
+      askingPriceCNY = priceInput / 0.74; // fallback
+    }
+  }
+
+  resultDiv.innerHTML = '<div style="text-align:center;padding:8px;color:var(--text-muted);font-size:12px;">Analisando...</div>';
+
+  try {
+    const r = await fetch(`${API_BASE}/api/pricempire/analyze-overpay`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        name,
+        floatValue: _refinement.floatvalue,
+        askingPriceCNY,
+      }),
+    });
+    const data = await r.json();
+    if (data.error) {
+      resultDiv.innerHTML = `<p style="color:var(--accent-red);font-size:12px;">${data.error === 'insufficient_data' ? 'Sem dados suficientes pra essa skin' : data.error}</p>`;
+      return;
+    }
+
+    // Cor + emoji por veredito
+    const verdictMap = {
+      OVERPAY_ALTO:     { color: '#ef4444', emoji: '🚨', label: 'OVERPAY ALTO',     bg: 'rgba(239,68,68,.12)' },
+      OVERPAY_MODERADO: { color: '#f59e0b', emoji: '⚠️', label: 'OVERPAY MODERADO', bg: 'rgba(245,158,11,.12)' },
+      PRECO_JUSTO:      { color: '#64748b', emoji: '⚖️', label: 'PREÇO JUSTO',      bg: 'rgba(100,116,139,.12)' },
+      BOM_DEAL:         { color: '#10b981', emoji: '✅', label: 'BOM DEAL',         bg: 'rgba(16,185,129,.12)' },
+      EXCELENTE_DEAL:   { color: '#22d3ee', emoji: '🔥', label: 'EXCELENTE DEAL',   bg: 'rgba(34,211,238,.12)' },
+    };
+    const v = verdictMap[data.verdict] || verdictMap.PRECO_JUSTO;
+
+    const sourceLabel = {
+      float_ranged: 'preço por float específico (mais preciso)',
+      youpin_listing: 'listing Youpin',
+      buyorder: 'buyorder',
+    }[data.referenceSource] || data.referenceSource;
+
+    resultDiv.innerHTML = `
+      <div style="padding:14px;background:${v.bg};border-radius:10px;border-left:4px solid ${v.color};">
+        <div style="display:flex;justify-content:space-between;align-items:baseline;flex-wrap:wrap;gap:8px;">
+          <div>
+            <div style="font-size:18px;font-weight:800;color:${v.color};">${v.emoji} ${v.label}</div>
+            <div style="font-size:13px;color:var(--text-secondary);margin-top:2px;">
+              ${data.overpayPercent > 0 ? '+' : ''}${data.overpayPercent}% vs preço esperado
+            </div>
+          </div>
+          <div style="text-align:right;">
+            <div style="font-size:11px;color:var(--text-muted);">Pedido / Esperado</div>
+            <div style="font-size:13px;font-weight:600;color:var(--text-primary);">¥${askingPriceCNY.toFixed(2)} / ¥${data.referencePrice.toFixed(2)}</div>
+          </div>
+        </div>
+        <div style="margin-top:10px;padding-top:10px;border-top:1px solid rgba(255,255,255,.06);font-size:11px;color:var(--text-muted);">
+          📊 Referência: ${sourceLabel}${data.floatRange ? ` (faixa <strong>${data.floatRange}</strong>)` : ''}
+          ${data.youpinListing ? ` · Youpin listing: ¥${data.youpinListing.toFixed(2)}` : ''}
+          ${data.youpinBuyorder ? ` · Buyorder: ¥${data.youpinBuyorder.toFixed(2)}` : ''}
+        </div>
+      </div>`;
+  } catch (e) {
+    resultDiv.innerHTML = `<p style="color:var(--accent-red);font-size:12px;">Erro: ${e.message}</p>`;
+  }
 }
 
 function onFloatSliderChange(v) {
