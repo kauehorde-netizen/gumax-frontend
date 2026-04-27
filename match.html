@@ -5,8 +5,10 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Match — GMAX LEAGUE</title>
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
-<script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app-compat.js"></script>
-<script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-auth-compat.js"></script>
+<!-- Firebase 10.5.0 — mesma versão que index.html (já cacheada). -->
+<script src="https://www.gstatic.com/firebasejs/10.5.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.5.0/firebase-auth-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.5.0/firebase-firestore-compat.js"></script>
 <style>
 :root {
   --bg-primary: #0a0612; --bg-secondary: #110a1f; --bg-elevated: #1a0f2e;
@@ -133,8 +135,21 @@ body { font-family: 'Inter', sans-serif; background: var(--bg-primary); color: v
 
 <script>
 // =================================================================
-//   match v1-mvp-skeleton
+//   match v2-firebase-v10-fallback
 // =================================================================
+
+if (typeof firebase === 'undefined') {
+  document.body.innerHTML = `
+    <div style="min-height:100vh;display:flex;align-items:center;justify-content:center;text-align:center;padding:40px;font-family:Inter,sans-serif;background:#0a0612;color:#e0e7ff;">
+      <div style="max-width:480px;">
+        <h1 style="color:#ef4444;margin-bottom:16px;">⚠️ Firebase bloqueado</h1>
+        <p style="color:#a5a3b8;margin-bottom:24px;">Ad-blocker bloqueou gstatic.com. Desativa pra <strong>market.gumaxskins.com</strong> e recarrega.</p>
+        <a href="index.html" style="padding:10px 20px;background:#1e293b;color:#e0e7ff;border-radius:10px;text-decoration:none;border:1px solid rgba(148,163,184,.3);">← Voltar ao Mercado</a>
+      </div>
+    </div>
+  `;
+  throw new Error('Firebase não carregou');
+}
 
 const firebaseConfig = {
   apiKey: "AIzaSyCN0TV59kJNQMsaQ-5d9dSTowirxFcuHG0",
