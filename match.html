@@ -135,8 +135,13 @@ body { font-family: 'Inter', sans-serif; background: var(--bg-primary); color: v
 
 <script>
 // =================================================================
-//   match v2-firebase-v10-fallback
+//   match v3-tdz-safe
 // =================================================================
+
+const API_BASE = 'https://gumax-backend-production.up.railway.app';
+const MATCH_ID = new URLSearchParams(location.search).get('id');
+let auth = null;
+let _firebaseReady = false;
 
 if (typeof firebase === 'undefined') {
   document.body.innerHTML = `
@@ -159,11 +164,14 @@ const firebaseConfig = {
   messagingSenderId: "678525908778",
   appId: "1:678525908778:web:56ee6d6a809c013b341053"
 };
-firebase.initializeApp(firebaseConfig);
-const auth = firebase.auth();
-
-const API_BASE = 'https://gumax-backend-production.up.railway.app';
-const MATCH_ID = new URLSearchParams(location.search).get('id');
+try {
+  firebase.initializeApp(firebaseConfig);
+  auth = firebase.auth();
+  _firebaseReady = true;
+} catch (e) {
+  console.error('[firebase init]', e);
+  alert('Erro ao iniciar Firebase: ' + e.message);
+}
 
 let _user = null;
 let _idToken = null;
@@ -190,7 +198,7 @@ function toast(msg, type = '') {
 }
 
 // ─── Auth obrigatório ───
-auth.onAuthStateChanged(async user => {
+if (_firebaseReady) auth.onAuthStateChanged(async user => {
   if (!user) { location.href = 'index.html'; return; }
   _user = user;
   _idToken = await user.getIdToken();
