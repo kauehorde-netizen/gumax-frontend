@@ -389,8 +389,8 @@ body {
 </nav>
 
 <section class="page-hero">
-  <h1>Análise inteligente de skins</h1>
-  <p>Descubra se o preço de uma skin CS2 tá subindo, caindo ou justo. Veja score de mercado, histórico e acione alertas.</p>
+  <h1>Quer saber se é a melhor hora de comprar a skin dos seus sonhos?</h1>
+  <p>A gente cruza preço atual, histórico, tendência e overpay por float pra te dizer se é hora de comprar ou esperar. Com tudo isso na mão, você toma a decisão certa.</p>
 </section>
 
 <!-- Visible ONLY when logged out -->
@@ -422,8 +422,8 @@ body {
              onblur="setTimeout(hideAnaliseSuggestions, 180)">
     </div>
     <div id="analiseSuggestions" class="search-suggestions"></div>
-    <p class="search-hint">Escolha pelo menu ou digite — depois selecione uma variante (wear muda TUDO na análise). Análise básica é grátis.</p>
-    <p style="font-size:10px;color:rgba(139,92,246,.5);margin-top:6px;text-align:center;">analise v8-full-direct</p>
+    <p class="search-hint">Escolha pelo menu ou digite — depois selecione uma variante (wear muda TUDO na análise). <strong style="color:#22d3ee;">Análise básica grátis</strong> · Análise completa custa 2 créditos.</p>
+    <p style="font-size:10px;color:rgba(139,92,246,.5);margin-top:6px;text-align:center;">analise v9-basic-default+upsell</p>
   </div>
 
   <script>
@@ -911,9 +911,9 @@ function hideAnaliseSuggestions() {
 function selectAnaliseSuggestion(name) {
   document.getElementById('skinSearch').value = name;
   hideAnaliseSuggestions();
-  // Dispara análise FULL direto (cobra 2 créditos logo de cara — sem preview).
-  // Se user já pagou por essa skin nas últimas 24h, backend não cobra de novo.
-  runAnalysis('full');
+  // Dispara análise BÁSICA (grátis). Mostra preview com score + tendência;
+  // user decide se quer pagar 2 créditos pra análise completa via CTA "Ver completa".
+  runAnalysis('basic');
 }
 
 function onAnaliseSearchKeyDown(event) {
@@ -933,7 +933,7 @@ function onAnaliseSearchKeyDown(event) {
       fetchAnaliseSuggestions(v);
       return;
     }
-    runAnalysis('full');
+    runAnalysis('basic'); // grátis — user pode subir pra full no botão de upsell
   } else if (event.key === 'ArrowDown' && visible) {
     event.preventDefault();
     _sugIndex = Math.min(_sugIndex + 1, _sugItems.length - 1);
@@ -1342,6 +1342,23 @@ function renderResult(data) {
           <div class="trend-sub">${trendDelta}</div>
         </div>
       </div>
+
+      ${data.tier === 'basic' ? `
+        <!-- CTA upsell pra análise completa. Aparece apenas no tier basic
+             (grátis) — guia o user pra desbloquear tudo de uma vez por 2 créditos
+             em vez de ter que clicar em cada section individual. -->
+        <div style="margin-top:18px;padding:18px 20px;background:linear-gradient(135deg,rgba(139,92,246,.18),rgba(34,211,238,.10));border:1px solid rgba(139,92,246,.35);border-radius:14px;display:flex;align-items:center;gap:16px;flex-wrap:wrap;">
+          <div style="flex:1;min-width:220px;">
+            <div style="font-size:13px;font-weight:700;color:var(--primary-light);margin-bottom:4px;">🔓 Quer ver tudo?</div>
+            <div style="font-size:13px;color:var(--text-secondary);">
+              Análise completa: comparativo entre 6 marketplaces, preços em BRL/CNY/USD, recomendação <strong>COMPRAR / ESPERAR / EVITAR</strong>, Gumax Shield (refund se cair ≤5%) e análise de pattern/float.
+            </div>
+          </div>
+          <button onclick="unlockTier('full', 2)" style="padding:14px 24px;background:linear-gradient(135deg,#8b5cf6,#22d3ee);color:#fff;border:none;border-radius:10px;font-weight:800;cursor:pointer;font-size:14px;box-shadow:0 4px 12px rgba(139,92,246,.3);white-space:nowrap;">
+            Ver análise completa · 2 créditos
+          </button>
+        </div>
+      ` : ''}
   `;
 
   // FULL breakdown (if paid)
