@@ -223,27 +223,24 @@ nav {
   gap: 16px;
 }
 
-/* GMAX LEAGUE button — visualmente separado da loja, identidade própria de plataforma de campeonato */
+/* GMAX LEAGUE button — discreto, fundo azul escuro (não compete com a logo da loja) */
 .btn-league {
   padding: 8px 16px;
-  background: linear-gradient(135deg, #facc15 0%, #f97316 50%, #ef4444 100%);
-  color: #0a0612;
-  border: none;
-  border-radius: 24px;
-  font-weight: 800;
+  background: #1e293b;
+  color: #e0e7ff;
+  border: 1px solid rgba(148, 163, 184, .2);
+  border-radius: 10px;
+  font-weight: 700;
   cursor: pointer;
   font-size: 13px;
   text-decoration: none;
   display: inline-flex;
   align-items: center;
   gap: 6px;
-  box-shadow: 0 4px 14px rgba(249, 115, 22, .35);
-  transition: transform .15s, filter .15s;
-  letter-spacing: .4px;
-  text-transform: uppercase;
+  transition: background .15s, border-color .15s;
   white-space: nowrap;
 }
-.btn-league:hover { transform: translateY(-1px); filter: brightness(1.1); }
+.btn-league:hover { background: #2a3a52; border-color: var(--primary-light); }
 
 .cart-icon {
   position: relative;
