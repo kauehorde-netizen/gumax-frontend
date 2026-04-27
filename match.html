@@ -1,0 +1,381 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Match — Gumax</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-auth-compat.js"></script>
+<style>
+:root {
+  --bg-primary: #0a0612; --bg-secondary: #110a1f; --bg-elevated: #1a0f2e;
+  --primary: #8b5cf6; --primary-light: #a78bfa;
+  --accent-cyan: #22d3ee; --accent-yellow: #facc15; --accent-red: #ef4444; --accent-green: #10b981;
+  --text-primary: #e0e7ff; --text-secondary: #a5a3b8; --text-muted: #6b6885;
+  --border: rgba(139,92,246,.15);
+}
+* { box-sizing: border-box; margin: 0; padding: 0; }
+body { font-family: 'Inter', sans-serif; background: var(--bg-primary); color: var(--text-primary); min-height: 100vh; }
+
+.shell { max-width: 1200px; margin: 0 auto; padding: 28px; }
+.match-header { text-align:center; margin-bottom:28px; }
+.match-header .stage { font-size:11px; color:var(--text-muted); text-transform:uppercase; letter-spacing:1.2px; margin-bottom:6px; }
+.match-header h1 { font-size:28px; font-weight:800; }
+.countdown { font-family:'JetBrains Mono', monospace; font-size:42px; color:var(--accent-yellow); font-weight:800; margin:14px 0; }
+
+/* Times lado a lado */
+.teams-row { display:grid; grid-template-columns: 1fr auto 1fr; gap:16px; align-items:start; margin-bottom:32px; }
+.team-card { background:var(--bg-elevated); border:1px solid var(--border); border-radius:14px; padding:18px; }
+.team-card.team-a { border-color:rgba(34,211,238,.4); }
+.team-card.team-b { border-color:rgba(239,68,68,.4); }
+.team-card h2 { font-size:14px; color:var(--text-muted); text-transform:uppercase; letter-spacing:.5px; margin-bottom:14px; text-align:center; }
+.player-row { display:flex; align-items:center; gap:10px; padding:8px 0; border-bottom:1px solid rgba(255,255,255,.04); }
+.player-row:last-child { border-bottom:none; }
+.player-avatar { width:34px; height:34px; border-radius:50%; background:rgba(139,92,246,.2); flex-shrink:0; display:flex; align-items:center; justify-content:center; font-size:13px; }
+.player-avatar img { width:100%; height:100%; border-radius:50%; object-fit:cover; }
+.player-name { flex:1; font-size:13px; }
+.player-confirm { font-size:18px; }
+.confirm-yes { color:var(--accent-green); }
+.confirm-no  { color:var(--text-muted); }
+
+.vs-divider { display:flex; align-items:center; justify-content:center; font-size:28px; font-weight:800; color:var(--primary-light); padding:0 6px; }
+
+/* Action box (botão grande de confirmar / connectar) */
+.action-box { text-align:center; margin:24px auto; max-width:640px; }
+.btn-huge { padding:18px 36px; background:linear-gradient(135deg, var(--primary), var(--accent-cyan)); border:none; color:#fff; border-radius:14px; font-size:18px; font-weight:800; cursor:pointer; box-shadow:0 6px 24px rgba(139,92,246,.4); transition:all .15s; }
+.btn-huge:hover { transform:translateY(-2px); }
+.btn-huge:disabled { background:rgba(100,100,120,.2); color:var(--text-muted); cursor:not-allowed; box-shadow:none; transform:none; }
+.btn-connect { background:linear-gradient(135deg, #1b2838, #66c0f4); }
+
+/* Pick/ban grid */
+.maps-section { margin-top:32px; }
+.maps-section h2 { font-size:16px; margin-bottom:14px; }
+.captain-info { background:rgba(139,92,246,.12); border:1px solid rgba(139,92,246,.3); border-radius:10px; padding:12px 16px; margin-bottom:16px; font-size:13px; color:var(--primary-light); }
+.maps-grid { display:grid; grid-template-columns:repeat(auto-fit, minmax(180px, 1fr)); gap:12px; }
+.map-card { background:var(--bg-elevated); border:1px solid var(--border); border-radius:12px; padding:14px; cursor:pointer; transition:all .15s; text-align:center; position:relative; }
+.map-card:hover:not(.banned):not(.picked) { transform:translateY(-2px); border-color:var(--primary); }
+.map-card.banned { opacity:.35; cursor:not-allowed; border-color:rgba(239,68,68,.5); }
+.map-card.banned::after { content:'BANIDO'; position:absolute; top:50%; left:50%; transform:translate(-50%,-50%) rotate(-15deg); font-size:18px; font-weight:800; color:var(--accent-red); }
+.map-card.picked { border-color:var(--accent-green); background:rgba(16,185,129,.12); }
+.map-card.picked::after { content:'✅ ESCOLHIDO'; position:absolute; bottom:6px; left:0; right:0; font-size:11px; color:var(--accent-green); font-weight:700; }
+.map-card .map-name { font-weight:700; }
+.map-card .map-img { width:100%; aspect-ratio: 16/9; background:rgba(139,92,246,.08); border-radius:8px; margin-bottom:8px; display:flex; align-items:center; justify-content:center; font-size:24px; }
+
+/* Veto log */
+.veto-log { margin-top:18px; padding:14px; background:var(--bg-elevated); border-radius:10px; font-size:12px; color:var(--text-secondary); }
+.veto-log .row { padding:4px 0; }
+
+/* Toast */
+.toast { position:fixed; bottom:24px; left:50%; transform:translateX(-50%); padding:12px 20px; background:var(--bg-elevated); border:1px solid var(--border); border-radius:10px; font-size:13px; opacity:0; pointer-events:none; transition:opacity .2s; z-index:100; }
+.toast.show { opacity:1; }
+.toast.error { border-color:rgba(239,68,68,.4); color:var(--accent-red); }
+.toast.success { border-color:rgba(16,185,129,.4); color:var(--accent-green); }
+</style>
+</head>
+<body>
+
+<div class="shell">
+
+  <header class="match-header">
+    <div class="stage" id="stageLabel">Carregando…</div>
+    <h1 id="stageTitle">Match Gumax</h1>
+    <div class="countdown" id="countdown" style="display:none;">--:--</div>
+  </header>
+
+  <!-- Times -->
+  <div class="teams-row">
+    <div class="team-card team-a">
+      <h2>Time A 🟦</h2>
+      <div id="teamAList"></div>
+    </div>
+    <div class="vs-divider">VS</div>
+    <div class="team-card team-b">
+      <h2>Time B 🟥</h2>
+      <div id="teamBList"></div>
+    </div>
+  </div>
+
+  <!-- Action box dinâmico (varia conforme stage) -->
+  <div id="actionBox" class="action-box"></div>
+
+  <!-- Pick/ban (só visível em status='mappick') -->
+  <section class="maps-section" id="mapsSection" style="display:none;">
+    <div class="captain-info" id="captainInfo">Aguardando capitão decidir…</div>
+    <div class="maps-grid" id="mapsGrid"></div>
+    <div class="veto-log" id="vetoLog"></div>
+  </section>
+
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+// =================================================================
+//   match v1-mvp-skeleton
+// =================================================================
+
+const firebaseConfig = {
+  apiKey: "AIzaSyCN0TV59kJNQMsaQ-5d9dSTowirxFcuHG0",
+  authDomain: "gumax-skins.firebaseapp.com",
+  projectId: "gumax-skins",
+  storageBucket: "gumax-skins.firebasestorage.app",
+  messagingSenderId: "678525908778",
+  appId: "1:678525908778:web:56ee6d6a809c013b341053"
+};
+firebase.initializeApp(firebaseConfig);
+const auth = firebase.auth();
+
+const API_BASE = 'https://gumax-backend-production.up.railway.app';
+const MATCH_ID = new URLSearchParams(location.search).get('id');
+
+let _user = null;
+let _idToken = null;
+let _matchData = null;
+let _isCaptainA = false;
+let _isCaptainB = false;
+let _myTeam = null; // 'A' or 'B'
+
+const MAP_LABELS = {
+  de_mirage: { name: 'Mirage', icon: '🏛️' },
+  de_inferno: { name: 'Inferno', icon: '🔥' },
+  de_dust2: { name: 'Dust 2', icon: '🏜️' },
+  de_nuke: { name: 'Nuke', icon: '☢️' },
+  de_anubis: { name: 'Anubis', icon: '🐺' },
+  de_ancient: { name: 'Ancient', icon: '🌿' },
+  de_train: { name: 'Train', icon: '🚂' },
+};
+
+// ─── Toast ───
+function toast(msg, type = '') {
+  const t = document.getElementById('toast');
+  t.textContent = msg; t.className = 'toast show ' + type;
+  setTimeout(() => t.classList.remove('show'), 2800);
+}
+
+// ─── Auth obrigatório ───
+auth.onAuthStateChanged(async user => {
+  if (!user) { location.href = 'index.html'; return; }
+  _user = user;
+  _idToken = await user.getIdToken();
+  if (!MATCH_ID) { document.getElementById('stageTitle').textContent = 'Match não encontrado'; return; }
+  startPolling();
+});
+
+// ─── Polling 2s pra pegar transições rápido ───
+let _pollTimer = null;
+function startPolling() {
+  if (_pollTimer) clearInterval(_pollTimer);
+  loadMatch();
+  _pollTimer = setInterval(loadMatch, 2000);
+}
+
+async function loadMatch() {
+  try {
+    const r = await fetch(`${API_BASE}/api/match/${MATCH_ID}`, {
+      headers: { 'Authorization': 'Bearer ' + _idToken }
+    });
+    if (r.status === 401) { toast('Refazendo login...', 'error'); _idToken = await _user.getIdToken(true); return; }
+    if (r.status === 403) { toast('Você não é membro desse match', 'error'); return; }
+    const data = await r.json();
+    if (data.error) { toast(data.error, 'error'); return; }
+    _matchData = data;
+    render();
+  } catch (e) { console.error('[match]', e); }
+}
+
+// ─── Render ───
+function render() {
+  if (!_matchData) return;
+  const m = _matchData;
+  // Detecta quem sou e em qual time
+  const inA = (m.teamA || []).find(p => p.uid === _user.uid);
+  const inB = (m.teamB || []).find(p => p.uid === _user.uid);
+  _myTeam = inA ? 'A' : inB ? 'B' : null;
+
+  renderTeams();
+  renderStage(m);
+  if (m.status === 'mappick' || m.status === 'starting' || m.status === 'in_progress') {
+    document.getElementById('mapsSection').style.display = '';
+    renderVeto();
+  } else {
+    document.getElementById('mapsSection').style.display = 'none';
+  }
+
+  if (m.status === 'cancelled' || m.status === 'finished') {
+    if (_pollTimer) { clearInterval(_pollTimer); _pollTimer = null; }
+  }
+}
+
+function renderTeams() {
+  const m = _matchData;
+  document.getElementById('teamAList').innerHTML = (m.teamA || []).map(p => playerRow(p, m.confirmations)).join('');
+  document.getElementById('teamBList').innerHTML = (m.teamB || []).map(p => playerRow(p, m.confirmations)).join('');
+}
+
+function playerRow(p, confirmations) {
+  const confirmed = confirmations && confirmations[p.uid] === true;
+  return `
+    <div class="player-row">
+      <div class="player-avatar">${p.avatar ? `<img src="${p.avatar}" onerror="this.style.display='none'">` : (p.name||'?').charAt(0).toUpperCase()}</div>
+      <div class="player-name">${escHtml(p.name || '—')}</div>
+      <div class="player-confirm ${confirmed ? 'confirm-yes' : 'confirm-no'}">${confirmed ? '✅' : '⏳'}</div>
+    </div>
+  `;
+}
+
+function renderStage(m) {
+  const stageLabel = document.getElementById('stageLabel');
+  const stageTitle = document.getElementById('stageTitle');
+  const countdown = document.getElementById('countdown');
+  const actionBox = document.getElementById('actionBox');
+
+  if (m.status === 'confirming') {
+    stageLabel.textContent = 'Etapa 1 de 3';
+    stageTitle.textContent = 'Confirmação dos jogadores';
+    countdown.style.display = '';
+    startCountdown(m.confirmExpiresAt?._seconds * 1000 || m.confirmExpiresAt?.toMillis?.());
+
+    const myConfirmed = m.confirmations && m.confirmations[_user.uid];
+    if (myConfirmed) {
+      actionBox.innerHTML = `<button class="btn-huge" disabled>✅ Você confirmou — aguardando outros</button>`;
+    } else {
+      actionBox.innerHTML = `<button class="btn-huge" onclick="doConfirm()">✋ Estou no PC, confirmar partida</button>`;
+    }
+  } else if (m.status === 'mappick') {
+    stageLabel.textContent = 'Etapa 2 de 3';
+    stageTitle.textContent = 'Picks & Bans de mapa';
+    countdown.style.display = 'none';
+    actionBox.innerHTML = '';
+  } else if (m.status === 'starting') {
+    stageLabel.textContent = 'Etapa 3 de 3';
+    stageTitle.textContent = 'Preparando servidor…';
+    countdown.style.display = 'none';
+    actionBox.innerHTML = `<button class="btn-huge" disabled>🔄 Configurando servidor com mapa <strong>${m.mapVeto?.finalMap || ''}</strong>…</button>`;
+  } else if (m.status === 'in_progress') {
+    stageLabel.textContent = 'Pronto pra jogar';
+    stageTitle.textContent = 'Servidor pronto!';
+    countdown.style.display = 'none';
+    const url = m.serverInfo?.connectUrl || '#';
+    actionBox.innerHTML = `
+      <button class="btn-huge btn-connect" onclick="window.location.href='${url}'">
+        🎮 ENTRAR NO SERVIDOR (CS2 abre automático)
+      </button>
+      <p style="margin-top:14px;font-size:12px;color:var(--text-muted);">
+        Mapa: <strong style="color:var(--primary-light);">${m.mapVeto?.finalMap || ''}</strong> · Servidor: ${m.serverInfo?.ip}:${m.serverInfo?.port} · Senha: <code style="color:var(--accent-yellow);">${m.serverInfo?.password}</code>
+      </p>
+    `;
+  } else if (m.status === 'finished') {
+    stageLabel.textContent = 'Match finalizado';
+    const winner = m.winner === 'A' ? 'Time A 🟦 venceu!' : m.winner === 'B' ? 'Time B 🟥 venceu!' : 'Empate!';
+    stageTitle.textContent = winner;
+    countdown.style.display = 'none';
+    actionBox.innerHTML = `
+      <p style="font-size:24px;font-weight:800;color:var(--accent-yellow);margin-bottom:14px;">${m.scoreA||0} × ${m.scoreB||0}</p>
+      <button class="btn-huge" onclick="location.href='lobbies.html'">Voltar pra Lobbies</button>
+    `;
+  } else if (m.status === 'cancelled') {
+    stageLabel.textContent = 'Match cancelado';
+    stageTitle.textContent = m.cancelReason === 'confirm_timeout' ? 'Tempo de confirmação esgotado' : 'Match cancelado';
+    countdown.style.display = 'none';
+    actionBox.innerHTML = `<button class="btn-huge" onclick="location.href='lobbies.html'">Voltar pra Lobbies</button>`;
+  }
+}
+
+function renderVeto() {
+  const m = _matchData;
+  const veto = m.mapVeto || {};
+  const captainInfo = document.getElementById('captainInfo');
+  const grid = document.getElementById('mapsGrid');
+  const log = document.getElementById('vetoLog');
+
+  const banned = (veto.actions || []).filter(a => a.action === 'ban').map(a => a.map);
+  const final = veto.finalMap;
+  const isMyTurn = veto.activeTeam === _myTeam && (m.status === 'mappick');
+
+  if (final) {
+    captainInfo.innerHTML = `🎯 Mapa escolhido: <strong style="color:var(--accent-green);font-size:16px;">${MAP_LABELS[final]?.name || final}</strong>`;
+  } else if (m.status !== 'mappick') {
+    captainInfo.innerHTML = `🔄 Aguardando começar…`;
+  } else {
+    const action = ((m.mapVeto?.turn || 0) % 2 === 0) ? 'BANIR' : 'BANIR'; // 6 bans então sempre é ban
+    captainInfo.innerHTML = isMyTurn
+      ? `<strong style="color:var(--accent-yellow);">🔥 SUA VEZ:</strong> escolha um mapa pra <strong>BANIR</strong> (clique no card)`
+      : `Aguardando capitão do <strong>Time ${veto.activeTeam}</strong> banir um mapa…`;
+  }
+
+  grid.innerHTML = (veto.pool || []).map(map => {
+    const isBanned = banned.includes(map);
+    const isPicked = final === map;
+    const cls = isPicked ? 'picked' : (isBanned ? 'banned' : '');
+    const onclick = isMyTurn && !isBanned && !isPicked ? `onclick="doVeto('${map}')"` : '';
+    return `
+      <div class="map-card ${cls}" ${onclick}>
+        <div class="map-img">${MAP_LABELS[map]?.icon || '🗺️'}</div>
+        <div class="map-name">${MAP_LABELS[map]?.name || map}</div>
+      </div>
+    `;
+  }).join('');
+
+  log.innerHTML = `<strong>Histórico:</strong>` + (
+    (veto.actions || []).map(a => `<div class="row">Time ${a.team} <strong style="color:var(--accent-red);">${a.action.toUpperCase()}</strong> ${MAP_LABELS[a.map]?.name || a.map}</div>`).join('')
+    || '<div class="row" style="color:var(--text-muted);">nenhuma ação ainda</div>'
+  );
+}
+
+// ─── Countdown ───
+let _countdownTimer = null;
+function startCountdown(targetMs) {
+  if (_countdownTimer) clearInterval(_countdownTimer);
+  if (!targetMs) return;
+  const el = document.getElementById('countdown');
+  const tick = () => {
+    const remaining = targetMs - Date.now();
+    if (remaining <= 0) {
+      el.textContent = '0:00';
+      el.style.color = 'var(--accent-red)';
+      clearInterval(_countdownTimer);
+      return;
+    }
+    const min = Math.floor(remaining / 60000);
+    const sec = Math.floor((remaining % 60000) / 1000);
+    el.textContent = `${min}:${sec.toString().padStart(2, '0')}`;
+    el.style.color = remaining < 30000 ? 'var(--accent-red)' : 'var(--accent-yellow)';
+  };
+  tick();
+  _countdownTimer = setInterval(tick, 1000);
+}
+
+// ─── Ações ───
+async function doConfirm() {
+  try {
+    const r = await fetch(`${API_BASE}/api/match/${MATCH_ID}/confirm`, {
+      method: 'POST', headers: { 'Authorization': 'Bearer ' + _idToken }
+    });
+    const data = await r.json();
+    if (data.error) { toast(data.error, 'error'); return; }
+    toast('Confirmado! ✅', 'success');
+    loadMatch();
+  } catch (e) { toast('Erro: ' + e.message, 'error'); }
+}
+
+async function doVeto(map) {
+  try {
+    const r = await fetch(`${API_BASE}/api/match/${MATCH_ID}/veto`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + _idToken },
+      body: JSON.stringify({ map })
+    });
+    const data = await r.json();
+    if (data.error) { toast(data.error, 'error'); return; }
+    if (data.finalMap) toast(`🎯 Mapa: ${MAP_LABELS[data.finalMap]?.name || data.finalMap}!`, 'success');
+    else toast(`Banido!`, 'success');
+    loadMatch();
+  } catch (e) { toast('Erro: ' + e.message, 'error'); }
+}
+
+function escHtml(s) { return String(s || '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'})[c]); }
+</script>
+
+</body>
+</html>
