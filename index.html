@@ -2131,7 +2131,7 @@ footer {
 <!-- SEARCH & FILTERS -->
 <section class="search-section" id="marketplace">
   <!-- Marca visível pra confirmar versão deployada. -->
-  <div style="font-size: 10px; color: rgba(139,92,246,0.5); text-align: right; margin-bottom: 4px;">search v53-tier-filter+raffle-5min+overpay+csprice</div>
+  <div style="font-size: 10px; color: rgba(139,92,246,0.5); text-align: right; margin-bottom: 4px;">search v54-float-slider-modal</div>
 
   <!-- BUFF-style category picker com SVG icons (Faca, Luvas, Rifle, ...).
        Clicar num modelo (ex: AK-47) filtra a grid e rola pra seção. -->
@@ -2609,6 +2609,26 @@ footer {
           <div>
             <div style="font-size: 11px; color: var(--text-secondary); text-transform: uppercase; letter-spacing: .4px; margin-bottom: 8px; font-weight: 600;">Selecione o exterior</div>
             <div id="modalWearTabs" style="display: grid; grid-template-columns: repeat(5, 1fr); gap: 4px;"></div>
+          </div>
+
+          <!-- 🎯 Float slider — dentro de cada wear, varia do float MIN ao MAX
+               (FN: 0.00-0.07, MW: 0.07-0.15, FT: 0.15-0.38, WW: 0.38-0.45, BS: 0.45-1.00).
+               Conecta com /api/pricempire/float-ranged pra ajustar o preço EXATO
+               daquela faixa de float. Único no Brasil que faz isso. -->
+          <div id="modalFloatSliderBox" style="display:none; padding:14px; background:rgba(34,211,238,.06); border:1px solid rgba(34,211,238,.2); border-radius:12px;">
+            <div style="display:flex; justify-content:space-between; align-items:baseline; margin-bottom:6px; gap:8px; flex-wrap:wrap;">
+              <span style="font-size:11px; color:#22d3ee; text-transform:uppercase; letter-spacing:.5px; font-weight:700;">🎯 Ajuste por float</span>
+              <span id="modalFloatValDisplay" style="font-family:'JetBrains Mono',monospace; font-size:13px; color:#22d3ee; font-weight:700;">0.000</span>
+            </div>
+            <input type="range" id="modalFloatSlider" min="0" max="1" step="0.0001" value="0.5"
+                   oninput="onModalFloatSliderInput(this.value)"
+                   style="width:100%; accent-color:#22d3ee; cursor:pointer;">
+            <div style="display:flex; justify-content:space-between; font-size:9px; color:var(--text-muted); margin-top:2px;">
+              <span id="modalFloatMin">0.00</span>
+              <span style="color:var(--text-muted);">arrasta pra ver preço por float específico</span>
+              <span id="modalFloatMax">1.00</span>
+            </div>
+            <div id="modalFloatPriceHint" style="margin-top:8px; font-size:11px; color:var(--text-secondary); text-align:center; min-height:14px;"></div>
           </div>
 
           <!-- Card de preço (atualiza quando troca de aba) -->
@@ -4285,6 +4305,9 @@ async function openSkinModal(skin) {
   // Renderiza abas placeholder enquanto busca outros wears
   renderWearTabs(currentWear, baseName);
 
+  // Inicializa slider de float pra wear da skin clicada
+  setupModalFloatSlider(currentWear, skin);
+
   // Mostra modal já — busca de wears é assíncrona
   document.getElementById('skinModal').classList.remove('hidden');
 
@@ -4364,6 +4387,127 @@ function switchWearTab(baseName, wear) {
     document.getElementById('modalImage').innerHTML =
       `<img src="${variant.image}" alt="${variant.name}" onerror="gumaxImgFallback(this)" style="max-width: 280px; max-height: 200px;">`;
   }
+  // Re-inicializa slider de float pra range da wear nova (FT: 0.15-0.38, etc)
+  setupModalFloatSlider(wear, variant);
+}
+
+// ═══════ Float slider dentro do modal — diferencial único Gumax ═══════
+//
+// Range de float por wear (CS2 oficial). Quando user troca de aba, o slider
+// é remontado pra cobrir só esse intervalo. Quando user arrasta, debounce 400ms
+// e busca preço no backend (/api/pricempire/float-ranged) — substitui o preço
+// genérico Youpin pelo preço REAL daquela faixa de float específica.
+const MODAL_WEAR_RANGES = {
+  'Factory New':    { min: 0.00, max: 0.07 },
+  'Minimal Wear':   { min: 0.07, max: 0.15 },
+  'Field-Tested':   { min: 0.15, max: 0.38 },
+  'Well-Worn':      { min: 0.38, max: 0.45 },
+  'Battle-Scarred': { min: 0.45, max: 1.00 },
+};
+
+let _modalFloatDebounce = null;
+let _modalFloatBasePrice = null;  // preço genérico Youpin (referência pra delta)
+let _modalFloatBaseSale = null;   // saleBRL genérico (pra rebuild se vier null da API)
+
+function setupModalFloatSlider(wear, variant) {
+  const box = document.getElementById('modalFloatSliderBox');
+  if (!box) return;
+  const range = MODAL_WEAR_RANGES[wear];
+  if (!range) { box.style.display = 'none'; return; }
+  box.style.display = '';
+
+  const slider = document.getElementById('modalFloatSlider');
+  const display = document.getElementById('modalFloatValDisplay');
+  const minLabel = document.getElementById('modalFloatMin');
+  const maxLabel = document.getElementById('modalFloatMax');
+  const hint = document.getElementById('modalFloatPriceHint');
+
+  // Default: meio do range. User pode arrastar pra qualquer ponto.
+  const defaultFloat = (range.min + range.max) / 2;
+  slider.min = range.min;
+  slider.max = range.max;
+  slider.step = 0.0001;
+  slider.value = defaultFloat;
+  display.textContent = defaultFloat.toFixed(4);
+  minLabel.textContent = range.min.toFixed(2);
+  maxLabel.textContent = range.max.toFixed(2);
+  hint.textContent = '';
+
+  // Guarda preço base (Youpin genérico) pra mostrar delta quando vier preço por float
+  _modalFloatBasePrice = variant.price_cny || 0;
+  _modalFloatBaseSale = variant.saleBRL || variant.price || 0;
+}
+
+// Chamado a cada movimento do slider. Atualiza display imediatamente,
+// debounce 400ms na chamada API pra não afogar /api/pricempire/float-ranged.
+function onModalFloatSliderInput(value) {
+  const display = document.getElementById('modalFloatValDisplay');
+  const floatVal = parseFloat(value);
+  if (display) display.textContent = floatVal.toFixed(4);
+
+  if (_modalFloatDebounce) clearTimeout(_modalFloatDebounce);
+  _modalFloatDebounce = setTimeout(() => fetchAdjustedFloatPrice(floatVal), 400);
+}
+
+// Busca preço pra float específico no backend e atualiza modalSalePrice + hint.
+async function fetchAdjustedFloatPrice(floatVal) {
+  if (!currentModal || !currentModal.name) return;
+  const hint = document.getElementById('modalFloatPriceHint');
+  hint.textContent = 'Buscando preço pra esse float…';
+  hint.style.color = 'var(--text-muted)';
+
+  try {
+    const r = await fetch(`${API_BASE}/api/pricempire/float-ranged?name=${encodeURIComponent(currentModal.name)}&float=${floatVal}`);
+    if (!r.ok) {
+      // 404 = sem dado pra esse float específico — mostra explicação amigável
+      hint.textContent = 'ℹ️ Sem dado de float específico — mostrando preço médio da wear';
+      hint.style.color = 'var(--text-muted)';
+      // Restaura preço base (caso slider anterior tenha alterado)
+      restoreBaseModalPrice();
+      return;
+    }
+    const data = await r.json();
+    const cnyPrice = data.price_rmb || 0;
+    if (cnyPrice <= 0) {
+      hint.textContent = 'ℹ️ Sem dado pra esse float — mostrando preço médio';
+      restoreBaseModalPrice();
+      return;
+    }
+
+    // Aplica fator BRL na ordem do mercado (mesma fórmula do backend pricing.js):
+    // saleBRL = cny * (saleBRL_base / cny_base). Mantém razão exata do que o user
+    // já viu antes — só ajusta proporcional ao novo preço CNY.
+    let adjustedBRL;
+    if (_modalFloatBasePrice > 0 && _modalFloatBaseSale > 0) {
+      const ratio = cnyPrice / _modalFloatBasePrice;
+      adjustedBRL = _modalFloatBaseSale * ratio;
+    } else {
+      // Fallback: usa fator aproximado (CNY × ~0.78) — só pra não quebrar
+      adjustedBRL = cnyPrice * 0.78;
+    }
+
+    // Atualiza UI do preço principal
+    const saleEl = document.getElementById('modalSalePrice');
+    if (saleEl) saleEl.textContent = `R$ ${adjustedBRL.toFixed(2).replace('.', ',')}`;
+
+    // Hint mostra delta vs preço médio + range que matchou
+    const deltaPct = _modalFloatBaseSale > 0
+      ? ((adjustedBRL - _modalFloatBaseSale) / _modalFloatBaseSale) * 100
+      : 0;
+    const sign = deltaPct > 0 ? '+' : '';
+    const color = deltaPct > 5 ? '#ef4444' : deltaPct < -5 ? '#10b981' : 'var(--text-muted)';
+    hint.innerHTML = `Faixa <strong>${data.float_range}</strong> · <span style="color:${color};font-weight:700;">${sign}${deltaPct.toFixed(1)}%</span> vs preço médio`;
+    hint.style.color = '';
+  } catch (e) {
+    hint.textContent = 'Erro ao buscar preço por float';
+    hint.style.color = 'var(--accent-red)';
+  }
+}
+
+function restoreBaseModalPrice() {
+  if (_modalFloatBaseSale == null) return;
+  const saleEl = document.getElementById('modalSalePrice');
+  if (saleEl) saleEl.textContent = `R$ ${_modalFloatBaseSale.toFixed(2).replace('.', ',')}`;
 }
 
 async function loadWearVariantsForModal(baseName, currentWear, originalSkin) {
