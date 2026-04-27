@@ -2131,7 +2131,7 @@ footer {
 <!-- SEARCH & FILTERS -->
 <section class="search-section" id="marketplace">
   <!-- Marca visível pra confirmar versão deployada. -->
-  <div style="font-size: 10px; color: rgba(139,92,246,0.5); text-align: right; margin-bottom: 4px;">search v52-expand-raw-logs</div>
+  <div style="font-size: 10px; color: rgba(139,92,246,0.5); text-align: right; margin-bottom: 4px;">search v53-tier-filter+raffle-5min+overpay+csprice</div>
 
   <!-- BUFF-style category picker com SVG icons (Faca, Luvas, Rifle, ...).
        Clicar num modelo (ex: AK-47) filtra a grid e rola pra seção. -->
@@ -2381,6 +2381,25 @@ footer {
         <option value="Field-Tested">Field-Tested</option>
         <option value="Well-Worn">Well-Worn</option>
         <option value="Battle-Scarred">Battle-Scarred</option>
+      </select>
+    </div>
+    <!-- Tier high-tier (Doppler phases). Filtra items cujo name termina com (Phase X) / (Ruby) / etc -->
+    <div class="wfb-select-wrap">
+      <label>Tier:</label>
+      <select id="wfbTierFilter" onchange="onTierFilterChange(this.value)">
+        <option value="">Todos</option>
+        <optgroup label="💎 Doppler raros">
+          <option value="Ruby">💎 Ruby</option>
+          <option value="Sapphire">💎 Sapphire</option>
+          <option value="Black Pearl">🖤 Black Pearl</option>
+          <option value="Emerald">💚 Emerald (Gamma)</option>
+        </optgroup>
+        <optgroup label="Doppler / Gamma phases">
+          <option value="Phase 1">Phase 1</option>
+          <option value="Phase 2">Phase 2</option>
+          <option value="Phase 3">Phase 3</option>
+          <option value="Phase 4">Phase 4</option>
+        </optgroup>
       </select>
     </div>
     <div class="wfb-search">
@@ -2755,6 +2774,9 @@ let weaponFilter = null;        // display label ("Karambit", "Agente", "Adesivo
 let weaponFilterType = 'weapon'; // 'weapon' | 'agent' | 'sticker' | 'charm'
 let weaponFilterWear = '';
 let weaponFilterName = '';
+// Tier high-tier (Doppler phases). Vazio = todos. Quando ativo, mantém só
+// items cujo market_hash_name termina com (Phase 1)/(Ruby)/(Sapphire)/etc.
+let weaponFilterTier = '';
 
 // Lista de "group names" que aparecem no FINAL de nomes de agentes CS2.
 // Usada pra detectar: "Prof. Shahmat | Elite Crew" → agent.
@@ -2826,6 +2848,10 @@ function _setFilterInternal(label, type, searchQuery) {
   weaponFilterType = type;
   weaponFilterWear = '';
   weaponFilterName = '';
+  weaponFilterTier = ''; // reset do tier quando troca de modelo
+  // Reseta o select visual também (estado UI sincronizado com state)
+  const tierSel = document.getElementById('wfbTierFilter');
+  if (tierSel) tierSel.value = '';
   const mainInput = document.getElementById('searchInput');
   if (mainInput) mainInput.value = '';
   currentSearchQuery = '';
@@ -2945,6 +2971,38 @@ function onWfbNameFilterChange(value) {
   renderSkins();
 }
 
+// Tier filter (Doppler phases). Quando user escolhe, chama backend com query
+// "★ ModeloAtual (Phase X)" pra puxar variantes específicas que NÃO estão
+// no catálogo bulk (já que o Steam Market trata cada phase como item separado
+// pra alguns casos). Combina com results client-side existentes.
+async function onTierFilterChange(value) {
+  weaponFilterTier = value || '';
+  if (!weaponFilterTier) {
+    renderSkins();
+    return;
+  }
+  // Tenta enriquecer results com items específicos da phase via backend search.
+  // Ex: "★ Karambit | Doppler (Phase 2)" — esses items existem como entries
+  // próprias no Steam DB e talvez não estejam no catálogo geral bulk.
+  if (weaponFilter && weaponFilterType === 'weapon') {
+    try {
+      const baseQ = `${weaponFilter} ${weaponFilterTier}`;
+      const r = await fetch(`${API_BASE}/api/pricempire/search?q=${encodeURIComponent(baseQ)}&limit=80`);
+      if (r.ok) {
+        const data = await r.json();
+        if (Array.isArray(data.items)) {
+          // Adiciona ao searchResults global pra renderSkins() considerar
+          searchResults = data.items;
+          lastSearchQuery = baseQ;
+        }
+      }
+    } catch (e) {
+      console.warn('[tier filter] search enrich falhou:', e.message);
+    }
+  }
+  renderSkins();
+}
+
 // Ordenação: 'price_desc' (default) ou 'price_asc'.
 let weaponFilterSort = 'price_desc';
 function onSortFilterChange(value) {
@@ -2960,6 +3018,16 @@ function weaponFilterMatches(skin) {
 
   // Busca livre por nome (comum a todos os tipos)
   if (weaponFilterName && !lower.includes(weaponFilterName)) return false;
+
+  // Tier high-tier (Doppler phases). Verifica sufixo do nome:
+  //   "★ Karambit | Doppler (Factory New) (Ruby)" → tier='Ruby' bate
+  //   "★ Karambit | Doppler (Factory New) (Phase 2)" → tier='Phase 2' bate
+  // Aplica em todos os tipos (não faz sentido pra agent/sticker/charm mas
+  // esses não terão phase no nome então naturalmente não passam).
+  if (weaponFilterTier) {
+    const tierRe = new RegExp(`\\(${weaponFilterTier.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}\\)\\s*$`, 'i');
+    if (!tierRe.test(name)) return false;
+  }
 
   // Categories sem wear (sticker/charm/agent)
   if (weaponFilterType === 'agent')   return isAgent(name);
