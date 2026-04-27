@@ -223,6 +223,28 @@ nav {
   gap: 16px;
 }
 
+/* GMAX LEAGUE button — visualmente separado da loja, identidade própria de plataforma de campeonato */
+.btn-league {
+  padding: 8px 16px;
+  background: linear-gradient(135deg, #facc15 0%, #f97316 50%, #ef4444 100%);
+  color: #0a0612;
+  border: none;
+  border-radius: 24px;
+  font-weight: 800;
+  cursor: pointer;
+  font-size: 13px;
+  text-decoration: none;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  box-shadow: 0 4px 14px rgba(249, 115, 22, .35);
+  transition: transform .15s, filter .15s;
+  letter-spacing: .4px;
+  text-transform: uppercase;
+  white-space: nowrap;
+}
+.btn-league:hover { transform: translateY(-1px); filter: brightness(1.1); }
+
 .cart-icon {
   position: relative;
   cursor: pointer;
@@ -2088,10 +2110,11 @@ footer {
       <span class="nav-link" onclick="scrollToSection('marketplace')">🛒 Mercado</span>
       <a class="nav-link" href="vender.html" style="color: var(--accent-yellow); font-weight: 600; text-decoration: none;">💰 Vender</a>
       <a class="nav-link analise-link" href="analise.html">📊 Análise</a>
-      <a class="nav-link" href="lobbies.html">🎮 Lobbies</a>
       <a class="nav-link rifas-link" href="rifas.html">🎰 Rifas</a>
     </nav>
     <div class="header-actions">
+      <!-- 🏆 GMAX LEAGUE - plataforma de campeonatos CS2 (não faz parte da loja, ID visual próprio) -->
+      <a class="btn-league" href="lobbies.html" title="Plataforma de campeonatos CS2">🏆 GMAX LEAGUE</a>
       <div class="cart-icon" onclick="toggleCart()">
         <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="9" cy="21" r="1"/><circle cx="20" cy="21" r="1"/><path d="M1 1h4l2.68 13.39a2 2 0 002 1.61h9.72a2 2 0 002-1.61L23 6H6"/></svg>
         <div class="cart-badge" id="cartBadge" style="display: none;">0</div>
