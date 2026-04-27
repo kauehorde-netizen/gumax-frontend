@@ -708,7 +708,19 @@ function renderMain() {
 
     <div class="vender-layout">
       <div class="inventory-section">
-        <h2>Seu inventário <span style="color: var(--text-muted); font-weight: 400; font-size: 14px;">(${inventory.length} itens)</span></h2>
+        <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:10px;margin-bottom:14px;">
+          <h2 style="margin:0;">Seu inventário <span style="color: var(--text-muted); font-weight: 400; font-size: 14px;">(${inventory.length} itens<span id="invSelectedCount" style="color:var(--primary-light);"></span>)</span></h2>
+          <!-- Bulk actions: facilita pra clientes que querem vender o inventário inteiro
+               de uma vez. Seleciona apenas items COM cotação válida (>R$ 0). -->
+          <div style="display:flex;gap:8px;">
+            <button onclick="selectAllInventory()" style="padding:8px 14px;background:rgba(139,92,246,.15);border:1px solid rgba(139,92,246,.35);color:var(--primary-light);border-radius:8px;cursor:pointer;font-size:12px;font-weight:600;">
+              ✓ Selecionar todos
+            </button>
+            <button onclick="clearSelection()" id="btnClearSel" style="padding:8px 14px;background:transparent;border:1px solid var(--border);color:var(--text-muted);border-radius:8px;cursor:pointer;font-size:12px;font-weight:600;display:none;">
+              ✕ Limpar
+            </button>
+          </div>
+        </div>
         <div class="inventory-grid" id="inventoryGrid"></div>
       </div>
 
@@ -780,6 +792,48 @@ function toggleSelect(assetid) {
   else selected.set(assetid, item);
   renderInventory();
   renderCart();
+  updateSelectedCount();
+}
+
+// Selecionar todos: itera o inventário e adiciona cada item COM cotação válida
+// ao set de selecionados. Skins sem preço (cotando ou sem dados) ficam de fora —
+// o cliente é avisado por toast no fim com a quantidade ignorada.
+function selectAllInventory() {
+  if (!Array.isArray(inventory) || !inventory.length) return;
+  let added = 0, skipped = 0;
+  for (const item of inventory) {
+    if (selected.has(item.assetid)) continue;
+    const price = priceMap[item.market_hash_name];
+    if (!price || price.offerBRL <= 0) { skipped++; continue; }
+    selected.set(item.assetid, item);
+    added++;
+  }
+  renderInventory();
+  renderCart();
+  updateSelectedCount();
+  if (added && skipped) toast(`${added} skins selecionadas · ${skipped} sem cotação foram ignoradas`, 'success');
+  else if (added) toast(`${added} skins selecionadas`, 'success');
+  else if (skipped) toast(`Nenhuma cotação disponível ainda — aguarde alguns segundos`, 'error');
+}
+
+// Limpar seleção: zera o set e re-renderiza grid + carrinho.
+function clearSelection() {
+  if (!selected.size) return;
+  selected.clear();
+  renderInventory();
+  renderCart();
+  updateSelectedCount();
+  toast('Seleção limpa', 'success');
+}
+
+// Atualiza o contador "(X itens · Y selecionados)" + visibilidade do botão limpar.
+function updateSelectedCount() {
+  const el = document.getElementById('invSelectedCount');
+  const btn = document.getElementById('btnClearSel');
+  if (!el) return;
+  const n = selected.size;
+  el.textContent = n > 0 ? ` · ${n} selecionado${n > 1 ? 's' : ''}` : '';
+  if (btn) btn.style.display = n > 0 ? '' : 'none';
 }
 
 function renderCart() {
