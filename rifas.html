@@ -418,13 +418,18 @@ body {
     <h2>Pague via PIX</h2>
     <p style="color:var(--text-secondary); font-size:13px;">Bilhetes: <strong id="pixModalNumbers" style="color:var(--primary-light);">—</strong></p>
     <p style="color:var(--accent-yellow); font-size:18px; font-weight:700; margin: 12px 0;">R$ <span id="pixModalTotal">—</span></p>
+    <!-- Countdown 5min — quando zera, libera os números pra outros clientes -->
+    <div id="pixCountdownBox" style="background: rgba(245, 158, 11, .12); border: 1px solid rgba(245, 158, 11, .3); border-radius: 10px; padding: 10px 14px; margin: 8px 0 16px; text-align: center;">
+      <div style="font-size: 11px; color: var(--text-muted); text-transform: uppercase; letter-spacing: .5px; margin-bottom: 4px;">⏱️ Reserva expira em</div>
+      <div id="pixCountdown" style="font-size: 22px; font-weight: 800; color: #f59e0b; font-variant-numeric: tabular-nums;">5:00</div>
+    </div>
     <div class="qr-img"><img id="pixQrImg" src=""></div>
     <p style="font-size:12px; color:var(--text-secondary);">Ou copie e cole no app do banco:</p>
     <div class="copypaste-box" id="pixCopyPaste">—</div>
     <button class="btn btn-ghost" onclick="copyPixCode()">📋 Copiar código</button>
     <p style="font-size:11px; color:var(--text-muted); margin-top:14px;">
       Após pagar, seus bilhetes aparecem em "Meus bilhetes" automaticamente.
-      Não feche essa janela até o pagamento confirmar.
+      Se a reserva expirar antes do pagamento, os números voltam pro pool e podem ser pegos por outros.
     </p>
   </div>
 </div>
@@ -655,6 +660,26 @@ async function buyTickets() {
   }
   if (_selected.size < 2) { showToast('Selecione pelo menos 2 bilhetes', 'error'); return; }
 
+  // Bloqueia compra de bilhetes se perfil incompleto. Sem WhatsApp/tradeLink
+  // a equipe Gu não consegue avisar/entregar a skin se ele ganhar.
+  try {
+    const doc = await db.collection('users').doc(user.uid).get();
+    const data = doc.data() || {};
+    if (!data.profileComplete) {
+      const proceed = confirm(
+        '📋 Pra participar da rifa, precisamos completar seu perfil:\n\n' +
+        '• Nome completo\n' +
+        '• WhatsApp (pra avisar se você ganhar)\n' +
+        '• Trade URL Steam (pra enviar a skin)\n\n' +
+        'Deseja completar agora?'
+      );
+      if (proceed) window.location.href = 'perfil.html?return=rifas.html';
+      return;
+    }
+  } catch (e) {
+    console.warn('[rifas] profileComplete check falhou:', e.message);
+  }
+
   const btn = document.getElementById('buyBtn');
   btn.disabled = true; btn.textContent = 'Gerando PIX...';
 
@@ -683,16 +708,64 @@ async function buyTickets() {
   }
 }
 
+// Handle do interval do countdown — guardado pra clear no close
+let _pixCountdownInterval = null;
+
 function openPixModal(data) {
   document.getElementById('pixModalNumbers').textContent = (data.numbers || []).join(', ');
   document.getElementById('pixModalTotal').textContent = (data.totalBRL || 0).toFixed(2);
   document.getElementById('pixQrImg').src = `data:image/png;base64,${data.qrCodeBase64}`;
   document.getElementById('pixCopyPaste').textContent = data.copyPaste || '';
   document.getElementById('pixModal').classList.add('show');
+
+  // Inicia countdown de 5 min. Backend manda pendingExpiresAtMs; se não vier
+  // (rollback), fallback pra 5min a partir de agora.
+  const expiresAt = data.pendingExpiresAtMs || (Date.now() + 5 * 60 * 1000);
+  startPixCountdown(expiresAt);
+}
+
+function startPixCountdown(expiresAtMs) {
+  if (_pixCountdownInterval) clearInterval(_pixCountdownInterval);
+  const el = document.getElementById('pixCountdown');
+  const box = document.getElementById('pixCountdownBox');
+
+  function tick() {
+    const remainingMs = expiresAtMs - Date.now();
+    if (remainingMs <= 0) {
+      // Tempo zerou — fecha modal, libera UI, recarrega grid pra mostrar
+      // que os números voltaram pro pool (release rodou no backend também).
+      clearInterval(_pixCountdownInterval);
+      _pixCountdownInterval = null;
+      el.textContent = '0:00';
+      box.style.background = 'rgba(239, 68, 68, .12)';
+      box.style.borderColor = 'rgba(239, 68, 68, .3)';
+      el.style.color = '#ef4444';
+      showToast('⏰ Tempo da reserva esgotado — números liberados', 'error');
+      setTimeout(() => closePixModal(), 1500);
+      return;
+    }
+    const min = Math.floor(remainingMs / 60000);
+    const sec = Math.floor((remainingMs % 60000) / 1000);
+    el.textContent = `${min}:${sec.toString().padStart(2, '0')}`;
+    // Quando faltam < 60s, vira vermelho pra criar urgência
+    if (remainingMs < 60000) {
+      box.style.background = 'rgba(239, 68, 68, .12)';
+      box.style.borderColor = 'rgba(239, 68, 68, .3)';
+      el.style.color = '#ef4444';
+    }
+  }
+  tick();
+  _pixCountdownInterval = setInterval(tick, 1000);
 }
 
 function closePixModal() {
   document.getElementById('pixModal').classList.remove('show');
+  // Reset visual do countdown box pra próxima abertura
+  const box = document.getElementById('pixCountdownBox');
+  const el = document.getElementById('pixCountdown');
+  if (box) { box.style.background = 'rgba(245, 158, 11, .12)'; box.style.borderColor = 'rgba(245, 158, 11, .3)'; }
+  if (el) el.style.color = '#f59e0b';
+  if (_pixCountdownInterval) { clearInterval(_pixCountdownInterval); _pixCountdownInterval = null; }
   loadMyTickets(); // recarrega lista de bilhetes pra refletir status
   loadAll();      // recarrega progresso da rifa
 }
