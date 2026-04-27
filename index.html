@@ -2131,7 +2131,7 @@ footer {
 <!-- SEARCH & FILTERS -->
 <section class="search-section" id="marketplace">
   <!-- Marca visível pra confirmar versão deployada. -->
-  <div style="font-size: 10px; color: rgba(139,92,246,0.5); text-align: right; margin-bottom: 4px;">search v55-float-chips-buff-style</div>
+  <div style="font-size: 10px; color: rgba(139,92,246,0.5); text-align: right; margin-bottom: 4px;">search v56-float-slider-step001</div>
 
   <!-- BUFF-style category picker com SVG icons (Faca, Luvas, Rifle, ...).
        Clicar num modelo (ex: AK-47) filtra a grid e rola pra seção. -->
@@ -2611,17 +2611,23 @@ footer {
             <div id="modalWearTabs" style="display: grid; grid-template-columns: repeat(5, 1fr); gap: 4px;"></div>
           </div>
 
-          <!-- 🎯 Faixa de Float (chips) — dentro de cada wear, divide em 5 sub-faixas
-               igual o BUFF faz (ex: FT vira 0.15-0.18 / 0.18-0.21 / 0.21-0.24 / 0.24-0.27 / 0.27-0.38).
-               Faixas pré-definidas garantem que o user sempre cai num range com listings reais
-               — slider gerava floats específicos que muitas vezes não tinham anúncio.
-               Conecta com /api/pricempire/float-ranged pra ajustar preço REAL da faixa. -->
+          <!-- 🎯 Slider de Float — step de 0.01 (centésimos: 0.15, 0.16, 0.17, 0.18...).
+               Cada posição cai dentro de uma faixa real da CSPriceAPI (backend acha
+               o bucket que contém esse float via /v2/prices/float-ranged). Granularidade
+               boa pro user explorar sem gerar floats sem anúncio. -->
           <div id="modalFloatSliderBox" style="display:none; padding:14px; background:rgba(34,211,238,.06); border:1px solid rgba(34,211,238,.2); border-radius:12px;">
-            <div style="display:flex; justify-content:space-between; align-items:baseline; margin-bottom:10px; gap:8px; flex-wrap:wrap;">
-              <span style="font-size:11px; color:#22d3ee; text-transform:uppercase; letter-spacing:.5px; font-weight:700;">🎯 Faixa de Float</span>
-              <span style="font-size:10px; color:var(--text-muted);">escolha o intervalo do anúncio</span>
+            <div style="display:flex; justify-content:space-between; align-items:baseline; margin-bottom:8px; gap:8px; flex-wrap:wrap;">
+              <span style="font-size:11px; color:#22d3ee; text-transform:uppercase; letter-spacing:.5px; font-weight:700;">🎯 Ajuste por Float</span>
+              <span id="modalFloatValDisplay" style="font-family:'JetBrains Mono',monospace; font-size:14px; color:#22d3ee; font-weight:800;">0.00</span>
             </div>
-            <div id="modalFloatChips" style="display:grid; grid-template-columns:repeat(auto-fit, minmax(82px, 1fr)); gap:6px;"></div>
+            <input type="range" id="modalFloatSlider" min="0" max="1" step="0.01" value="0.5"
+                   oninput="onModalFloatSliderInput(this.value)"
+                   style="width:100%; accent-color:#22d3ee; cursor:pointer;">
+            <div style="display:flex; justify-content:space-between; font-size:10px; color:var(--text-muted); margin-top:2px;">
+              <span id="modalFloatMin">0.00</span>
+              <span style="color:var(--text-muted);">arrasta pra ver preço por float</span>
+              <span id="modalFloatMax">1.00</span>
+            </div>
             <div id="modalFloatPriceHint" style="margin-top:10px; font-size:11px; color:var(--text-secondary); text-align:center; min-height:14px;"></div>
           </div>
 
@@ -4385,148 +4391,111 @@ function switchWearTab(baseName, wear) {
   setupModalFloatSlider(wear, variant);
 }
 
-// ═══════ Faixa de Float dentro do modal (estilo BUFF) ═══════
+// ═══════ Slider de Float dentro do modal (step 0.01) ═══════
 //
-// Em vez de slider (gera floats específicos sem anúncio), divide cada wear em
-// 5 faixas pré-definidas que GARANTEM ter listings reais. User clica a chip
-// da faixa que quer, backend busca preço da CSPriceAPI (/v2/prices/float-ranged
-// retorna preço por bucket de float). Igual o BUFF/CSGOSKINS faz.
-//
-// Faixas escolhidas pra cobrir o range da wear de forma equilibrada — em
-// FT subdivimos onde tem maior volume de mercado (0.15-0.27).
-const MODAL_FLOAT_RANGES = {
-  'Factory New':    [[0.00,0.014],[0.014,0.028],[0.028,0.042],[0.042,0.056],[0.056,0.07]],
-  'Minimal Wear':   [[0.07,0.086],[0.086,0.102],[0.102,0.118],[0.118,0.134],[0.134,0.15]],
-  'Field-Tested':   [[0.15,0.18],[0.18,0.21],[0.21,0.24],[0.24,0.27],[0.27,0.38]],
-  'Well-Worn':      [[0.38,0.394],[0.394,0.408],[0.408,0.422],[0.422,0.436],[0.436,0.45]],
-  'Battle-Scarred': [[0.45,0.55],[0.55,0.65],[0.65,0.75],[0.75,0.85],[0.85,1.00]],
+// Slider com STEPS de 0.01 (15, 16, 17, 18... em centésimos). User movimenta
+// e cada parada cai dentro de UMA faixa real da CSPriceAPI — backend procura
+// a faixa que contém o float pedido (/v2/prices/float-ranged retorna o bucket
+// com listings reais). Granularidade fina sem cair em float que não tem anúncio.
+const MODAL_WEAR_RANGES = {
+  'Factory New':    { min: 0.00, max: 0.07 },
+  'Minimal Wear':   { min: 0.07, max: 0.15 },
+  'Field-Tested':   { min: 0.15, max: 0.38 },
+  'Well-Worn':      { min: 0.38, max: 0.45 },
+  'Battle-Scarred': { min: 0.45, max: 1.00 },
 };
 
-let _modalFloatBasePrice = null;  // preço CNY base (referência pra delta)
-let _modalFloatBaseSale = null;   // saleBRL base (rollback ao clicar "Tudo")
-let _modalFloatActiveRange = null; // chip ativa atualmente
+let _modalFloatDebounce = null;
+let _modalFloatBasePrice = null;  // CNY base — referência pra delta
+let _modalFloatBaseSale = null;   // saleBRL base — referência pra delta + rollback
 
-// Configura as chips quando o user troca de wear tab (ou abre modal).
+// Configura slider quando user troca de wear tab (ou abre modal).
 function setupModalFloatSlider(wear, variant) {
   const box = document.getElementById('modalFloatSliderBox');
-  const chipsContainer = document.getElementById('modalFloatChips');
-  if (!box || !chipsContainer) return;
-  const ranges = MODAL_FLOAT_RANGES[wear];
-  if (!ranges) { box.style.display = 'none'; return; }
+  if (!box) return;
+  const range = MODAL_WEAR_RANGES[wear];
+  if (!range) { box.style.display = 'none'; return; }
   box.style.display = '';
 
-  // Reset estado
-  _modalFloatActiveRange = null;
+  const slider = document.getElementById('modalFloatSlider');
+  const display = document.getElementById('modalFloatValDisplay');
+  const minLabel = document.getElementById('modalFloatMin');
+  const maxLabel = document.getElementById('modalFloatMax');
+  const hint = document.getElementById('modalFloatPriceHint');
+
+  // Default: meio do range arredondado pro step de 0.01
+  const defaultFloat = Math.round(((range.min + range.max) / 2) * 100) / 100;
+  slider.min = range.min;
+  slider.max = range.max;
+  slider.step = 0.01;
+  slider.value = defaultFloat;
+  display.textContent = defaultFloat.toFixed(2);
+  minLabel.textContent = range.min.toFixed(2);
+  maxLabel.textContent = range.max.toFixed(2);
+  hint.textContent = 'Mostrando preço médio da wear · arrasta pra ajustar pelo float';
+  hint.style.color = 'var(--text-muted)';
+
+  // Guarda preço base pra calcular delta quando vier preço da faixa
   _modalFloatBasePrice = variant.price_cny || 0;
   _modalFloatBaseSale = variant.saleBRL || variant.price || 0;
-
-  // Render chips: "Tudo" + 5 faixas. Default = "Tudo" ativa (preço médio).
-  const tudoLabel = `Tudo`;
-  const allChips = [
-    `<button onclick="onModalFloatChipClick('all')" class="modal-float-chip" data-range="all" style="${chipStyle(true)}">${tudoLabel}</button>`,
-    ...ranges.map(([lo, hi]) => {
-      const key = `${lo.toFixed(3)}-${hi.toFixed(3)}`;
-      const label = `${lo.toFixed(2)} - ${hi.toFixed(2)}`;
-      return `<button onclick="onModalFloatChipClick('${key}', ${lo}, ${hi})" class="modal-float-chip" data-range="${key}" style="${chipStyle(false)}">${label}</button>`;
-    }),
-  ];
-  chipsContainer.innerHTML = allChips.join('');
-
-  const hint = document.getElementById('modalFloatPriceHint');
-  if (hint) hint.textContent = 'Mostrando preço médio da wear · clique numa faixa pra ver preço real do range';
-  hint.style.color = 'var(--text-muted)';
 }
 
-// Estilo das chips — ativa fica azul ciano, inativa fica neutra hover-able.
-function chipStyle(isActive) {
-  if (isActive) {
-    return 'padding:8px 4px;background:rgba(34,211,238,.18);border:1px solid #22d3ee;color:#22d3ee;border-radius:8px;cursor:pointer;font-family:inherit;font-size:11px;font-weight:700;transition:all .15s;';
-  }
-  return 'padding:8px 4px;background:var(--bg-elevated);border:1px solid var(--border);color:var(--text-primary);border-radius:8px;cursor:pointer;font-family:inherit;font-size:11px;font-weight:600;transition:all .15s;';
+// Chamado a cada movimento (step 0.01). Atualiza display imediato,
+// debounce 350ms na chamada API pra não afogar o backend.
+function onModalFloatSliderInput(value) {
+  const display = document.getElementById('modalFloatValDisplay');
+  const floatVal = parseFloat(value);
+  if (display) display.textContent = floatVal.toFixed(2);
+
+  if (_modalFloatDebounce) clearTimeout(_modalFloatDebounce);
+  _modalFloatDebounce = setTimeout(() => fetchAdjustedFloatPrice(floatVal), 350);
 }
 
-// Click numa chip: marca ativa, busca preço da faixa específica (ou restaura "Tudo").
-async function onModalFloatChipClick(rangeKey, lo, hi) {
-  _modalFloatActiveRange = rangeKey;
-  // Re-renderiza chips com a clicada ativa
-  const chips = document.querySelectorAll('.modal-float-chip');
-  chips.forEach(c => {
-    const isActive = c.getAttribute('data-range') === rangeKey;
-    c.style.cssText = chipStyle(isActive);
-  });
-
-  const hint = document.getElementById('modalFloatPriceHint');
-
-  if (rangeKey === 'all') {
-    // "Tudo" → restaura preço médio da wear
-    restoreBaseModalPrice();
-    if (hint) {
-      hint.textContent = 'Mostrando preço médio da wear';
-      hint.style.color = 'var(--text-muted)';
-    }
-    return;
-  }
-
-  // Range específico → chama backend
+// Busca preço pra float específico no backend e atualiza modalSalePrice + hint.
+// Backend acha a FAIXA OFICIAL (do /v2/prices/float-ranged) que contém esse float.
+async function fetchAdjustedFloatPrice(floatVal) {
   if (!currentModal || !currentModal.name) return;
-  hint.textContent = `Buscando preço da faixa ${lo.toFixed(2)}-${hi.toFixed(2)}…`;
+  const hint = document.getElementById('modalFloatPriceHint');
+  hint.textContent = `Buscando preço pra float ${floatVal.toFixed(2)}…`;
   hint.style.color = 'var(--text-muted)';
 
   try {
-    // Backend aceita ?range=X-Y (string) ou ?float=N (número que cai numa faixa).
-    // Aqui mandamos o range exato pra match preciso.
-    const rangeParam = `${lo}-${hi}`;
-    const r = await fetch(`${API_BASE}/api/pricempire/float-ranged?name=${encodeURIComponent(currentModal.name)}&range=${rangeParam}`);
+    const r = await fetch(`${API_BASE}/api/pricempire/float-ranged?name=${encodeURIComponent(currentModal.name)}&float=${floatVal}`);
     if (!r.ok) {
-      // 404 — não tem listing nessa faixa específica. Tenta um float no meio do range
-      // (backend acha a faixa que CONTÉM esse float, geralmente uma das oficiais da CSPriceAPI).
-      const midFloat = (lo + hi) / 2;
-      const r2 = await fetch(`${API_BASE}/api/pricempire/float-ranged?name=${encodeURIComponent(currentModal.name)}&float=${midFloat}`);
-      if (!r2.ok) {
-        hint.textContent = `ℹ️ Sem listings na faixa ${lo.toFixed(2)}-${hi.toFixed(2)} no momento`;
-        restoreBaseModalPrice();
-        return;
-      }
-      const data2 = await r2.json();
-      applyFloatRangedResult(data2, lo, hi);
+      hint.textContent = `ℹ️ Sem dado pra float ${floatVal.toFixed(2)} — mostrando preço médio`;
+      restoreBaseModalPrice();
       return;
     }
     const data = await r.json();
-    applyFloatRangedResult(data, lo, hi);
+    const cnyPrice = data.price_rmb || 0;
+    if (cnyPrice <= 0) {
+      hint.textContent = `ℹ️ Sem dado pra float ${floatVal.toFixed(2)}`;
+      restoreBaseModalPrice();
+      return;
+    }
+
+    // Razão CNY→BRL fiel ao base. Mesma fórmula do pricing.js.
+    let adjustedBRL;
+    if (_modalFloatBasePrice > 0 && _modalFloatBaseSale > 0) {
+      adjustedBRL = _modalFloatBaseSale * (cnyPrice / _modalFloatBasePrice);
+    } else {
+      adjustedBRL = cnyPrice * 0.78;
+    }
+
+    const saleEl = document.getElementById('modalSalePrice');
+    if (saleEl) saleEl.textContent = `R$ ${adjustedBRL.toFixed(2).replace('.', ',')}`;
+
+    const deltaPct = _modalFloatBaseSale > 0
+      ? ((adjustedBRL - _modalFloatBaseSale) / _modalFloatBaseSale) * 100
+      : 0;
+    const sign = deltaPct > 0 ? '+' : '';
+    const color = deltaPct > 5 ? '#ef4444' : deltaPct < -5 ? '#10b981' : 'var(--text-muted)';
+    hint.innerHTML = `Faixa <strong>${data.float_range || floatVal.toFixed(2)}</strong> · <span style="color:${color};font-weight:700;">${sign}${deltaPct.toFixed(1)}%</span> vs médio${data.count ? ` · ${data.count} listings` : ''}`;
+    hint.style.color = '';
   } catch (e) {
-    hint.textContent = 'Erro ao buscar preço por faixa';
+    hint.textContent = 'Erro ao buscar preço por float';
     hint.style.color = 'var(--accent-red)';
   }
-}
-
-// Aplica o resultado da API (price_rmb da faixa) no modalSalePrice + hint.
-function applyFloatRangedResult(data, lo, hi) {
-  const hint = document.getElementById('modalFloatPriceHint');
-  const cnyPrice = data.price_rmb || 0;
-  if (cnyPrice <= 0) {
-    hint.textContent = `ℹ️ Sem dado pra faixa ${lo.toFixed(2)}-${hi.toFixed(2)}`;
-    restoreBaseModalPrice();
-    return;
-  }
-
-  // Mantém a razão CNY→BRL fiel ao preço base. Igual fórmula do backend pricing.js.
-  let adjustedBRL;
-  if (_modalFloatBasePrice > 0 && _modalFloatBaseSale > 0) {
-    adjustedBRL = _modalFloatBaseSale * (cnyPrice / _modalFloatBasePrice);
-  } else {
-    adjustedBRL = cnyPrice * 0.78;
-  }
-
-  const saleEl = document.getElementById('modalSalePrice');
-  if (saleEl) saleEl.textContent = `R$ ${adjustedBRL.toFixed(2).replace('.', ',')}`;
-
-  const deltaPct = _modalFloatBaseSale > 0
-    ? ((adjustedBRL - _modalFloatBaseSale) / _modalFloatBaseSale) * 100
-    : 0;
-  const sign = deltaPct > 0 ? '+' : '';
-  const color = deltaPct > 5 ? '#ef4444' : deltaPct < -5 ? '#10b981' : 'var(--text-muted)';
-  hint.innerHTML = `Faixa <strong>${data.float_range || (lo.toFixed(2) + '-' + hi.toFixed(2))}</strong> · <span style="color:${color};font-weight:700;">${sign}${deltaPct.toFixed(1)}%</span> vs preço médio${data.count ? ` · ${data.count} listings` : ''}`;
-  hint.style.color = '';
 }
 
 function restoreBaseModalPrice() {
