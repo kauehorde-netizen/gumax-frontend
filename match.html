@@ -19,6 +19,14 @@
 body { font-family: 'Inter', sans-serif; background: var(--bg-primary); color: var(--text-primary); min-height: 100vh; }
 
 .shell { max-width: 1200px; margin: 0 auto; padding: 28px; }
+/* Top bar GMAX LEAGUE — separado da loja, só voltar ao mercado */
+.league-topbar { display:flex; align-items:center; justify-content:space-between; padding:12px 24px; border-bottom:1px solid var(--border); background:rgba(8,6,14,.85); backdrop-filter:blur(20px); position:sticky; top:0; z-index:50; }
+.back-to-market { display:inline-flex; align-items:center; gap:8px; padding:8px 14px; background:rgba(255,255,255,.04); border:1px solid var(--border); border-radius:10px; color:var(--text-secondary); text-decoration:none; font-size:13px; font-weight:600; transition:all .15s; }
+.back-to-market:hover { background:rgba(255,255,255,.08); color:var(--text-primary); border-color:var(--primary-light); }
+.league-brand { display:flex; align-items:center; gap:10px; }
+.league-icon { font-size:24px; filter:drop-shadow(0 0 8px rgba(250,204,21,.4)); }
+.league-name { font-size:18px; font-weight:800; letter-spacing:1px; background:linear-gradient(135deg,#facc15 0%,#f97316 60%,#ef4444 100%); -webkit-background-clip:text; -webkit-text-fill-color:transparent; }
+
 .match-header { text-align:center; margin-bottom:28px; }
 .match-header .stage { font-size:11px; color:var(--text-muted); text-transform:uppercase; letter-spacing:1.2px; margin-bottom:6px; }
 .match-header h1 { font-size:28px; font-weight:800; }
@@ -74,6 +82,19 @@ body { font-family: 'Inter', sans-serif; background: var(--bg-primary); color: v
 </style>
 </head>
 <body>
+
+<!-- Top bar GMAX LEAGUE — só voltar ao mercado + brand identity própria -->
+<div class="league-topbar">
+  <a class="back-to-market" href="index.html" title="Voltar ao Mercado">
+    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M19 12H5M12 19l-7-7 7-7"/></svg>
+    Voltar ao Mercado
+  </a>
+  <div class="league-brand">
+    <span class="league-icon">🏆</span>
+    <span class="league-name">GMAX LEAGUE</span>
+  </div>
+  <div></div>
+</div>
 
 <div class="shell">
 
