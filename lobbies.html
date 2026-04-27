@@ -137,7 +137,7 @@ header { background: rgba(8,6,14,0.85); backdrop-filter: blur(20px); border-bott
       <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M19 12H5M12 19l-7-7 7-7"/></svg>
       Voltar ao Mercado
     </a>
-    <div class="league-brand" title="lobby v2-league-standalone-header">
+    <div class="league-brand" title="lobby v5-tdz-safe">
       <span class="league-icon">🏆</span>
       <span class="league-name">GMAX <strong>LEAGUE</strong></span>
     </div>
@@ -212,23 +212,30 @@ header { background: rgba(8,6,14,0.85); backdrop-filter: blur(20px); border-bott
 // =================================================================
 // MARKER
 // =================================================================
-//   lobby v4-firebase-v10-fallback
+//   lobby v5-tdz-safe
 // =================================================================
 
-// Defensiva: se ad-blocker bloqueou gstatic.com e firebase não carregou,
-// mostra banner amigável em vez de tela em branco.
+// API_BASE primeiro — assim mesmo se Firebase falhar, doLogin() funciona
+// (sem TDZ "Cannot access 'API_BASE' before initialization").
+const API_BASE = 'https://gumax-backend-production.up.railway.app';
+
+let auth = null;
+let db = null;
+let _firebaseReady = false;
+
+// Defensiva: se ad-blocker bloqueou gstatic.com, mostra banner amigável.
 if (typeof firebase === 'undefined') {
   document.body.innerHTML = `
     <div style="min-height:100vh;display:flex;align-items:center;justify-content:center;text-align:center;padding:40px;font-family:Inter,sans-serif;background:#0a0612;color:#e0e7ff;">
       <div style="max-width:480px;">
         <h1 style="color:#ef4444;margin-bottom:16px;">⚠️ Firebase bloqueado</h1>
-        <p style="color:#a5a3b8;margin-bottom:14px;">Algum ad-blocker (uBlock, Brave Shields, etc) está bloqueando o domínio <code>gstatic.com</code>, que precisamos pra autenticar.</p>
-        <p style="color:#a5a3b8;margin-bottom:24px;">Solução: desativa o ad-blocker pra <strong>market.gumaxskins.com</strong> e recarrega a página.</p>
+        <p style="color:#a5a3b8;margin-bottom:14px;">Algum ad-blocker (uBlock, Brave Shields, etc) ou extensão está bloqueando <code>gstatic.com</code>.</p>
+        <p style="color:#a5a3b8;margin-bottom:24px;">Solução: desativa o ad-blocker pra <strong>market.gumaxskins.com</strong> e recarrega a página (Ctrl+Shift+R).</p>
         <a href="index.html" style="padding:10px 20px;background:#1e293b;color:#e0e7ff;border-radius:10px;text-decoration:none;border:1px solid rgba(148,163,184,.3);">← Voltar ao Mercado</a>
       </div>
     </div>
   `;
-  throw new Error('Firebase não carregou — ad-blocker bloqueando gstatic.com');
+  throw new Error('Firebase não carregou — gstatic.com bloqueado');
 }
 
 const firebaseConfig = {
@@ -239,11 +246,16 @@ const firebaseConfig = {
   messagingSenderId: "678525908778",
   appId: "1:678525908778:web:56ee6d6a809c013b341053"
 };
-firebase.initializeApp(firebaseConfig);
-const auth = firebase.auth();
-const db = firebase.firestore();
-
-const API_BASE = 'https://gumax-backend-production.up.railway.app';
+try {
+  firebase.initializeApp(firebaseConfig);
+  auth = firebase.auth();
+  db = firebase.firestore();
+  _firebaseReady = true;
+} catch (e) {
+  console.error('[firebase init]', e);
+  // Mostra erro inline mas mantém página utilizável (botão voltar continua ok)
+  alert('Erro ao iniciar Firebase: ' + e.message);
+}
 
 let _user = null;
 let _idToken = null;
@@ -260,7 +272,7 @@ function toast(msg, type = '') {
 // ─── Auth state — espelha o padrão do index.html ───
 // Sessão Firebase persiste em localStorage por default → quando user loga em
 // index.html, lobbies.html já pega via onAuthStateChanged sem precisar relogar.
-auth.onAuthStateChanged(async user => {
+if (_firebaseReady) auth.onAuthStateChanged(async user => {
   const loginBtn = document.getElementById('headerLoginBtn');
   const profileArea = document.getElementById('headerProfileArea');
   const createBtn = document.getElementById('btnCreateLobby');
