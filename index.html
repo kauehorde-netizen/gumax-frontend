@@ -2152,7 +2152,7 @@ footer {
 <!-- SEARCH & FILTERS -->
 <section class="search-section" id="marketplace">
   <!-- Marca visível pra confirmar versão deployada. -->
-  <div style="font-size: 10px; color: rgba(139,92,246,0.5); text-align: right; margin-bottom: 4px;">search v56-float-slider-step001</div>
+  <div style="font-size: 10px; color: rgba(139,92,246,0.5); text-align: right; margin-bottom: 4px;">search v57-stattrak-souvenir-wear-fix</div>
 
   <!-- BUFF-style category picker com SVG icons (Faca, Luvas, Rifle, ...).
        Clicar num modelo (ex: AK-47) filtra a grid e rola pra seção. -->
@@ -4556,9 +4556,19 @@ async function loadWearVariantsForModal(baseName, currentWear, originalSkin) {
   // 2) Busca outras wears no backend (Youpin) — APENAS pra preencher as wears
   //    que NÃO existem no Full. Não sobrescreve as Full pra preservar o
   //    inspectLink + badge "Entrega Full".
+  //
+  //    ⚠️ Importante: o backend searchCatalog filtra StatTrak/Souvenir por
+  //    default (a query precisa CONTER essas palavras pra ativar). Como
+  //    extractBaseName REMOVE "StatTrak™" do baseName, aqui a gente adiciona
+  //    de volta no query string pra que variantes StatTrak/Souvenir sejam
+  //    incluídas nos results — senão as outras wears StatTrak vêm vazias.
+  const origIsSouvenir = /^Souvenir\s/.test(originalSkin.name);
+  let searchQuery = baseName;
+  if (origIsStatTrak) searchQuery = 'StatTrak ' + searchQuery;
+  if (origIsSouvenir) searchQuery = 'Souvenir ' + searchQuery;
   document.getElementById('modalWearLoading').style.display = '';
   try {
-    const r = await fetch(`${API_BASE}/api/pricempire/search?q=${encodeURIComponent(baseName)}&limit=50`);
+    const r = await fetch(`${API_BASE}/api/pricempire/search?q=${encodeURIComponent(searchQuery)}&limit=50`);
     if (!r.ok) return;
     const data = await r.json();
     const items = Array.isArray(data.items) ? data.items : [];
