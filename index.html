@@ -2152,7 +2152,7 @@ footer {
 <!-- SEARCH & FILTERS -->
 <section class="search-section" id="marketplace">
   <!-- Marca visível pra confirmar versão deployada. -->
-  <div style="font-size: 10px; color: rgba(139,92,246,0.5); text-align: right; margin-bottom: 4px;">search v58-checkout-firebase-auth-fix</div>
+  <div style="font-size: 10px; color: rgba(139,92,246,0.5); text-align: right; margin-bottom: 4px;">search v59-pix-card-real</div>
 
   <!-- BUFF-style category picker com SVG icons (Faca, Luvas, Rifle, ...).
        Clicar num modelo (ex: AK-47) filtra a grid e rola pra seção. -->
@@ -4789,183 +4789,288 @@ function closeCheckout(event) {
   document.getElementById('checkoutModal').classList.add('hidden');
 }
 
+// ═══ CHECKOUT — STEP 1: ESCOLHER MÉTODO DE PAGAMENTO ═══
 function renderCheckoutSteps() {
   const container = document.getElementById('checkoutSteps');
   const subtotal = cart.reduce((sum, item) => sum + (item.price * item.qty), 0);
 
-  let html = `
+  // Lista de items + total + 2 cards de seleção (PIX / Cartão)
+  let itemsList = cart.map(item => `
+    <div style="display: flex; justify-content: space-between; padding: 8px 0; border-bottom: 1px solid var(--border); font-size: 13px;">
+      <span>${escHtml(item.name)}</span>
+      <span style="color: var(--accent-yellow);">×${item.qty} · ${fmtR(item.price * item.qty)}</span>
+    </div>
+  `).join('');
+
+  container.innerHTML = `
     <div class="checkout-step">
       <div class="checkout-step-title">
         <span class="step-number-badge">1</span>
         Confirmar Itens
       </div>
-      <div style="max-height: 200px; overflow-y: auto;">
-  `;
-
-  cart.forEach(item => {
-    html += `
-      <div style="display: flex; justify-content: space-between; padding: 8px 0; border-bottom: 1px solid var(--border); font-size: 13px;">
-        <span>${item.name}</span>
-        <span style="color: var(--accent-yellow);">×${item.qty}</span>
-      </div>
-    `;
-  });
-
-  html += `
-      </div>
+      <div style="max-height: 200px; overflow-y: auto;">${itemsList}</div>
       <div style="padding: 12px 0; border-top: 1px solid var(--border); margin-top: 12px; font-weight: 600;">
-        Total: <span style="color: var(--accent-yellow);">${fmtR(subtotal)}</span>
+        Total: <span style="color: var(--accent-yellow); font-size:18px;">${fmtR(subtotal)}</span>
       </div>
     </div>
 
     <div class="checkout-step">
       <div class="checkout-step-title">
         <span class="step-number-badge">2</span>
-        Gerar QR Code
+        Escolha o método de pagamento
       </div>
-      <div class="qr-container">
-        <div id="qrCode" class="qr-code">
-          <div style="width: 100%; height: 100%; display: flex; align-items: center; justify-content: center; color: var(--text-muted);">
-            <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="1"/><path d="M12 1v6m0 6v6"/><path d="M4.22 4.22l4.24 4.24m3.08 3.08l4.24 4.24"/><path d="M1 12h6m6 0h6"/><path d="M4.22 19.78l4.24-4.24m3.08-3.08l4.24-4.24"/></svg>
-          </div>
-        </div>
-        <div class="pix-code-container">
-          <input type="text" class="pix-code" id="pixCode" readonly value="Gerando código PIX...">
-          <button class="copy-button" onclick="copyPixCode()">Copiar</button>
-        </div>
-        <div class="countdown">
-          ⏱️ Válido por: <span class="countdown-timer" id="countdown">10:00</span>
-        </div>
+      <div style="display:grid; grid-template-columns:1fr 1fr; gap:12px; margin-top:14px;">
+        <button onclick="startPaymentFlow('pix', ${subtotal})" style="padding:18px; background:linear-gradient(135deg,rgba(34,211,238,.12),rgba(16,185,129,.08)); border:1px solid rgba(34,211,238,.4); border-radius:12px; cursor:pointer; transition:transform .15s; color:var(--text-primary); text-align:center;" onmouseover="this.style.transform='translateY(-3px)'" onmouseout="this.style.transform='translateY(0)'">
+          <div style="font-size:32px; margin-bottom:6px;">⚡</div>
+          <div style="font-weight:800; font-size:14px;">PIX</div>
+          <div style="font-size:10px; color:var(--text-muted); margin-top:4px;">Instantâneo · sem taxa</div>
+        </button>
+        <button onclick="startPaymentFlow('card', ${subtotal})" style="padding:18px; background:linear-gradient(135deg,rgba(139,92,246,.12),rgba(167,139,250,.08)); border:1px solid rgba(139,92,246,.4); border-radius:12px; cursor:pointer; transition:transform .15s; color:var(--text-primary); text-align:center;" onmouseover="this.style.transform='translateY(-3px)'" onmouseout="this.style.transform='translateY(0)'">
+          <div style="font-size:32px; margin-bottom:6px;">💳</div>
+          <div style="font-weight:800; font-size:14px;">Cartão</div>
+          <div style="font-size:10px; color:var(--text-muted); margin-top:4px;">Crédito · até 12x</div>
+        </button>
       </div>
+      <p style="font-size:11px; color:var(--text-muted); text-align:center; margin-top:14px;">
+        Pagamento seguro processado pelo Mercado Pago
+      </p>
+    </div>
+  `;
+}
+
+// ═══ STEP 2: criar pedido + roteamento por método ═══
+let _currentOrder = null;   // { orderId, paymentMethod, paymentId, ... }
+let _pollTimer = null;
+let _countdownTimer = null;
+
+async function startPaymentFlow(method, amount) {
+  const container = document.getElementById('checkoutSteps');
+  // Loading state
+  container.innerHTML = `
+    <div style="text-align:center; padding:60px 20px;">
+      <div style="display:inline-block; width:48px; height:48px; border:4px solid var(--primary); border-top-color:transparent; border-radius:50%; animation:spin 1s linear infinite;"></div>
+      <p style="margin-top:16px; color:var(--text-secondary);">Criando pedido…</p>
+    </div>
+  `;
+
+  // Coleta dados do user (Firebase Auth + users/{uid})
+  const fbUser = firebase.auth().currentUser;
+  if (!fbUser) {
+    showToast('Sua sessão expirou. Faça login novamente.');
+    closeCheckout({ target: { id: 'checkoutModal' } });
+    return;
+  }
+  let userData = {};
+  try {
+    const doc = await firebase.firestore().collection('users').doc(fbUser.uid).get();
+    userData = doc.data() || {};
+  } catch (e) { console.warn('[checkout] user fetch:', e.message); }
+
+  // POST pro backend
+  let resp;
+  try {
+    const r = await fetch(`${API_BASE}/api/create-order`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        items: cart.map(i => ({ name: i.name, price: i.price, qty: i.qty, id: i.id || null })),
+        user: {
+          uid: fbUser.uid,
+          steamId: userData.steamId || fbUser.uid,
+          email: userData.email || fbUser.email || `${userData.steamId || fbUser.uid}@gumax.placeholder`,
+          name: userData.fullName || userData.steamName || fbUser.displayName || 'Cliente',
+          whatsapp: userData.whatsapp || '',
+          tradeLink: userData.tradeLink || ''
+        },
+        paymentMethod: method,
+      }),
+    });
+    resp = await r.json();
+    if (!r.ok) throw new Error(resp.error || `HTTP ${r.status}`);
+  } catch (e) {
+    container.innerHTML = `
+      <div style="text-align:center; padding:40px 20px;">
+        <div style="font-size:48px; margin-bottom:12px;">⚠️</div>
+        <h3 style="color:var(--accent-red); margin-bottom:8px;">Erro ao criar pedido</h3>
+        <p style="color:var(--text-secondary); font-size:13px; margin-bottom:18px;">${escHtml(e.message)}</p>
+        <button class="btn btn-primary" onclick="renderCheckoutSteps()">Tentar de novo</button>
+      </div>
+    `;
+    return;
+  }
+
+  _currentOrder = resp;
+
+  if (method === 'pix') {
+    showPixPayment(resp);
+  } else if (method === 'card') {
+    showCardRedirect(resp);
+  }
+}
+
+// ═══ PIX FLOW — mostra QR + código + polling ═══
+function showPixPayment(order) {
+  const container = document.getElementById('checkoutSteps');
+  // QR Code do MP vem como base64 PNG OU como string pra gerar QR
+  const qrImg = order.pixQrCodeBase64
+    ? `<img src="data:image/png;base64,${order.pixQrCodeBase64}" alt="QR Code PIX" style="width:240px; height:240px; border-radius:12px; background:#fff; padding:8px;">`
+    : `<div style="width:240px; height:240px; background:#fff; border-radius:12px; display:flex; align-items:center; justify-content:center; color:#000;">QR Code indisponível — use o código abaixo</div>`;
+
+  container.innerHTML = `
+    <div class="checkout-step">
+      <div class="checkout-step-title">
+        <span class="step-number-badge">⚡</span>
+        Pague via PIX — ${fmtR(order.total)}
+      </div>
+      <div style="text-align:center; margin-top:14px;">
+        ${qrImg}
+        <p style="font-size:12px; color:var(--text-muted); margin-top:10px;">Escaneie com o app do seu banco<br>OU copie o código abaixo</p>
+      </div>
+      <div class="pix-code-container" style="margin-top:14px;">
+        <input type="text" class="pix-code" id="pixCode" readonly value="${escHtml(order.pixCopyPaste || '')}">
+        <button class="copy-button" onclick="copyPixCode()">Copiar</button>
+      </div>
+      <div class="countdown" style="margin-top:14px; text-align:center;">
+        ⏱️ Válido por: <span class="countdown-timer" id="countdown">10:00</span>
+      </div>
+      <p style="font-size:11px; color:var(--text-muted); text-align:center; margin-top:10px;">
+        Pedido #${order.orderId.slice(0,12)}…
+      </p>
     </div>
 
     <div class="checkout-step">
       <div class="checkout-step-title">
-        <span class="step-number-badge">3</span>
-        Aguardando Pagamento
+        <span class="step-number-badge">⏳</span>
+        Aguardando confirmação
       </div>
-      <div style="text-align: center; padding: 24px 0;">
-        <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="margin: 0 auto 16px; animation: spin 2s linear infinite;"><circle cx="12" cy="12" r="10"/><path d="M12 6v6l4 2"/></svg>
-        <p style="color: var(--text-secondary); margin-bottom: 12px;">Verificando pagamento...</p>
-        <p style="font-size: 12px; color: var(--text-muted);">Confirmar pagamento pode levar até 1 minuto</p>
+      <div style="text-align:center; padding:18px 0;" id="paymentStatus">
+        <div style="display:inline-block; width:32px; height:32px; border:3px solid var(--primary); border-top-color:transparent; border-radius:50%; animation:spin 1s linear infinite;"></div>
+        <p style="color:var(--text-secondary); font-size:13px; margin-top:10px;">Verificando pagamento (30s a 2min após pagar)…</p>
       </div>
     </div>
   `;
 
-  container.innerHTML = html;
-
-  // Generate PIX
-  generatePixCode(subtotal);
   startCountdown();
-  pollPaymentStatus();
+  pollPaymentStatus(order);
 }
 
-function generatePixCode(amount) {
-  const orderId = 'order_' + Date.now();
-  const pixCode = Math.random().toString(36).substring(2, 15) + Math.random().toString(36).substring(2, 15);
-
-  localStorage.setItem('current_order', JSON.stringify({
-    id: orderId,
-    amount,
-    pixCode,
-    timestamp: Date.now(),
-    items: cart
-  }));
-
-  document.getElementById('pixCode').value = pixCode;
-
-  // In real implementation, generate QR from PIX code
-  generateQRCode(pixCode);
-}
-
-function generateQRCode(text) {
-  const qrDiv = document.getElementById('qrCode');
-  if (!qrDiv) return;
-
-  // Simple QR placeholder - in production use qrcode.js library
-  const svg = `
-    <svg viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg">
-      <rect width="100" height="100" fill="white"/>
-      <rect x="10" y="10" width="20" height="20" fill="black"/>
-      <rect x="70" y="10" width="20" height="20" fill="black"/>
-      <rect x="10" y="70" width="20" height="20" fill="black"/>
-      <rect x="35" y="35" width="30" height="30" fill="black" opacity="0.5"/>
-      <text x="50" y="80" text-anchor="middle" fill="black" font-size="8">${text.substring(0, 10)}</text>
-    </svg>
+// ═══ CARTÃO FLOW — redireciona pro Mercado Pago Checkout Pro ═══
+function showCardRedirect(order) {
+  const container = document.getElementById('checkoutSteps');
+  container.innerHTML = `
+    <div class="checkout-step">
+      <div class="checkout-step-title">
+        <span class="step-number-badge">💳</span>
+        Pagar com cartão — ${fmtR(order.total)}
+      </div>
+      <div style="text-align:center; padding:24px 0;">
+        <div style="font-size:48px; margin-bottom:14px;">🔒</div>
+        <h3 style="font-size:16px; margin-bottom:10px;">Pagamento seguro pelo Mercado Pago</h3>
+        <p style="color:var(--text-secondary); font-size:13px; margin-bottom:18px; max-width:400px; margin-left:auto; margin-right:auto;">
+          Você será redirecionado pra página oficial do Mercado Pago pra preencher os dados do cartão com segurança PCI-compliant. Após o pagamento, volta automaticamente pro site.
+        </p>
+        <a href="${order.initPoint}" class="btn btn-primary" style="display:inline-flex; align-items:center; gap:8px; padding:14px 28px; font-size:15px; text-decoration:none;">
+          Continuar pro pagamento →
+        </a>
+        <p style="font-size:11px; color:var(--text-muted); margin-top:16px;">
+          Pedido #${order.orderId.slice(0,12)}… · Crédito em até 12x
+        </p>
+      </div>
+    </div>
   `;
-  qrDiv.innerHTML = svg;
 }
 
 function copyPixCode() {
   const code = document.getElementById('pixCode').value;
+  if (!code) return;
   navigator.clipboard.writeText(code);
   showToast('Código PIX copiado!');
 }
 
 function startCountdown() {
-  let seconds = 600; // 10 minutes
-
-  const interval = setInterval(() => {
+  if (_countdownTimer) clearInterval(_countdownTimer);
+  let seconds = 600; // 10 min
+  _countdownTimer = setInterval(() => {
     seconds--;
     const mins = Math.floor(seconds / 60);
     const secs = seconds % 60;
     const timer = document.getElementById('countdown');
-    if (timer) {
-      timer.textContent = `${mins}:${secs.toString().padStart(2, '0')}`;
-    }
-
+    if (timer) timer.textContent = `${mins}:${secs.toString().padStart(2, '0')}`;
     if (seconds <= 0) {
-      clearInterval(interval);
-      showToast('Código PIX expirado');
+      clearInterval(_countdownTimer);
+      const t = document.getElementById('countdown');
+      if (t) { t.textContent = 'Expirado'; t.style.color = 'var(--accent-red)'; }
     }
   }, 1000);
 }
 
-function pollPaymentStatus() {
-  const checkInterval = setInterval(() => {
-    // In real implementation, call /api/check-pix
-    const order = JSON.parse(localStorage.getItem('current_order') || '{}');
-
-    // Simulate payment check (for demo, show success after 30 seconds)
-    if (Date.now() - order.timestamp > 30000) {
-      clearInterval(checkInterval);
-      showPaymentSuccess();
+// Polling /api/check-pix a cada 5s — confirma quando MP retorna status='approved'
+async function pollPaymentStatus(order) {
+  if (_pollTimer) clearInterval(_pollTimer);
+  let attempts = 0;
+  const maxAttempts = 120; // 10 min @ 5s = 120 tentativas
+  _pollTimer = setInterval(async () => {
+    attempts++;
+    if (attempts > maxAttempts) {
+      clearInterval(_pollTimer);
+      return;
     }
+    try {
+      const r = await fetch(`${API_BASE}/api/check-pix`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ orderId: order.orderId, paymentId: order.paymentId }),
+      });
+      const data = await r.json();
+      if (data.status === 'approved') {
+        clearInterval(_pollTimer);
+        if (_countdownTimer) clearInterval(_countdownTimer);
+        showPaymentSuccess(order);
+      }
+    } catch (e) { /* ignora erros transientes */ }
   }, 5000);
 }
 
-function showPaymentSuccess() {
+function showPaymentSuccess(order) {
   const container = document.getElementById('checkoutSteps');
-  const order = JSON.parse(localStorage.getItem('current_order') || '{}');
+  const totalItems = cart.reduce((sum, i) => sum + (i.qty || 1), 0);
+  const orderTotal = order?.total || cart.reduce((sum, i) => sum + (i.price * i.qty), 0);
 
   container.innerHTML = `
     <div class="success-message">
       <div class="success-icon">✅</div>
       <h3 class="success-title">Pagamento Confirmado!</h3>
-      <p class="success-description">Seu pedido foi processado com sucesso. As skins serão entregues em breve.</p>
+      <p class="success-description">Seu pedido foi recebido. A skin será entregue na sua trade URL em até 1h durante horário comercial.</p>
 
       <div class="order-details">
         <div class="detail-row">
           <span class="detail-label">Pedido #</span>
-          <span class="detail-value">${order.id}</span>
+          <span class="detail-value" style="font-family:monospace;font-size:11px;">${escHtml(order?.orderId || '—')}</span>
         </div>
         <div class="detail-row">
           <span class="detail-label">Valor Pago</span>
-          <span class="detail-value">${fmtR(order.amount)}</span>
+          <span class="detail-value">${fmtR(orderTotal)}</span>
         </div>
         <div class="detail-row">
           <span class="detail-label">Skins</span>
-          <span class="detail-value">${order.items.length}</span>
+          <span class="detail-value">${totalItems}</span>
         </div>
         <div class="detail-row">
           <span class="detail-label">Status</span>
-          <span class="detail-value" style="color: #22c55e;">Processando</span>
+          <span class="detail-value" style="color: #22c55e;">Processando entrega</span>
         </div>
       </div>
 
       <button class="btn btn-primary" style="width: 100%;" onclick="finishCheckout()">Voltar à Loja</button>
     </div>
   `;
+
+  // Limpa carrinho e timers
+  cart = [];
+  try { localStorage.setItem('gumax_cart', JSON.stringify(cart)); } catch {}
+  if (typeof updateCartUI === 'function') updateCartUI();
+  if (_pollTimer) { clearInterval(_pollTimer); _pollTimer = null; }
+  if (_countdownTimer) { clearInterval(_countdownTimer); _countdownTimer = null; }
 }
 
 function finishCheckout() {
