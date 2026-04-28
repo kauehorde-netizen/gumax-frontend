@@ -202,12 +202,12 @@ header { background: rgba(8,6,14,0.85); backdrop-filter: blur(20px); border-bott
   -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
   -webkit-mask-composite: xor;
           mask-composite: exclude;
-  animation: energyRotate 4s linear infinite;
+  animation: energyRotate 8s linear infinite;
   pointer-events:none;
   z-index:-1;
 }
 
-/* Camada 2: LASER ORBITAL — ponto bright girando muito rápido com glow */
+/* Camada 2: LASER ORBITAL — ponto bright girando com glow */
 .energy-card::after {
   content:''; position:absolute; inset:-2px; border-radius:18px; padding:2px;
   background: conic-gradient(from var(--laser-angle, 0deg),
@@ -219,15 +219,15 @@ header { background: rgba(8,6,14,0.85); backdrop-filter: blur(20px); border-bott
   -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
   -webkit-mask-composite: xor;
           mask-composite: exclude;
-  animation: laserOrbit 1.8s linear infinite;
+  animation: laserOrbit 3.6s linear infinite;
   pointer-events:none;
   z-index:0;
   filter: drop-shadow(0 0 6px var(--laser-color, rgba(250,204,21,.9)))
           drop-shadow(0 0 12px var(--laser-color, rgba(250,204,21,.9)));
 }
 
-.energy-card:hover::before { animation-duration: 1.5s; }
-.energy-card:hover::after  { animation-duration: 0.8s; }
+.energy-card:hover::before { animation-duration: 3s; }
+.energy-card:hover::after  { animation-duration: 1.6s; }
 
 @property --energy-angle { syntax: '<angle>'; initial-value: 0deg; inherits: false; }
 @property --laser-angle  { syntax: '<angle>'; initial-value: 0deg; inherits: false; }
@@ -246,7 +246,7 @@ header { background: rgba(8,6,14,0.85); backdrop-filter: blur(20px); border-bott
 
 /* PASSO 1 — CRIE SUA SALA (plus quadrado) — quica violento + escala + tilt */
 .icon-bounce {
-  animation: iconBounceWild 1.4s cubic-bezier(.68,-.55,.27,1.55) infinite;
+  animation: iconBounceWild 2.8s cubic-bezier(.68,-.55,.27,1.55) infinite;
   transform-origin:center;
 }
 @keyframes iconBounceWild {
@@ -259,7 +259,7 @@ header { background: rgba(8,6,14,0.85); backdrop-filter: blur(20px); border-bott
 
 /* PASSO 2 — CONVIDE 4 AMIGOS (pessoas) — pulse big + brilho + leve rotação */
 .icon-pulse {
-  animation: iconPulseWild 1.2s cubic-bezier(.4,0,.2,1) infinite;
+  animation: iconPulseWild 2.4s cubic-bezier(.4,0,.2,1) infinite;
   transform-origin:center;
 }
 @keyframes iconPulseWild {
@@ -268,9 +268,9 @@ header { background: rgba(8,6,14,0.85); backdrop-filter: blur(20px); border-bott
   70%      { transform: scale(.95) rotate(8deg); filter: brightness(1) drop-shadow(0 0 0 transparent); }
 }
 
-/* PASSO 3 — DESAFIE OUTRA SALA (espadas cruzadas) — shake VIOLENTO contínuo */
+/* PASSO 3 — DESAFIE OUTRA SALA (2 espadas duelando) — clash contínuo */
 .icon-shake {
-  animation: iconShakeWild .55s linear infinite;
+  animation: iconShakeWild 1.1s linear infinite;
   transform-origin:center;
 }
 @keyframes iconShakeWild {
@@ -287,9 +287,9 @@ header { background: rgba(8,6,14,0.85); backdrop-filter: blur(20px); border-bott
   100% { transform: translate(0,0) rotate(-12deg) scale(1); }
 }
 
-/* PASSO 4 — JOGUE + RANKING (mira) — spin rápido + escala wave */
+/* PASSO 4 — JOGUE + RANKING (mira) — spin + escala wave */
 .icon-spin {
-  animation: iconSpinWild 1.8s cubic-bezier(.4,0,.6,1) infinite;
+  animation: iconSpinWild 3.6s cubic-bezier(.4,0,.6,1) infinite;
   transform-origin:center;
 }
 @keyframes iconSpinWild {
@@ -300,12 +300,12 @@ header { background: rgba(8,6,14,0.85); backdrop-filter: blur(20px); border-bott
   100% { transform: rotate(360deg) scale(1); }
 }
 
-/* Halo glow atrás do ícone — MUITO maior + pulsa rápido */
+/* Halo glow atrás do ícone — grande + pulsa */
 .step-card .step-icon::after {
   content:''; position:absolute; inset:-25px; border-radius:36px;
   background:radial-gradient(circle, rgba(139,92,246,.55), transparent 65%);
   filter:blur(18px); z-index:0;
-  animation: iconGlowWild 1.4s ease-in-out infinite;
+  animation: iconGlowWild 2.8s ease-in-out infinite;
 }
 @keyframes iconGlowWild {
   0%, 100% { opacity:.35; transform:scale(.85); }
@@ -352,7 +352,7 @@ header { background: rgba(8,6,14,0.85); backdrop-filter: blur(20px); border-bott
     rgba(139,92,246,.4)   360deg);
   -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
   -webkit-mask-composite: xor; mask-composite: exclude;
-  animation: energyRotate 5s linear infinite;
+  animation: energyRotate 10s linear infinite;
   pointer-events:none; z-index:-1;
 }
 /* Camada 2: laser orbital */
@@ -366,7 +366,7 @@ header { background: rgba(8,6,14,0.85); backdrop-filter: blur(20px); border-bott
     var(--laser-color) 360deg);
   -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
   -webkit-mask-composite: xor; mask-composite: exclude;
-  animation: laserOrbit 2.2s linear infinite;
+  animation: laserOrbit 4.4s linear infinite;
   pointer-events:none; z-index:0;
   filter: drop-shadow(0 0 4px var(--laser-color)) drop-shadow(0 0 10px var(--laser-color));
 }
@@ -415,7 +415,7 @@ header { background: rgba(8,6,14,0.85); backdrop-filter: blur(20px); border-bott
     rgba(139,92,246,.4)  360deg);
   -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
   -webkit-mask-composite: xor; mask-composite: exclude;
-  animation: energyRotate 5s linear infinite;
+  animation: energyRotate 10s linear infinite;
   pointer-events:none; z-index:-1;
 }
 
@@ -430,23 +430,23 @@ header { background: rgba(8,6,14,0.85); backdrop-filter: blur(20px); border-bott
     var(--laser-color) 360deg);
   -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
   -webkit-mask-composite: xor; mask-composite: exclude;
-  animation: laserOrbit 2s linear infinite;
+  animation: laserOrbit 4s linear infinite;
   pointer-events:none; z-index:0;
   filter: drop-shadow(0 0 4px var(--laser-color)) drop-shadow(0 0 10px var(--laser-color));
 }
 
-.lobby-card:hover::before { animation-duration:2s; }
-.lobby-card:hover::after  { animation-duration:1s; }
+.lobby-card:hover::before { animation-duration:4s; }
+.lobby-card:hover::after  { animation-duration:2s; }
 
 .lobby-card.full         { --laser-color: rgba(34,211,238,1); }   /* ciano */
-.lobby-card.full::after  { animation-duration:1.5s; }
+.lobby-card.full::after  { animation-duration:3s; }
 .lobby-card.mine {
   background:linear-gradient(135deg, rgba(26,15,46,.9) 0%, rgba(40,28,8,.6) 100%);
   --laser-color: rgba(250,204,21,1);    /* dourado */
 }
-.lobby-card.mine::after  { animation-duration:1.2s; }
-.lobby-card.challenged   { --laser-color: rgba(239,68,68,1); animation:pulse 1.2s ease-in-out infinite; }
-.lobby-card.challenged::after { animation-duration:.7s; }   /* laser FRENÉTICO */
+.lobby-card.mine::after  { animation-duration:2.4s; }
+.lobby-card.challenged   { --laser-color: rgba(239,68,68,1); animation:pulse 2.4s ease-in-out infinite; }
+.lobby-card.challenged::after { animation-duration:1.4s; }   /* laser ainda mais rápido pra urgência */
 @keyframes pulse { 0%,100% { box-shadow:0 0 0 0 rgba(250,204,21,.4); } 50% { box-shadow:0 0 0 14px rgba(250,204,21,0); } }
 .lobby-name { font-size:14px; font-weight:700; margin-bottom:10px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
 .lobby-slots { display:flex; gap:5px; margin-bottom:14px; }
@@ -562,7 +562,7 @@ header { background: rgba(8,6,14,0.85); backdrop-filter: blur(20px); border-bott
       <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M19 12H5M12 19l-7-7 7-7"/></svg>
       Voltar ao Mercado
     </a>
-    <div class="league-brand" title="lobby v21-laser-wild-anims">
+    <div class="league-brand" title="lobby v22-swords-half-speed">
       <!-- Logo em vídeo (fundo preto fica transparente via mix-blend-mode:screen).
            muted+playsinline são obrigatórios pra autoplay funcionar nos browsers. -->
       <video class="league-logo-video" src="logogu.mp4" autoplay loop muted playsinline preload="auto"></video>
@@ -630,14 +630,21 @@ header { background: rgba(8,6,14,0.85); backdrop-filter: blur(20px); border-bott
       <div class="step-desc">Compartilha o link e teu time entra na sala. Quando bate 5/5, tá pronto.</div>
     </div>
 
-    <!-- Passo 3: Desafiar -->
+    <!-- Passo 3: Desafiar — 2 espadinhas DUELANDO em X -->
     <div class="energy-card step-card" data-color="red">
       <div class="step-num">PASSO 3</div>
       <div class="step-icon">
-        <svg class="icon-shake" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
-          <path d="M14.5 17.5 3 6V3h3l11.5 11.5"/>
-          <path d="m13 19 6-6M16 16l4 4M19 21l2-2"/>
-          <path d="m5 14 6 6M4 13l6 6M3 16l4-4"/>
+        <svg class="icon-shake" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+          <!-- Espada 1: pommel canto inferior esquerdo, lâmina sobe pra direita -->
+          <circle cx="4" cy="20" r="1" fill="currentColor"/>
+          <line x1="4" y1="20" x2="6.5" y2="17.5"/>
+          <line x1="5" y1="16" x2="8" y2="19"/>
+          <line x1="6.5" y1="17.5" x2="19" y2="5"/>
+          <!-- Espada 2: pommel canto inferior direito, lâmina sobe pra esquerda -->
+          <circle cx="20" cy="20" r="1" fill="currentColor"/>
+          <line x1="20" y1="20" x2="17.5" y2="17.5"/>
+          <line x1="19" y1="16" x2="16" y2="19"/>
+          <line x1="17.5" y1="17.5" x2="5" y2="5"/>
         </svg>
       </div>
       <div class="step-title">Desafie outra sala</div>
@@ -733,13 +740,13 @@ header { background: rgba(8,6,14,0.85); backdrop-filter: blur(20px); border-bott
 <div class="toast" id="toast"></div>
 
 <!-- Marker discreto persistente (canto inferior direito) — pra dev/debug -->
-<div style="position:fixed;bottom:8px;right:12px;font-size:10px;color:rgba(250,204,21,.5);font-family:monospace;pointer-events:none;z-index:1;background:rgba(0,0,0,.4);padding:3px 8px;border-radius:4px;">lobby v21-laser-wild-anims</div>
+<div style="position:fixed;bottom:8px;right:12px;font-size:10px;color:rgba(250,204,21,.5);font-family:monospace;pointer-events:none;z-index:1;background:rgba(0,0,0,.4);padding:3px 8px;border-radius:4px;">lobby v22-swords-half-speed</div>
 
 <script>
 // =================================================================
 // MARKER
 // =================================================================
-//   lobby v21-laser-wild-anims
+//   lobby v22-swords-half-speed
 // =================================================================
 
 // API_BASE primeiro — assim mesmo se Firebase falhar, doLogin() funciona
