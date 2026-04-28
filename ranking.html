@@ -1,0 +1,278 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Ranking — GMAX LEAGUE</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&family=JetBrains+Mono:wght@600;800&display=swap" rel="stylesheet">
+<style>
+:root {
+  --bg-primary: #0a0612; --bg-secondary: #110a1f; --bg-elevated: #1a0f2e;
+  --primary: #8b5cf6; --primary-light: #a78bfa;
+  --accent-cyan: #22d3ee; --accent-yellow: #facc15; --accent-orange: #f97316;
+  --accent-red: #ef4444; --accent-green: #10b981;
+  --text-primary: #e0e7ff; --text-secondary: #a5a3b8; --text-muted: #6b6885;
+  --border: rgba(139,92,246,.15);
+}
+* { box-sizing: border-box; margin: 0; padding: 0; }
+body {
+  font-family: 'Inter', sans-serif;
+  color: var(--text-primary);
+  min-height: 100vh;
+  background:
+    radial-gradient(ellipse at top, rgba(139,92,246,.08), transparent 60%),
+    radial-gradient(ellipse at bottom, rgba(34,211,238,.05), transparent 60%),
+    var(--bg-primary);
+  overflow-x:hidden;
+  position:relative;
+}
+.bg-orbs { position:fixed; inset:0; pointer-events:none; z-index:0; overflow:hidden; }
+.bg-orbs .orb { position:absolute; border-radius:50%; filter:blur(80px); opacity:.3; will-change:transform; }
+.bg-orbs .orb-purple { width:500px; height:500px; background:radial-gradient(circle, rgba(139,92,246,.6), transparent 70%); top:-15%; left:-10%; animation:orbDrift1 24s ease-in-out infinite alternate; }
+.bg-orbs .orb-yellow { width:380px; height:380px; background:radial-gradient(circle, rgba(250,204,21,.4), transparent 70%); top:30%; right:-12%; animation:orbDrift2 28s ease-in-out infinite alternate; }
+@keyframes orbDrift1 { from { transform:translate(0,0) scale(1); } to { transform:translate(80px, 60px) scale(1.15); } }
+@keyframes orbDrift2 { from { transform:translate(0,0) scale(1); } to { transform:translate(-70px, 90px) scale(.9); } }
+
+header, main { position:relative; z-index:1; }
+header { z-index:100; background: rgba(8,6,14,0.85); backdrop-filter: blur(20px); border-bottom: 1px solid var(--border); position: sticky; top: 0; }
+.header-content { max-width: 1400px; margin: 0 auto; padding: 12px 24px; display: flex; align-items: center; justify-content: space-between; gap: 24px; }
+.back-to-market { display:inline-flex; align-items:center; gap:8px; padding:8px 14px; background:rgba(255,255,255,.04); border:1px solid var(--border); border-radius:10px; color:var(--text-secondary); text-decoration:none; font-size:13px; font-weight:600; transition:all .15s; }
+.back-to-market:hover { background:rgba(255,255,255,.08); color:var(--text-primary); border-color:var(--primary-light); }
+.league-brand { display:flex; align-items:center; gap:10px; }
+.league-logo-video { height: 76px; width: auto; display: block; filter: url(#logoChromaKey); pointer-events: none; }
+.nav-back { display:inline-flex; align-items:center; gap:8px; padding:8px 14px; background:rgba(139,92,246,.15); border:1px solid rgba(139,92,246,.3); border-radius:10px; color:var(--primary-light); text-decoration:none; font-size:13px; font-weight:600; transition:all .15s; }
+.nav-back:hover { background:rgba(139,92,246,.25); }
+
+main { max-width:1200px; margin:0 auto; padding:32px 24px; }
+
+.page-title { text-align:center; margin-bottom:36px; }
+.page-title h1 { font-size:38px; font-weight:900; background:linear-gradient(135deg,#facc15 0%,#f97316 60%,#ef4444 100%); -webkit-background-clip:text; -webkit-text-fill-color:transparent; letter-spacing:1px; }
+.page-title p { color:var(--text-secondary); font-size:14px; margin-top:8px; }
+
+/* ── PÓDIO TOP 3 ── */
+.podium { display:grid; grid-template-columns:1fr 1.2fr 1fr; gap:14px; margin-bottom:40px; align-items:end; }
+@media (max-width:720px) { .podium { grid-template-columns:1fr; } }
+.podium-spot { position:relative; border-radius:16px; padding:20px 16px; text-align:center; overflow:hidden; isolation:isolate; backdrop-filter:blur(8px); }
+.podium-spot::before {
+  content:''; position:absolute; inset:-1px; border-radius:17px; padding:1px;
+  background: conic-gradient(from var(--energy-angle, 0deg),
+    var(--medal-color, rgba(139,92,246,.5)) 0deg,
+    transparent 120deg,
+    var(--medal-color, rgba(139,92,246,.5)) 240deg,
+    transparent 360deg);
+  -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+  -webkit-mask-composite: xor; mask-composite: exclude;
+  animation: energyRotate 6s linear infinite;
+  pointer-events:none; z-index:-1;
+}
+@property --energy-angle { syntax: '<angle>'; initial-value: 0deg; inherits: false; }
+@keyframes energyRotate { from { --energy-angle:0deg; } to { --energy-angle:360deg; } }
+
+.podium-spot.gold   { background:linear-gradient(180deg, rgba(40,30,8,.85), rgba(20,15,5,.95)); --medal-color:rgba(250,204,21,1); min-height:280px; transform:translateY(-12px); }
+.podium-spot.silver { background:linear-gradient(180deg, rgba(30,30,40,.85), rgba(15,15,25,.95)); --medal-color:rgba(192,192,192,.9); min-height:240px; }
+.podium-spot.bronze { background:linear-gradient(180deg, rgba(40,25,15,.85), rgba(25,15,8,.95)); --medal-color:rgba(205,127,50,.9); min-height:240px; }
+.podium-medal { font-size:42px; margin-bottom:10px; filter:drop-shadow(0 4px 12px rgba(0,0,0,.4)); }
+.podium-position { font-family:'JetBrains Mono',monospace; font-size:11px; color:var(--text-muted); letter-spacing:1.5px; margin-bottom:8px; text-transform:uppercase; }
+.podium-avatar { width:72px; height:72px; border-radius:50%; margin:0 auto 12px; background:rgba(139,92,246,.2); display:flex; align-items:center; justify-content:center; font-size:24px; font-weight:800; border:3px solid var(--medal-color); overflow:hidden; }
+.podium-avatar img { width:100%; height:100%; object-fit:cover; }
+.podium-name { font-size:16px; font-weight:800; margin-bottom:4px; }
+.podium-rating { font-family:'JetBrains Mono',monospace; font-size:28px; font-weight:900; color:var(--medal-color); margin:8px 0; }
+.podium-stats { font-size:11px; color:var(--text-muted); display:flex; justify-content:center; gap:10px; flex-wrap:wrap; }
+.podium-stats strong { color:var(--text-primary); font-weight:700; }
+
+/* ── TABELA ── */
+.ranking-table-wrap { background:linear-gradient(135deg, rgba(20,16,40,.85), rgba(15,10,30,.92)); border:1px solid var(--border); border-radius:16px; padding:6px; overflow:hidden; backdrop-filter:blur(8px); }
+.ranking-table { width:100%; border-collapse:collapse; }
+.ranking-table thead th { padding:14px 12px; font-size:11px; color:var(--text-muted); text-transform:uppercase; letter-spacing:1px; text-align:left; border-bottom:1px solid var(--border); font-weight:700; }
+.ranking-table thead th.numeric { text-align:right; }
+.ranking-table tbody td { padding:12px; border-bottom:1px solid rgba(255,255,255,.03); }
+.ranking-table tbody td.numeric { text-align:right; font-family:'JetBrains Mono',monospace; font-weight:600; }
+.ranking-table tbody tr { transition:background .15s; }
+.ranking-table tbody tr:hover { background:rgba(139,92,246,.06); }
+.ranking-table tbody tr:last-child td { border-bottom:none; }
+
+.rank-pos { width:48px; text-align:center; font-family:'JetBrains Mono',monospace; font-weight:800; font-size:15px; color:var(--text-muted); }
+.rank-pos.top1 { color:var(--accent-yellow); font-size:18px; }
+.rank-pos.top2 { color:#c0c0c0; font-size:17px; }
+.rank-pos.top3 { color:#cd7f32; font-size:16px; }
+
+.player-cell { display:flex; align-items:center; gap:10px; }
+.player-cell .avatar { width:34px; height:34px; border-radius:50%; background:rgba(139,92,246,.2); display:flex; align-items:center; justify-content:center; font-size:13px; font-weight:700; flex-shrink:0; overflow:hidden; }
+.player-cell .avatar img { width:100%; height:100%; object-fit:cover; }
+.player-cell .player-name { font-weight:600; font-size:14px; }
+
+.rating-pill { display:inline-block; padding:3px 10px; border-radius:12px; font-family:'JetBrains Mono',monospace; font-size:13px; font-weight:800; background:rgba(139,92,246,.15); color:var(--primary-light); border:1px solid rgba(139,92,246,.3); }
+.rating-pill.high { background:rgba(16,185,129,.15); color:var(--accent-green); border-color:rgba(16,185,129,.4); }
+.rating-pill.elite { background:linear-gradient(135deg,rgba(250,204,21,.2),rgba(249,115,22,.2)); color:var(--accent-yellow); border-color:rgba(250,204,21,.5); }
+
+.empty-state { padding:80px 20px; text-align:center; color:var(--text-muted); }
+.empty-state h2 { color:var(--text-secondary); font-size:18px; margin-bottom:8px; }
+.empty-state p { font-size:13px; }
+
+@media (max-width:720px) {
+  .ranking-table th.hide-mobile, .ranking-table td.hide-mobile { display:none; }
+  .page-title h1 { font-size:28px; }
+  .league-logo-video { height:50px; }
+}
+</style>
+</head>
+<body>
+
+<!-- SVG chromakey filter (igual lobbies.html / match.html) -->
+<svg width="0" height="0" style="position:absolute;pointer-events:none;" aria-hidden="true">
+  <defs>
+    <filter id="logoChromaKey" color-interpolation-filters="sRGB">
+      <feColorMatrix type="matrix" values="
+        1 0 0 0 0
+        0 1 0 0 0
+        0 0 1 0 0
+        0.4 0.4 0.4 0 0"/>
+      <feComponentTransfer>
+        <feFuncA type="linear" slope="4" intercept="-0.4"/>
+      </feComponentTransfer>
+    </filter>
+  </defs>
+</svg>
+
+<!-- Background dinâmico -->
+<div class="bg-orbs" aria-hidden="true">
+  <div class="orb orb-purple"></div>
+  <div class="orb orb-yellow"></div>
+</div>
+
+<header>
+  <div class="header-content">
+    <a class="back-to-market" href="index.html" title="Voltar ao Mercado">
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M19 12H5M12 19l-7-7 7-7"/></svg>
+      Voltar ao Mercado
+    </a>
+    <div class="league-brand">
+      <video class="league-logo-video" src="logogu.mp4" autoplay loop muted playsinline preload="auto"></video>
+    </div>
+    <a class="nav-back" href="lobbies.html">🎮 Lobbies</a>
+  </div>
+</header>
+
+<main>
+  <div class="page-title">
+    <h1>🏆 RANKING</h1>
+    <p>Top jogadores GMAX LEAGUE · Rating composto: KDR 40% · KDA 30% · ADR 30%</p>
+  </div>
+
+  <!-- Pódio Top 3 — preenchido via JS -->
+  <section class="podium" id="podium" style="display:none;">
+    <div class="podium-spot silver" id="spot2"></div>
+    <div class="podium-spot gold" id="spot1"></div>
+    <div class="podium-spot bronze" id="spot3"></div>
+  </section>
+
+  <!-- Tabela com TODOS (incluindo top 3 também — pódio é só destaque) -->
+  <section class="ranking-table-wrap">
+    <table class="ranking-table" id="rankingTable">
+      <thead>
+        <tr>
+          <th class="rank-pos">#</th>
+          <th>Jogador</th>
+          <th class="numeric">Rating</th>
+          <th class="numeric hide-mobile">Partidas</th>
+          <th class="numeric hide-mobile">K/D</th>
+          <th class="numeric hide-mobile">KDA</th>
+          <th class="numeric hide-mobile">ADR</th>
+          <th class="numeric hide-mobile">MVPs</th>
+        </tr>
+      </thead>
+      <tbody id="rankingBody"></tbody>
+    </table>
+    <div class="empty-state" id="emptyState">
+      <h2>🏗️ Sem partidas registradas ainda</h2>
+      <p>Quando rolarem as primeiras partidas via GMAX LEAGUE, o ranking começa a popular.</p>
+    </div>
+  </section>
+</main>
+
+<div style="position:fixed;bottom:8px;right:12px;font-size:10px;color:rgba(250,204,21,.5);font-family:monospace;pointer-events:none;z-index:1;background:rgba(0,0,0,.4);padding:3px 8px;border-radius:4px;">ranking v1</div>
+
+<script>
+const API_BASE = 'https://gumax-backend-production.up.railway.app';
+
+async function loadRanking() {
+  const tbody = document.getElementById('rankingBody');
+  const empty = document.getElementById('emptyState');
+  const podium = document.getElementById('podium');
+  try {
+    const r = await fetch(`${API_BASE}/api/match/ranking`);
+    const data = await r.json();
+    const players = data.players || [];
+
+    if (!players.length) {
+      empty.style.display = '';
+      podium.style.display = 'none';
+      return;
+    }
+    empty.style.display = 'none';
+
+    // Pódio top 3
+    if (players.length >= 1) renderPodium('spot1', players[0], 1);
+    if (players.length >= 2) renderPodium('spot2', players[1], 2); else hidePodium('spot2');
+    if (players.length >= 3) renderPodium('spot3', players[2], 3); else hidePodium('spot3');
+    podium.style.display = '';
+
+    // Tabela completa
+    tbody.innerHTML = players.map((p, i) => renderRow(p, i + 1)).join('');
+  } catch (e) {
+    console.error('[ranking]', e);
+    empty.style.display = '';
+    empty.querySelector('h2').textContent = '⚠️ Erro ao carregar ranking';
+    empty.querySelector('p').textContent = e.message;
+  }
+}
+
+function renderPodium(spotId, p, pos) {
+  const medals = { 1: '🥇', 2: '🥈', 3: '🥉' };
+  const ratingClass = p.rating >= 1.5 ? 'elite' : p.rating >= 1.0 ? 'high' : '';
+  document.getElementById(spotId).innerHTML = `
+    <div class="podium-medal">${medals[pos]}</div>
+    <div class="podium-position">#${pos}</div>
+    <div class="podium-avatar">${p.avatar ? `<img src="${esc(p.avatar)}" onerror="this.style.display='none'">` : esc((p.name || '?').charAt(0).toUpperCase())}</div>
+    <div class="podium-name">${esc(p.name)}</div>
+    <div class="podium-rating">${p.rating.toFixed(2)}</div>
+    <div class="podium-stats">
+      <span><strong>${p.matches}</strong> partidas</span>
+      <span><strong>${p.kdr.toFixed(2)}</strong> K/D</span>
+      <span><strong>${p.avgAdr}</strong> ADR</span>
+    </div>
+  `;
+}
+
+function hidePodium(spotId) { document.getElementById(spotId).style.visibility = 'hidden'; }
+
+function renderRow(p, pos) {
+  const rankClass = pos === 1 ? 'top1' : pos === 2 ? 'top2' : pos === 3 ? 'top3' : '';
+  const ratingClass = p.rating >= 1.5 ? 'elite' : p.rating >= 1.0 ? 'high' : '';
+  return `
+    <tr>
+      <td class="rank-pos ${rankClass}">${pos}</td>
+      <td>
+        <div class="player-cell">
+          <div class="avatar">${p.avatar ? `<img src="${esc(p.avatar)}" onerror="this.style.display='none'">` : esc((p.name || '?').charAt(0).toUpperCase())}</div>
+          <div class="player-name">${esc(p.name)}</div>
+        </div>
+      </td>
+      <td class="numeric"><span class="rating-pill ${ratingClass}">${p.rating.toFixed(2)}</span></td>
+      <td class="numeric hide-mobile">${p.matches}</td>
+      <td class="numeric hide-mobile">${p.kdr.toFixed(2)}</td>
+      <td class="numeric hide-mobile">${p.kda.toFixed(2)}</td>
+      <td class="numeric hide-mobile">${p.avgAdr}</td>
+      <td class="numeric hide-mobile">${p.mvps}</td>
+    </tr>
+  `;
+}
+
+function esc(s) { return String(s || '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'})[c]); }
+
+loadRanking();
+// Refresh a cada 60s pra puxar novos resultados de partidas
+setInterval(loadRanking, 60000);
+</script>
+</body>
+</html>
