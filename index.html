@@ -2152,7 +2152,7 @@ footer {
 <!-- SEARCH & FILTERS -->
 <section class="search-section" id="marketplace">
   <!-- Marca visível pra confirmar versão deployada. -->
-  <div style="font-size: 10px; color: rgba(139,92,246,0.5); text-align: right; margin-bottom: 4px;">search v64-color-filter</div>
+  <div style="font-size: 10px; color: rgba(139,92,246,0.5); text-align: right; margin-bottom: 4px;">search v65-cart-wear-variant</div>
 
   <!-- BUFF-style category picker com SVG icons (Faca, Luvas, Rifle, ...).
        Clicar num modelo (ex: AK-47) filtra a grid e rola pra seção. -->
@@ -4276,17 +4276,34 @@ function createSkinCard(skin, index) {
 }
 
 // ============= CART MANAGEMENT =============
-function addToCart(event, skinId) {
-  event.stopPropagation();
-  const skin = getAllSkins().find(s => s.id === skinId);
-  if (!skin) return;
+// Aceita: addToCart(event, skinId)   — vindo de botão da grid (lookup em getAllSkins)
+//      OU addToCart(event, skinObject) — vindo do modal (passa objeto direto, evita
+//         falha quando variante de wear NÃO está em getAllSkins, só em WEAR_VARIANTS_CACHE)
+function addToCart(event, skinIdOrObject) {
+  if (event && event.stopPropagation) event.stopPropagation();
 
-  const existing = cart.find(item => item.id === skinId);
+  let skin;
+  if (typeof skinIdOrObject === 'object' && skinIdOrObject !== null) {
+    skin = skinIdOrObject;  // objeto completo passado do modal
+  } else {
+    // É um id — busca no catálogo
+    skin = getAllSkins().find(s => s.id === skinIdOrObject);
+    if (!skin) {
+      console.warn('[addToCart] skin não achada em getAllSkins, id=', skinIdOrObject);
+      showToast('Erro ao adicionar — recarrega a página e tenta de novo');
+      return;
+    }
+  }
+  if (!skin || skin.id == null) {
+    console.warn('[addToCart] skin inválida', skin);
+    return;
+  }
+
+  const existing = cart.find(item => item.id === skin.id);
   if (existing) {
     existing.qty++;
   } else {
-    // FIX: armazena a imagem DENTRO do item. Antes dependia do cache global
-    // skinImages[name] que pode estar vazio (skin adicionada via modal de busca).
+    // 3 fallbacks pra imagem: do skin object → cache global → vazio
     const image = skin.image || skin.iconUrl || skinImages[skin.name] || '';
     cart.push({...skin, qty: 1, image});
   }
@@ -4298,7 +4315,9 @@ function addToCart(event, skinId) {
 
 function addToCartFromModal() {
   if (!currentModal) return;
-  addToCart({stopPropagation: () => {}}, currentModal.id);
+  // FIX: passa o objeto INTEIRO em vez de só o id — assim funciona pra
+  // variante de wear que veio do WEAR_VARIANTS_CACHE (e não está em getAllSkins).
+  addToCart({stopPropagation: () => {}}, currentModal);
   closeSkinModal();
 }
 
