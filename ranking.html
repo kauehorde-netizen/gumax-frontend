@@ -26,15 +26,18 @@ body {
   overflow-x:hidden;
   position:relative;
 }
-.bg-orbs { position:fixed; inset:0; pointer-events:none; z-index:0; overflow:hidden; }
-.bg-orbs .orb { position:absolute; border-radius:50%; filter:blur(80px); opacity:.3; will-change:transform; }
-.bg-orbs .orb-purple { width:500px; height:500px; background:radial-gradient(circle, rgba(139,92,246,.6), transparent 70%); top:-15%; left:-10%; animation:orbDrift1 24s ease-in-out infinite alternate; }
-.bg-orbs .orb-yellow { width:380px; height:380px; background:radial-gradient(circle, rgba(250,204,21,.4), transparent 70%); top:30%; right:-12%; animation:orbDrift2 28s ease-in-out infinite alternate; }
-@keyframes orbDrift1 { from { transform:translate(0,0) scale(1); } to { transform:translate(80px, 60px) scale(1.15); } }
-@keyframes orbDrift2 { from { transform:translate(0,0) scale(1); } to { transform:translate(-70px, 90px) scale(.9); } }
+/* v2-perf: blur 80→32px, sizes -30%, scale removido, anim 24s/28s → 50s/60s */
+.bg-orbs { position:fixed; inset:0; pointer-events:none; z-index:0; overflow:hidden; contain:strict; }
+.bg-orbs .orb { position:absolute; border-radius:50%; filter:blur(32px); opacity:.3; will-change:transform; transform:translateZ(0); }
+.bg-orbs .orb-purple { width:340px; height:340px; background:radial-gradient(circle, rgba(139,92,246,.55), transparent 70%); top:-10%; left:-8%; animation:orbDrift1 50s ease-in-out infinite alternate; }
+.bg-orbs .orb-yellow { width:280px; height:280px; background:radial-gradient(circle, rgba(250,204,21,.36), transparent 70%); top:30%; right:-8%; animation:orbDrift2 60s ease-in-out infinite alternate; }
+@keyframes orbDrift1 { from { transform:translate3d(0,0,0); } to { transform:translate3d(60px, 40px, 0); } }
+@keyframes orbDrift2 { from { transform:translate3d(0,0,0); } to { transform:translate3d(-50px, 60px, 0); } }
+@media (prefers-reduced-motion: reduce) { .bg-orbs .orb { animation: none; } }
 
 header, main { position:relative; z-index:1; }
-header { z-index:100; background: rgba(8,6,14,0.85); backdrop-filter: blur(20px); border-bottom: 1px solid var(--border); position: sticky; top: 0; }
+/* v2-perf: backdrop-filter 20→10px (4x mais barato) */
+header { z-index:100; background: rgba(8,6,14,0.92); backdrop-filter: blur(10px); border-bottom: 1px solid var(--border); position: sticky; top: 0; }
 .header-content { max-width: 1400px; margin: 0 auto; padding: 12px 24px; display: flex; align-items: center; justify-content: space-between; gap: 24px; }
 .back-to-market { display:inline-flex; align-items:center; gap:8px; padding:8px 14px; background:rgba(255,255,255,.04); border:1px solid var(--border); border-radius:10px; color:var(--text-secondary); text-decoration:none; font-size:13px; font-weight:600; transition:all .15s; }
 .back-to-market:hover { background:rgba(255,255,255,.08); color:var(--text-primary); border-color:var(--primary-light); }
@@ -52,7 +55,7 @@ main { max-width:1200px; margin:0 auto; padding:32px 24px; }
 /* ── PÓDIO TOP 3 ── */
 .podium { display:grid; grid-template-columns:1fr 1.2fr 1fr; gap:14px; margin-bottom:40px; align-items:end; }
 @media (max-width:720px) { .podium { grid-template-columns:1fr; } }
-.podium-spot { position:relative; border-radius:16px; padding:20px 16px; text-align:center; overflow:hidden; isolation:isolate; backdrop-filter:blur(8px); }
+.podium-spot { position:relative; border-radius:16px; padding:20px 16px; text-align:center; overflow:hidden; isolation:isolate; /* v2-perf removido: backdrop-filter:blur(8px) */; }
 .podium-spot::before {
   content:''; position:absolute; inset:-1px; border-radius:17px; padding:1px;
   background: conic-gradient(from var(--energy-angle, 0deg),
@@ -62,7 +65,7 @@ main { max-width:1200px; margin:0 auto; padding:32px 24px; }
     transparent 360deg);
   -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
   -webkit-mask-composite: xor; mask-composite: exclude;
-  animation: energyRotate 6s linear infinite;
+  animation: energyRotate 30s linear infinite; /* v2-perf: 6s → 30s */
   pointer-events:none; z-index:-1;
 }
 @property --energy-angle { syntax: '<angle>'; initial-value: 0deg; inherits: false; }
@@ -81,7 +84,7 @@ main { max-width:1200px; margin:0 auto; padding:32px 24px; }
 .podium-stats strong { color:var(--text-primary); font-weight:700; }
 
 /* ── TABELA ── */
-.ranking-table-wrap { background:linear-gradient(135deg, rgba(20,16,40,.85), rgba(15,10,30,.92)); border:1px solid var(--border); border-radius:16px; padding:6px; overflow:hidden; backdrop-filter:blur(8px); }
+.ranking-table-wrap { background:linear-gradient(135deg, rgba(20,16,40,.85), rgba(15,10,30,.92)); border:1px solid var(--border); border-radius:16px; padding:6px; overflow:hidden; /* v2-perf removido: backdrop-filter:blur(8px) */; }
 .ranking-table { width:100%; border-collapse:collapse; }
 .ranking-table thead th { padding:14px 12px; font-size:11px; color:var(--text-muted); text-transform:uppercase; letter-spacing:1px; text-align:left; border-bottom:1px solid var(--border); font-weight:700; }
 .ranking-table thead th.numeric { text-align:right; }
@@ -190,7 +193,7 @@ main { max-width:1200px; margin:0 auto; padding:32px 24px; }
   </section>
 </main>
 
-<div style="position:fixed;bottom:8px;right:12px;font-size:10px;color:rgba(250,204,21,.5);font-family:monospace;pointer-events:none;z-index:1;background:rgba(0,0,0,.4);padding:3px 8px;border-radius:4px;">ranking v1</div>
+<div style="position:fixed;bottom:8px;right:12px;font-size:10px;color:rgba(250,204,21,.5);font-family:monospace;pointer-events:none;z-index:1;background:rgba(0,0,0,.4);padding:3px 8px;border-radius:4px;">ranking v2-perf</div>
 
 <script>
 const API_BASE = 'https://gumax-backend-production.up.railway.app';
