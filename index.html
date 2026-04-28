@@ -2152,7 +2152,7 @@ footer {
 <!-- SEARCH & FILTERS -->
 <section class="search-section" id="marketplace">
   <!-- Marca visível pra confirmar versão deployada. -->
-  <div style="font-size: 10px; color: rgba(139,92,246,0.5); text-align: right; margin-bottom: 4px;">search v62-inspect-toast</div>
+  <div style="font-size: 10px; color: rgba(139,92,246,0.5); text-align: right; margin-bottom: 4px;">search v63-inspect-warn-url</div>
 
   <!-- BUFF-style category picker com SVG icons (Faca, Luvas, Rifle, ...).
        Clicar num modelo (ex: AK-47) filtra a grid e rola pra seção. -->
@@ -4686,9 +4686,20 @@ async function inspectInCS2() {
       });
     }
     if (r.ok && data?.inspectLink) {
-      console.log('✅ CAMINHO 2: API devolveu inspectLink, abrindo CS2');
-      console.log('URL:', data.inspectLink);
-      // (sem groupEnd)
+      // console.warn (não log) pra DevDiag capturar o URL exato no Console Errors dump.
+      // Se CS2 abre mas skin não carrega, o problema tá no formato desse URL —
+      // checar se tem S/M+A+D válidos ou placeholders (S0A0D0).
+      console.warn('✅ CAMINHO 2 (sucesso): URL final →', data.inspectLink);
+      console.warn('   source:', data.source, '| listingId:', data.listingId, '| assetId:', data.assetId);
+      // Validação local: se URL tem placeholders óbvios (S0A0, etc), avisa user
+      const hasZeros = /[SM]0|A0|D0/.test(data.inspectLink);
+      if (hasZeros) {
+        console.warn('🚨 URL TEM PLACEHOLDERS S/M/A/D = 0 — skin não vai carregar no jogo!');
+        showToast('Link inválido (placeholder). Mostrando Steam Market.');
+        const marketUrl = `https://steamcommunity.com/market/listings/730/${encodeURIComponent(skin.name)}`;
+        setTimeout(() => window.open(marketUrl, '_blank'), 800);
+        return;
+      }
       window.open(data.inspectLink, '_blank');
       return;
     }
