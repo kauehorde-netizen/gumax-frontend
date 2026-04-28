@@ -100,6 +100,7 @@ header { background: rgba(8,6,14,0.85); backdrop-filter: blur(20px); border-bott
 .lobby-card { background:var(--bg-elevated); border:1px solid var(--border); border-radius:14px; padding:16px; transition:transform .15s, border-color .15s; }
 .lobby-card:hover { transform:translateY(-2px); border-color:rgba(139,92,246,.4); }
 .lobby-card.full { border-color: rgba(34,211,238,.4); }
+.lobby-card.mine { border-color: rgba(250,204,21,.5); background:linear-gradient(135deg, var(--bg-elevated) 0%, rgba(250,204,21,.06) 100%); }
 .lobby-card.challenged { border-color: rgba(250,204,21,.5); animation:pulse 2s ease-in-out infinite; }
 @keyframes pulse { 0%,100% { box-shadow:0 0 0 0 rgba(250,204,21,.3); } 50% { box-shadow:0 0 0 8px rgba(250,204,21,0); } }
 .lobby-name { font-size:14px; font-weight:700; margin-bottom:10px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
@@ -240,7 +241,7 @@ header { background: rgba(8,6,14,0.85); backdrop-filter: blur(20px); border-bott
 // =================================================================
 // MARKER
 // =================================================================
-//   lobby v7-hero-banner+list-fix
+//   lobby v8-mine-shows-in-grid
 // =================================================================
 
 // API_BASE primeiro — assim mesmo se Firebase falhar, doLogin() funciona
@@ -382,9 +383,10 @@ function renderList(lobbies) {
   if (!lobbies.length) { grid.innerHTML = ''; empty.style.display = ''; updateStats([]); return; }
   empty.style.display = 'none';
 
-  // Filtra: não mostra meu próprio lobby na lista (já tá na sidebar)
-  const others = lobbies.filter(l => l.id !== _myLobbyId);
-  grid.innerHTML = others.map(l => renderLobbyCard(l)).join('');
+  // Mostra TODAS as salas (incluindo a do user) — sala dele ganha destaque "SUA SALA".
+  // Antes filtrava por _myLobbyId mas isso fazia parecer que sumia (race condition
+  // entre loadList e loadMyLobby), confundia user.
+  grid.innerHTML = lobbies.map(l => renderLobbyCard(l)).join('');
   updateStats(lobbies);
 }
 
@@ -394,15 +396,16 @@ function renderLobbyCard(lobby) {
     : `<div class="lobby-slot">·</div>`
   ).join('');
   const isFull = lobby.filled === 5;
-  const cls = lobby.status === 'challenged' ? 'challenged' : (isFull ? 'full' : '');
+  const isMine = lobby.id === _myLobbyId;
+  let cls = lobby.status === 'challenged' ? 'challenged' : (isFull ? 'full' : '');
+  if (isMine) cls += ' mine';
 
-  // Botão de ação varia de acordo com estado:
-  //   - Sala não cheia → "Entrar"
-  //   - Sala cheia + EU NÃO TENHO LOBBY → não posso desafiar (preciso de sala minha cheia também)
-  //   - Sala cheia + EU TENHO LOBBY CHEIO → "Desafiar"
-  //   - Sala em desafio → "Aguardando..."
+  // Botão de ação varia conforme estado E se é minha sala
   let actionHtml;
-  if (lobby.status === 'challenged') {
+  if (isMine) {
+    // Minha sala — só mostra info, controle real fica na sidebar (Sair/Encerrar)
+    actionHtml = `<button class="lobby-action btn-disabled" disabled>✓ Sua sala (${lobby.filled}/5)</button>`;
+  } else if (lobby.status === 'challenged') {
     actionHtml = `<button class="lobby-action btn-disabled" disabled>Em desafio…</button>`;
   } else if (isFull) {
     if (_myLobbyFilled === 5 && _myLobbyOwner) {
@@ -414,8 +417,13 @@ function renderLobbyCard(lobby) {
     actionHtml = `<button class="lobby-action btn-join" onclick="joinLobby('${lobby.id}')">Entrar (${lobby.filled}/5)</button>`;
   }
 
+  const badge = isMine
+    ? `<div style="position:absolute;top:-8px;right:10px;padding:3px 10px;background:linear-gradient(135deg,#facc15,#f97316);color:#0a0612;border-radius:12px;font-size:9px;font-weight:800;letter-spacing:.5px;">SUA SALA</div>`
+    : '';
+
   return `
-    <div class="lobby-card ${cls}">
+    <div class="lobby-card ${cls}" style="position:relative;">
+      ${badge}
       <div class="lobby-name">${escHtml(lobby.name)}</div>
       <div class="lobby-slots">${slots}</div>
       ${actionHtml}
