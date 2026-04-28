@@ -87,17 +87,19 @@ header { background: rgba(8,6,14,0.85); backdrop-filter: blur(20px); border-bott
 .league-name strong { font-weight:900; }
 
 /* ── LOGO EM VÍDEO (logogu.mp4) ──
-   O vídeo tem fundo preto sólido. Usamos mix-blend-mode:screen pra que pixels
-   pretos virem transparentes (screen blend: result = 1 - (1-base)*(1-blend)
-   → blend preto = base inalterada → preto vira transparente sobre o header).
-   Importante: o pai DEVE ter um background (mesmo que escuro) pra screen funcionar. */
+   O vídeo tem fundo preto sólido. Em vez de mix-blend-mode:screen (que falha
+   porque o header tem backdrop-filter → cria stacking context isolado e o
+   blend só vê o background do header, não o que tá ATRÁS dele), usamos um
+   SVG chromakey filter que converte luminância em alpha:
+     - pixel preto puro → alpha 0 (totalmente transparente, de verdade)
+     - pixel colorido brilhante → alpha 1 (totalmente opaco)
+   Resultado: alpha real, drop-shadow segue a forma do logo (não o retângulo). */
 .league-logo-video {
-  height: 38px;          /* ajusta a altura do logo no header */
+  height: 76px;           /* dobrado de 38px → 76px (user pediu 2x) */
   width: auto;
   display: block;
-  mix-blend-mode: screen; /* preto → transparente */
-  filter: drop-shadow(0 0 8px rgba(250,204,21,.25)); /* glow sutil amarelo */
-  pointer-events: none;   /* evita que o user pause o vídeo clicando */
+  filter: url(#logoChromaKey);  /* chromakey: preto vira alpha */
+  pointer-events: none;
 }
 
 /* ── Hero topo SLIM com efeito sutil moderno ── */
@@ -440,6 +442,26 @@ header { background: rgba(8,6,14,0.85); backdrop-filter: blur(20px); border-bott
 </head>
 <body>
 
+<!-- SVG filter pra chromakey do logo em vídeo.
+     Step 1: copia RGB inalterado, recalcula alpha como soma ponderada do brilho
+     Step 2: aplica curva agressiva (slope 4, intercept -0.4) — preto puro vira
+             alpha negativo (clamp 0), tudo claro vira alpha alto (clamp 1).
+     Output: vídeo com fundo PRETO virando transparência REAL. -->
+<svg width="0" height="0" style="position:absolute;pointer-events:none;" aria-hidden="true">
+  <defs>
+    <filter id="logoChromaKey" color-interpolation-filters="sRGB">
+      <feColorMatrix type="matrix" values="
+        1 0 0 0 0
+        0 1 0 0 0
+        0 0 1 0 0
+        0.4 0.4 0.4 0 0"/>
+      <feComponentTransfer>
+        <feFuncA type="linear" slope="4" intercept="-0.4"/>
+      </feComponentTransfer>
+    </filter>
+  </defs>
+</svg>
+
 <!-- Background dinâmico — 3 blobs flutuantes em loop infinito.
      Position fixed, atrás de todo conteúdo, sem custo de interação. -->
 <div class="bg-orbs" aria-hidden="true">
@@ -455,7 +477,7 @@ header { background: rgba(8,6,14,0.85); backdrop-filter: blur(20px); border-bott
       <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M19 12H5M12 19l-7-7 7-7"/></svg>
       Voltar ao Mercado
     </a>
-    <div class="league-brand" title="lobby v17-tdz-fix-steamcb">
+    <div class="league-brand" title="lobby v18-chromakey-logo-2x">
       <!-- Logo em vídeo (fundo preto fica transparente via mix-blend-mode:screen).
            muted+playsinline são obrigatórios pra autoplay funcionar nos browsers. -->
       <video class="league-logo-video" src="logogu.mp4" autoplay loop muted playsinline preload="auto"></video>
@@ -626,13 +648,13 @@ header { background: rgba(8,6,14,0.85); backdrop-filter: blur(20px); border-bott
 <div class="toast" id="toast"></div>
 
 <!-- Marker visível pra confirmar versão deployada — apaga após v testar -->
-<div style="position:fixed;bottom:8px;right:12px;font-size:10px;color:rgba(250,204,21,.7);font-family:monospace;pointer-events:none;z-index:1;background:rgba(0,0,0,.6);padding:3px 8px;border-radius:4px;">lobby v17-tdz-fix-steamcb</div>
+<div style="position:fixed;bottom:8px;right:12px;font-size:10px;color:rgba(250,204,21,.7);font-family:monospace;pointer-events:none;z-index:1;background:rgba(0,0,0,.6);padding:3px 8px;border-radius:4px;">lobby v18-chromakey-logo-2x</div>
 
 <script>
 // =================================================================
 // MARKER
 // =================================================================
-//   lobby v17-tdz-fix-steamcb
+//   lobby v18-chromakey-logo-2x
 // =================================================================
 
 // API_BASE primeiro — assim mesmo se Firebase falhar, doLogin() funciona
@@ -698,6 +720,10 @@ function toast(msg, type = '') {
 // Sessão Firebase persiste em localStorage por default → quando user loga em
 // index.html, lobbies.html já pega via onAuthStateChanged sem precisar relogar.
 if (_firebaseReady) auth.onAuthStateChanged(async user => {
+  // DIAGNÓSTICO — confirma que o v18 está rodando e qual o estado de auth.
+  // Se não aparecer no console, o browser tá servindo HTML cacheado (Ctrl+Shift+R).
+  console.log('[lobby v18] auth state:', user ? `LOGGED IN uid=${user.uid} name=${user.displayName||'?'}` : 'NOT LOGGED IN');
+
   const loginBtn = document.getElementById('headerLoginBtn');
   const profileArea = document.getElementById('headerProfileArea');
   const createBtn = document.getElementById('btnCreateLobby');
