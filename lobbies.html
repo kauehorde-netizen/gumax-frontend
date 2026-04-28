@@ -41,23 +41,29 @@ body {
   position:relative;
   overflow-x:hidden;
 }
-/* Camada de blobs flutuando — usa pseudo no body via wrapper porque pseudo
-   no body nem sempre funciona bem em scroll. Faço com div .bg-orbs. */
-.bg-orbs { position:fixed; inset:0; pointer-events:none; z-index:0; overflow:hidden; }
-.bg-orbs .orb { position:absolute; border-radius:50%; filter:blur(80px); opacity:.35; will-change:transform; }
-.bg-orbs .orb-purple { width:500px; height:500px; background:radial-gradient(circle, rgba(139,92,246,.6), transparent 70%); top:-15%; left:-10%; animation:orbDrift1 24s ease-in-out infinite alternate; }
-.bg-orbs .orb-cyan   { width:420px; height:420px; background:radial-gradient(circle, rgba(34,211,238,.45), transparent 70%); top:30%; right:-12%; animation:orbDrift2 28s ease-in-out infinite alternate; }
-.bg-orbs .orb-yellow { width:380px; height:380px; background:radial-gradient(circle, rgba(250,204,21,.3), transparent 70%); bottom:-10%; left:25%; animation:orbDrift3 32s ease-in-out infinite alternate; }
-@keyframes orbDrift1 { from { transform:translate(0,0) scale(1); } to { transform:translate(80px, 60px) scale(1.15); } }
-@keyframes orbDrift2 { from { transform:translate(0,0) scale(1); } to { transform:translate(-70px, 90px) scale(.9); } }
-@keyframes orbDrift3 { from { transform:translate(0,0) scale(1); } to { transform:translate(60px, -50px) scale(1.1); } }
+/* Camada de blobs flutuando — orbs com blur são caros (blur cost ≈ radius²).
+   v28-perf: reduzi blur 80→32px, sizes ~30%, removi scale (só translate),
+   slowed animation 24-32s → 50-65s. Resultado: ~10x menos cost, mantém vibe.
+   contain: paint isola repaint do main flow. */
+.bg-orbs { position:fixed; inset:0; pointer-events:none; z-index:0; overflow:hidden; contain:strict; }
+.bg-orbs .orb { position:absolute; border-radius:50%; filter:blur(32px); opacity:.32; will-change:transform; transform:translateZ(0); }
+.bg-orbs .orb-purple { width:340px; height:340px; background:radial-gradient(circle, rgba(139,92,246,.55), transparent 70%); top:-10%; left:-8%; animation:orbDrift1 50s ease-in-out infinite alternate; }
+.bg-orbs .orb-cyan   { width:300px; height:300px; background:radial-gradient(circle, rgba(34,211,238,.4), transparent 70%); top:30%; right:-8%; animation:orbDrift2 58s ease-in-out infinite alternate; }
+.bg-orbs .orb-yellow { width:280px; height:280px; background:radial-gradient(circle, rgba(250,204,21,.28), transparent 70%); bottom:-8%; left:25%; animation:orbDrift3 65s ease-in-out infinite alternate; }
+@keyframes orbDrift1 { from { transform:translate3d(0,0,0); } to { transform:translate3d(60px, 40px, 0); } }
+@keyframes orbDrift2 { from { transform:translate3d(0,0,0); } to { transform:translate3d(-50px, 60px, 0); } }
+@keyframes orbDrift3 { from { transform:translate3d(0,0,0); } to { transform:translate3d(40px, -35px, 0); } }
+@media (prefers-reduced-motion: reduce) {
+  .bg-orbs .orb { animation: none; }
+}
 /* Garante que conteúdo fica acima dos orbs */
 header, main, .modal-backdrop, .toast { position:relative; z-index:1; }
 header { z-index:100; }
 .modal-backdrop { z-index:200; }
 
 /* ── Header padrão do site (mesma estética do index/rifas) ── */
-header { background: rgba(8,6,14,0.85); backdrop-filter: blur(20px); border-bottom: 1px solid var(--border); position: sticky; top: 0; z-index: 100; }
+/* v28-perf: backdrop-filter blur 20→10px (perceptualmente igual, custo ~4x menor). */
+header { background: rgba(8,6,14,0.92); backdrop-filter: blur(10px); border-bottom: 1px solid var(--border); position: sticky; top: 0; z-index: 100; will-change:auto; }
 .header-content { max-width: 1400px; margin: 0 auto; padding: 12px 24px; display: flex; align-items: center; justify-content: space-between; gap: 24px; }
 .header-content .logo { width: 80px; height: auto; cursor: pointer; }
 .header-content nav { display: flex; gap: 4px; flex: 1; justify-content: center; }
@@ -117,7 +123,9 @@ header { background: rgba(8,6,14,0.85); backdrop-filter: blur(20px); border-bott
   box-shadow: 0 0 20px rgba(139,92,246,.08), inset 0 1px 0 rgba(255,255,255,.03);
 }
 
-/* Linha de "shine" deslizando horizontalmente — bem sutil */
+/* Linha de "shine" deslizando horizontalmente — bem sutil
+   v28-perf: 8s → 24s (3x menos repaint). Background-position animation
+   pinta toda área do hero a cada frame; period maior alivia. */
 .league-hero::before {
   content:''; position:absolute; inset:0; pointer-events:none; z-index:0;
   background: linear-gradient(110deg,
@@ -127,10 +135,10 @@ header { background: rgba(8,6,14,0.85); backdrop-filter: blur(20px); border-bott
     rgba(139,92,246,.06) 55%,
     transparent 70%);
   background-size: 250% 100%;
-  animation: heroShine 8s linear infinite;
+  animation: heroShine 24s linear infinite;
 }
 
-/* Border bottom com gradient pulsando */
+/* Border bottom com gradient pulsando — 4s → 6s, ainda perceptível */
 .league-hero::after {
   content:''; position:absolute; left:10%; right:10%; bottom:0; height:1px;
   background: linear-gradient(90deg,
@@ -138,8 +146,11 @@ header { background: rgba(8,6,14,0.85); backdrop-filter: blur(20px); border-bott
     rgba(250,204,21,.4),
     rgba(139,92,246,.4),
     transparent);
-  animation: heroBorderPulse 4s ease-in-out infinite alternate;
+  animation: heroBorderPulse 6s ease-in-out infinite alternate;
   z-index:0;
+}
+@media (prefers-reduced-motion: reduce) {
+  .league-hero::before, .league-hero::after { animation: none; }
 }
 
 .league-hero > * { position:relative; z-index:1; }
@@ -180,13 +191,15 @@ header { background: rgba(8,6,14,0.85); backdrop-filter: blur(20px); border-bott
    ═══════════════════════════════════════════════════════════════ */
 .energy-card {
   position:relative;
-  background:linear-gradient(135deg, rgba(20,16,40,.85), rgba(15,10,30,.92));
+  background:linear-gradient(135deg, rgba(20,16,40,.92), rgba(15,10,30,.96));
   border-radius:16px;
   padding:20px 18px;
   overflow:hidden;
   isolation:isolate;
   transition:transform .25s ease;
-  backdrop-filter:blur(8px);
+  /* v28-perf: removi backdrop-filter:blur(8px) — caro e quase imperceptível
+     porque o background-gradient já é opaco o suficiente. */
+  contain:layout style paint;
 }
 .energy-card:hover { transform:translateY(-4px); }
 
@@ -202,12 +215,14 @@ header { background: rgba(8,6,14,0.85); backdrop-filter: blur(20px); border-bott
   -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
   -webkit-mask-composite: xor;
           mask-composite: exclude;
-  animation: energyRotate 8s linear infinite;
+  animation: energyRotate 30s linear infinite;
   pointer-events:none;
   z-index:-1;
 }
 
-/* Camada 2: LASER ORBITAL — ponto bright girando com glow */
+/* Camada 2: LASER ORBITAL — ponto bright girando com glow.
+   v28-perf: 3.6s → 14s (ainda visível, mas 4x menos repaint), drop-shadow
+   reduzido pra 1 layer (2 layers de drop-shadow é caro). */
 .energy-card::after {
   content:''; position:absolute; inset:-2px; border-radius:18px; padding:2px;
   background: conic-gradient(from var(--laser-angle, 0deg),
@@ -219,15 +234,19 @@ header { background: rgba(8,6,14,0.85); backdrop-filter: blur(20px); border-bott
   -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
   -webkit-mask-composite: xor;
           mask-composite: exclude;
-  animation: laserOrbit 3.6s linear infinite;
+  animation: laserOrbit 14s linear infinite;
   pointer-events:none;
   z-index:0;
-  filter: drop-shadow(0 0 6px var(--laser-color, rgba(250,204,21,.9)))
-          drop-shadow(0 0 12px var(--laser-color, rgba(250,204,21,.9)));
+  filter: drop-shadow(0 0 8px var(--laser-color, rgba(250,204,21,.7)));
 }
 
-.energy-card:hover::before { animation-duration: 3s; }
-.energy-card:hover::after  { animation-duration: 1.6s; }
+/* Hover: acelera APENAS quando user passa o mouse no card específico —
+   só 1 card animado mais rápido por vez, custo localizado. */
+.energy-card:hover::before { animation-duration: 8s; }
+.energy-card:hover::after  { animation-duration: 5s; }
+@media (prefers-reduced-motion: reduce) {
+  .energy-card::before, .energy-card::after { animation: none; }
+}
 
 @property --energy-angle { syntax: '<angle>'; initial-value: 0deg; inherits: false; }
 @property --laser-angle  { syntax: '<angle>'; initial-value: 0deg; inherits: false; }
@@ -377,10 +396,10 @@ header { background: rgba(8,6,14,0.85); backdrop-filter: blur(20px); border-bott
     rgba(139,92,246,.4)   360deg);
   -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
   -webkit-mask-composite: xor; mask-composite: exclude;
-  animation: energyRotate 10s linear infinite;
+  animation: energyRotate 30s linear infinite; /* v28-perf: 10s → 30s */
   pointer-events:none; z-index:-1;
 }
-/* Camada 2: laser orbital */
+/* Camada 2: laser orbital — v28-perf: 4.4s → 14s, 1 drop-shadow só. */
 .my-lobby-card::after {
   content:''; position:absolute; inset:-2px; border-radius:16px; padding:2px;
   background: conic-gradient(from var(--laser-angle, 0deg),
@@ -391,9 +410,9 @@ header { background: rgba(8,6,14,0.85); backdrop-filter: blur(20px); border-bott
     var(--laser-color) 360deg);
   -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
   -webkit-mask-composite: xor; mask-composite: exclude;
-  animation: laserOrbit 4.4s linear infinite;
+  animation: laserOrbit 14s linear infinite;
   pointer-events:none; z-index:0;
-  filter: drop-shadow(0 0 4px var(--laser-color)) drop-shadow(0 0 10px var(--laser-color));
+  filter: drop-shadow(0 0 6px var(--laser-color));
 }
 .my-lobby-card h3 { font-size:13px; color:var(--text-muted); text-transform:uppercase; letter-spacing:.5px; margin-bottom:12px; }
 .slot-row { display:flex; gap:8px; align-items:center; padding:6px 0; border-bottom:1px solid rgba(255,255,255,.04); }
@@ -519,11 +538,11 @@ header { background: rgba(8,6,14,0.85); backdrop-filter: blur(20px); border-bott
     rgba(139,92,246,.4)  360deg);
   -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
   -webkit-mask-composite: xor; mask-composite: exclude;
-  animation: energyRotate 10s linear infinite;
+  animation: energyRotate 30s linear infinite; /* v28-perf: 10s → 30s */
   pointer-events:none; z-index:-1;
 }
 
-/* Camada 2: laser orbital brilhante */
+/* Camada 2: laser orbital brilhante — v28-perf: 4s → 14s + 1 drop-shadow */
 .lobby-card::after {
   content:''; position:absolute; inset:-2px; border-radius:16px; padding:2px;
   background: conic-gradient(from var(--laser-angle, 0deg),
@@ -534,24 +553,29 @@ header { background: rgba(8,6,14,0.85); backdrop-filter: blur(20px); border-bott
     var(--laser-color) 360deg);
   -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
   -webkit-mask-composite: xor; mask-composite: exclude;
-  animation: laserOrbit 4s linear infinite;
+  animation: laserOrbit 14s linear infinite;
   pointer-events:none; z-index:0;
-  filter: drop-shadow(0 0 4px var(--laser-color)) drop-shadow(0 0 10px var(--laser-color));
+  filter: drop-shadow(0 0 6px var(--laser-color));
 }
 
-.lobby-card:hover::before { animation-duration:4s; }
-.lobby-card:hover::after  { animation-duration:2s; }
+/* Hover acelera só o card sob mouse (custo localizado, 1 card por vez) */
+.lobby-card:hover::before { animation-duration:10s; }
+.lobby-card:hover::after  { animation-duration:5s; }
 
 .lobby-card.full         { --laser-color: rgba(34,211,238,1); }   /* ciano */
-.lobby-card.full::after  { animation-duration:3s; }
+.lobby-card.full::after  { animation-duration:9s; }
 .lobby-card.mine {
   background:linear-gradient(135deg, rgba(26,15,46,.9) 0%, rgba(40,28,8,.6) 100%);
   --laser-color: rgba(250,204,21,1);    /* dourado */
 }
-.lobby-card.mine::after  { animation-duration:2.4s; }
-.lobby-card.challenged   { --laser-color: rgba(239,68,68,1); animation:pulse 2.4s ease-in-out infinite; }
-.lobby-card.challenged::after { animation-duration:1.4s; }   /* laser ainda mais rápido pra urgência */
+.lobby-card.mine::after  { animation-duration:8s; }
+.lobby-card.challenged   { --laser-color: rgba(239,68,68,1); animation:pulse 4s ease-in-out infinite; }
+.lobby-card.challenged::after { animation-duration:5s; }   /* laser mais rápido pra urgência mas controlado */
 @keyframes pulse { 0%,100% { box-shadow:0 0 0 0 rgba(250,204,21,.4); } 50% { box-shadow:0 0 0 14px rgba(250,204,21,0); } }
+@media (prefers-reduced-motion: reduce) {
+  .lobby-card::before, .lobby-card::after, .my-lobby-card::before, .my-lobby-card::after,
+  .lobby-card.challenged { animation: none; }
+}
 .lobby-name { font-size:14px; font-weight:700; margin-bottom:10px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
 .lobby-slots { display:flex; gap:5px; margin-bottom:14px; }
 .lobby-slot { flex:1; aspect-ratio:1; border-radius:50%; background:rgba(139,92,246,.08); border:1.5px dashed rgba(139,92,246,.25); display:flex; align-items:center; justify-content:center; font-size:10px; color:var(--text-muted); }
@@ -666,7 +690,7 @@ header { background: rgba(8,6,14,0.85); backdrop-filter: blur(20px); border-bott
       <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M19 12H5M12 19l-7-7 7-7"/></svg>
       Voltar ao Mercado
     </a>
-    <div class="league-brand" title="lobby v27-chat-lobby">
+    <div class="league-brand" title="lobby v28-perf">
       <!-- Logo em vídeo (fundo preto fica transparente via mix-blend-mode:screen).
            muted+playsinline são obrigatórios pra autoplay funcionar nos browsers. -->
       <video class="league-logo-video" src="logogu.mp4" autoplay loop muted playsinline preload="auto"></video>
@@ -889,13 +913,13 @@ header { background: rgba(8,6,14,0.85); backdrop-filter: blur(20px); border-bott
 <div class="toast" id="toast"></div>
 
 <!-- Marker discreto persistente (canto inferior direito) — pra dev/debug -->
-<div style="position:fixed;bottom:8px;right:12px;font-size:10px;color:rgba(250,204,21,.5);font-family:monospace;pointer-events:none;z-index:1;background:rgba(0,0,0,.4);padding:3px 8px;border-radius:4px;">lobby v27-chat-lobby</div>
+<div style="position:fixed;bottom:8px;right:12px;font-size:10px;color:rgba(250,204,21,.5);font-family:monospace;pointer-events:none;z-index:1;background:rgba(0,0,0,.4);padding:3px 8px;border-radius:4px;">lobby v28-perf</div>
 
 <script>
 // =================================================================
 // MARKER
 // =================================================================
-//   lobby v27-chat-lobby
+//   lobby v28-perf
 //   - Subcollection lobbies/{id}/chat com onSnapshot real-time
 //   - UI compacta na sidebar (fora de myLobbyContent pra não morrer no poll)
 //   - Rate limit 1.5s + maxlength 200 + rules robustas (uid==auth, member-only)
@@ -1027,19 +1051,30 @@ async function doLogout() {
   location.href = 'index.html';
 }
 
-// ─── Polling 3s — rodando SEMPRE (lista pública) ───
+// ─── Polling 5s — rodando SEMPRE (lista pública) ───
+// v28-perf: 3s → 5s. Mudança imperceptível pro user mas reduz 40% das requisições.
+// Para quando aba vai pra background (visibilitychange) — economiza CPU em laptops.
 // loadList é público (sem auth); loadMyLobby só dispara se user logado.
 let _pollTimer = null;
 let _lastLobbiesData = null; // cache pra re-render quando auth state muda
+let _lastListSignature = ''; // hash dos dados pra evitar re-render se nada mudou
+const POLL_INTERVAL_MS = 5000;
+
 function startPolling() {
   if (_pollTimer) clearInterval(_pollTimer);
   loadList();
   if (_idToken) loadMyLobby();
-  _pollTimer = setInterval(() => {
-    loadList();
-    if (_idToken && _myLobbyId) loadMyLobby();
-  }, 3000);
+  _pollTimer = setInterval(pollTick, POLL_INTERVAL_MS);
 }
+function pollTick() {
+  if (document.hidden) return; // aba em background → skip
+  loadList();
+  if (_idToken && _myLobbyId) loadMyLobby();
+}
+// Quando a aba volta a ficar visível, força refresh imediato pra atualizar UI
+document.addEventListener('visibilitychange', () => {
+  if (!document.hidden) pollTick();
+});
 
 // ─── Listar lobbies (PÚBLICO — não precisa de auth) ───
 async function loadList() {
@@ -1057,12 +1092,21 @@ async function loadList() {
 function renderList(lobbies) {
   const grid = document.getElementById('lobbiesGrid');
   const empty = document.getElementById('lobbiesEmpty');
+
+  // v28-perf: gera signature dos dados que afetam o render. Se igual ao último,
+  // skip o innerHTML (evita reflow + paint do grid inteiro a cada 5s).
+  // Inclui _myLobbyId/Filled/Owner porque esses afetam botões dos cards.
+  const sig = JSON.stringify([
+    _myLobbyId, _myLobbyFilled, _myLobbyOwner, !!_user,
+    lobbies.map(l => [l.id, l.name, l.status, l.filled, (l.slots||[]).map(s => s ? s.uid : null)])
+  ]);
+  if (sig === _lastListSignature) return; // nada mudou → skip render
+  _lastListSignature = sig;
+
   if (!lobbies.length) { grid.innerHTML = ''; empty.style.display = ''; updateStats([]); return; }
   empty.style.display = 'none';
 
   // Mostra TODAS as salas (incluindo a do user) — sala dele ganha destaque "SUA SALA".
-  // Antes filtrava por _myLobbyId mas isso fazia parecer que sumia (race condition
-  // entre loadList e loadMyLobby), confundia user.
   grid.innerHTML = lobbies.map(l => renderLobbyCard(l)).join('');
   updateStats(lobbies);
 }
@@ -1196,9 +1240,15 @@ async function loadMyLobby() {
   }
 }
 
+// v28-perf: memoization signature pra evitar re-render do myLobbyContent
+// quando dados não mudaram (sem reflow do DOM, mantém scroll/foco).
+let _myLobbySignature = '';
+
 function renderMyLobby(lobby) {
   const container = document.getElementById('myLobbyContent');
   if (!lobby) {
+    if (_myLobbySignature === '__null__') return; // já tá no estado vazio
+    _myLobbySignature = '__null__';
     _myLobbyId = null; _myLobbyFilled = 0; _myLobbyOwner = false;
     // Sai do chat (cleanup do listener) — user não tá mais em sala nenhuma.
     teardownChat();
@@ -1234,6 +1284,20 @@ function renderMyLobby(lobby) {
     location.href = `match.html?id=${lobby.matchId}`;
     return;
   }
+
+  // v28-perf: signature do que afeta o render (slots, status, banner, owner).
+  // Se igual ao último render, pula tudo abaixo (innerHTML + fetchPlayerStats).
+  // Setup do chat ainda dispara (idempotente) por segurança.
+  const sig = JSON.stringify([
+    lobby.id, lobby.name, lobby.status, lobby.challengedBy || '', lobby.challengeTo || '',
+    _myLobbyOwner,
+    (lobby.slots || []).map(s => s ? [s.uid, s.name, s.steamId] : null)
+  ]);
+  if (sig === _myLobbySignature) {
+    setupChat(lobby.id); // idempotente — só re-cria listener se mudou de sala
+    return;
+  }
+  _myLobbySignature = sig;
 
   // Render slots primeiro com placeholders, depois faz batch fetch e re-renderiza
   // com level/KDR/streak. Assim a UI não trava esperando a API.
