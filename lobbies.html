@@ -254,129 +254,87 @@ header { background: rgba(8,6,14,0.85); backdrop-filter: blur(20px); border-bott
   transform-origin: center;
 }
 
-/* ━━━ PASSO 1 — CRIE SUA SALA ━━━
-   História de 4s:
-     0-25%  : caixa vazia se materializa (scale 0 → 1, fade in)
-     25-45% : sinal de + aparece dentro (scale 0 → 1.3 → 1 elastic)
-     45-70% : pulso de "criado!" (escala suave + glow)
-     70-100%: prepara reset (mantém visível, próximo loop começa) */
-.story-create .sc-box {
-  animation: storyCreateBox 4s ease-in-out infinite;
+/* ═══ ANIMAÇÕES MODERNAS — movimento CONTÍNUO único, sem cortes ═══
+   Princípios:
+     - Uma única animação por ícone (não múltiplas fases)
+     - Easing linear pra rotação (movimento orgânico)
+     - Breathing pra escala (1 ↔ 1.05, suavíssimo)
+     - Stroke drawing pra elementos lineares (marcador correndo)
+     - Glow pulse contínuo, não phase-based
+   Resultado: sutil, premium, NÃO parece GIF dos anos 2000. */
+
+/* ━━━ PASSO 1 — Box estática + marker correndo na borda + plus pulsando luz ━━━ */
+.story-create .sc-box rect {
+  stroke-dasharray: 12 70;
+  animation: scBoxTrace 5s linear infinite;
 }
 .story-create .sc-plus {
-  animation: storyCreatePlus 4s ease-in-out infinite;
+  animation: scPlusBreath 4s ease-in-out infinite;
 }
-@keyframes storyCreateBox {
-  0%, 100% { transform: scale(.4); opacity: 0; }
-  20%      { transform: scale(1.05); opacity: 1; }
-  25%, 95% { transform: scale(1); opacity: 1; }
-}
-@keyframes storyCreatePlus {
-  0%, 30%   { transform: scale(0); opacity: 0; }
-  40%       { transform: scale(1.4); opacity: 1; }
-  50%, 65%  { transform: scale(1); opacity: 1; }
-  70%       { transform: scale(1.15); opacity: 1; filter: drop-shadow(0 0 6px currentColor); }
-  85%, 100% { transform: scale(1); opacity: 1; filter: none; }
+@keyframes scBoxTrace { to { stroke-dashoffset: -82; } }
+@keyframes scPlusBreath {
+  0%, 100% { opacity: .65; }
+  50%      { opacity: 1; filter: drop-shadow(0 0 6px currentColor); }
 }
 
-/* ━━━ PASSO 2 — CONVIDE 4 AMIGOS ━━━
-   História de 4s:
-     Pessoa central fica visível e estável o tempo todo.
-     3 ondas de convite emanam em sequência (delay 0s, 1.3s, 2.6s),
-     cada uma cresce de raio 6 → 14 e fade out — convites broadcasting */
-.story-invite .si-ripple {
-  animation: storyInviteRipple 3.5s ease-out infinite;
+/* ━━━ PASSO 2 — Pessoa estável + UMA onda emanando devagar ━━━
+   Esconde 2 das 3 ondas e usa só uma com loop bem suave. */
+.story-invite .si-ripple-2,
+.story-invite .si-ripple-3 { display: none; }
+.story-invite .si-ripple-1 {
+  animation: siRippleSlow 3.5s ease-out infinite;
   stroke-width: 1.3;
 }
-.story-invite .si-ripple-1 { animation-delay: 0s; }
-.story-invite .si-ripple-2 { animation-delay: 1.2s; }
-.story-invite .si-ripple-3 { animation-delay: 2.4s; }
-@keyframes storyInviteRipple {
+@keyframes siRippleSlow {
   0%   { transform: scale(.5); stroke-opacity: .9; }
-  60%  { transform: scale(1.6); stroke-opacity: .4; }
-  100% { transform: scale(2.2); stroke-opacity: 0; }
+  100% { transform: scale(2.4); stroke-opacity: 0; }
 }
-/* Pessoa também respira sutilmente */
-.story-invite .si-person {
-  animation: storyInvitePerson 4s ease-in-out infinite;
-}
-@keyframes storyInvitePerson {
-  0%, 100% { transform: scale(1); }
-  50%      { transform: scale(1.05); }
+.story-invite .si-person {  /* pessoa fica TOTALMENTE estável (sem breathing) */
+  animation: none;
 }
 
-/* ━━━ PASSO 3 — DESAFIE OUTRA SALA ━━━
-   História de 4s:
-     0-30% : espadas afastadas (translate -3px / +3px)
-     30-50%: convergem pro centro (translate 0)
-     45-55%: CLASH — faísca aparece, espadas tremem brevemente
-     55-100%: espadas retraem, faísca some, prepara próximo clash */
-.story-duel .sd-sword-left {
-  animation: swordLeft 4s ease-in-out infinite;
-}
+/* ━━━ PASSO 3 — Espadas estáticas + glow no ponto de contato ━━━
+   Sem translação (espadas permanecem cruzadas no X). Só o spark central
+   respira sutilmente, sugerindo "tensão" do duelo iminente. */
+.story-duel .sd-sword-left,
 .story-duel .sd-sword-right {
-  animation: swordRight 4s ease-in-out infinite;
+  animation: none;            /* espadas paradas */
 }
 .story-duel .sd-spark {
-  animation: swordSpark 4s ease-in-out infinite;
+  opacity: .55;               /* sempre visível, só pulsa intensidade */
+  animation: sdSparkBreath 3.5s ease-in-out infinite;
 }
-@keyframes swordLeft {
-  0%, 100%  { transform: translate(-3px, 2px) rotate(-3deg); }
-  35%, 50%  { transform: translate(0, 0) rotate(0deg); }
-  45%       { transform: translate(1px, -1px) rotate(2deg); }   /* tremor do impacto */
-  70%       { transform: translate(-2px, 1px) rotate(-2deg); }
-}
-@keyframes swordRight {
-  0%, 100%  { transform: translate(3px, 2px) rotate(3deg); }
-  35%, 50%  { transform: translate(0, 0) rotate(0deg); }
-  45%       { transform: translate(-1px, -1px) rotate(-2deg); }
-  70%       { transform: translate(2px, 1px) rotate(2deg); }
-}
-@keyframes swordSpark {
-  0%, 38%, 62%, 100% { opacity: 0; transform: scale(.4) rotate(0deg); }
-  42%, 50%           { opacity: 1; transform: scale(1.3) rotate(45deg); }
-  56%                { opacity: .6; transform: scale(.9) rotate(90deg); }
+@keyframes sdSparkBreath {
+  0%, 100% { opacity: .25; transform: scale(.7); }
+  50%      { opacity: .85; transform: scale(1.15); filter: drop-shadow(0 0 4px currentColor); }
 }
 
-/* ━━━ PASSO 4 — JOGUE + RANKING ━━━
-   História de 4s:
-     Anel externo + ticks giram devagar (8s pra 360° — meio loop por loop de 4s)
-     Centro pulsa "acquiring lock" → encolhe forte (LOCKED) → flash do tiro → relaxa */
-.story-aim .sa-outer, .story-aim .sa-ticks {
-  animation: aimRotate 8s linear infinite;
+/* ━━━ PASSO 4 — Anel rotação contínua lenta + centro respira ━━━
+   Movimento de relógio (linear constante), sem mudança brusca. */
+.story-aim .sa-outer,
+.story-aim .sa-ticks {
+  animation: saRotateSlow 12s linear infinite;
 }
 .story-aim .sa-inner {
-  animation: aimLock 4s ease-in-out infinite;
+  animation: saInnerBreath 4s ease-in-out infinite;
 }
-.story-aim .sa-shot {
-  animation: aimShot 4s ease-in-out infinite;
-}
-@keyframes aimRotate {
-  to { transform: rotate(360deg); }
-}
-@keyframes aimLock {
-  0%, 100%  { transform: scale(1); stroke-opacity: 1; }
-  30%       { transform: scale(1.15); stroke-opacity: .7; }   /* respira procurando */
-  45%       { transform: scale(.45); stroke-opacity: 1; }     /* LOCKED — encolhe forte */
-  55%       { transform: scale(.45); stroke-opacity: 1; }     /* mantém locked */
-  70%       { transform: scale(1.2); stroke-opacity: .5; }    /* expande pós-tiro */
-  85%       { transform: scale(1); stroke-opacity: 1; }
-}
-@keyframes aimShot {
-  0%, 50%, 70%, 100% { opacity: 0; transform: scale(.3); }
-  55%, 60%           { opacity: 1; transform: scale(2.2); }   /* flash do tiro */
+.story-aim .sa-shot { display: none; }   /* removido — flash quebrava o tom */
+@keyframes saRotateSlow { to { transform: rotate(360deg); } }
+@keyframes saInnerBreath {
+  0%, 100% { transform: scale(.92); stroke-opacity: .85; }
+  50%      { transform: scale(1.08); stroke-opacity: 1; filter: drop-shadow(0 0 4px currentColor); }
 }
 
-/* Halo glow atrás do ícone — grande + pulsa */
+/* Halo glow atrás do ícone — sutil, nunca chega no máximo */
 .step-card .step-icon::after {
-  content:''; position:absolute; inset:-25px; border-radius:36px;
-  background:radial-gradient(circle, rgba(139,92,246,.55), transparent 65%);
-  filter:blur(18px); z-index:0;
-  animation: iconGlowWild 2.8s ease-in-out infinite;
+  content:''; position:absolute; inset:-15px; border-radius:28px;
+  background:radial-gradient(circle, rgba(139,92,246,.4), transparent 70%);
+  filter:blur(12px); z-index:0;
+  animation: iconGlowBreath 5s ease-in-out infinite;
 }
-@keyframes iconGlowWild {
-  0%, 100% { opacity:.35; transform:scale(.85); }
-  50%      { opacity:1; transform:scale(1.6); }
+@keyframes iconGlowBreath {
+  0%, 100% { opacity:.4; transform:scale(.9); }
+  50%      { opacity:.75; transform:scale(1.15); }
 }
 
 /* Cores e laser por step */
@@ -388,9 +346,9 @@ header { background: rgba(8,6,14,0.85); backdrop-filter: blur(20px); border-bott
 .step-card[data-color="cyan"]   { --laser-color: rgba(34,211,238,1); }
 .step-card[data-color="yellow"] { --laser-color: rgba(250,204,21,1); }
 .step-card[data-color="red"]    { --laser-color: rgba(239,68,68,1); }
-.step-card[data-color="cyan"]   .step-icon::after { background:radial-gradient(circle, rgba(34,211,238,.55), transparent 65%); }
-.step-card[data-color="yellow"] .step-icon::after { background:radial-gradient(circle, rgba(250,204,21,.55), transparent 65%); }
-.step-card[data-color="red"]    .step-icon::after { background:radial-gradient(circle, rgba(239,68,68,.55), transparent 65%); }
+.step-card[data-color="cyan"]   .step-icon::after { background:radial-gradient(circle, rgba(34,211,238,.4), transparent 70%); }
+.step-card[data-color="yellow"] .step-icon::after { background:radial-gradient(circle, rgba(250,204,21,.4), transparent 70%); }
+.step-card[data-color="red"]    .step-icon::after { background:radial-gradient(circle, rgba(239,68,68,.4), transparent 70%); }
 
 /* ── Layout principal — sidebar esquerda + grid à direita, mais pra baixo ── */
 .lobby-shell { display:grid; grid-template-columns: 320px 1fr; gap:28px; padding:36px 28px; max-width:1400px; margin:0 auto; }
@@ -675,7 +633,7 @@ header { background: rgba(8,6,14,0.85); backdrop-filter: blur(20px); border-bott
       <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M19 12H5M12 19l-7-7 7-7"/></svg>
       Voltar ao Mercado
     </a>
-    <div class="league-brand" title="lobby v24-level-kdr">
+    <div class="league-brand" title="lobby v25-modern-subtle">
       <!-- Logo em vídeo (fundo preto fica transparente via mix-blend-mode:screen).
            muted+playsinline são obrigatórios pra autoplay funcionar nos browsers. -->
       <video class="league-logo-video" src="logogu.mp4" autoplay loop muted playsinline preload="auto"></video>
@@ -886,13 +844,13 @@ header { background: rgba(8,6,14,0.85); backdrop-filter: blur(20px); border-bott
 <div class="toast" id="toast"></div>
 
 <!-- Marker discreto persistente (canto inferior direito) — pra dev/debug -->
-<div style="position:fixed;bottom:8px;right:12px;font-size:10px;color:rgba(250,204,21,.5);font-family:monospace;pointer-events:none;z-index:1;background:rgba(0,0,0,.4);padding:3px 8px;border-radius:4px;">lobby v24-level-kdr</div>
+<div style="position:fixed;bottom:8px;right:12px;font-size:10px;color:rgba(250,204,21,.5);font-family:monospace;pointer-events:none;z-index:1;background:rgba(0,0,0,.4);padding:3px 8px;border-radius:4px;">lobby v25-modern-subtle</div>
 
 <script>
 // =================================================================
 // MARKER
 // =================================================================
-//   lobby v24-level-kdr
+//   lobby v25-modern-subtle
 // =================================================================
 
 // API_BASE primeiro — assim mesmo se Firebase falhar, doLogin() funciona
