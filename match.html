@@ -28,8 +28,9 @@ body { font-family: 'Inter', sans-serif; background: var(--bg-primary); color: v
 .league-brand { display:flex; align-items:center; gap:10px; }
 .league-icon { font-size:24px; filter:drop-shadow(0 0 8px rgba(250,204,21,.4)); }
 .league-name { font-size:18px; font-weight:800; letter-spacing:1px; background:linear-gradient(135deg,#facc15 0%,#f97316 60%,#ef4444 100%); -webkit-background-clip:text; -webkit-text-fill-color:transparent; }
-/* Logo em vídeo — fundo preto fica transparente via mix-blend-mode:screen */
-.league-logo-video { height: 38px; width: auto; display: block; mix-blend-mode: screen; filter: drop-shadow(0 0 8px rgba(250,204,21,.25)); pointer-events: none; }
+/* Logo em vídeo — chromakey SVG converte preto em alpha real (mix-blend-mode
+   falha por causa do backdrop-filter no header). */
+.league-logo-video { height: 76px; width: auto; display: block; filter: url(#logoChromaKey); pointer-events: none; }
 
 .match-header { text-align:center; margin-bottom:28px; }
 .match-header .stage { font-size:11px; color:var(--text-muted); text-transform:uppercase; letter-spacing:1.2px; margin-bottom:6px; }
@@ -86,6 +87,22 @@ body { font-family: 'Inter', sans-serif; background: var(--bg-primary); color: v
 </style>
 </head>
 <body>
+
+<!-- SVG chromakey filter (idêntico ao de lobbies.html) — converte preto em alpha real -->
+<svg width="0" height="0" style="position:absolute;pointer-events:none;" aria-hidden="true">
+  <defs>
+    <filter id="logoChromaKey" color-interpolation-filters="sRGB">
+      <feColorMatrix type="matrix" values="
+        1 0 0 0 0
+        0 1 0 0 0
+        0 0 1 0 0
+        0.4 0.4 0.4 0 0"/>
+      <feComponentTransfer>
+        <feFuncA type="linear" slope="4" intercept="-0.4"/>
+      </feComponentTransfer>
+    </filter>
+  </defs>
+</svg>
 
 <!-- Top bar GMAX LEAGUE — só voltar ao mercado + brand identity própria -->
 <div class="league-topbar">
