@@ -108,9 +108,12 @@ body {
   padding: 8px 18px; border-radius: 12px;
   text-transform: uppercase;
 }
-.verdict-comprar { background: rgba(16,185,129,.15); color: var(--accent-green); }
-.verdict-esperar { background: rgba(250,204,21,.12); color: var(--accent-yellow); }
-.verdict-evitar { background: rgba(239,68,68,.12); color: var(--accent-red); }
+.verdict-comprar  { background: rgba(16,185,129,.15); color: var(--accent-green); }
+.verdict-justo    { background: rgba(34,211,238,.12); color: var(--accent-cyan); }
+.verdict-aguardar { background: rgba(250,204,21,.12); color: var(--accent-yellow); }
+.verdict-evitar   { background: rgba(239,68,68,.12); color: var(--accent-red); }
+/* Compatibilidade com versões antigas que ainda mandam "ESPERAR" */
+.verdict-esperar  { background: rgba(250,204,21,.12); color: var(--accent-yellow); }
 .recommendation .reasons { font-size: 13px; color: var(--text-secondary); flex: 1; }
 .recommendation .reasons ul { list-style: none; display: flex; flex-wrap: wrap; gap: 8px 14px; }
 .recommendation .reasons li::before { content: '· '; color: var(--primary-light); }
@@ -1471,7 +1474,7 @@ function renderResult(data) {
           <div style="flex:1;min-width:220px;">
             <div style="font-size:13px;font-weight:700;color:var(--primary-light);margin-bottom:4px;">🔓 Quer ver tudo?</div>
             <div style="font-size:13px;color:var(--text-secondary);">
-              Análise completa: comparativo entre 6 marketplaces, preços em BRL/CNY/USD, recomendação <strong>COMPRAR / ESPERAR / EVITAR</strong>, Gumax Shield (refund se cair ≤5%) e análise de pattern/float.
+              Análise completa: comparativo entre 6 marketplaces, preços em BRL/CNY/USD, recomendação <strong>COMPRAR / JUSTO / AGUARDAR / EVITAR</strong>, Gumax Shield (refund se cair ≤5%) e análise de pattern/float.
             </div>
           </div>
           <button onclick="unlockTier('full', 2)" style="padding:14px 24px;background:linear-gradient(135deg,#8b5cf6,#22d3ee);color:#fff;border:none;border-radius:10px;font-weight:800;cursor:pointer;font-size:14px;box-shadow:0 4px 12px rgba(139,92,246,.3);white-space:nowrap;">
@@ -1487,13 +1490,19 @@ function renderResult(data) {
     if (data.recommendation) {
       const r = data.recommendation;
       const verdictClass =
-        r.verdict === 'COMPRAR' ? 'verdict-comprar' :
-        r.verdict === 'EVITAR' ? 'verdict-evitar' : 'verdict-esperar';
+        r.verdict === 'COMPRAR'  ? 'verdict-comprar'  :
+        r.verdict === 'EVITAR'   ? 'verdict-evitar'   :
+        r.verdict === 'AGUARDAR' ? 'verdict-aguardar' :
+        r.verdict === 'JUSTO'    ? 'verdict-justo'    :
+        'verdict-esperar';   // legado
+      // "confiança X%" foi REMOVIDO — termo confundia user (associação negativa
+      // tipo "só 75% confiança na Gumax?"). Backend ainda calcula mas não exibe.
+      // Se quiser indicador visual no futuro, usar dots ●●○ ou estrelas — nunca
+      // a palavra "confiança" sozinha.
       html += `
         <div class="recommendation">
           <div>
             <div class="verdict ${verdictClass}">${r.verdict}</div>
-            <div class="confidence" style="margin-top:6px;text-align:center;">confiança ${Math.round(r.confidence)}%</div>
           </div>
           <div class="reasons">
             ${r.opportunity ? `<span class="opp-badge">${r.opportunity.badge}</span>${r.opportunity.note ? ` <em style="color:var(--text-secondary);">— ${r.opportunity.note}</em>` : ''}<br><br>` : ''}
