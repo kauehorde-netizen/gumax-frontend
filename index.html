@@ -2152,7 +2152,7 @@ footer {
 <!-- SEARCH & FILTERS -->
 <section class="search-section" id="marketplace">
   <!-- Marca visível pra confirmar versão deployada. -->
-  <div style="font-size: 10px; color: rgba(139,92,246,0.5); text-align: right; margin-bottom: 4px;">search v57-stattrak-souvenir-wear-fix</div>
+  <div style="font-size: 10px; color: rgba(139,92,246,0.5); text-align: right; margin-bottom: 4px;">search v58-checkout-firebase-auth-fix</div>
 
   <!-- BUFF-style category picker com SVG icons (Faca, Luvas, Rifle, ...).
        Clicar num modelo (ex: AK-47) filtra a grid e rola pra seção. -->
@@ -4742,10 +4742,13 @@ async function startCheckout() {
     return;
   }
 
-  const user = JSON.parse(localStorage.getItem('gumax_user') || '{}');
-  if (!user.steamId) {
+  // FIX: a fonte de verdade do login é Firebase Auth, NÃO localStorage.gumax_user
+  // (que nunca foi populado neste arquivo — bug histórico). Lê estado direto.
+  const fbUser = firebase.auth().currentUser;
+  if (!fbUser) {
     showToast('Faça login com Steam primeiro');
-    closeSteamLogin();
+    // Abre o modal de login Steam pra agilizar
+    if (typeof openSteamLogin === 'function') openSteamLogin();
     return;
   }
 
@@ -4753,24 +4756,27 @@ async function startCheckout() {
   // Sem esses dados a equipe Gu não consegue: 1) confirmar identidade, 2) avisar
   // sobre status do pedido via WhatsApp, 3) enviar a skin via Steam Trade.
   try {
-    const fbUser = firebase.auth().currentUser;
-    if (fbUser) {
-      const doc = await firebase.firestore().collection('users').doc(fbUser.uid).get();
-      const data = doc.data() || {};
-      if (!data.profileComplete) {
-        const proceed = confirm(
-          '📋 Pra finalizar a compra, precisamos completar seu perfil:\n\n' +
-          '• Nome completo\n' +
-          '• WhatsApp (pra avisar sobre o pedido)\n' +
-          '• Trade URL Steam (pra enviar a skin)\n\n' +
-          'Deseja completar agora?'
-        );
-        if (proceed) window.location.href = 'perfil.html?return=index.html';
-        return;
-      }
+    const doc = await firebase.firestore().collection('users').doc(fbUser.uid).get();
+    const data = doc.data() || {};
+    // Verifica se o user tem steamId (logou via Steam) E profile completo
+    if (!data.steamId) {
+      showToast('Sua conta não está vinculada à Steam. Faça login Steam primeiro.');
+      if (typeof openSteamLogin === 'function') openSteamLogin();
+      return;
+    }
+    if (!data.profileComplete) {
+      const proceed = confirm(
+        '📋 Pra finalizar a compra, precisamos completar seu perfil:\n\n' +
+        '• Nome completo\n' +
+        '• WhatsApp (pra avisar sobre o pedido)\n' +
+        '• Trade URL Steam (pra enviar a skin)\n\n' +
+        'Deseja completar agora?'
+      );
+      if (proceed) window.location.href = 'perfil.html?return=index.html';
+      return;
     }
   } catch (e) {
-    console.warn('[checkout] profileComplete check falhou:', e.message);
+    console.warn('[checkout] profile check falhou:', e.message);
     // Em caso de erro de leitura, deixa passar — ruim travar o user por bug nosso.
   }
 
