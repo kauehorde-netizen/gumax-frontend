@@ -190,6 +190,43 @@ header { background: rgba(8,6,14,0.85); backdrop-filter: blur(20px); border-bott
 .modal-box .btn-row { display:flex; gap:8px; }
 .modal-box .btn-row button { flex:1; padding:11px; border-radius:8px; border:none; cursor:pointer; font-weight:700; }
 .btn-secondary { background:transparent; border:1px solid var(--border) !important; color:var(--text-secondary); }
+
+/* Modal de DESAFIO RECEBIDO — substitui o confirm() nativo */
+.challenge-modal { background:linear-gradient(135deg, rgba(26,15,46,1) 0%, rgba(15,8,30,1) 100%); border:2px solid rgba(250,204,21,.5); box-shadow:0 0 40px rgba(250,204,21,.25); animation: challengePop .3s ease-out; }
+@keyframes challengePop { from { transform:scale(.85); opacity:0; } to { transform:scale(1); opacity:1; } }
+.challenge-modal .head { display:flex; align-items:center; gap:12px; margin-bottom:6px; }
+.challenge-modal .head .crossed { font-size:32px; filter:drop-shadow(0 0 8px rgba(250,204,21,.5)); }
+.challenge-modal .head h2 { font-size:22px; background:linear-gradient(135deg,#facc15,#f97316); -webkit-background-clip:text; -webkit-text-fill-color:transparent; margin:0; }
+.challenge-modal .subtitle { color:var(--text-secondary); font-size:13px; margin-bottom:14px; }
+.challenge-modal .opponent-card { background:rgba(239,68,68,.08); border:1px solid rgba(239,68,68,.3); border-radius:10px; padding:12px; margin-bottom:14px; }
+.challenge-modal .opponent-card .opponent-label { font-size:11px; color:var(--text-muted); text-transform:uppercase; letter-spacing:.5px; margin-bottom:6px; }
+.challenge-modal .opponent-card .opponent-name { font-size:15px; font-weight:700; color:var(--accent-red); }
+.challenge-modal .opponent-card .opponent-roster { display:flex; gap:6px; margin-top:10px; flex-wrap:wrap; }
+.challenge-modal .opponent-card .opponent-roster .av { width:30px; height:30px; border-radius:50%; background:rgba(239,68,68,.2); border:1.5px solid rgba(239,68,68,.4); display:flex; align-items:center; justify-content:center; font-size:11px; font-weight:700; }
+.challenge-modal .opponent-card .opponent-roster .av img { width:100%; height:100%; border-radius:50%; object-fit:cover; }
+.challenge-modal .countdown-bar { height:6px; background:rgba(255,255,255,.06); border-radius:3px; overflow:hidden; margin-bottom:14px; }
+.challenge-modal .countdown-bar .fill { height:100%; background:linear-gradient(90deg,#facc15,#ef4444); transition:width 1s linear; width:100%; }
+.challenge-modal .countdown-text { text-align:center; font-family:'JetBrains Mono', monospace; font-size:18px; color:var(--accent-yellow); font-weight:800; margin-bottom:14px; }
+.challenge-modal .countdown-text.urgent { color:var(--accent-red); animation: urgent 0.5s ease-in-out infinite alternate; }
+@keyframes urgent { from { transform:scale(1); } to { transform:scale(1.05); } }
+.challenge-modal .btn-row { display:flex; gap:10px; }
+/* Especificidade extra (.btn-row) pra vencer .modal-box .btn-row button (0,0,2,1) */
+.challenge-modal .btn-row .btn-accept { flex:1; padding:14px; background:linear-gradient(135deg,#10b981,#22d3ee); border:none; color:#fff; border-radius:10px; font-size:15px; font-weight:800; cursor:pointer; transition:transform .15s; }
+.challenge-modal .btn-row .btn-accept:hover { transform:translateY(-2px); }
+.challenge-modal .btn-row .btn-decline { flex:0 0 110px; padding:14px; background:transparent; border:1px solid rgba(239,68,68,.4); color:var(--accent-red); border-radius:10px; font-weight:700; cursor:pointer; }
+.challenge-modal .btn-row .btn-decline:hover { background:rgba(239,68,68,.1); }
+
+/* Banner "DESAFIANDO" na sidebar quando MINHA sala é a challenger */
+.challenging-banner { margin-top:12px; padding:12px 14px; background:linear-gradient(135deg, rgba(139,92,246,.15), rgba(34,211,238,.08)); border:1px solid rgba(139,92,246,.4); border-radius:10px; text-align:center; animation: challengingPulse 1.5s ease-in-out infinite; }
+@keyframes challengingPulse { 0%,100% { border-color:rgba(139,92,246,.4); } 50% { border-color:rgba(34,211,238,.7); } }
+.challenging-banner .label { font-size:11px; color:var(--text-muted); text-transform:uppercase; letter-spacing:.5px; margin-bottom:4px; }
+.challenging-banner .text { font-size:13px; font-weight:700; color:var(--primary-light); }
+.challenging-banner .dots::after { content:''; animation: dots 1.4s steps(4) infinite; }
+@keyframes dots { 0%{content:''} 25%{content:'.'} 50%{content:'..'} 75%{content:'...'} }
+
+/* Banner de "MATCH AO VIVO" no card de lobby */
+.lobby-card.in-match { border-color: rgba(16,185,129,.5); background:linear-gradient(135deg, var(--bg-elevated) 0%, rgba(16,185,129,.06) 100%); }
+.lobby-card .live-badge { display:inline-block; padding:2px 8px; background:rgba(16,185,129,.2); color:var(--accent-green); border-radius:4px; font-size:10px; font-weight:700; letter-spacing:.5px; margin-bottom:8px; }
 </style>
 </head>
 <body>
@@ -201,7 +238,7 @@ header { background: rgba(8,6,14,0.85); backdrop-filter: blur(20px); border-bott
       <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M19 12H5M12 19l-7-7 7-7"/></svg>
       Voltar ao Mercado
     </a>
-    <div class="league-brand" title="lobby v12-subtle-shine-bg">
+    <div class="league-brand" title="lobby v13-challenge-modal">
       <span class="league-icon">🏆</span>
       <span class="league-name">GMAX <strong>LEAGUE</strong></span>
     </div>
@@ -282,17 +319,39 @@ header { background: rgba(8,6,14,0.85); backdrop-filter: blur(20px); border-bott
   </div>
 </div>
 
+<!-- Modal: DESAFIO RECEBIDO (substitui o confirm() nativo bloqueante) -->
+<div class="modal-backdrop" id="challengeModal">
+  <div class="modal-box challenge-modal">
+    <div class="head">
+      <span class="crossed">⚔️</span>
+      <h2>VOCÊ FOI DESAFIADO!</h2>
+    </div>
+    <p class="subtitle">Outra sala quer jogar uma partida 5v5 contra a sua. Aceitar agora?</p>
+    <div class="opponent-card">
+      <div class="opponent-label">⚡ Sala desafiante</div>
+      <div class="opponent-name" id="challengeOpponentName">—</div>
+      <div class="opponent-roster" id="challengeOpponentRoster"></div>
+    </div>
+    <div class="countdown-bar"><div class="fill" id="challengeCountdownFill"></div></div>
+    <div class="countdown-text" id="challengeCountdownText">30s</div>
+    <div class="btn-row">
+      <button class="btn-decline" onclick="declineChallengeFromModal()">Recusar</button>
+      <button class="btn-accept" onclick="acceptChallengeFromModal()">⚔️ ACEITAR PARTIDA</button>
+    </div>
+  </div>
+</div>
+
 <!-- Toast -->
 <div class="toast" id="toast"></div>
 
 <!-- Marker visível pra confirmar versão deployada — apaga após v testar -->
-<div style="position:fixed;bottom:8px;right:12px;font-size:10px;color:rgba(250,204,21,.7);font-family:monospace;pointer-events:none;z-index:1;background:rgba(0,0,0,.6);padding:3px 8px;border-radius:4px;">lobby v12-subtle-shine-bg</div>
+<div style="position:fixed;bottom:8px;right:12px;font-size:10px;color:rgba(250,204,21,.7);font-family:monospace;pointer-events:none;z-index:1;background:rgba(0,0,0,.6);padding:3px 8px;border-radius:4px;">lobby v13-challenge-modal</div>
 
 <script>
 // =================================================================
 // MARKER
 // =================================================================
-//   lobby v12-subtle-shine-bg
+//   lobby v13-challenge-modal
 // =================================================================
 
 // API_BASE primeiro — assim mesmo se Firebase falhar, doLogin() funciona
@@ -515,6 +574,8 @@ function renderMyLobby(lobby) {
   const container = document.getElementById('myLobbyContent');
   if (!lobby) {
     _myLobbyId = null; _myLobbyFilled = 0; _myLobbyOwner = false;
+    // Se modal de desafio estava aberto, fecha (sala foi deletada)
+    closeChallengeModal();
     container.innerHTML = '<p style="font-size:13px;color:var(--text-muted);">Você não está em nenhuma sala. <strong style="color:var(--primary-light);">Crie uma</strong> ou entre numa aberta →</p>';
     return;
   }
@@ -522,9 +583,12 @@ function renderMyLobby(lobby) {
   _myLobbyFilled = (lobby.slots || []).filter(s => s != null).length;
   _myLobbyOwner = lobby.ownerId === (_user && _user.uid);
 
-  // Detecta desafio recebido pra mostrar popup
+  // Detecta desafio recebido pra abrir modal customizado (substitui confirm())
   if (lobby.challengedBy && _myLobbyOwner) {
-    showChallengePopup(lobby.challengedBy, lobby.challengeExpiresAt);
+    openChallengeModal(lobby.challengedBy, lobby.challengeExpiresAt);
+  } else {
+    // Se desafio expirou ou foi cancelado pelo backend, fecha o modal
+    closeChallengeModal();
   }
   // Detecta match criado (status in_match) — redireciona pra match.html
   if (lobby.status === 'in_match' && lobby.matchId) {
@@ -543,9 +607,22 @@ function renderMyLobby(lobby) {
     </div>`;
   }).join('');
 
+  // Banner "DESAFIANDO TIME B" quando MINHA sala é o challenger.
+  // Backend marca a minha como status='challenged' e seta `challengeTo` apontando pra sala desafiada.
+  let challengingBanner = '';
+  if (lobby.status === 'challenged' && lobby.challengeTo && !lobby.challengedBy) {
+    challengingBanner = `
+      <div class="challenging-banner">
+        <div class="label">⚔️ Desafio enviado</div>
+        <div class="text">Aguardando resposta<span class="dots"></span></div>
+      </div>
+    `;
+  }
+
   container.innerHTML = `
     <div style="font-weight:700;margin-bottom:8px;">${escHtml(lobby.name)}</div>
     ${slotsHtml}
+    ${challengingBanner}
     <button class="btn-leave" onclick="leaveMyLobby()">${_myLobbyOwner ? '🏁 Encerrar Sala' : '🚪 Sair'}</button>
   `;
 }
@@ -629,36 +706,104 @@ async function challengeLobby(targetLobbyId) {
   } catch (e) { toast('Erro: ' + e.message, 'error'); }
 }
 
-// Popup de desafio recebido (debounce visual — só mostra uma vez)
-let _challengePopupShown = null;
-function showChallengePopup(challengerLobbyId, expiresAt) {
-  if (_challengePopupShown === challengerLobbyId) return;
-  _challengePopupShown = challengerLobbyId;
-  const accept = confirm('⚔️ Você foi DESAFIADO por outra sala!\n\nAceitar partida 5v5?');
-  if (accept) acceptChallenge();
-  else declineChallenge();
+// ─── Modal de DESAFIO RECEBIDO (substitui o confirm() bloqueante) ───
+// Estado interno: rastreia qual lobby está nos desafiando e o timer de countdown.
+let _challengeModalChallengerId = null;
+let _challengeModalCountdownTimer = null;
+let _challengeModalExpiresAt = 0;
+
+async function openChallengeModal(challengerLobbyId, expiresAt) {
+  // Idempotente: se já tá aberto pra esse mesmo desafiante, só atualiza countdown
+  if (_challengeModalChallengerId === challengerLobbyId) return;
+  _challengeModalChallengerId = challengerLobbyId;
+  // expiresAt vem como Firestore Timestamp ({_seconds, _nanoseconds}) ou ms
+  _challengeModalExpiresAt = expiresAt?._seconds ? expiresAt._seconds * 1000
+    : (expiresAt?.toMillis ? expiresAt.toMillis() : (typeof expiresAt === 'number' ? expiresAt : Date.now() + 30000));
+
+  // Busca info da sala desafiante pra mostrar opponent roster
+  try {
+    const r = await fetch(`${API_BASE}/api/lobby/${challengerLobbyId}`);
+    const data = await r.json();
+    document.getElementById('challengeOpponentName').textContent = data.name || data.ownerName || 'Sala desconhecida';
+    const roster = (data.slots || []).filter(Boolean).map(p => `
+      <div class="av" title="${escHtml(p.name || '?')}">
+        ${p.avatar ? `<img src="${p.avatar}" onerror="this.style.display='none';this.parentNode.textContent='${(p.name||'?').charAt(0).toUpperCase()}';">` : (p.name || '?').charAt(0).toUpperCase()}
+      </div>
+    `).join('');
+    document.getElementById('challengeOpponentRoster').innerHTML = roster;
+  } catch (e) {
+    document.getElementById('challengeOpponentName').textContent = 'Sala desafiante';
+    document.getElementById('challengeOpponentRoster').innerHTML = '';
+  }
+
+  document.getElementById('challengeModal').classList.add('show');
+
+  // Inicia countdown visual (atualiza a cada 250ms pra suavidade da barra)
+  if (_challengeModalCountdownTimer) clearInterval(_challengeModalCountdownTimer);
+  const totalMs = Math.max(_challengeModalExpiresAt - Date.now(), 30000);
+  const tick = () => {
+    const remaining = _challengeModalExpiresAt - Date.now();
+    const txt = document.getElementById('challengeCountdownText');
+    const fill = document.getElementById('challengeCountdownFill');
+    if (remaining <= 0) {
+      // Expirou — fecha modal e limpa estado
+      txt.textContent = 'Expirado';
+      fill.style.width = '0%';
+      clearInterval(_challengeModalCountdownTimer);
+      // Backend já marcou como expirado, próximo poll vai limpar
+      setTimeout(() => closeChallengeModal(), 800);
+      return;
+    }
+    const sec = Math.ceil(remaining / 1000);
+    txt.textContent = sec + 's';
+    txt.classList.toggle('urgent', sec <= 10);
+    fill.style.width = Math.max(0, Math.min(100, (remaining / totalMs) * 100)) + '%';
+  };
+  tick();
+  _challengeModalCountdownTimer = setInterval(tick, 250);
 }
 
-async function acceptChallenge() {
+function closeChallengeModal() {
+  document.getElementById('challengeModal').classList.remove('show');
+  if (_challengeModalCountdownTimer) {
+    clearInterval(_challengeModalCountdownTimer);
+    _challengeModalCountdownTimer = null;
+  }
+  _challengeModalChallengerId = null;
+}
+
+async function acceptChallengeFromModal() {
+  // Desabilita botões pra evitar double-click
+  document.querySelector('#challengeModal .btn-accept').disabled = true;
+  document.querySelector('#challengeModal .btn-decline').disabled = true;
   try {
     const r = await fetch(`${API_BASE}/api/lobby/${_myLobbyId}/accept-challenge`, {
       method: 'POST',
       headers: { 'Authorization': 'Bearer ' + _idToken }
     });
     const data = await r.json();
-    if (data.error) { toast(data.error, 'error'); return; }
+    if (data.error) {
+      toast(data.error === 'challenge_expired' ? 'O desafio expirou ⏰' : data.error, 'error');
+      closeChallengeModal();
+      return;
+    }
     toast('Match criado! Indo pra confirmação…', 'success');
     if (data.matchId) location.href = `match.html?id=${data.matchId}`;
-  } catch (e) { toast('Erro: ' + e.message, 'error'); }
+  } catch (e) {
+    toast('Erro: ' + e.message, 'error');
+    document.querySelector('#challengeModal .btn-accept').disabled = false;
+    document.querySelector('#challengeModal .btn-decline').disabled = false;
+  }
 }
 
-async function declineChallenge() {
+async function declineChallengeFromModal() {
+  closeChallengeModal();
   try {
     await fetch(`${API_BASE}/api/lobby/${_myLobbyId}/decline-challenge`, {
       method: 'POST',
       headers: { 'Authorization': 'Bearer ' + _idToken }
     });
-    _challengePopupShown = null;
+    toast('Desafio recusado', '');
     loadMyLobby();
   } catch (e) {}
 }
