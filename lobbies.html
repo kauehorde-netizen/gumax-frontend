@@ -85,18 +85,15 @@ header { background: rgba(8,6,14,0.85); backdrop-filter: blur(20px); border-bott
 }
 
 .league-hero-text { display:flex; align-items:center; gap:12px; flex:1; min-width:0; }
-.league-hero-text .icon { font-size:24px; filter:drop-shadow(0 0 10px rgba(250,204,21,.5)); }
-.league-hero-text h1 { font-size:18px; font-weight:800; letter-spacing:.5px; background:linear-gradient(135deg,#facc15 0%,#f97316 60%,#ef4444 100%); -webkit-background-clip:text; -webkit-text-fill-color:transparent; white-space:nowrap; }
-.league-hero-text .tag { font-size:11px; color:var(--text-secondary); padding:3px 10px; background:rgba(255,255,255,.04); border-radius:20px; border:1px solid var(--border); white-space:nowrap; }
+.league-hero-text .tagline { font-size:13px; color:var(--text-secondary); }
 
 .league-hero-cta { display:flex; gap:10px; }
 .league-hero-link { font-size:11px; color:var(--text-muted); text-decoration:none; padding:6px 10px; border-radius:8px; transition:all .15s; }
 .league-hero-link:hover { background:rgba(255,255,255,.05); color:var(--primary-light); }
 
 @media (max-width: 720px) {
-  .league-hero { padding:12px 16px; }
-  .league-hero-text h1 { font-size:15px; }
-  .league-hero-text .tag { display:none; }
+  .league-hero { padding:10px 14px; }
+  .league-hero-text .tagline { font-size:11px; }
 }
 
 /* ── Layout principal — sidebar esquerda + grid à direita, mais pra baixo ── */
@@ -201,13 +198,11 @@ header { background: rgba(8,6,14,0.85); backdrop-filter: blur(20px); border-bott
 
 <main>
 
-<!-- Hero slim com fundo animado (orbs flutuando) — espaço pra futuras infos
-     (campeonato ativo, premiação do mês, ranking, etc). -->
+<!-- Hero slim com fundo animado (orbs flutuando). Título principal já está
+     no topbar acima — aqui só descrição rápida + links pra futuras seções. -->
 <section class="league-hero">
   <div class="league-hero-text">
-    <span class="icon">🏆</span>
-    <h1>GMAX LEAGUE</h1>
-    <span class="tag">Matchmaker 5v5 · Premiação mensal em skin</span>
+    <span class="tagline">Matchmaker 5v5 entre amigos · <strong style="color:var(--text-primary);">Premiação mensal em skin</strong></span>
   </div>
   <div class="league-hero-cta">
     <a class="league-hero-link" href="#" onclick="alert('Em breve!');return false;">📊 Ranking</a>
@@ -272,7 +267,7 @@ header { background: rgba(8,6,14,0.85); backdrop-filter: blur(20px); border-bott
 // =================================================================
 // MARKER
 // =================================================================
-//   lobby v10-slim-hero-animated-orbs
+//   lobby v11-no-duplicate-title
 // =================================================================
 
 // API_BASE primeiro — assim mesmo se Firebase falhar, doLogin() funciona
