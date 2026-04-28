@@ -2152,7 +2152,7 @@ footer {
 <!-- SEARCH & FILTERS -->
 <section class="search-section" id="marketplace">
   <!-- Marca visível pra confirmar versão deployada. -->
-  <div style="font-size: 10px; color: rgba(139,92,246,0.5); text-align: right; margin-bottom: 4px;">search v65-cart-wear-variant</div>
+  <div style="font-size: 10px; color: rgba(139,92,246,0.5); text-align: right; margin-bottom: 4px;">search v66-color-dropdown</div>
 
   <!-- BUFF-style category picker com SVG icons (Faca, Luvas, Rifle, ...).
        Clicar num modelo (ex: AK-47) filtra a grid e rola pra seção. -->
@@ -2423,6 +2423,23 @@ footer {
         </optgroup>
       </select>
     </div>
+    <!-- Cor (single-select dropdown — mesma UX do Exterior/Tier) -->
+    <div class="wfb-select-wrap">
+      <label>Cor:</label>
+      <select id="wfbColorFilter" onchange="onColorFilterChange(this.value)">
+        <option value="">Todas</option>
+        <option value="red">🔴 Vermelho</option>
+        <option value="orange">🟠 Laranja</option>
+        <option value="yellow">🟡 Amarelo</option>
+        <option value="green">🟢 Verde</option>
+        <option value="blue">🔵 Azul</option>
+        <option value="purple">🟣 Roxo</option>
+        <option value="pink">🩷 Rosa</option>
+        <option value="white">⚪ Branco</option>
+        <option value="black">⚫ Preto</option>
+        <option value="gold">🟡 Dourado</option>
+      </select>
+    </div>
     <div class="wfb-search">
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" style="width:14px;height:14px;opacity:.6;"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>
       <input type="text" id="wfbNameFilter" placeholder="Busca por nome (ex: Fade, Redline)" oninput="onWfbNameFilterChange(this.value)">
@@ -2486,43 +2503,8 @@ footer {
       flex: 1; background: transparent; border: none;
       color: var(--text-primary); font-size: 13px; font-family: inherit; outline: none;
     }
-    /* ── Filtro de COR — chips circulares clicáveis ── */
-    .wfb-color-filter {
-      display: inline-flex; align-items: center; gap: 6px;
-      padding: 4px 10px;
-      background: var(--bg-elevated); border: 1px solid var(--border); border-radius: 8px;
-    }
-    .color-chip {
-      width: 22px; height: 22px; border-radius: 50%;
-      background: var(--chip);
-      cursor: pointer; transition: transform .15s, box-shadow .15s;
-      border: 2px solid transparent;
-      box-shadow: 0 0 0 1px rgba(0,0,0,.4) inset;
-    }
-    .color-chip:hover { transform: scale(1.15); }
-    .color-chip.active {
-      transform: scale(1.2);
-      border-color: #fff;
-      box-shadow: 0 0 0 1px rgba(0,0,0,.4) inset, 0 0 12px var(--chip);
-    }
+    /* CSS dos chips de cor removido — agora é dropdown <select> igual ao Exterior/Tier */
   </style>
-
-  <!-- Mini-bar PERSISTENTE de filtro por cor — sempre visível acima da grid.
-       Independente do menu BUFF (categoria) — pode filtrar só por cor. -->
-  <div class="weapon-filter-bar" id="colorFilterBar" style="margin-bottom:14px;">
-    <label style="font-size:11px;color:var(--text-muted);text-transform:uppercase;letter-spacing:.5px;font-weight:600;margin-right:6px;">Filtrar por cor:</label>
-    <div class="color-chip" data-color="red"     style="--chip:#ef4444" title="Vermelho"  onclick="toggleColorFilter('red')"></div>
-    <div class="color-chip" data-color="orange"  style="--chip:#f97316" title="Laranja"   onclick="toggleColorFilter('orange')"></div>
-    <div class="color-chip" data-color="yellow"  style="--chip:#facc15" title="Amarelo"   onclick="toggleColorFilter('yellow')"></div>
-    <div class="color-chip" data-color="green"   style="--chip:#10b981" title="Verde"     onclick="toggleColorFilter('green')"></div>
-    <div class="color-chip" data-color="blue"    style="--chip:#3b82f6" title="Azul"      onclick="toggleColorFilter('blue')"></div>
-    <div class="color-chip" data-color="purple"  style="--chip:#8b5cf6" title="Roxo"      onclick="toggleColorFilter('purple')"></div>
-    <div class="color-chip" data-color="pink"    style="--chip:#ec4899" title="Rosa"      onclick="toggleColorFilter('pink')"></div>
-    <div class="color-chip" data-color="white"   style="--chip:#f1f5f9" title="Branco"    onclick="toggleColorFilter('white')"></div>
-    <div class="color-chip" data-color="black"   style="--chip:#1e293b" title="Preto"     onclick="toggleColorFilter('black')"></div>
-    <div class="color-chip" data-color="gold"    style="--chip:#eab308" title="Dourado"   onclick="toggleColorFilter('gold')"></div>
-    <button id="clearColorFilter" onclick="clearAllColorFilters()" style="display:none;margin-left:6px;padding:3px 10px;background:transparent;border:1px solid var(--border);border-radius:6px;color:var(--text-muted);font-size:11px;cursor:pointer;">Limpar</button>
-  </div>
 
   <div class="skin-grid" id="skinGridUnified">
     <!-- Catálogo completo (Full + Youpin juntos) -->
@@ -2854,8 +2836,8 @@ let weaponFilterName = '';
 // Tier high-tier (Doppler phases). Vazio = todos. Quando ativo, mantém só
 // items cujo market_hash_name termina com (Phase 1)/(Ruby)/(Sapphire)/etc.
 let weaponFilterTier = '';
-// Filtro de COR — set de cores ativas (multi-select). Vazio = todas.
-let weaponFilterColors = new Set();
+// Filtro de COR — single-select (mesma UX do Exterior/Tier). Vazio = todas.
+let weaponFilterColor = '';
 
 // ── Mapa nome → cor(es). Skins podem ter múltiplas cores (Hyper Beast, etc).
 // Match por substring case-insensitive — pega o "finish name" da skin.
@@ -2888,28 +2870,9 @@ function getSkinColors(name) {
   return [...colors];
 }
 
-// Toggle chip — adiciona/remove cor do set ativo, re-renderiza grid
-function toggleColorFilter(color) {
-  const chips = document.querySelectorAll(`.color-chip[data-color="${color}"]`);
-  if (weaponFilterColors.has(color)) {
-    weaponFilterColors.delete(color);
-    chips.forEach(c => c.classList.remove('active'));
-  } else {
-    weaponFilterColors.add(color);
-    chips.forEach(c => c.classList.add('active'));
-  }
-  // Mostra/esconde botão Limpar
-  const clearBtn = document.getElementById('clearColorFilter');
-  if (clearBtn) clearBtn.style.display = weaponFilterColors.size > 0 ? '' : 'none';
-  // Re-aplica filtro na grid
-  if (typeof renderUnifiedGrid === 'function') renderUnifiedGrid();
-}
-
-function clearAllColorFilters() {
-  weaponFilterColors.clear();
-  document.querySelectorAll('.color-chip').forEach(c => c.classList.remove('active'));
-  const clearBtn = document.getElementById('clearColorFilter');
-  if (clearBtn) clearBtn.style.display = 'none';
+// Handler do dropdown — single-select (mesma UX do Exterior/Tier)
+function onColorFilterChange(value) {
+  weaponFilterColor = value || '';
   if (typeof renderUnifiedGrid === 'function') renderUnifiedGrid();
 }
 
@@ -3147,16 +3110,14 @@ function onSortFilterChange(value) {
 
 // Aplica o filtro ativo (weapon específico, category, ou class).
 function weaponFilterMatches(skin) {
-  if (!weaponFilter && weaponFilterColors.size === 0) return true;
+  if (!weaponFilter && !weaponFilterColor) return true;
   const name = skin.name || '';
   const lower = name.toLowerCase();
 
   // Filtro por COR — independente do weaponFilter (pode filtrar só por cor)
-  if (weaponFilterColors.size > 0) {
+  if (weaponFilterColor) {
     const skinColors = getSkinColors(name);
-    // Match SE pelo menos 1 cor selecionada bater
-    const hasMatch = [...weaponFilterColors].some(c => skinColors.includes(c));
-    if (!hasMatch) return false;
+    if (!skinColors.includes(weaponFilterColor)) return false;
   }
 
   if (!weaponFilter) return true;  // só filtro de cor ativo, passa
