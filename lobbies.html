@@ -166,6 +166,9 @@ header { background: rgba(8,6,14,0.85); backdrop-filter: blur(20px); border-bott
 .lobby-action.btn-challenge { background:linear-gradient(135deg,var(--primary),var(--accent-cyan)); color:#fff; }
 .lobby-action.btn-challenge:hover { filter:brightness(1.1); }
 .lobby-action.btn-disabled { background:rgba(100,100,120,.15); color:var(--text-muted); cursor:not-allowed; }
+/* Botão "Login pra entrar" — visitante deslogado vê isso em vez do "Entrar" */
+.lobby-action.btn-login { background:rgba(30,41,59,.7); color:var(--text-secondary); border:1px solid rgba(148,163,184,.25); cursor:pointer; }
+.lobby-action.btn-login:hover { background:rgba(30,41,59,1); color:var(--text-primary); border-color:var(--primary-light); }
 
 .empty-state { padding:60px 20px; text-align:center; color:var(--text-muted); border:1px dashed var(--border); border-radius:14px; }
 
@@ -238,7 +241,7 @@ header { background: rgba(8,6,14,0.85); backdrop-filter: blur(20px); border-bott
       <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M19 12H5M12 19l-7-7 7-7"/></svg>
       Voltar ao Mercado
     </a>
-    <div class="league-brand" title="lobby v13-challenge-modal">
+    <div class="league-brand" title="lobby v14-public-list-ttl20">
       <span class="league-icon">🏆</span>
       <span class="league-name">GMAX <strong>LEAGUE</strong></span>
     </div>
@@ -345,13 +348,13 @@ header { background: rgba(8,6,14,0.85); backdrop-filter: blur(20px); border-bott
 <div class="toast" id="toast"></div>
 
 <!-- Marker visível pra confirmar versão deployada — apaga após v testar -->
-<div style="position:fixed;bottom:8px;right:12px;font-size:10px;color:rgba(250,204,21,.7);font-family:monospace;pointer-events:none;z-index:1;background:rgba(0,0,0,.6);padding:3px 8px;border-radius:4px;">lobby v13-challenge-modal</div>
+<div style="position:fixed;bottom:8px;right:12px;font-size:10px;color:rgba(250,204,21,.7);font-family:monospace;pointer-events:none;z-index:1;background:rgba(0,0,0,.6);padding:3px 8px;border-radius:4px;">lobby v14-public-list-ttl20</div>
 
 <script>
 // =================================================================
 // MARKER
 // =================================================================
-//   lobby v13-challenge-modal
+//   lobby v14-public-list-ttl20
 // =================================================================
 
 // API_BASE primeiro — assim mesmo se Firebase falhar, doLogin() funciona
@@ -408,6 +411,12 @@ function toast(msg, type = '') {
   setTimeout(() => t.classList.remove('show'), 2800);
 }
 
+// ─── Polling ARRANCA SEMPRE — listagem é pública ───
+// Lista de salas é visível pra qualquer visitante (logado ou não), só pedimos
+// login na hora de Criar/Entrar. Isso melhora discovery — pessoa entra na
+// página, vê que tem gente jogando AGORA, e isso motiva ela a logar.
+startPolling();
+
 // ─── Auth state — espelha o padrão do index.html ───
 // Sessão Firebase persiste em localStorage por default → quando user loga em
 // index.html, lobbies.html já pega via onAuthStateChanged sem precisar relogar.
@@ -417,9 +426,14 @@ if (_firebaseReady) auth.onAuthStateChanged(async user => {
   const createBtn = document.getElementById('btnCreateLobby');
 
   if (!user) {
+    _user = null; _idToken = null; _myLobbyId = null; _myLobbyOwner = false; _myLobbyFilled = 0;
     if (loginBtn) loginBtn.style.display = '';
     if (profileArea) profileArea.style.display = 'none';
-    if (createBtn) createBtn.style.display = 'none';
+    // Botão Criar continua visível, mas chama login se clicado sem auth
+    if (createBtn) createBtn.style.display = '';
+    // Re-renderiza sidebar e lista pra mostrar estado deslogado
+    renderMyLobby(null);
+    if (_lastLobbiesData) renderList(_lastLobbiesData);
     return;
   }
 
@@ -448,7 +462,9 @@ if (_firebaseReady) auth.onAuthStateChanged(async user => {
 
   if (createBtn) createBtn.style.display = '';
   await loadMyLobby();
-  startPolling();
+  // Re-renderiza lista pra trocar "Login pra entrar" → "Entrar (X/5)" sem
+  // ter que esperar o próximo tick do polling 3s.
+  if (_lastLobbiesData) renderList(_lastLobbiesData);
 });
 
 async function doLogin() {
@@ -464,26 +480,28 @@ async function doLogout() {
   location.href = 'index.html';
 }
 
-// ─── Polling 3s ───
+// ─── Polling 3s — rodando SEMPRE (lista pública) ───
+// loadList é público (sem auth); loadMyLobby só dispara se user logado.
 let _pollTimer = null;
+let _lastLobbiesData = null; // cache pra re-render quando auth state muda
 function startPolling() {
   if (_pollTimer) clearInterval(_pollTimer);
   loadList();
-  loadMyLobby();
+  if (_idToken) loadMyLobby();
   _pollTimer = setInterval(() => {
     loadList();
-    if (_myLobbyId) loadMyLobby();
+    if (_idToken && _myLobbyId) loadMyLobby();
   }, 3000);
 }
 
-// ─── Listar lobbies ───
+// ─── Listar lobbies (PÚBLICO — não precisa de auth) ───
 async function loadList() {
   try {
     const r = await fetch(`${API_BASE}/api/lobby/list`);
     const data = await r.json();
-    // DEBUG: log cada poll pra ver se sala some/aparece e por quê
     console.log(`[lobby:list poll] count=${data.count} lobbies=`, (data.lobbies||[]).map(l => `${l.name}(${l.status},${l.filled}/5)`).join('|'));
-    renderList(data.lobbies || []);
+    _lastLobbiesData = data.lobbies || [];
+    renderList(_lastLobbiesData);
   } catch (e) {
     console.error('[lobby:list]', e);
   }
@@ -508,13 +526,17 @@ function renderLobbyCard(lobby) {
     : `<div class="lobby-slot">·</div>`
   ).join('');
   const isFull = lobby.filled === 5;
-  const isMine = lobby.id === _myLobbyId;
+  const isMine = !!_user && lobby.id === _myLobbyId;
+  const isLoggedIn = !!_user;
   let cls = lobby.status === 'challenged' ? 'challenged' : (isFull ? 'full' : '');
   if (isMine) cls += ' mine';
 
-  // Botão de ação varia conforme estado E se é minha sala
+  // Botão de ação varia conforme estado E se é minha sala E se tô logado
   let actionHtml;
-  if (isMine) {
+  if (!isLoggedIn) {
+    // Sem login — call-to-action discreto pra entrar
+    actionHtml = `<button class="lobby-action btn-login" onclick="doLogin()" title="Faça login Steam pra entrar">🔐 Login pra entrar</button>`;
+  } else if (isMine) {
     // Minha sala — só mostra info, controle real fica na sidebar (Sair/Encerrar)
     actionHtml = `<button class="lobby-action btn-disabled" disabled>✓ Sua sala (${lobby.filled}/5)</button>`;
   } else if (lobby.status === 'challenged') {
@@ -576,7 +598,18 @@ function renderMyLobby(lobby) {
     _myLobbyId = null; _myLobbyFilled = 0; _myLobbyOwner = false;
     // Se modal de desafio estava aberto, fecha (sala foi deletada)
     closeChallengeModal();
-    container.innerHTML = '<p style="font-size:13px;color:var(--text-muted);">Você não está em nenhuma sala. <strong style="color:var(--primary-light);">Crie uma</strong> ou entre numa aberta →</p>';
+    if (!_user) {
+      // Visitante deslogado — mensagem call-to-action diferente
+      container.innerHTML = `
+        <p style="font-size:13px;color:var(--text-muted);margin-bottom:12px;">Faça login com Steam pra criar uma sala ou entrar numa partida 5v5.</p>
+        <button class="btn-create" style="width:100%;padding:10px;font-size:13px;display:inline-flex;align-items:center;justify-content:center;gap:8px;" onclick="doLogin()">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor"><path d="M11.979 0C5.678 0 .511 4.86.022 11.037l6.432 2.658c.545-.371 1.203-.59 1.912-.59.063 0 .125.004.188.006l2.861-4.142V8.91c0-2.495 2.028-4.524 4.524-4.524 2.494 0 4.524 2.031 4.524 4.527s-2.03 4.525-4.524 4.525h-.105l-4.076 2.911c0 .052.004.105.004.159 0 1.875-1.515 3.396-3.39 3.396-1.635 0-3.016-1.173-3.331-2.727L.436 15.27C1.862 20.307 6.486 24 11.979 24c6.627 0 11.999-5.373 11.999-12S18.605 0 11.979 0z"/></svg>
+          Entrar com Steam
+        </button>
+      `;
+    } else {
+      container.innerHTML = '<p style="font-size:13px;color:var(--text-muted);">Você não está em nenhuma sala. <strong style="color:var(--primary-light);">Crie uma</strong> ou entre numa aberta →</p>';
+    }
     return;
   }
   _myLobbyId = lobby.id;
@@ -629,6 +662,12 @@ function renderMyLobby(lobby) {
 
 // ─── Ações ───
 function openCreateModal() {
+  // Visitante deslogado: dispara fluxo de login direto (mais ágil que toast + modal)
+  if (!_idToken) {
+    toast('Login Steam pra criar uma sala…', '');
+    setTimeout(() => doLogin(), 600);
+    return;
+  }
   document.getElementById('lobbyNameInput').value = '';
   document.getElementById('createModal').classList.add('show');
 }
@@ -652,7 +691,11 @@ async function submitCreate() {
 }
 
 async function joinLobby(lobbyId) {
-  if (!_idToken) { toast('Faça login', 'error'); return; }
+  if (!_idToken) {
+    toast('Login Steam pra entrar na sala…', '');
+    setTimeout(() => doLogin(), 600);
+    return;
+  }
   try {
     const r = await fetch(`${API_BASE}/api/lobby/${lobbyId}/join`, {
       method: 'POST',
