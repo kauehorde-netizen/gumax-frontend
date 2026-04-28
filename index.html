@@ -2152,7 +2152,7 @@ footer {
 <!-- SEARCH & FILTERS -->
 <section class="search-section" id="marketplace">
   <!-- Marca visível pra confirmar versão deployada. -->
-  <div style="font-size: 10px; color: rgba(139,92,246,0.5); text-align: right; margin-bottom: 4px;">search v59-pix-card-real</div>
+  <div style="font-size: 10px; color: rgba(139,92,246,0.5); text-align: right; margin-bottom: 4px;">search v60-cart-img-fix</div>
 
   <!-- BUFF-style category picker com SVG icons (Faca, Luvas, Rifle, ...).
        Clicar num modelo (ex: AK-47) filtra a grid e rola pra seção. -->
@@ -4229,11 +4229,12 @@ function updateCartUI() {
     list.innerHTML = '<div class="cart-empty">Seu carrinho está vazio</div>';
   } else {
     list.innerHTML = cart.map(item => {
-      const image = skinImages[item.name];
+      // 3 níveis de fallback: item.image (gravado ao add) → cache global → vazio
+      const image = item.image || item.iconUrl || skinImages[item.name] || '';
       return `
         <div class="cart-item">
           <div class="cart-item-image">
-            ${image ? `<img src="${image}" alt="${item.name}" data-name="${item.name.replace(/"/g, '&quot;')}" onerror="gumaxImgFallback(this)">` : ''}
+            ${image ? `<img src="${image}" alt="${item.name}" data-name="${item.name.replace(/"/g, '&quot;')}" onerror="gumaxImgFallback(this)">` : '<div style="width:100%;height:100%;display:flex;align-items:center;justify-content:center;color:var(--text-muted);font-size:9px;">sem<br>imagem</div>'}
           </div>
           <div class="cart-item-details">
             <div class="cart-item-name">${item.name}</div>
