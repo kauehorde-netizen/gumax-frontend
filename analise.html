@@ -1169,11 +1169,11 @@ function buildRefinementPanel(data) {
   }
 
   // ═══ HISTÓRICO DE VENDAS POR PATTERN (CSPriceAPI bluegem-sales) ═══
-  // Quando user inseriu paintseed E a skin é pattern-sensitive (Case Hardened,
-  // Marble Fade, Crimson Web, etc.), mostra placeholder que carrega lazy
-  // chamando /api/pricempire/bluegem-sales — mostra últimas 5 vendas reais.
+  // Mercado real só paga overpay por pattern em Case Hardened (bluegems) e
+  // Doppler (phases raras). Marble Fade é fixo (todas iguais). Crimson Web
+  // e Slaughter ninguém precifica por pattern. Filtro mais conservador.
   const seedForHistory = _refinement?.paintseed;
-  const isPatternSensitive = isCaseHardened || /Marble Fade|Crimson Web|Slaughter/i.test(data.name || '');
+  const isPatternSensitive = isCaseHardened || isDoppler;
   let bluegemHtml = '';
   if (seedForHistory && isPatternSensitive) {
     // Container vazio — preenchido async pelo loadBluegemSales(seed) abaixo
