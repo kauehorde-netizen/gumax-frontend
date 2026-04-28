@@ -28,6 +28,8 @@ body { font-family: 'Inter', sans-serif; background: var(--bg-primary); color: v
 .league-brand { display:flex; align-items:center; gap:10px; }
 .league-icon { font-size:24px; filter:drop-shadow(0 0 8px rgba(250,204,21,.4)); }
 .league-name { font-size:18px; font-weight:800; letter-spacing:1px; background:linear-gradient(135deg,#facc15 0%,#f97316 60%,#ef4444 100%); -webkit-background-clip:text; -webkit-text-fill-color:transparent; }
+/* Logo em vídeo — fundo preto fica transparente via mix-blend-mode:screen */
+.league-logo-video { height: 38px; width: auto; display: block; mix-blend-mode: screen; filter: drop-shadow(0 0 8px rgba(250,204,21,.25)); pointer-events: none; }
 
 .match-header { text-align:center; margin-bottom:28px; }
 .match-header .stage { font-size:11px; color:var(--text-muted); text-transform:uppercase; letter-spacing:1.2px; margin-bottom:6px; }
@@ -92,8 +94,7 @@ body { font-family: 'Inter', sans-serif; background: var(--bg-primary); color: v
     Voltar ao Mercado
   </a>
   <div class="league-brand">
-    <span class="league-icon">🏆</span>
-    <span class="league-name">GMAX LEAGUE</span>
+    <video class="league-logo-video" src="logogu.mp4" autoplay loop muted playsinline preload="auto"></video>
   </div>
   <div></div>
 </div>
