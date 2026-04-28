@@ -241,7 +241,7 @@ header { background: rgba(8,6,14,0.85); backdrop-filter: blur(20px); border-bott
 // =================================================================
 // MARKER
 // =================================================================
-//   lobby v8-mine-shows-in-grid
+//   lobby v9-debug-logs-cleanup-disabled
 // =================================================================
 
 // API_BASE primeiro — assim mesmo se Firebase falhar, doLogin() funciona
@@ -371,6 +371,8 @@ async function loadList() {
   try {
     const r = await fetch(`${API_BASE}/api/lobby/list`);
     const data = await r.json();
+    // DEBUG: log cada poll pra ver se sala some/aparece e por quê
+    console.log(`[lobby:list poll] count=${data.count} lobbies=`, (data.lobbies||[]).map(l => `${l.name}(${l.status},${l.filled}/5)`).join('|'));
     renderList(data.lobbies || []);
   } catch (e) {
     console.error('[lobby:list]', e);
@@ -451,6 +453,7 @@ async function loadMyLobby() {
       headers: { 'Authorization': 'Bearer ' + _idToken }
     });
     const data = await r.json();
+    console.log('[lobby:mine poll]', data.lobby ? `id=${data.lobby.id} status=${data.lobby.status} filled=${(data.lobby.slots||[]).filter(Boolean).length}/5` : 'NULL');
     renderMyLobby(data.lobby);
   } catch (e) {
     console.error('[lobby:mine]', e);
