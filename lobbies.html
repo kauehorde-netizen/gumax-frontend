@@ -58,30 +58,55 @@ header { background: rgba(8,6,14,0.85); backdrop-filter: blur(20px); border-bott
 .league-name { font-size:18px; font-weight:800; letter-spacing:1px; background:linear-gradient(135deg,#facc15 0%,#f97316 60%,#ef4444 100%); -webkit-background-clip:text; -webkit-text-fill-color:transparent; }
 .league-name strong { font-weight:900; }
 
-/* ── Hero topo SLIM com fundo animado (orbs blur flutuando + gradient mesh) ── */
+/* ── Hero topo SLIM com efeito sutil moderno ── */
+/* Em vez de orbs saturados (que ficavam degradê chapado em hero fino), uso:
+   1. Background base super sutil com gradient diagonal escuro
+   2. Linha de glow animada deslizando horizontalmente (efeito "shine")
+   3. Border-bottom com gradient pulsando (acent visual sem peso) */
 .league-hero {
-  position:relative; max-width:1400px; margin:18px auto 0; padding:14px 24px;
-  background:linear-gradient(135deg, rgba(139,92,246,.10), rgba(34,211,238,.05));
-  border:1px solid var(--border); border-radius:14px;
+  position:relative; max-width:1400px; margin:18px auto 0; padding:12px 24px;
+  background:linear-gradient(135deg, rgba(20,16,40,.6), rgba(26,15,46,.4));
+  border:1px solid var(--border);
+  border-radius:14px;
   display:flex; align-items:center; justify-content:space-between; gap:18px; flex-wrap:wrap;
-  overflow:hidden; /* contém os orbs animados */
+  overflow:hidden;
+  box-shadow: 0 0 20px rgba(139,92,246,.08), inset 0 1px 0 rgba(255,255,255,.03);
 }
-/* Camada de orbs animados (blobs grandes em blur que flutuam) */
-.league-hero::before, .league-hero::after {
-  content:''; position:absolute; border-radius:50%; filter:blur(50px); opacity:.55; pointer-events:none; z-index:0;
+
+/* Linha de "shine" deslizando horizontalmente — bem sutil */
+.league-hero::before {
+  content:''; position:absolute; inset:0; pointer-events:none; z-index:0;
+  background: linear-gradient(110deg,
+    transparent 30%,
+    rgba(250,204,21,.04) 45%,
+    rgba(250,204,21,.08) 50%,
+    rgba(139,92,246,.06) 55%,
+    transparent 70%);
+  background-size: 250% 100%;
+  animation: heroShine 8s linear infinite;
 }
-.league-hero::before { width:280px; height:280px; background:#facc15; top:-100px; left:-50px; animation:floatOrb1 14s ease-in-out infinite; }
-.league-hero::after  { width:340px; height:340px; background:#8b5cf6; top:-120px; right:-80px; animation:floatOrb2 18s ease-in-out infinite; }
-.league-hero > * { position:relative; z-index:1; } /* conteúdo acima dos orbs */
-@keyframes floatOrb1 {
-  0%,100% { transform:translate(0,0) scale(1); }
-  33%     { transform:translate(120px,30px) scale(1.15); }
-  66%     { transform:translate(60px,-20px) scale(.92); }
+
+/* Border bottom com gradient pulsando */
+.league-hero::after {
+  content:''; position:absolute; left:10%; right:10%; bottom:0; height:1px;
+  background: linear-gradient(90deg,
+    transparent,
+    rgba(250,204,21,.4),
+    rgba(139,92,246,.4),
+    transparent);
+  animation: heroBorderPulse 4s ease-in-out infinite alternate;
+  z-index:0;
 }
-@keyframes floatOrb2 {
-  0%,100% { transform:translate(0,0) scale(1); }
-  40%     { transform:translate(-180px,40px) scale(1.1); }
-  75%     { transform:translate(-90px,-15px) scale(.9); }
+
+.league-hero > * { position:relative; z-index:1; }
+
+@keyframes heroShine {
+  0%   { background-position: -50% 0; }
+  100% { background-position: 150% 0; }
+}
+@keyframes heroBorderPulse {
+  from { opacity:.4; }
+  to   { opacity:1; }
 }
 
 .league-hero-text { display:flex; align-items:center; gap:12px; flex:1; min-width:0; }
@@ -176,7 +201,7 @@ header { background: rgba(8,6,14,0.85); backdrop-filter: blur(20px); border-bott
       <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M19 12H5M12 19l-7-7 7-7"/></svg>
       Voltar ao Mercado
     </a>
-    <div class="league-brand" title="lobby v11-slim-hero">
+    <div class="league-brand" title="lobby v12-subtle-shine-bg">
       <span class="league-icon">🏆</span>
       <span class="league-name">GMAX <strong>LEAGUE</strong></span>
     </div>
@@ -261,13 +286,13 @@ header { background: rgba(8,6,14,0.85); backdrop-filter: blur(20px); border-bott
 <div class="toast" id="toast"></div>
 
 <!-- Marker visível pra confirmar versão deployada — apaga após v testar -->
-<div style="position:fixed;bottom:8px;right:12px;font-size:10px;color:rgba(250,204,21,.7);font-family:monospace;pointer-events:none;z-index:1;background:rgba(0,0,0,.6);padding:3px 8px;border-radius:4px;">lobby v11-slim-hero</div>
+<div style="position:fixed;bottom:8px;right:12px;font-size:10px;color:rgba(250,204,21,.7);font-family:monospace;pointer-events:none;z-index:1;background:rgba(0,0,0,.6);padding:3px 8px;border-radius:4px;">lobby v12-subtle-shine-bg</div>
 
 <script>
 // =================================================================
 // MARKER
 // =================================================================
-//   lobby v11-no-duplicate-title
+//   lobby v12-subtle-shine-bg
 // =================================================================
 
 // API_BASE primeiro — assim mesmo se Firebase falhar, doLogin() funciona
