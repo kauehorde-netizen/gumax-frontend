@@ -242,62 +242,129 @@ header { background: rgba(8,6,14,0.85); backdrop-filter: blur(20px); border-bott
 .step-card .step-title { font-size:14px; font-weight:700; margin-bottom:6px; color:var(--text-primary); }
 .step-card .step-desc { font-size:12px; color:var(--text-secondary); line-height:1.5; }
 
-/* ═══ ANIMAÇÕES EXTRAVAGANTES POR ÍCONE ═══ */
-
-/* PASSO 1 — CRIE SUA SALA (plus quadrado) — quica violento + escala + tilt */
-.icon-bounce {
-  animation: iconBounceWild 2.8s cubic-bezier(.68,-.55,.27,1.55) infinite;
-  transform-origin:center;
-}
-@keyframes iconBounceWild {
-  0%, 100% { transform: translateY(0) scale(1) rotate(0deg); }
-  15%      { transform: translateY(-22px) scale(1.2) rotate(-12deg); }
-  30%      { transform: translateY(0) scale(.92) rotate(0deg); }
-  45%      { transform: translateY(-12px) scale(1.1) rotate(8deg); }
-  60%      { transform: translateY(2px) scale(.97) rotate(0deg); }
+/* ═══ ANIMAÇÕES NARRATIVAS — cada ícone conta a HISTÓRIA do passo ═══
+     Truque pra animar elementos internos do SVG: transform-box: fill-box
+     define a "caixa de transformação" como o bounding box do próprio elemento,
+     então transform-origin: center funciona certinho em <g>, <rect>, <circle> etc. */
+.story-create g, .story-create rect, .story-create line,
+.story-invite g, .story-invite circle,
+.story-duel g, .story-duel circle, .story-duel line, .story-duel path,
+.story-aim g, .story-aim circle, .story-aim line {
+  transform-box: fill-box;
+  transform-origin: center;
 }
 
-/* PASSO 2 — CONVIDE 4 AMIGOS (pessoas) — pulse big + brilho + leve rotação */
-.icon-pulse {
-  animation: iconPulseWild 2.4s cubic-bezier(.4,0,.2,1) infinite;
-  transform-origin:center;
+/* ━━━ PASSO 1 — CRIE SUA SALA ━━━
+   História de 4s:
+     0-25%  : caixa vazia se materializa (scale 0 → 1, fade in)
+     25-45% : sinal de + aparece dentro (scale 0 → 1.3 → 1 elastic)
+     45-70% : pulso de "criado!" (escala suave + glow)
+     70-100%: prepara reset (mantém visível, próximo loop começa) */
+.story-create .sc-box {
+  animation: storyCreateBox 4s ease-in-out infinite;
 }
-@keyframes iconPulseWild {
-  0%, 100% { transform: scale(1) rotate(0deg); filter: brightness(1) drop-shadow(0 0 0 transparent); }
-  35%      { transform: scale(1.45) rotate(-10deg); filter: brightness(1.6) drop-shadow(0 0 12px currentColor); }
-  70%      { transform: scale(.95) rotate(8deg); filter: brightness(1) drop-shadow(0 0 0 transparent); }
+.story-create .sc-plus {
+  animation: storyCreatePlus 4s ease-in-out infinite;
 }
-
-/* PASSO 3 — DESAFIE OUTRA SALA (2 espadas duelando) — clash contínuo */
-.icon-shake {
-  animation: iconShakeWild 1.1s linear infinite;
-  transform-origin:center;
+@keyframes storyCreateBox {
+  0%, 100% { transform: scale(.4); opacity: 0; }
+  20%      { transform: scale(1.05); opacity: 1; }
+  25%, 95% { transform: scale(1); opacity: 1; }
 }
-@keyframes iconShakeWild {
-  0%   { transform: translate(0,0) rotate(-12deg) scale(1); }
-  10%  { transform: translate(-4px,-3px) rotate(20deg) scale(1.1); }
-  20%  { transform: translate(3px,2px) rotate(-18deg) scale(.95); }
-  30%  { transform: translate(-3px,3px) rotate(25deg) scale(1.08); }
-  40%  { transform: translate(4px,-2px) rotate(-22deg) scale(1); }
-  50%  { transform: translate(-4px,2px) rotate(18deg) scale(1.12); }
-  60%  { transform: translate(3px,3px) rotate(-25deg) scale(.94); }
-  70%  { transform: translate(-2px,-3px) rotate(20deg) scale(1.05); }
-  80%  { transform: translate(4px,1px) rotate(-18deg) scale(1); }
-  90%  { transform: translate(-3px,-1px) rotate(22deg) scale(1.08); }
-  100% { transform: translate(0,0) rotate(-12deg) scale(1); }
+@keyframes storyCreatePlus {
+  0%, 30%   { transform: scale(0); opacity: 0; }
+  40%       { transform: scale(1.4); opacity: 1; }
+  50%, 65%  { transform: scale(1); opacity: 1; }
+  70%       { transform: scale(1.15); opacity: 1; filter: drop-shadow(0 0 6px currentColor); }
+  85%, 100% { transform: scale(1); opacity: 1; filter: none; }
 }
 
-/* PASSO 4 — JOGUE + RANKING (mira) — spin + escala wave */
-.icon-spin {
-  animation: iconSpinWild 3.6s cubic-bezier(.4,0,.6,1) infinite;
-  transform-origin:center;
+/* ━━━ PASSO 2 — CONVIDE 4 AMIGOS ━━━
+   História de 4s:
+     Pessoa central fica visível e estável o tempo todo.
+     3 ondas de convite emanam em sequência (delay 0s, 1.3s, 2.6s),
+     cada uma cresce de raio 6 → 14 e fade out — convites broadcasting */
+.story-invite .si-ripple {
+  animation: storyInviteRipple 3.5s ease-out infinite;
+  stroke-width: 1.3;
 }
-@keyframes iconSpinWild {
-  0%   { transform: rotate(0deg) scale(1); }
-  25%  { transform: rotate(90deg) scale(1.18); }
-  50%  { transform: rotate(180deg) scale(1.3); filter: drop-shadow(0 0 8px currentColor); }
-  75%  { transform: rotate(270deg) scale(1.18); }
-  100% { transform: rotate(360deg) scale(1); }
+.story-invite .si-ripple-1 { animation-delay: 0s; }
+.story-invite .si-ripple-2 { animation-delay: 1.2s; }
+.story-invite .si-ripple-3 { animation-delay: 2.4s; }
+@keyframes storyInviteRipple {
+  0%   { transform: scale(.5); stroke-opacity: .9; }
+  60%  { transform: scale(1.6); stroke-opacity: .4; }
+  100% { transform: scale(2.2); stroke-opacity: 0; }
+}
+/* Pessoa também respira sutilmente */
+.story-invite .si-person {
+  animation: storyInvitePerson 4s ease-in-out infinite;
+}
+@keyframes storyInvitePerson {
+  0%, 100% { transform: scale(1); }
+  50%      { transform: scale(1.05); }
+}
+
+/* ━━━ PASSO 3 — DESAFIE OUTRA SALA ━━━
+   História de 4s:
+     0-30% : espadas afastadas (translate -3px / +3px)
+     30-50%: convergem pro centro (translate 0)
+     45-55%: CLASH — faísca aparece, espadas tremem brevemente
+     55-100%: espadas retraem, faísca some, prepara próximo clash */
+.story-duel .sd-sword-left {
+  animation: swordLeft 4s ease-in-out infinite;
+}
+.story-duel .sd-sword-right {
+  animation: swordRight 4s ease-in-out infinite;
+}
+.story-duel .sd-spark {
+  animation: swordSpark 4s ease-in-out infinite;
+}
+@keyframes swordLeft {
+  0%, 100%  { transform: translate(-3px, 2px) rotate(-3deg); }
+  35%, 50%  { transform: translate(0, 0) rotate(0deg); }
+  45%       { transform: translate(1px, -1px) rotate(2deg); }   /* tremor do impacto */
+  70%       { transform: translate(-2px, 1px) rotate(-2deg); }
+}
+@keyframes swordRight {
+  0%, 100%  { transform: translate(3px, 2px) rotate(3deg); }
+  35%, 50%  { transform: translate(0, 0) rotate(0deg); }
+  45%       { transform: translate(-1px, -1px) rotate(-2deg); }
+  70%       { transform: translate(2px, 1px) rotate(2deg); }
+}
+@keyframes swordSpark {
+  0%, 38%, 62%, 100% { opacity: 0; transform: scale(.4) rotate(0deg); }
+  42%, 50%           { opacity: 1; transform: scale(1.3) rotate(45deg); }
+  56%                { opacity: .6; transform: scale(.9) rotate(90deg); }
+}
+
+/* ━━━ PASSO 4 — JOGUE + RANKING ━━━
+   História de 4s:
+     Anel externo + ticks giram devagar (8s pra 360° — meio loop por loop de 4s)
+     Centro pulsa "acquiring lock" → encolhe forte (LOCKED) → flash do tiro → relaxa */
+.story-aim .sa-outer, .story-aim .sa-ticks {
+  animation: aimRotate 8s linear infinite;
+}
+.story-aim .sa-inner {
+  animation: aimLock 4s ease-in-out infinite;
+}
+.story-aim .sa-shot {
+  animation: aimShot 4s ease-in-out infinite;
+}
+@keyframes aimRotate {
+  to { transform: rotate(360deg); }
+}
+@keyframes aimLock {
+  0%, 100%  { transform: scale(1); stroke-opacity: 1; }
+  30%       { transform: scale(1.15); stroke-opacity: .7; }   /* respira procurando */
+  45%       { transform: scale(.45); stroke-opacity: 1; }     /* LOCKED — encolhe forte */
+  55%       { transform: scale(.45); stroke-opacity: 1; }     /* mantém locked */
+  70%       { transform: scale(1.2); stroke-opacity: .5; }    /* expande pós-tiro */
+  85%       { transform: scale(1); stroke-opacity: 1; }
+}
+@keyframes aimShot {
+  0%, 50%, 70%, 100% { opacity: 0; transform: scale(.3); }
+  55%, 60%           { opacity: 1; transform: scale(2.2); }   /* flash do tiro */
 }
 
 /* Halo glow atrás do ícone — grande + pulsa */
@@ -382,6 +449,52 @@ header { background: rgba(8,6,14,0.85); backdrop-filter: blur(20px); border-bott
 
 .btn-leave { width:100%; padding:9px; margin-top:12px; background:transparent; border:1px solid rgba(239,68,68,.4); color:var(--accent-red); border-radius:8px; cursor:pointer; font-size:12px; font-weight:600; }
 .btn-leave:hover { background:rgba(239,68,68,.1); }
+
+/* ═══ LEVEL HEXÁGONO + KDR PILL — exibido ao lado de cada jogador ═══ */
+.player-level {
+  position:relative; width:24px; height:28px; display:inline-flex; align-items:center; justify-content:center;
+  font-family:'JetBrains Mono', monospace; font-size:11px; font-weight:900; color:#fff;
+  background:linear-gradient(135deg, var(--lvl-color, #6b6885), var(--lvl-color-dark, #3a3850));
+  clip-path: polygon(50% 0%, 100% 25%, 100% 75%, 50% 100%, 0% 75%, 0% 25%);
+  flex-shrink:0;
+  text-shadow: 0 1px 2px rgba(0,0,0,.5);
+}
+/* Cores do hexágono progressivas conforme level (1-10) */
+.player-level[data-lvl="1"]  { --lvl-color:#6b7280; --lvl-color-dark:#374151; }
+.player-level[data-lvl="2"]  { --lvl-color:#84cc16; --lvl-color-dark:#4d7c0f; }
+.player-level[data-lvl="3"]  { --lvl-color:#84cc16; --lvl-color-dark:#4d7c0f; }
+.player-level[data-lvl="4"]  { --lvl-color:#22d3ee; --lvl-color-dark:#0e7490; }
+.player-level[data-lvl="5"]  { --lvl-color:#22d3ee; --lvl-color-dark:#0e7490; }
+.player-level[data-lvl="6"]  { --lvl-color:#a78bfa; --lvl-color-dark:#6d28d9; }
+.player-level[data-lvl="7"]  { --lvl-color:#a78bfa; --lvl-color-dark:#6d28d9; }
+.player-level[data-lvl="8"]  { --lvl-color:#facc15; --lvl-color-dark:#a16207; }
+.player-level[data-lvl="9"]  { --lvl-color:#f97316; --lvl-color-dark:#9a3412; }
+.player-level[data-lvl="10"] { --lvl-color:#ef4444; --lvl-color-dark:#991b1b; }
+.player-level.no-level { background:rgba(255,255,255,.05); color:var(--text-muted); border:1px dashed rgba(255,255,255,.15); clip-path:none; border-radius:6px; font-size:9px; padding:0 4px; width:auto; min-width:32px; }
+
+.player-kdr {
+  display:inline-flex; align-items:center; gap:4px; padding:2px 7px;
+  background:rgba(139,92,246,.12); border:1px solid rgba(139,92,246,.25); border-radius:10px;
+  font-family:'JetBrains Mono', monospace; font-size:11px; font-weight:700; color:var(--text-secondary);
+  flex-shrink:0;
+}
+.player-kdr .kdr-label { font-size:8px; color:var(--text-muted); text-transform:uppercase; letter-spacing:.5px; }
+.player-kdr .kdr-val { color:var(--text-primary); }
+.player-kdr.high  { border-color:rgba(34,211,238,.4); background:rgba(34,211,238,.1); }
+.player-kdr.high .kdr-val { color:var(--accent-cyan); }
+.player-kdr.elite { border-color:rgba(250,204,21,.5); background:rgba(250,204,21,.1); }
+.player-kdr.elite .kdr-val { color:var(--accent-yellow); }
+
+/* Win streak fire badge */
+.player-streak {
+  display:inline-flex; align-items:center; gap:3px; padding:2px 6px;
+  background:linear-gradient(135deg, rgba(249,115,22,.2), rgba(239,68,68,.15));
+  border:1px solid rgba(249,115,22,.4); border-radius:10px;
+  font-size:10px; font-weight:800; color:var(--accent-orange);
+}
+
+/* Slot row reorganizado pra caber level + nome + kdr */
+.slot-row .slot-meta { display:flex; gap:5px; align-items:center; flex-shrink:0; }
 
 /* Header da grid */
 .grid-header { display:flex; justify-content:space-between; align-items:center; margin-bottom:18px; flex-wrap:wrap; gap:12px; }
@@ -562,7 +675,7 @@ header { background: rgba(8,6,14,0.85); backdrop-filter: blur(20px); border-bott
       <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M19 12H5M12 19l-7-7 7-7"/></svg>
       Voltar ao Mercado
     </a>
-    <div class="league-brand" title="lobby v22-swords-half-speed">
+    <div class="league-brand" title="lobby v24-level-kdr">
       <!-- Logo em vídeo (fundo preto fica transparente via mix-blend-mode:screen).
            muted+playsinline são obrigatórios pra autoplay funcionar nos browsers. -->
       <video class="league-logo-video" src="logogu.mp4" autoplay loop muted playsinline preload="auto"></video>
@@ -603,62 +716,95 @@ header { background: rgba(8,6,14,0.85); backdrop-filter: blur(20px); border-bott
 <section class="how-it-works" id="howItWorks">
   <div class="section-title">⚡ Como funciona</div>
   <div class="steps-grid">
-    <!-- Passo 1: Criar sala -->
+    <!-- ═══ PASSO 1 — CRIE SUA SALA ═══
+         História: caixa vazia → caixa materializa → plus aparece dentro → glow celebra → reseta -->
     <div class="energy-card step-card" data-color="purple">
       <div class="step-num">PASSO 1</div>
       <div class="step-icon">
-        <svg class="icon-bounce" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
-          <rect x="3" y="3" width="18" height="18" rx="3"/>
-          <path d="M12 8v8M8 12h8"/>
+        <svg class="story-create" viewBox="0 0 32 32" fill="none" stroke="currentColor" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round">
+          <g class="sc-box"><rect x="6" y="6" width="20" height="20" rx="3"/></g>
+          <g class="sc-plus">
+            <line x1="16" y1="12" x2="16" y2="20"/>
+            <line x1="12" y1="16" x2="20" y2="16"/>
+          </g>
         </svg>
       </div>
       <div class="step-title">Crie sua sala</div>
       <div class="step-desc">Login Steam e crie uma sala 5v5 com o nome do seu time.</div>
     </div>
 
-    <!-- Passo 2: Convidar amigos -->
+    <!-- ═══ PASSO 2 — CONVIDE 4 AMIGOS ═══
+         História: pessoa no centro → ondas de convite emanam (1, 2, 3 em sequência) → repete -->
     <div class="energy-card step-card" data-color="cyan">
       <div class="step-num">PASSO 2</div>
       <div class="step-icon">
-        <svg class="icon-pulse" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
-          <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/>
-          <circle cx="9" cy="7" r="4"/>
-          <path d="M22 11h-6M19 8v6"/>
+        <svg class="story-invite" viewBox="0 0 32 32" fill="none" stroke="currentColor" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round">
+          <!-- Pessoa central -->
+          <g class="si-person">
+            <circle cx="16" cy="13" r="3.5"/>
+            <path d="M9 26v-1.5a4 4 0 0 1 4-4h6a4 4 0 0 1 4 4V26"/>
+          </g>
+          <!-- 3 ondas de convite emanando — cada uma com delay -->
+          <circle class="si-ripple si-ripple-1" cx="16" cy="16" r="6" stroke-opacity="0"/>
+          <circle class="si-ripple si-ripple-2" cx="16" cy="16" r="6" stroke-opacity="0"/>
+          <circle class="si-ripple si-ripple-3" cx="16" cy="16" r="6" stroke-opacity="0"/>
         </svg>
       </div>
       <div class="step-title">Convide 4 amigos</div>
       <div class="step-desc">Compartilha o link e teu time entra na sala. Quando bate 5/5, tá pronto.</div>
     </div>
 
-    <!-- Passo 3: Desafiar — 2 espadinhas DUELANDO em X -->
+    <!-- ═══ PASSO 3 — DESAFIE OUTRA SALA ═══
+         História: espadas afastadas → vêm em direção ao centro → CLASH com faísca → afastam → repete -->
     <div class="energy-card step-card" data-color="red">
       <div class="step-num">PASSO 3</div>
       <div class="step-icon">
-        <svg class="icon-shake" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
-          <!-- Espada 1: pommel canto inferior esquerdo, lâmina sobe pra direita -->
-          <circle cx="4" cy="20" r="1" fill="currentColor"/>
-          <line x1="4" y1="20" x2="6.5" y2="17.5"/>
-          <line x1="5" y1="16" x2="8" y2="19"/>
-          <line x1="6.5" y1="17.5" x2="19" y2="5"/>
-          <!-- Espada 2: pommel canto inferior direito, lâmina sobe pra esquerda -->
-          <circle cx="20" cy="20" r="1" fill="currentColor"/>
-          <line x1="20" y1="20" x2="17.5" y2="17.5"/>
-          <line x1="19" y1="16" x2="16" y2="19"/>
-          <line x1="17.5" y1="17.5" x2="5" y2="5"/>
+        <svg class="story-duel" viewBox="0 0 32 32" fill="none" stroke="currentColor" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round">
+          <!-- Espada esquerda: pommel inferior-esquerdo, lâmina sobe pra direita -->
+          <g class="sd-sword-left">
+            <circle cx="6" cy="26" r="1" fill="currentColor" stroke="none"/>
+            <line x1="6" y1="26" x2="9" y2="23"/>
+            <line x1="7" y1="22" x2="11" y2="26"/>
+            <line x1="9" y1="23" x2="22" y2="10"/>
+          </g>
+          <!-- Espada direita: pommel inferior-direito, lâmina sobe pra esquerda -->
+          <g class="sd-sword-right">
+            <circle cx="26" cy="26" r="1" fill="currentColor" stroke="none"/>
+            <line x1="26" y1="26" x2="23" y2="23"/>
+            <line x1="25" y1="22" x2="21" y2="26"/>
+            <line x1="23" y1="23" x2="10" y2="10"/>
+          </g>
+          <!-- Faísca no centro (oculta por padrão, aparece no clash) -->
+          <g class="sd-spark" opacity="0">
+            <path d="M16 11l1 4 4 1-4 1-1 4-1-4-4-1 4-1z" fill="currentColor" stroke="none"/>
+          </g>
         </svg>
       </div>
       <div class="step-title">Desafie outra sala</div>
       <div class="step-desc">Veja salas adversárias cheias e mande o desafio. Pick/ban de mapa rolando.</div>
     </div>
 
-    <!-- Passo 4: Jogar -->
+    <!-- ═══ PASSO 4 — JOGUE + RANKING ═══
+         História: mira gira lento → centro pulsa "lock-on" → tiro flash → repete -->
     <div class="energy-card step-card" data-color="yellow">
       <div class="step-num">PASSO 4</div>
       <div class="step-icon">
-        <svg class="icon-spin" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
-          <circle cx="12" cy="12" r="10"/>
-          <path d="M12 2v4M12 18v4M2 12h4M18 12h4"/>
-          <circle cx="12" cy="12" r="4"/>
+        <svg class="story-aim" viewBox="0 0 32 32" fill="none" stroke="currentColor" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round">
+          <!-- Anel externo gira lento -->
+          <g class="sa-outer"><circle cx="16" cy="16" r="12"/></g>
+          <!-- Marquinhas N/S/L/O (parte do anel externo, gira junto) -->
+          <g class="sa-ticks">
+            <line x1="16" y1="3" x2="16" y2="6"/>
+            <line x1="16" y1="26" x2="16" y2="29"/>
+            <line x1="3" y1="16" x2="6" y2="16"/>
+            <line x1="26" y1="16" x2="29" y2="16"/>
+          </g>
+          <!-- Centro pulsa fazendo lock-on -->
+          <g class="sa-inner"><circle cx="16" cy="16" r="4"/></g>
+          <!-- Tiro/flash no centro (oculto, aparece no momento do shot) -->
+          <g class="sa-shot" opacity="0">
+            <circle cx="16" cy="16" r="2" fill="currentColor" stroke="none"/>
+          </g>
         </svg>
       </div>
       <div class="step-title">Jogue + ranking</div>
@@ -740,13 +886,13 @@ header { background: rgba(8,6,14,0.85); backdrop-filter: blur(20px); border-bott
 <div class="toast" id="toast"></div>
 
 <!-- Marker discreto persistente (canto inferior direito) — pra dev/debug -->
-<div style="position:fixed;bottom:8px;right:12px;font-size:10px;color:rgba(250,204,21,.5);font-family:monospace;pointer-events:none;z-index:1;background:rgba(0,0,0,.4);padding:3px 8px;border-radius:4px;">lobby v22-swords-half-speed</div>
+<div style="position:fixed;bottom:8px;right:12px;font-size:10px;color:rgba(250,204,21,.5);font-family:monospace;pointer-events:none;z-index:1;background:rgba(0,0,0,.4);padding:3px 8px;border-radius:4px;">lobby v24-level-kdr</div>
 
 <script>
 // =================================================================
 // MARKER
 // =================================================================
-//   lobby v22-swords-half-speed
+//   lobby v24-level-kdr
 // =================================================================
 
 // API_BASE primeiro — assim mesmo se Firebase falhar, doLogin() funciona
@@ -973,6 +1119,63 @@ function updateStats(lobbies) {
 let _myLobbyFilled = 0;
 let _myLobbyOwner = false;
 
+// Cache de stats dos jogadores (level/KDR/streak) — evita refetch em cada poll.
+// Key = steamId, value = { level, kdrRecent10, winStreak, matches, fetchedAt }.
+const _playerStatsCache = new Map();
+const PLAYER_STATS_TTL_MS = 60 * 1000;  // 1 min de cache
+
+async function fetchPlayerStats(steamIds) {
+  if (!steamIds || !steamIds.length) return {};
+  const now = Date.now();
+  // Filtra IDs que ainda estão no cache válido
+  const fresh = {};
+  const stale = [];
+  steamIds.forEach(id => {
+    const cached = _playerStatsCache.get(id);
+    if (cached && (now - cached.fetchedAt) < PLAYER_STATS_TTL_MS) {
+      fresh[id] = cached;
+    } else {
+      stale.push(id);
+    }
+  });
+  if (!stale.length) return fresh;
+
+  // Batch fetch dos faltantes
+  try {
+    const r = await fetch(`${API_BASE}/api/match/players?ids=${stale.join(',')}`);
+    const data = await r.json();
+    Object.entries(data.players || {}).forEach(([id, stats]) => {
+      const entry = { ...stats, fetchedAt: now };
+      _playerStatsCache.set(id, entry);
+      fresh[id] = entry;
+    });
+  } catch (e) {
+    console.warn('[player stats] fetch falhou:', e.message);
+  }
+  return fresh;
+}
+
+// Renderiza badge de level (hexágono) ou "Sem nível" se < 3 partidas
+function renderLevelBadge(stats) {
+  if (!stats || !stats.level) {
+    const remaining = stats ? Math.max(0, 3 - (stats.matches || 0)) : 3;
+    return `<div class="player-level no-level" title="Joga ${remaining} partidas pra desbloquear nível">${remaining}p</div>`;
+  }
+  return `<div class="player-level" data-lvl="${stats.level}" title="Nível ${stats.level} · KDR ${stats.kdrRecent10.toFixed(2)}">${stats.level}</div>`;
+}
+
+function renderKdrBadge(stats) {
+  if (!stats || !stats.matches) return '';
+  const kdr = stats.kdrRecent10 || 0;
+  const cls = kdr >= 1.5 ? 'elite' : kdr >= 1.0 ? 'high' : '';
+  return `<div class="player-kdr ${cls}" title="KDR das últimas 10 partidas"><span class="kdr-label">KDR</span><span class="kdr-val">${kdr.toFixed(2)}</span></div>`;
+}
+
+function renderStreakBadge(stats) {
+  if (!stats || !stats.winStreak || stats.winStreak < 2) return '';
+  return `<div class="player-streak" title="${stats.winStreak} vitórias seguidas">🔥 ${stats.winStreak}</div>`;
+}
+
 async function loadMyLobby() {
   if (!_idToken) return;
   try {
@@ -1024,13 +1227,21 @@ function renderMyLobby(lobby) {
     return;
   }
 
+  // Render slots primeiro com placeholders, depois faz batch fetch e re-renderiza
+  // com level/KDR/streak. Assim a UI não trava esperando a API.
   const slotsHtml = (lobby.slots || []).map((s, i) => {
     if (!s) return `<div class="slot-row slot-empty"><div class="slot-avatar">?</div><div class="slot-name">vazio</div></div>`;
     const kickBtn = (_myLobbyOwner && s.uid !== _user.uid)
       ? `<button class="slot-kick" onclick="kickPlayer('${s.uid}')" title="Remover">×</button>` : '';
-    return `<div class="slot-row">
+    const cached = _playerStatsCache.get(s.steamId);
+    return `<div class="slot-row" data-steamid="${escHtml(s.steamId || '')}">
+      ${renderLevelBadge(cached)}
       <div class="slot-avatar">${s.avatar ? `<img src="${s.avatar}" onerror="this.style.display='none'">` : (s.name || '?').charAt(0).toUpperCase()}</div>
       <div class="slot-name">${escHtml(s.name || '—')}${s.uid === lobby.ownerId ? ' 👑' : ''}</div>
+      <div class="slot-meta">
+        ${renderStreakBadge(cached)}
+        ${renderKdrBadge(cached)}
+      </div>
       ${kickBtn}
     </div>`;
   }).join('');
@@ -1053,6 +1264,22 @@ function renderMyLobby(lobby) {
     ${challengingBanner}
     <button class="btn-leave" onclick="leaveMyLobby()">${_myLobbyOwner ? '🏁 Encerrar Sala' : '🚪 Sair'}</button>
   `;
+
+  // Após renderizar com placeholders, busca stats em batch e atualiza in-place
+  const steamIds = (lobby.slots || []).filter(s => s && s.steamId).map(s => s.steamId);
+  if (steamIds.length) {
+    fetchPlayerStats(steamIds).then(stats => {
+      // Atualiza cada slot com level/KDR/streak já carregados
+      Object.entries(stats).forEach(([sid, s]) => {
+        const row = container.querySelector(`.slot-row[data-steamid="${sid}"]`);
+        if (!row) return;
+        const oldLevel = row.querySelector('.player-level');
+        if (oldLevel) oldLevel.outerHTML = renderLevelBadge(s);
+        const meta = row.querySelector('.slot-meta');
+        if (meta) meta.innerHTML = renderStreakBadge(s) + renderKdrBadge(s);
+      });
+    });
+  }
 }
 
 // ─── Ações ───
