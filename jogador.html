@@ -1,0 +1,390 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Perfil do Jogador — GMAX LEAGUE</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&family=JetBrains+Mono:wght@600;700;800&display=swap" rel="stylesheet">
+<style>
+:root {
+  --bg-primary: #0a0612; --bg-secondary: #110a1f; --bg-elevated: #1a0f2e;
+  --primary: #8b5cf6; --primary-light: #a78bfa;
+  --accent-cyan: #22d3ee; --accent-yellow: #facc15; --accent-orange: #f97316;
+  --accent-red: #ef4444; --accent-green: #10b981;
+  --text-primary: #e0e7ff; --text-secondary: #a5a3b8; --text-muted: #6b6885;
+  --border: rgba(139,92,246,.15);
+}
+* { box-sizing: border-box; margin: 0; padding: 0; }
+body {
+  font-family: 'Inter', sans-serif; color: var(--text-primary); min-height: 100vh;
+  background:
+    radial-gradient(ellipse at top, rgba(139,92,246,.08), transparent 60%),
+    radial-gradient(ellipse at bottom, rgba(34,211,238,.05), transparent 60%),
+    var(--bg-primary);
+  overflow-x:hidden; position:relative;
+}
+.bg-orbs { position:fixed; inset:0; pointer-events:none; z-index:0; overflow:hidden; }
+.bg-orbs .orb { position:absolute; border-radius:50%; filter:blur(80px); opacity:.3; will-change:transform; }
+.bg-orbs .orb-purple { width:500px; height:500px; background:radial-gradient(circle, rgba(139,92,246,.6), transparent 70%); top:-15%; left:-10%; animation:orbDrift1 24s ease-in-out infinite alternate; }
+.bg-orbs .orb-cyan { width:420px; height:420px; background:radial-gradient(circle, rgba(34,211,238,.45), transparent 70%); top:30%; right:-12%; animation:orbDrift2 28s ease-in-out infinite alternate; }
+@keyframes orbDrift1 { from { transform:translate(0,0) scale(1); } to { transform:translate(80px, 60px) scale(1.15); } }
+@keyframes orbDrift2 { from { transform:translate(0,0) scale(1); } to { transform:translate(-70px, 90px) scale(.9); } }
+
+header, main { position:relative; z-index:1; }
+header { z-index:100; background: rgba(8,6,14,0.85); backdrop-filter: blur(20px); border-bottom: 1px solid var(--border); position: sticky; top: 0; }
+.header-content { max-width: 1400px; margin: 0 auto; padding: 12px 24px; display: flex; align-items: center; justify-content: space-between; gap: 24px; }
+.back-to-market { display:inline-flex; align-items:center; gap:8px; padding:8px 14px; background:rgba(255,255,255,.04); border:1px solid var(--border); border-radius:10px; color:var(--text-secondary); text-decoration:none; font-size:13px; font-weight:600; transition:all .15s; }
+.back-to-market:hover { background:rgba(255,255,255,.08); color:var(--text-primary); border-color:var(--primary-light); }
+.league-brand { display:flex; align-items:center; gap:10px; }
+.league-logo-video { height: 76px; width: auto; display: block; filter: url(#logoChromaKey); pointer-events: none; }
+.nav-back { display:inline-flex; align-items:center; gap:8px; padding:8px 14px; background:rgba(139,92,246,.15); border:1px solid rgba(139,92,246,.3); border-radius:10px; color:var(--primary-light); text-decoration:none; font-size:13px; font-weight:600; }
+.nav-back:hover { background:rgba(139,92,246,.25); }
+
+main { max-width:1100px; margin:0 auto; padding:32px 24px; }
+
+/* ═══ HERO DO JOGADOR ═══ */
+.player-hero {
+  position:relative;
+  display:grid; grid-template-columns: auto 1fr auto; gap:28px; align-items:center;
+  padding:32px;
+  background:linear-gradient(135deg, rgba(20,16,40,.85), rgba(15,10,30,.92));
+  border-radius:20px;
+  margin-bottom:28px;
+  overflow:hidden; isolation:isolate; backdrop-filter:blur(8px);
+}
+.player-hero::before {
+  content:''; position:absolute; inset:-1px; border-radius:21px; padding:2px;
+  background: conic-gradient(from var(--energy-angle, 0deg),
+    rgba(139,92,246,.4) 0deg, rgba(34,211,238,.7) 120deg,
+    rgba(250,204,21,.5) 240deg, rgba(139,92,246,.4) 360deg);
+  -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+  -webkit-mask-composite: xor; mask-composite: exclude;
+  animation: energyRotate 10s linear infinite; pointer-events:none; z-index:-1;
+}
+@property --energy-angle { syntax: '<angle>'; initial-value: 0deg; inherits: false; }
+@keyframes energyRotate { from { --energy-angle:0deg; } to { --energy-angle:360deg; } }
+
+/* Hexágono BIG do level */
+.hero-level {
+  position:relative; width:120px; height:140px; display:flex; align-items:center; justify-content:center;
+  font-family:'JetBrains Mono', monospace; font-size:48px; font-weight:900; color:#fff;
+  background:linear-gradient(135deg, var(--lvl-color, #6b7280), var(--lvl-color-dark, #1f2937));
+  clip-path: polygon(50% 0%, 100% 25%, 100% 75%, 50% 100%, 0% 75%, 0% 25%);
+  text-shadow: 0 2px 6px rgba(0,0,0,.6);
+  filter: drop-shadow(0 0 20px var(--lvl-color, #6b7280));
+}
+.hero-level[data-lvl="1"]  { --lvl-color:#6b7280; --lvl-color-dark:#374151; }
+.hero-level[data-lvl="2"]  { --lvl-color:#84cc16; --lvl-color-dark:#4d7c0f; }
+.hero-level[data-lvl="3"]  { --lvl-color:#84cc16; --lvl-color-dark:#4d7c0f; }
+.hero-level[data-lvl="4"]  { --lvl-color:#22d3ee; --lvl-color-dark:#0e7490; }
+.hero-level[data-lvl="5"]  { --lvl-color:#22d3ee; --lvl-color-dark:#0e7490; }
+.hero-level[data-lvl="6"]  { --lvl-color:#a78bfa; --lvl-color-dark:#6d28d9; }
+.hero-level[data-lvl="7"]  { --lvl-color:#a78bfa; --lvl-color-dark:#6d28d9; }
+.hero-level[data-lvl="8"]  { --lvl-color:#facc15; --lvl-color-dark:#a16207; }
+.hero-level[data-lvl="9"]  { --lvl-color:#f97316; --lvl-color-dark:#9a3412; }
+.hero-level[data-lvl="10"] { --lvl-color:#ef4444; --lvl-color-dark:#991b1b; }
+.hero-level.no-level { background:rgba(255,255,255,.05); color:var(--text-muted); border:2px dashed rgba(255,255,255,.15); clip-path:none; border-radius:20px; font-size:11px; font-weight:700; text-align:center; line-height:1.2; padding:10px; }
+.hero-level-label { position:absolute; top:-10px; left:50%; transform:translateX(-50%); padding:3px 10px; background:rgba(0,0,0,.7); border:1px solid var(--border); border-radius:10px; font-size:9px; color:var(--text-muted); text-transform:uppercase; letter-spacing:1.5px; font-family:'Inter',sans-serif; white-space:nowrap; }
+
+.hero-info { display:flex; flex-direction:column; gap:10px; min-width:0; }
+.hero-info .name { font-size:32px; font-weight:900; line-height:1; }
+.hero-info .meta { display:flex; gap:12px; flex-wrap:wrap; align-items:center; }
+.hero-pill {
+  display:inline-flex; align-items:center; gap:6px; padding:5px 12px;
+  background:rgba(139,92,246,.12); border:1px solid rgba(139,92,246,.3); border-radius:14px;
+  font-family:'JetBrains Mono', monospace; font-size:13px; font-weight:700;
+}
+.hero-pill .label { font-size:9px; color:var(--text-muted); text-transform:uppercase; letter-spacing:1px; font-family:'Inter',sans-serif; }
+.hero-pill.kdr  { color:var(--text-primary); }
+.hero-pill.kdr.high  { background:rgba(34,211,238,.1); border-color:rgba(34,211,238,.4); color:var(--accent-cyan); }
+.hero-pill.kdr.elite { background:rgba(250,204,21,.1); border-color:rgba(250,204,21,.5); color:var(--accent-yellow); }
+.hero-pill.streak { background:linear-gradient(135deg,rgba(249,115,22,.2),rgba(239,68,68,.15)); border-color:rgba(249,115,22,.4); color:var(--accent-orange); }
+.hero-pill.winrate { background:rgba(16,185,129,.1); border-color:rgba(16,185,129,.4); color:var(--accent-green); }
+
+.hero-avatar { width:120px; height:120px; border-radius:50%; background:rgba(139,92,246,.2); overflow:hidden; flex-shrink:0; border:3px solid var(--lvl-color, var(--primary)); }
+.hero-avatar img { width:100%; height:100%; object-fit:cover; }
+
+@media (max-width:760px) {
+  .player-hero { grid-template-columns: 1fr; text-align:center; padding:24px; }
+  .hero-info { align-items:center; }
+  .hero-info .name { font-size:24px; }
+  .hero-level { margin:0 auto; }
+  .hero-avatar { margin:0 auto; }
+}
+
+/* ═══ STATS GRID ═══ */
+.stats-grid { display:grid; grid-template-columns:repeat(auto-fit, minmax(140px, 1fr)); gap:14px; margin-bottom:28px; }
+.stat-card {
+  padding:16px;
+  background:linear-gradient(135deg, rgba(20,16,40,.85), rgba(15,10,30,.92));
+  border:1px solid var(--border); border-radius:14px;
+  backdrop-filter:blur(8px);
+  text-align:center;
+}
+.stat-card .stat-label { font-size:10px; color:var(--text-muted); text-transform:uppercase; letter-spacing:1px; margin-bottom:6px; }
+.stat-card .stat-value { font-family:'JetBrains Mono', monospace; font-size:24px; font-weight:800; color:var(--text-primary); }
+.stat-card .stat-sub { font-size:11px; color:var(--text-secondary); margin-top:2px; }
+.stat-card.green .stat-value { color:var(--accent-green); }
+.stat-card.red   .stat-value { color:var(--accent-red); }
+.stat-card.purple .stat-value { color:var(--primary-light); }
+.stat-card.yellow .stat-value { color:var(--accent-yellow); }
+.stat-card.cyan   .stat-value { color:var(--accent-cyan); }
+
+/* ═══ HISTÓRICO DE PARTIDAS ═══ */
+.history-section h2 { font-size:18px; font-weight:800; margin-bottom:12px; display:flex; align-items:center; gap:10px; }
+.history-section h2 .count { font-size:11px; padding:3px 10px; background:rgba(139,92,246,.15); border:1px solid rgba(139,92,246,.3); border-radius:10px; color:var(--primary-light); font-weight:600; font-family:'JetBrains Mono',monospace; }
+
+.history-table-wrap { background:linear-gradient(135deg, rgba(20,16,40,.85), rgba(15,10,30,.92)); border:1px solid var(--border); border-radius:16px; overflow:hidden; backdrop-filter:blur(8px); }
+.history-table { width:100%; border-collapse:collapse; }
+.history-table thead th { padding:14px 12px; font-size:10px; color:var(--text-muted); text-transform:uppercase; letter-spacing:1px; text-align:left; border-bottom:1px solid var(--border); font-weight:700; font-family:'Inter',sans-serif; }
+.history-table thead th.numeric { text-align:right; }
+.history-table tbody td { padding:12px; border-bottom:1px solid rgba(255,255,255,.03); font-size:13px; }
+.history-table tbody td.numeric { text-align:right; font-family:'JetBrains Mono', monospace; font-weight:600; }
+.history-table tbody tr:hover { background:rgba(139,92,246,.06); }
+.history-table tbody tr:last-child td { border-bottom:none; }
+
+.result-pill { display:inline-flex; align-items:center; justify-content:center; min-width:48px; padding:3px 10px; border-radius:8px; font-size:10px; font-weight:800; text-transform:uppercase; letter-spacing:1px; }
+.result-pill.win  { background:rgba(16,185,129,.15); color:var(--accent-green); border:1px solid rgba(16,185,129,.4); }
+.result-pill.loss { background:rgba(239,68,68,.15); color:var(--accent-red); border:1px solid rgba(239,68,68,.4); }
+.result-pill.tie  { background:rgba(100,100,120,.15); color:var(--text-muted); border:1px solid rgba(100,100,120,.4); }
+
+.score-cell { font-family:'JetBrains Mono', monospace; font-weight:700; font-size:13px; }
+.score-cell .own { color:var(--text-primary); }
+.score-cell .sep { color:var(--text-muted); margin:0 4px; }
+.score-cell .opp { color:var(--text-muted); }
+
+.kdr-mini { font-family:'JetBrains Mono', monospace; font-weight:700; font-size:13px; }
+.kdr-mini.high  { color:var(--accent-cyan); }
+.kdr-mini.elite { color:var(--accent-yellow); }
+.kdr-mini.low   { color:var(--text-muted); }
+
+.empty-state { padding:60px 20px; text-align:center; color:var(--text-muted); }
+.empty-state h2 { color:var(--text-secondary); font-size:18px; margin-bottom:8px; font-weight:600; }
+.loading-state { padding:60px; text-align:center; color:var(--text-muted); display:flex; flex-direction:column; gap:14px; align-items:center; }
+.loading-state .spinner { width:32px; height:32px; border:3px solid var(--primary-light); border-top-color:transparent; border-radius:50%; animation:spin 1s linear infinite; }
+@keyframes spin { to { transform: rotate(360deg); } }
+
+@media (max-width:720px) {
+  .history-table th.hide-mobile, .history-table td.hide-mobile { display:none; }
+  .stats-grid { grid-template-columns:repeat(2,1fr); }
+}
+</style>
+</head>
+<body>
+
+<svg width="0" height="0" style="position:absolute;pointer-events:none;" aria-hidden="true">
+  <defs>
+    <filter id="logoChromaKey" color-interpolation-filters="sRGB">
+      <feColorMatrix type="matrix" values="1 0 0 0 0  0 1 0 0 0  0 0 1 0 0  0.4 0.4 0.4 0 0"/>
+      <feComponentTransfer><feFuncA type="linear" slope="4" intercept="-0.4"/></feComponentTransfer>
+    </filter>
+  </defs>
+</svg>
+
+<div class="bg-orbs" aria-hidden="true">
+  <div class="orb orb-purple"></div>
+  <div class="orb orb-cyan"></div>
+</div>
+
+<header>
+  <div class="header-content">
+    <a class="back-to-market" href="lobbies.html" title="Voltar pra Lobbies">
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M19 12H5M12 19l-7-7 7-7"/></svg>
+      Lobbies
+    </a>
+    <div class="league-brand">
+      <video class="league-logo-video" src="logogu.mp4" autoplay loop muted playsinline preload="auto"></video>
+    </div>
+    <a class="nav-back" href="ranking.html">📊 Ranking</a>
+  </div>
+</header>
+
+<main>
+  <div id="loadingState" class="loading-state">
+    <div class="spinner"></div>
+    <div>Carregando perfil…</div>
+  </div>
+  <div id="profileContent" style="display:none;"></div>
+  <div id="errorState" class="empty-state" style="display:none;">
+    <h2>Jogador não encontrado</h2>
+    <p>Esse jogador ainda não tem partidas registradas no GMAX LEAGUE.</p>
+  </div>
+</main>
+
+<div style="position:fixed;bottom:8px;right:12px;font-size:10px;color:rgba(250,204,21,.5);font-family:monospace;pointer-events:none;z-index:1;background:rgba(0,0,0,.4);padding:3px 8px;border-radius:4px;">jogador v1</div>
+
+<script>
+const API_BASE = 'https://gumax-backend-production.up.railway.app';
+
+const MAP_LABELS = {
+  de_mirage: 'Mirage', de_inferno: 'Inferno', de_dust2: 'Dust 2',
+  de_nuke: 'Nuke', de_anubis: 'Anubis', de_ancient: 'Ancient', de_train: 'Train',
+};
+
+async function loadProfile() {
+  const params = new URLSearchParams(location.search);
+  const steamId = params.get('id');
+  if (!steamId) { showError(); return; }
+  try {
+    const r = await fetch(`${API_BASE}/api/match/player/${encodeURIComponent(steamId)}`);
+    if (r.status === 404) { showError(); return; }
+    const data = await r.json();
+    if (data.error) { showError(); return; }
+    renderProfile(data);
+  } catch (e) {
+    console.error('[profile]', e);
+    showError(e.message);
+  }
+}
+
+function showError(msg) {
+  document.getElementById('loadingState').style.display = 'none';
+  document.getElementById('profileContent').style.display = 'none';
+  const err = document.getElementById('errorState');
+  err.style.display = '';
+  if (msg) err.querySelector('p').textContent = msg;
+}
+
+function renderProfile(p) {
+  document.getElementById('loadingState').style.display = 'none';
+  document.title = `${p.name} — GMAX LEAGUE`;
+
+  const kdrCls = p.kdrRecent10 >= 1.5 ? 'elite' : p.kdrRecent10 >= 1.0 ? 'high' : '';
+  const lvlBadge = p.level
+    ? `<div class="hero-level" data-lvl="${p.level}">${p.level}<div class="hero-level-label">LEVEL</div></div>`
+    : `<div class="hero-level no-level">Joga ${Math.max(0, 3 - p.matches)}<br>partidas</div>`;
+  const streakHtml = p.winStreak >= 2
+    ? `<div class="hero-pill streak">🔥 <span>${p.winStreak} VITÓRIAS SEGUIDAS</span></div>`
+    : '';
+
+  const heroHtml = `
+    <section class="player-hero">
+      ${lvlBadge}
+      <div class="hero-info">
+        <div class="name">${esc(p.name)}</div>
+        <div class="meta">
+          <div class="hero-pill kdr ${kdrCls}">
+            <span class="label">KDR</span>
+            <span>${p.kdrRecent10.toFixed(2)}</span>
+          </div>
+          <div class="hero-pill winrate">
+            <span class="label">WIN RATE</span>
+            <span>${p.winRate}%</span>
+          </div>
+          ${streakHtml}
+        </div>
+      </div>
+      <div class="hero-avatar" data-lvl-color>
+        ${p.avatar ? `<img src="${esc(p.avatar)}" onerror="this.parentNode.textContent='${esc((p.name||'?').charAt(0).toUpperCase())}';">` : esc((p.name||'?').charAt(0).toUpperCase())}
+      </div>
+    </section>
+  `;
+
+  const statsHtml = `
+    <section class="stats-grid">
+      <div class="stat-card purple">
+        <div class="stat-label">Partidas</div>
+        <div class="stat-value">${p.matches}</div>
+      </div>
+      <div class="stat-card green">
+        <div class="stat-label">Vitórias</div>
+        <div class="stat-value">${p.wins}</div>
+      </div>
+      <div class="stat-card red">
+        <div class="stat-label">Derrotas</div>
+        <div class="stat-value">${p.losses}</div>
+      </div>
+      <div class="stat-card cyan">
+        <div class="stat-label">K / D / A</div>
+        <div class="stat-value" style="font-size:18px;">${p.kills}/${p.deaths}/${p.assists}</div>
+      </div>
+      <div class="stat-card yellow">
+        <div class="stat-label">MVPs</div>
+        <div class="stat-value">${p.mvps}</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-label">ADR Médio</div>
+        <div class="stat-value">${p.avgAdr}</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-label">KDA</div>
+        <div class="stat-value">${p.kda.toFixed(2)}</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-label">KDR All-time</div>
+        <div class="stat-value">${p.kdr.toFixed(2)}</div>
+      </div>
+    </section>
+  `;
+
+  const historyHtml = renderHistory(p.history || []);
+
+  document.getElementById('profileContent').style.display = '';
+  document.getElementById('profileContent').innerHTML = heroHtml + statsHtml + historyHtml;
+}
+
+function renderHistory(history) {
+  if (!history.length) {
+    return `
+      <section class="history-section">
+        <h2>📜 Histórico de partidas <span class="count">0</span></h2>
+        <div class="empty-state" style="background:linear-gradient(135deg, rgba(20,16,40,.85), rgba(15,10,30,.92));border:1px solid var(--border);border-radius:16px;">
+          <h2 style="font-size:15px;">Nenhuma partida registrada</h2>
+          <p>Quando rolar a primeira partida via GMAX LEAGUE, ela aparece aqui.</p>
+        </div>
+      </section>
+    `;
+  }
+  const rows = history.map(m => {
+    const date = m.playedAt ? new Date(m.playedAt).toLocaleDateString('pt-BR', { day: '2-digit', month: '2-digit' }) : '—';
+    const time = m.playedAt ? new Date(m.playedAt).toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' }) : '';
+    const map = m.map ? (MAP_LABELS[m.map] || m.map.replace('de_', '')) : '—';
+    const kdrCls = m.kdr >= 1.5 ? 'elite' : m.kdr >= 1.0 ? 'high' : 'low';
+    return `
+      <tr>
+        <td>
+          <div style="display:flex;flex-direction:column;line-height:1.2;">
+            <span style="font-weight:700;">${date}</span>
+            <span style="font-size:10px;color:var(--text-muted);">${time}</span>
+          </div>
+        </td>
+        <td><span class="result-pill ${m.result}">${m.result === 'win' ? 'WIN' : m.result === 'loss' ? 'LOSS' : 'TIE'}</span></td>
+        <td><span class="score-cell"><span class="own">${m.scoreOwn}</span><span class="sep">×</span><span class="opp">${m.scoreOpp}</span></span></td>
+        <td class="hide-mobile">${esc(map)}</td>
+        <td class="numeric">${m.kills}/${m.deaths}${m.assists ? '/' + m.assists : ''}</td>
+        <td class="numeric"><span class="kdr-mini ${kdrCls}">${m.kdr.toFixed(2)}</span></td>
+        <td class="numeric hide-mobile">${m.adr}</td>
+        <td class="numeric hide-mobile">${m.mvps || 0}</td>
+      </tr>
+    `;
+  }).join('');
+  return `
+    <section class="history-section">
+      <h2>📜 Histórico de partidas <span class="count">${history.length}</span></h2>
+      <div class="history-table-wrap">
+        <table class="history-table">
+          <thead>
+            <tr>
+              <th>Data</th>
+              <th>Resultado</th>
+              <th>Placar</th>
+              <th class="hide-mobile">Mapa</th>
+              <th class="numeric">K/D${history[0]?.assists ? '/A' : ''}</th>
+              <th class="numeric">KDR</th>
+              <th class="numeric hide-mobile">ADR</th>
+              <th class="numeric hide-mobile">MVPs</th>
+            </tr>
+          </thead>
+          <tbody>${rows}</tbody>
+        </table>
+      </div>
+    </section>
+  `;
+}
+
+function esc(s) { return String(s || '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'})[c]); }
+
+loadProfile();
+</script>
+</body>
+</html>
