@@ -408,6 +408,39 @@ header { background: rgba(8,6,14,0.85); backdrop-filter: blur(20px); border-bott
 .btn-leave { width:100%; padding:9px; margin-top:12px; background:transparent; border:1px solid rgba(239,68,68,.4); color:var(--accent-red); border-radius:8px; cursor:pointer; font-size:12px; font-weight:600; }
 .btn-leave:hover { background:rgba(239,68,68,.1); }
 
+/* ── Chat da sala (live via Firestore onSnapshot) ──
+   Fica fora do #myLobbyContent (que é innerHTML-overwrite a cada poll de 3s)
+   pra não destruir o listener nem perder estado de scroll/input. */
+.lobby-chat { margin-top:14px; padding-top:12px; border-top:1px dashed var(--border); display:flex; flex-direction:column; gap:8px; }
+.lobby-chat .chat-header { font-size:11px; color:var(--text-muted); text-transform:uppercase; letter-spacing:.5px; display:flex; align-items:center; gap:6px; }
+.lobby-chat .chat-header .live-dot { width:6px; height:6px; border-radius:50%; background:var(--accent-green); box-shadow:0 0 6px var(--accent-green); animation:chatLive 1.6s ease-in-out infinite; }
+@keyframes chatLive { 0%,100% { opacity:1; } 50% { opacity:.4; } }
+.chat-messages { max-height:240px; overflow-y:auto; padding-right:4px; display:flex; flex-direction:column; gap:4px; scrollbar-width:thin; scrollbar-color:rgba(139,92,246,.3) transparent; }
+.chat-messages::-webkit-scrollbar { width:4px; }
+.chat-messages::-webkit-scrollbar-thumb { background:rgba(139,92,246,.3); border-radius:2px; }
+.chat-msg { display:flex; gap:8px; align-items:flex-start; font-size:12px; line-height:1.4; padding:3px 0; }
+.chat-msg-avatar { width:22px; height:22px; border-radius:50%; flex-shrink:0; background:var(--bg-elevated); object-fit:cover; display:flex; align-items:center; justify-content:center; font-size:11px; font-weight:700; color:var(--text-secondary); overflow:hidden; }
+.chat-msg-avatar img { width:100%; height:100%; object-fit:cover; }
+.chat-msg-body { display:flex; flex-direction:column; flex:1; min-width:0; }
+.chat-msg-meta { display:flex; gap:6px; align-items:baseline; }
+.chat-msg-name { font-weight:700; color:var(--primary-light); font-size:11px; text-decoration:none; max-width:140px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+.chat-msg-name:hover { text-decoration:underline; }
+.chat-msg-time { font-size:10px; color:var(--text-muted); }
+.chat-msg-text { color:var(--text-primary); word-break:break-word; }
+.chat-msg.is-mine .chat-msg-name { color:var(--accent-yellow); }
+.chat-empty { font-size:11px; color:var(--text-muted); text-align:center; padding:14px 0; }
+.chat-form { display:flex; gap:6px; }
+.chat-form input { flex:1; padding:8px 10px; background:rgba(0,0,0,.3); border:1px solid var(--border); border-radius:8px; color:var(--text-primary); font-size:12px; font-family:inherit; outline:none; transition:border-color .15s; }
+.chat-form input:focus { border-color:var(--primary-light); }
+.chat-form input:disabled { opacity:.5; cursor:not-allowed; }
+.chat-send { padding:8px 14px; background:linear-gradient(135deg, var(--primary), var(--accent-cyan)); border:none; border-radius:8px; color:#fff; cursor:pointer; font-size:13px; font-weight:700; transition:filter .15s, transform .1s; }
+.chat-send:hover:not(:disabled) { filter:brightness(1.15); }
+.chat-send:active { transform:scale(.96); }
+.chat-send:disabled { opacity:.4; cursor:not-allowed; }
+.chat-charcount { font-size:10px; color:var(--text-muted); text-align:right; min-height:12px; }
+.chat-charcount.warn { color:var(--accent-yellow); }
+.chat-charcount.over { color:var(--accent-red); }
+
 /* ═══ LEVEL HEXÁGONO + KDR PILL — exibido ao lado de cada jogador ═══ */
 .player-level {
   position:relative; width:24px; height:28px; display:inline-flex; align-items:center; justify-content:center;
@@ -633,7 +666,7 @@ header { background: rgba(8,6,14,0.85); backdrop-filter: blur(20px); border-bott
       <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M19 12H5M12 19l-7-7 7-7"/></svg>
       Voltar ao Mercado
     </a>
-    <div class="league-brand" title="lobby v26-clickable-profiles">
+    <div class="league-brand" title="lobby v27-chat-lobby">
       <!-- Logo em vídeo (fundo preto fica transparente via mix-blend-mode:screen).
            muted+playsinline são obrigatórios pra autoplay funcionar nos browsers. -->
       <video class="league-logo-video" src="logogu.mp4" autoplay loop muted playsinline preload="auto"></video>
@@ -779,6 +812,18 @@ header { background: rgba(8,6,14,0.85); backdrop-filter: blur(20px); border-bott
     <div id="myLobbyContent">
       <p style="font-size:13px;color:var(--text-muted);">Você não está em nenhuma sala. <strong style="color:var(--primary-light);">Crie uma</strong> ou entre numa aberta →</p>
     </div>
+    <!-- Chat da sala — fica FORA do #myLobbyContent porque aquele é re-renderizado
+         a cada poll (3s). Aqui o listener onSnapshot persiste e o scroll/input
+         do user não somem. Mostrado só quando user é membro de uma sala. -->
+    <div id="lobbyChat" class="lobby-chat" style="display:none;">
+      <div class="chat-header"><span class="live-dot" aria-hidden="true"></span>💬 Chat da sala</div>
+      <div id="chatMessages" class="chat-messages" aria-live="polite"></div>
+      <form class="chat-form" onsubmit="sendChatMessage(event)" autocomplete="off">
+        <input id="chatInput" type="text" maxlength="200" placeholder="Mensagem… (Enter envia)" oninput="updateChatCount()" />
+        <button type="submit" class="chat-send" id="chatSendBtn" title="Enviar (Enter)">➤</button>
+      </form>
+      <div id="chatCharCount" class="chat-charcount"></div>
+    </div>
   </aside>
 
   <section>
@@ -844,13 +889,16 @@ header { background: rgba(8,6,14,0.85); backdrop-filter: blur(20px); border-bott
 <div class="toast" id="toast"></div>
 
 <!-- Marker discreto persistente (canto inferior direito) — pra dev/debug -->
-<div style="position:fixed;bottom:8px;right:12px;font-size:10px;color:rgba(250,204,21,.5);font-family:monospace;pointer-events:none;z-index:1;background:rgba(0,0,0,.4);padding:3px 8px;border-radius:4px;">lobby v26-clickable-profiles</div>
+<div style="position:fixed;bottom:8px;right:12px;font-size:10px;color:rgba(250,204,21,.5);font-family:monospace;pointer-events:none;z-index:1;background:rgba(0,0,0,.4);padding:3px 8px;border-radius:4px;">lobby v27-chat-lobby</div>
 
 <script>
 // =================================================================
 // MARKER
 // =================================================================
-//   lobby v26-clickable-profiles
+//   lobby v27-chat-lobby
+//   - Subcollection lobbies/{id}/chat com onSnapshot real-time
+//   - UI compacta na sidebar (fora de myLobbyContent pra não morrer no poll)
+//   - Rate limit 1.5s + maxlength 200 + rules robustas (uid==auth, member-only)
 // =================================================================
 
 // API_BASE primeiro — assim mesmo se Firebase falhar, doLogin() funciona
@@ -1152,6 +1200,8 @@ function renderMyLobby(lobby) {
   const container = document.getElementById('myLobbyContent');
   if (!lobby) {
     _myLobbyId = null; _myLobbyFilled = 0; _myLobbyOwner = false;
+    // Sai do chat (cleanup do listener) — user não tá mais em sala nenhuma.
+    teardownChat();
     // Se modal de desafio estava aberto, fecha (sala foi deletada)
     closeChallengeModal();
     if (!_user) {
@@ -1239,6 +1289,11 @@ function renderMyLobby(lobby) {
       });
     });
   }
+
+  // Setup do chat — idempotente (só re-cria listener se mudou de sala).
+  // Roda DEPOIS do innerHTML porque #lobbyChat fica fora do container, mas
+  // dependemos de _user já estar setado (renderMyLobby só roda com auth).
+  setupChat(lobby.id);
 }
 
 // ─── Ações ───
@@ -1430,6 +1485,203 @@ async function declineChallengeFromModal() {
     toast('Desafio recusado', '');
     loadMyLobby();
   } catch (e) {}
+}
+
+// ─── Chat da sala (Firestore real-time via onSnapshot) ───────────────────────
+// Estratégia:
+// • Subcollection `lobbies/{id}/chat/{msgId}` ordenada por createdAt asc, last 50.
+// • Setup acontece quando renderMyLobby recebe um lobby novo; teardown quando
+//   user sai/loga out. Listener UNIQUE por lobby — se _chatActiveLobbyId não
+//   muda, não re-cria pra evitar flicker.
+// • Mensagens são imutáveis (rules bloqueiam update/delete pra users).
+// • Anti-spam: rate limit 1.5s no client + maxlength 200 no input + size check
+//   nas rules (defesa em profundidade).
+// • UID/name/avatar lidos do users/{uid} no Firestore (mesma fonte de verdade
+//   que o auth state usa lá em cima).
+// ──────────────────────────────────────────────────────────────────────────────
+let _chatUnsubscribe = null;
+let _chatActiveLobbyId = null;
+let _chatLastSentAt = 0;
+// Cache do user info pra mensagens — busca uma vez quando entra no chat,
+// evita lookup repetido em cada send.
+let _chatMyProfile = null;
+
+function setupChat(lobbyId) {
+  if (_chatActiveLobbyId === lobbyId) return; // listener já ativo nesse lobby
+  teardownChat();
+  if (!lobbyId || !_user || !db) return;
+  _chatActiveLobbyId = lobbyId;
+
+  const wrap = document.getElementById('lobbyChat');
+  if (wrap) wrap.style.display = '';
+  const list = document.getElementById('chatMessages');
+  if (list) list.innerHTML = '<div class="chat-empty">Carregando…</div>';
+
+  // Pre-fetch do meu perfil (steamName/avatar/steamId) — usado em sendChatMessage.
+  // Faz uma vez aqui, não a cada send. Sem await — não bloqueia setup.
+  fetchMyChatProfile().catch(e => console.warn('[chat profile pre-fetch]', e.message));
+
+  try {
+    _chatUnsubscribe = db.collection('lobbies').doc(lobbyId)
+      .collection('chat')
+      .orderBy('createdAt', 'asc')
+      .limitToLast(50)
+      .onSnapshot(snap => {
+        const msgs = [];
+        snap.forEach(doc => msgs.push({ id: doc.id, ...doc.data() }));
+        renderChatMessages(msgs);
+      }, err => {
+        console.error('[chat snapshot]', err);
+        if (list) list.innerHTML = `<div class="chat-empty" style="color:var(--accent-red);">Erro: ${escHtml(err.message)}</div>`;
+      });
+  } catch (e) {
+    console.error('[chat setup]', e);
+    if (list) list.innerHTML = `<div class="chat-empty" style="color:var(--accent-red);">Erro ao carregar chat: ${escHtml(e.message)}</div>`;
+  }
+}
+
+function teardownChat() {
+  if (_chatUnsubscribe) {
+    try { _chatUnsubscribe(); } catch {}
+    _chatUnsubscribe = null;
+  }
+  _chatActiveLobbyId = null;
+  _chatMyProfile = null;
+  const wrap = document.getElementById('lobbyChat');
+  if (wrap) wrap.style.display = 'none';
+  const list = document.getElementById('chatMessages');
+  if (list) list.innerHTML = '';
+  const input = document.getElementById('chatInput');
+  if (input) { input.value = ''; input.disabled = false; }
+  updateChatCount();
+}
+
+async function fetchMyChatProfile() {
+  if (!_user || !db) return null;
+  if (_chatMyProfile && _chatMyProfile.uid === _user.uid) return _chatMyProfile;
+  let name = _user.displayName || '';
+  let avatar = _user.photoURL || '';
+  let steamId = '';
+  try {
+    const udoc = await db.collection('users').doc(_user.uid).get();
+    if (udoc.exists) {
+      const d = udoc.data() || {};
+      name = d.steamName || d.fullName || name;
+      avatar = d.steamAvatar || d.photoURL || avatar;
+      steamId = d.steamId || (/^\d{17}$/.test(_user.uid) ? _user.uid : '');
+    } else if (/^\d{17}$/.test(_user.uid)) {
+      steamId = _user.uid;
+    }
+  } catch (e) { /* tolera — backend cria users/{uid} no login */ }
+  if (!name) name = 'Anônimo';
+  _chatMyProfile = { uid: _user.uid, name, avatar, steamId };
+  return _chatMyProfile;
+}
+
+function renderChatMessages(msgs) {
+  const list = document.getElementById('chatMessages');
+  if (!list) return;
+  if (!msgs.length) {
+    list.innerHTML = '<div class="chat-empty">Sem mensagens ainda. Manda a primeira 👋</div>';
+    return;
+  }
+  // Detecta se user já tava perto do fim antes de re-renderizar — assim, se
+  // ele rolou pra cima pra ler histórico, não interrompe quando chega msg nova.
+  const wasAtBottom = list.scrollHeight - list.scrollTop - list.clientHeight < 40;
+  list.innerHTML = msgs.map(m => renderChatMessage(m)).join('');
+  if (wasAtBottom) list.scrollTop = list.scrollHeight;
+}
+
+function renderChatMessage(m) {
+  const ms = m.createdAt && m.createdAt.toMillis ? m.createdAt.toMillis() : null;
+  const time = ms ? formatChatTime(ms) : '…';
+  const profileLink = m.steamId ? `jogador.html?id=${encodeURIComponent(m.steamId)}` : '#';
+  const isMine = !!_user && m.uid === _user.uid;
+  const initial = escHtml((m.name || '?').charAt(0).toUpperCase());
+  // Avatar: se URL, tenta img (fallback: img some on error → quadrado vazio);
+  // se não tem URL, mostra a inicial direto. Mesmo padrão de renderMyLobby —
+  // EVITA injetar `initial` num atributo onerror (quebraria com aspas no nome).
+  const avatarInner = m.avatar
+    ? `<img src="${escHtml(m.avatar)}" alt="" onerror="this.style.display='none'">`
+    : initial;
+  const titleAttr = ms ? new Date(ms).toLocaleString('pt-BR') : '';
+  return `<div class="chat-msg${isMine ? ' is-mine' : ''}">
+    <a href="${profileLink}" class="chat-msg-avatar" title="Ver perfil">${avatarInner}</a>
+    <div class="chat-msg-body">
+      <div class="chat-msg-meta">
+        <a class="chat-msg-name" href="${profileLink}" title="${escHtml(m.name || '')}">${escHtml(m.name || '?')}</a>
+        <span class="chat-msg-time" title="${escHtml(titleAttr)}">${time}</span>
+      </div>
+      <div class="chat-msg-text">${escHtml(m.text || '')}</div>
+    </div>
+  </div>`;
+}
+
+function formatChatTime(ms) {
+  const diff = Date.now() - ms;
+  if (diff < 0) return 'agora';
+  if (diff < 60_000)    return 'agora';
+  if (diff < 3_600_000) return Math.floor(diff / 60_000) + 'm';
+  if (diff < 86_400_000) return Math.floor(diff / 3_600_000) + 'h';
+  const d = new Date(ms);
+  return d.getHours().toString().padStart(2, '0') + ':' + d.getMinutes().toString().padStart(2, '0');
+}
+
+function updateChatCount() {
+  const input = document.getElementById('chatInput');
+  const counter = document.getElementById('chatCharCount');
+  if (!input || !counter) return;
+  const len = input.value.length;
+  if (!len) { counter.textContent = ''; counter.className = 'chat-charcount'; return; }
+  counter.textContent = `${len}/200`;
+  counter.className = 'chat-charcount' + (len >= 200 ? ' over' : (len >= 170 ? ' warn' : ''));
+}
+
+async function sendChatMessage(ev) {
+  if (ev) ev.preventDefault();
+  if (!_user || !_chatActiveLobbyId || !db) return;
+  const input = document.getElementById('chatInput');
+  if (!input) return;
+  const text = (input.value || '').trim();
+  if (!text) return;
+  if (text.length > 200) { toast('Máximo 200 caracteres', 'error'); return; }
+
+  // Rate limit cliente: 1 msg / 1.5s. (Defesa em profundidade — rules não cobrem.)
+  const now = Date.now();
+  if (now - _chatLastSentAt < 1500) {
+    toast('Calma, espera 1.5s', '');
+    return;
+  }
+
+  const profile = await fetchMyChatProfile();
+  if (!profile) { toast('Não foi possível identificar seu perfil', 'error'); return; }
+
+  const sendBtn = document.getElementById('chatSendBtn');
+  if (sendBtn) sendBtn.disabled = true;
+  input.disabled = true;
+  try {
+    await db.collection('lobbies').doc(_chatActiveLobbyId)
+      .collection('chat').add({
+        uid: profile.uid,
+        steamId: profile.steamId || '',
+        name: profile.name.slice(0, 60),
+        avatar: profile.avatar || '',
+        text,
+        createdAt: firebase.firestore.FieldValue.serverTimestamp(),
+      });
+    _chatLastSentAt = now;
+    input.value = '';
+    updateChatCount();
+  } catch (e) {
+    console.error('[chat send]', e);
+    // permission-denied = user não é membro mais (kick/leave/expire)
+    const msg = e.code === 'permission-denied' ? 'Você não está mais nessa sala' : ('Erro: ' + e.message);
+    toast(msg, 'error');
+  } finally {
+    if (sendBtn) sendBtn.disabled = false;
+    input.disabled = false;
+    input.focus();
+  }
 }
 
 // ─── Helpers ───
