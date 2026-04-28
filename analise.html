@@ -1012,6 +1012,95 @@ async function runAnalysis(depth = 'full', refinement = null) {
   }
 }
 
+// =========== BLUEGEM SALES — histórico real de vendas por pattern ===========
+// Chamado pelo render do refinement quando user inseriu paintseed em skin
+// pattern-sensitive (Case Hardened, Marble Fade, Crimson Web, Slaughter, etc).
+// Usa o endpoint CSPriceAPI /v1/bluegem-sales (cache 6h no backend).
+async function loadBluegemSales(skinName, pattern) {
+  const box = document.getElementById('bluegemSalesContent');
+  if (!box) return;
+  try {
+    // Tenta primeiro com nome COM wear (mais específico) — fallback sem wear
+    const r = await fetch(`${API_BASE}/api/pricempire/bluegem-sales?name=${encodeURIComponent(skinName)}&pattern=${pattern}`);
+    if (!r.ok) {
+      // Fallback: tira a wear do nome ("AK-47 | Case Hardened (Minimal Wear)" → "AK-47 | Case Hardened")
+      const nameNoWear = skinName.replace(/\s*\([^)]+\)\s*$/, '');
+      if (nameNoWear !== skinName) {
+        const r2 = await fetch(`${API_BASE}/api/pricempire/bluegem-sales?name=${encodeURIComponent(nameNoWear)}&pattern=${pattern}`);
+        if (r2.ok) {
+          const data = await r2.json();
+          return renderBluegemSales(box, data, true);
+        }
+      }
+      box.innerHTML = `<div style="color:var(--text-muted);font-size:12px;">Sem vendas registradas pra esse pattern.</div>`;
+      return;
+    }
+    const data = await r.json();
+    renderBluegemSales(box, data, false);
+  } catch (e) {
+    box.innerHTML = `<div style="color:var(--accent-red);font-size:12px;">Erro ao buscar histórico: ${e.message}</div>`;
+  }
+}
+
+function renderBluegemSales(box, data, fellbackToNoWear) {
+  const sales = (data.sales || []).slice(0, 10); // top 10 mais recentes
+  if (!sales.length) {
+    box.innerHTML = `<div style="color:var(--text-muted);font-size:12px;">Sem vendas registradas pra esse pattern.</div>`;
+    return;
+  }
+  // Estatísticas
+  const prices = sales.map(s => s.priceUSD).filter(p => p > 0);
+  const avg = prices.length ? prices.reduce((a, b) => a + b, 0) / prices.length : 0;
+  const min = prices.length ? Math.min(...prices) : 0;
+  const max = prices.length ? Math.max(...prices) : 0;
+
+  const rows = sales.map(s => {
+    const date = s.transactedAt ? new Date(s.transactedAt).toLocaleDateString('pt-BR', { day: '2-digit', month: '2-digit', year: '2-digit' }) : '—';
+    const price = s.priceUSD ? '$' + s.priceUSD.toFixed(2) : '—';
+    const fl = s.floatvalue != null ? s.floatvalue.toFixed(5) : '—';
+    return `
+      <tr style="border-bottom:1px solid rgba(255,255,255,.04);">
+        <td style="padding:6px 8px;font-size:12px;color:var(--text-secondary);">${date}</td>
+        <td style="padding:6px 8px;font-size:12px;font-family:'JetBrains Mono',monospace;color:var(--text-primary);font-weight:700;">${price}</td>
+        <td style="padding:6px 8px;font-size:11px;font-family:'JetBrains Mono',monospace;color:var(--text-muted);">${fl}</td>
+        <td style="padding:6px 8px;font-size:11px;color:var(--accent-cyan);">${escHtml(s.market || '—')}</td>
+      </tr>`;
+  }).join('');
+
+  box.innerHTML = `
+    ${fellbackToNoWear ? `<div style="font-size:10px;color:var(--accent-yellow);margin-bottom:8px;">⚠️ Mostrando vendas de TODAS as wears (não havia dados específicos pra essa wear).</div>` : ''}
+    <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(110px,1fr));gap:10px;margin-bottom:14px;">
+      <div style="padding:8px 10px;background:rgba(255,255,255,.03);border-radius:8px;">
+        <div style="font-size:9px;color:var(--text-muted);text-transform:uppercase;letter-spacing:.5px;">Vendas (${sales.length} de ${data.count || sales.length})</div>
+        <div style="font-size:14px;font-weight:700;color:var(--text-primary);">${data.count || sales.length}</div>
+      </div>
+      <div style="padding:8px 10px;background:rgba(16,185,129,.06);border-radius:8px;">
+        <div style="font-size:9px;color:var(--text-muted);text-transform:uppercase;letter-spacing:.5px;">Mín</div>
+        <div style="font-size:14px;font-weight:700;color:var(--accent-green);">$${min.toFixed(2)}</div>
+      </div>
+      <div style="padding:8px 10px;background:rgba(139,92,246,.06);border-radius:8px;">
+        <div style="font-size:9px;color:var(--text-muted);text-transform:uppercase;letter-spacing:.5px;">Médio</div>
+        <div style="font-size:14px;font-weight:700;color:var(--primary-light);">$${avg.toFixed(2)}</div>
+      </div>
+      <div style="padding:8px 10px;background:rgba(239,68,68,.06);border-radius:8px;">
+        <div style="font-size:9px;color:var(--text-muted);text-transform:uppercase;letter-spacing:.5px;">Máx</div>
+        <div style="font-size:14px;font-weight:700;color:var(--accent-red);">$${max.toFixed(2)}</div>
+      </div>
+    </div>
+    <table style="width:100%;border-collapse:collapse;">
+      <thead>
+        <tr>
+          <th style="padding:6px 8px;text-align:left;font-size:10px;color:var(--text-muted);text-transform:uppercase;letter-spacing:.5px;font-weight:600;">Data</th>
+          <th style="padding:6px 8px;text-align:left;font-size:10px;color:var(--text-muted);text-transform:uppercase;letter-spacing:.5px;font-weight:600;">Preço</th>
+          <th style="padding:6px 8px;text-align:left;font-size:10px;color:var(--text-muted);text-transform:uppercase;letter-spacing:.5px;font-weight:600;">Float</th>
+          <th style="padding:6px 8px;text-align:left;font-size:10px;color:var(--text-muted);text-transform:uppercase;letter-spacing:.5px;font-weight:600;">Market</th>
+        </tr>
+      </thead>
+      <tbody>${rows}</tbody>
+    </table>
+  `;
+}
+
 // =========== REFINAMENTO (float slider + pattern + phase) ===========
 function buildRefinementPanel(data) {
   // Detecta wear do nome pra definir range do slider
@@ -1077,6 +1166,35 @@ function buildRefinementPanel(data) {
     if (cards.length) {
       patternHtml = `<div style="margin-top:18px;"><h3 style="font-size:14px;margin-bottom:10px;color:var(--primary-light);">💎 Análise de Pattern/Float</h3><div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:12px;">${cards.join('')}</div></div>`;
     }
+  }
+
+  // ═══ HISTÓRICO DE VENDAS POR PATTERN (CSPriceAPI bluegem-sales) ═══
+  // Quando user inseriu paintseed E a skin é pattern-sensitive (Case Hardened,
+  // Marble Fade, Crimson Web, etc.), mostra placeholder que carrega lazy
+  // chamando /api/pricempire/bluegem-sales — mostra últimas 5 vendas reais.
+  const seedForHistory = _refinement?.paintseed;
+  const isPatternSensitive = isCaseHardened || /Marble Fade|Crimson Web|Slaughter/i.test(data.name || '');
+  let bluegemHtml = '';
+  if (seedForHistory && isPatternSensitive) {
+    // Container vazio — preenchido async pelo loadBluegemSales(seed) abaixo
+    bluegemHtml = `
+      <div id="bluegemSalesBox" style="margin-top:18px;padding:16px;background:linear-gradient(135deg,rgba(37,99,235,.08),rgba(139,92,246,.05));border:1px solid rgba(37,99,235,.25);border-radius:12px;">
+        <h3 style="font-size:14px;margin-bottom:4px;color:#3b82f6;display:flex;align-items:center;gap:8px;">
+          📊 Histórico de Vendas do Pattern #${seedForHistory}
+          <span style="font-size:10px;font-weight:500;color:var(--text-muted);text-transform:uppercase;letter-spacing:.5px;">CSFloat + outros markets</span>
+        </h3>
+        <p style="font-size:11px;color:var(--text-muted);margin-bottom:12px;">Últimas vendas REAIS dessa combinação skin+pattern. Se pattern raro, ajuda a justificar overpay.</p>
+        <div id="bluegemSalesContent" style="font-size:13px;color:var(--text-secondary);">
+          <div style="display:flex;align-items:center;gap:10px;color:var(--text-muted);">
+            <div style="width:14px;height:14px;border:2px solid currentColor;border-top-color:transparent;border-radius:50%;animation:spin .8s linear infinite;"></div>
+            Buscando vendas recentes…
+          </div>
+        </div>
+      </div>
+      <style>@keyframes spin { to { transform: rotate(360deg); } }</style>
+    `;
+    // Dispara fetch após render — DOM já existe quando setTimeout 0 executa
+    setTimeout(() => loadBluegemSales(data.name, seedForHistory), 50);
   }
 
   return `
@@ -1146,6 +1264,7 @@ function buildRefinementPanel(data) {
       </div>
 
       ${patternHtml}
+      ${bluegemHtml}
 
       <!-- 🎯 Verificar Overpay (CSPriceAPI Trader Pro feature) -->
       <!-- Compara o preço pedido pelo vendedor com o preço esperado pra esse float
