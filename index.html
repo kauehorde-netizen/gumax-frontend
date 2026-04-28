@@ -2152,7 +2152,7 @@ footer {
 <!-- SEARCH & FILTERS -->
 <section class="search-section" id="marketplace">
   <!-- Marca visível pra confirmar versão deployada. -->
-  <div style="font-size: 10px; color: rgba(139,92,246,0.5); text-align: right; margin-bottom: 4px;">search v61-escHtml-fix</div>
+  <div style="font-size: 10px; color: rgba(139,92,246,0.5); text-align: right; margin-bottom: 4px;">search v62-inspect-toast</div>
 
   <!-- BUFF-style category picker com SVG icons (Faca, Luvas, Rifle, ...).
        Clicar num modelo (ex: AK-47) filtra a grid e rola pra seção. -->
@@ -4701,11 +4701,13 @@ async function inspectInCS2() {
       window.open(url, '_blank');
       return;
     }
-    // 4) Fallback final: Steam Market (web)
+    // 4) Fallback final: avisa user explicitamente que vai pra web (não pro jogo)
+    //    e abre o Steam Market como última cartada. Antes silenciava — gerava
+    //    confusão ("clico ver no jogo e abre site").
     const marketUrl = `https://steamcommunity.com/market/listings/730/${encodeURIComponent(skin.name)}`;
     console.warn('⚠️ CAMINHO 4 (último fallback): Steam Market web →', marketUrl);
-    // (sem groupEnd)
-    window.open(marketUrl, '_blank');
+    showToast('Não consegui abrir o CS2 dessa skin agora. Mostrando no Steam Market.');
+    setTimeout(() => window.open(marketUrl, '_blank'), 800);
   } catch (e) {
     console.error('❌ ERRO de rede no fetch da API:', e);
     if (isFull && skin.ownerSteamId && skin.assetid) {
