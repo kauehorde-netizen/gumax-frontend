@@ -86,6 +86,20 @@ header { background: rgba(8,6,14,0.85); backdrop-filter: blur(20px); border-bott
 .league-name { font-size:18px; font-weight:800; letter-spacing:1px; background:linear-gradient(135deg,#facc15 0%,#f97316 60%,#ef4444 100%); -webkit-background-clip:text; -webkit-text-fill-color:transparent; }
 .league-name strong { font-weight:900; }
 
+/* ── LOGO EM VÍDEO (logogu.mp4) ──
+   O vídeo tem fundo preto sólido. Usamos mix-blend-mode:screen pra que pixels
+   pretos virem transparentes (screen blend: result = 1 - (1-base)*(1-blend)
+   → blend preto = base inalterada → preto vira transparente sobre o header).
+   Importante: o pai DEVE ter um background (mesmo que escuro) pra screen funcionar. */
+.league-logo-video {
+  height: 38px;          /* ajusta a altura do logo no header */
+  width: auto;
+  display: block;
+  mix-blend-mode: screen; /* preto → transparente */
+  filter: drop-shadow(0 0 8px rgba(250,204,21,.25)); /* glow sutil amarelo */
+  pointer-events: none;   /* evita que o user pause o vídeo clicando */
+}
+
 /* ── Hero topo SLIM com efeito sutil moderno ── */
 /* Em vez de orbs saturados (que ficavam degradê chapado em hero fino), uso:
    1. Background base super sutil com gradient diagonal escuro
@@ -441,9 +455,10 @@ header { background: rgba(8,6,14,0.85); backdrop-filter: blur(20px); border-bott
       <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M19 12H5M12 19l-7-7 7-7"/></svg>
       Voltar ao Mercado
     </a>
-    <div class="league-brand" title="lobby v15-energy-life">
-      <span class="league-icon">🏆</span>
-      <span class="league-name">GMAX <strong>LEAGUE</strong></span>
+    <div class="league-brand" title="lobby v16-logo-video">
+      <!-- Logo em vídeo (fundo preto fica transparente via mix-blend-mode:screen).
+           muted+playsinline são obrigatórios pra autoplay funcionar nos browsers. -->
+      <video class="league-logo-video" src="logogu.mp4" autoplay loop muted playsinline preload="auto"></video>
     </div>
     <div class="header-actions">
       <button class="btn-primary-small" id="headerLoginBtn" onclick="doLogin()">
@@ -611,13 +626,13 @@ header { background: rgba(8,6,14,0.85); backdrop-filter: blur(20px); border-bott
 <div class="toast" id="toast"></div>
 
 <!-- Marker visível pra confirmar versão deployada — apaga após v testar -->
-<div style="position:fixed;bottom:8px;right:12px;font-size:10px;color:rgba(250,204,21,.7);font-family:monospace;pointer-events:none;z-index:1;background:rgba(0,0,0,.6);padding:3px 8px;border-radius:4px;">lobby v15-energy-life</div>
+<div style="position:fixed;bottom:8px;right:12px;font-size:10px;color:rgba(250,204,21,.7);font-family:monospace;pointer-events:none;z-index:1;background:rgba(0,0,0,.6);padding:3px 8px;border-radius:4px;">lobby v16-logo-video</div>
 
 <script>
 // =================================================================
 // MARKER
 // =================================================================
-//   lobby v15-energy-life
+//   lobby v16-logo-video
 // =================================================================
 
 // API_BASE primeiro — assim mesmo se Firebase falhar, doLogin() funciona
