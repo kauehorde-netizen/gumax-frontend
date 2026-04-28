@@ -4182,10 +4182,14 @@ function addToCart(event, skinId) {
   if (existing) {
     existing.qty++;
   } else {
-    cart.push({...skin, qty: 1});
+    // FIX: armazena a imagem DENTRO do item. Antes dependia do cache global
+    // skinImages[name] que pode estar vazio (skin adicionada via modal de busca).
+    const image = skin.image || skin.iconUrl || skinImages[skin.name] || '';
+    cart.push({...skin, qty: 1, image});
   }
 
   updateCartUI();
+  try { localStorage.setItem('gumax_cart', JSON.stringify(cart)); } catch {}
   showToast('Skin adicionada ao carrinho');
 }
 
