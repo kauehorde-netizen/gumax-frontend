@@ -26,7 +26,35 @@
   --border: rgba(139,92,246,.15);
 }
 * { box-sizing: border-box; margin: 0; padding: 0; }
-body { font-family: 'Inter', sans-serif; background: var(--bg-primary); color: var(--text-primary); min-height: 100vh; }
+body {
+  font-family: 'Inter', sans-serif;
+  color: var(--text-primary);
+  min-height: 100vh;
+  /* ── BACKGROUND DINÂMICO ── */
+  /* Base escura + 3 blobs gigantes de cor que flutuam em loop infinito.
+     Performance: position:fixed em pseudo-elementos no body, GPU-accelerated
+     via transform + filter:blur. Não bloqueia interação. */
+  background:
+    radial-gradient(ellipse at top, rgba(139,92,246,.08), transparent 60%),
+    radial-gradient(ellipse at bottom, rgba(34,211,238,.05), transparent 60%),
+    var(--bg-primary);
+  position:relative;
+  overflow-x:hidden;
+}
+/* Camada de blobs flutuando — usa pseudo no body via wrapper porque pseudo
+   no body nem sempre funciona bem em scroll. Faço com div .bg-orbs. */
+.bg-orbs { position:fixed; inset:0; pointer-events:none; z-index:0; overflow:hidden; }
+.bg-orbs .orb { position:absolute; border-radius:50%; filter:blur(80px); opacity:.35; will-change:transform; }
+.bg-orbs .orb-purple { width:500px; height:500px; background:radial-gradient(circle, rgba(139,92,246,.6), transparent 70%); top:-15%; left:-10%; animation:orbDrift1 24s ease-in-out infinite alternate; }
+.bg-orbs .orb-cyan   { width:420px; height:420px; background:radial-gradient(circle, rgba(34,211,238,.45), transparent 70%); top:30%; right:-12%; animation:orbDrift2 28s ease-in-out infinite alternate; }
+.bg-orbs .orb-yellow { width:380px; height:380px; background:radial-gradient(circle, rgba(250,204,21,.3), transparent 70%); bottom:-10%; left:25%; animation:orbDrift3 32s ease-in-out infinite alternate; }
+@keyframes orbDrift1 { from { transform:translate(0,0) scale(1); } to { transform:translate(80px, 60px) scale(1.15); } }
+@keyframes orbDrift2 { from { transform:translate(0,0) scale(1); } to { transform:translate(-70px, 90px) scale(.9); } }
+@keyframes orbDrift3 { from { transform:translate(0,0) scale(1); } to { transform:translate(60px, -50px) scale(1.1); } }
+/* Garante que conteúdo fica acima dos orbs */
+header, main, .modal-backdrop, .toast { position:relative; z-index:1; }
+header { z-index:100; }
+.modal-backdrop { z-index:200; }
 
 /* ── Header padrão do site (mesma estética do index/rifas) ── */
 header { background: rgba(8,6,14,0.85); backdrop-filter: blur(20px); border-bottom: 1px solid var(--border); position: sticky; top: 0; z-index: 100; }
@@ -121,12 +149,122 @@ header { background: rgba(8,6,14,0.85); backdrop-filter: blur(20px); border-bott
   .league-hero-text .tagline { font-size:11px; }
 }
 
+/* ── Seção "Como Funciona" — 4 cards com ícones animados + energy borders ── */
+.how-it-works { max-width:1400px; margin:32px auto 0; padding:0 28px; }
+.how-it-works .section-title { font-size:13px; color:var(--text-muted); text-transform:uppercase; letter-spacing:1.5px; margin-bottom:14px; text-align:center; display:flex; align-items:center; justify-content:center; gap:14px; }
+.how-it-works .section-title::before, .how-it-works .section-title::after { content:''; flex:1; max-width:120px; height:1px; background:linear-gradient(90deg, transparent, var(--border), transparent); }
+.steps-grid { display:grid; grid-template-columns:repeat(4, 1fr); gap:14px; }
+@media (max-width:980px) { .steps-grid { grid-template-columns:repeat(2, 1fr); } }
+@media (max-width:520px) { .steps-grid { grid-template-columns:1fr; } }
+
+/* CARD COM EFEITO DE ENERGIA — gradient conic rotativo na borda.
+   Truque: pseudo ::before com background:conic-gradient e mask pra mostrar só a borda. */
+.energy-card {
+  position:relative;
+  background:linear-gradient(135deg, rgba(20,16,40,.85), rgba(15,10,30,.92));
+  border-radius:16px;
+  padding:20px 18px;
+  overflow:hidden;
+  isolation:isolate;
+  transition:transform .25s ease;
+  backdrop-filter:blur(8px);
+}
+.energy-card:hover { transform:translateY(-4px); }
+/* Borda animada — conic gradient atrás do card, recortado pela borda */
+.energy-card::before {
+  content:''; position:absolute; inset:-1px; border-radius:17px; padding:1px;
+  background: conic-gradient(from var(--energy-angle, 0deg),
+    rgba(139,92,246,.0)    0deg,
+    rgba(139,92,246,.6)   60deg,
+    rgba(34,211,238,.8)  120deg,
+    rgba(250,204,21,.5)  180deg,
+    rgba(34,211,238,.6)  240deg,
+    rgba(139,92,246,.4)  300deg,
+    rgba(139,92,246,.0)  360deg);
+  -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+  -webkit-mask-composite: xor;
+          mask-composite: exclude;
+  animation: energyRotate 6s linear infinite;
+  pointer-events:none;
+  z-index:-1;
+}
+.energy-card:hover::before { animation-duration: 2.5s; }
+/* Variável CSS animada via @property — fallback se não suportar (Safari antigo) */
+@property --energy-angle { syntax: '<angle>'; initial-value: 0deg; inherits: false; }
+@keyframes energyRotate { from { --energy-angle:0deg; } to { --energy-angle:360deg; } }
+
+/* Conteúdo dos steps */
+.step-card { text-align:center; }
+.step-card .step-num { display:inline-block; padding:3px 10px; background:rgba(250,204,21,.15); color:var(--accent-yellow); border:1px solid rgba(250,204,21,.3); border-radius:12px; font-size:10px; font-weight:800; letter-spacing:1px; margin-bottom:12px; }
+.step-card .step-icon { width:56px; height:56px; margin:0 auto 12px; display:flex; align-items:center; justify-content:center; background:linear-gradient(135deg, rgba(139,92,246,.15), rgba(34,211,238,.1)); border-radius:14px; position:relative; }
+.step-card .step-icon svg { width:28px; height:28px; color:var(--primary-light); position:relative; z-index:1; }
+.step-card .step-title { font-size:14px; font-weight:700; margin-bottom:6px; color:var(--text-primary); }
+.step-card .step-desc { font-size:12px; color:var(--text-secondary); line-height:1.5; }
+
+/* Animações por ícone */
+.icon-bounce { animation: iconBounce 2.4s ease-in-out infinite; }
+@keyframes iconBounce { 0%,100% { transform:translateY(0); } 50% { transform:translateY(-4px); } }
+.icon-spin   { animation: iconSpin 8s linear infinite; transform-origin:center; }
+@keyframes iconSpin { from { transform:rotate(0); } to { transform:rotate(360deg); } }
+.icon-pulse  { animation: iconPulse 1.8s ease-in-out infinite; transform-origin:center; }
+@keyframes iconPulse { 0%,100% { transform:scale(1); } 50% { transform:scale(1.15); } }
+.icon-shake  { animation: iconShake 3s ease-in-out infinite; transform-origin:center; }
+@keyframes iconShake {
+  0%, 90%, 100% { transform:rotate(0); }
+  92% { transform:rotate(-12deg); }
+  94% { transform:rotate(12deg); }
+  96% { transform:rotate(-8deg); }
+  98% { transform:rotate(0); }
+}
+
+/* Halo glow atrás do ícone */
+.step-card .step-icon::after {
+  content:''; position:absolute; inset:-6px; border-radius:18px;
+  background:radial-gradient(circle, rgba(139,92,246,.25), transparent 70%);
+  filter:blur(8px); z-index:0;
+  animation: iconGlow 3s ease-in-out infinite;
+}
+@keyframes iconGlow { 0%,100% { opacity:.5; transform:scale(1); } 50% { opacity:1; transform:scale(1.15); } }
+
+/* Cores diferentes por step */
+.step-card[data-color="purple"] .step-icon svg { color:#a78bfa; }
+.step-card[data-color="cyan"]   .step-icon svg { color:#22d3ee; }
+.step-card[data-color="yellow"] .step-icon svg { color:#facc15; }
+.step-card[data-color="red"]    .step-icon svg { color:#ef4444; }
+.step-card[data-color="cyan"]   .step-icon::after { background:radial-gradient(circle, rgba(34,211,238,.3), transparent 70%); }
+.step-card[data-color="yellow"] .step-icon::after { background:radial-gradient(circle, rgba(250,204,21,.3), transparent 70%); }
+.step-card[data-color="red"]    .step-icon::after { background:radial-gradient(circle, rgba(239,68,68,.3), transparent 70%); }
+
 /* ── Layout principal — sidebar esquerda + grid à direita, mais pra baixo ── */
 .lobby-shell { display:grid; grid-template-columns: 320px 1fr; gap:28px; padding:36px 28px; max-width:1400px; margin:0 auto; }
 @media (max-width: 880px) { .lobby-shell { grid-template-columns: 1fr; padding:20px 16px; } .league-hero { margin:16px; padding:20px; } .league-hero h1 { font-size:22px; } }
 
-/* Sidebar com a sala do user */
-.my-lobby-card { background:linear-gradient(135deg,rgba(139,92,246,.10),rgba(34,211,238,.05)); border:1px solid var(--border); border-radius:14px; padding:18px; min-height:220px; }
+/* Sidebar com a sala do user — energy border também */
+.my-lobby-card {
+  position:relative;
+  background:linear-gradient(135deg, rgba(26,15,46,.9), rgba(20,12,38,.95));
+  border-radius:14px;
+  padding:18px;
+  min-height:220px;
+  overflow:hidden;
+  isolation:isolate;
+  backdrop-filter:blur(8px);
+}
+.my-lobby-card::before {
+  content:''; position:absolute; inset:-1px; border-radius:15px; padding:1px;
+  background: conic-gradient(from var(--energy-angle, 0deg),
+    rgba(139,92,246,.0)    0deg,
+    rgba(139,92,246,.6)   90deg,
+    rgba(34,211,238,.5)  180deg,
+    rgba(139,92,246,.4)  270deg,
+    rgba(139,92,246,.0)  360deg);
+  -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+  -webkit-mask-composite: xor;
+          mask-composite: exclude;
+  animation: energyRotate 10s linear infinite;
+  pointer-events:none;
+  z-index:-1;
+}
 .my-lobby-card h3 { font-size:13px; color:var(--text-muted); text-transform:uppercase; letter-spacing:.5px; margin-bottom:12px; }
 .slot-row { display:flex; gap:8px; align-items:center; padding:6px 0; border-bottom:1px solid rgba(255,255,255,.04); }
 .slot-row:last-child { border-bottom:none; }
@@ -147,14 +285,68 @@ header { background: rgba(8,6,14,0.85); backdrop-filter: blur(20px); border-bott
 .grid-stats strong { color:var(--primary-light); }
 .btn-create { padding:11px 20px; background:linear-gradient(135deg,var(--primary),var(--accent-cyan)); border:none; color:#fff; border-radius:10px; font-weight:700; cursor:pointer; font-size:13px; box-shadow:0 4px 12px rgba(139,92,246,.3); }
 
-/* Cards de lobbies */
+/* Cards de lobbies — usam o efeito de energy border (.energy-card) */
 .lobbies-grid { display:grid; grid-template-columns:repeat(auto-fill, minmax(220px, 1fr)); gap:14px; }
-.lobby-card { background:var(--bg-elevated); border:1px solid var(--border); border-radius:14px; padding:16px; transition:transform .15s, border-color .15s; }
-.lobby-card:hover { transform:translateY(-2px); border-color:rgba(139,92,246,.4); }
-.lobby-card.full { border-color: rgba(34,211,238,.4); }
-.lobby-card.mine { border-color: rgba(250,204,21,.5); background:linear-gradient(135deg, var(--bg-elevated) 0%, rgba(250,204,21,.06) 100%); }
-.lobby-card.challenged { border-color: rgba(250,204,21,.5); animation:pulse 2s ease-in-out infinite; }
-@keyframes pulse { 0%,100% { box-shadow:0 0 0 0 rgba(250,204,21,.3); } 50% { box-shadow:0 0 0 8px rgba(250,204,21,0); } }
+.lobby-card {
+  position:relative;
+  background:linear-gradient(135deg, rgba(26,15,46,.85), rgba(20,12,38,.92));
+  border-radius:14px;
+  padding:16px;
+  transition:transform .25s ease;
+  overflow:hidden;
+  isolation:isolate;
+  backdrop-filter:blur(8px);
+}
+.lobby-card:hover { transform:translateY(-3px); }
+/* Energy border igual aos step cards (gradient conic rotativo) */
+.lobby-card::before {
+  content:''; position:absolute; inset:-1px; border-radius:15px; padding:1px;
+  background: conic-gradient(from var(--energy-angle, 0deg),
+    rgba(139,92,246,.0)    0deg,
+    rgba(139,92,246,.5)   90deg,
+    rgba(34,211,238,.6)  180deg,
+    rgba(139,92,246,.4)  270deg,
+    rgba(139,92,246,.0)  360deg);
+  -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+  -webkit-mask-composite: xor;
+          mask-composite: exclude;
+  animation: energyRotate 8s linear infinite;
+  pointer-events:none;
+  z-index:-1;
+}
+.lobby-card:hover::before { animation-duration:3s; }
+.lobby-card.full::before {
+  background: conic-gradient(from var(--energy-angle, 0deg),
+    rgba(34,211,238,.0)    0deg,
+    rgba(34,211,238,.7)   90deg,
+    rgba(139,92,246,.5)  180deg,
+    rgba(34,211,238,.6)  270deg,
+    rgba(34,211,238,.0)  360deg);
+  animation-duration:5s;
+}
+.lobby-card.mine {
+  background:linear-gradient(135deg, rgba(26,15,46,.9) 0%, rgba(40,28,8,.6) 100%);
+}
+.lobby-card.mine::before {
+  background: conic-gradient(from var(--energy-angle, 0deg),
+    rgba(250,204,21,.0)    0deg,
+    rgba(250,204,21,.8)   90deg,
+    rgba(249,115,22,.7)  180deg,
+    rgba(250,204,21,.6)  270deg,
+    rgba(250,204,21,.0)  360deg);
+  animation-duration:4s;
+}
+.lobby-card.challenged::before {
+  background: conic-gradient(from var(--energy-angle, 0deg),
+    rgba(250,204,21,1)     0deg,
+    rgba(239,68,68,.9)    90deg,
+    rgba(250,204,21,1)   180deg,
+    rgba(239,68,68,.9)   270deg,
+    rgba(250,204,21,1)   360deg);
+  animation-duration:1.5s;
+}
+.lobby-card.challenged { animation:pulse 1.2s ease-in-out infinite; }
+@keyframes pulse { 0%,100% { box-shadow:0 0 0 0 rgba(250,204,21,.4); } 50% { box-shadow:0 0 0 14px rgba(250,204,21,0); } }
 .lobby-name { font-size:14px; font-weight:700; margin-bottom:10px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
 .lobby-slots { display:flex; gap:5px; margin-bottom:14px; }
 .lobby-slot { flex:1; aspect-ratio:1; border-radius:50%; background:rgba(139,92,246,.08); border:1.5px dashed rgba(139,92,246,.25); display:flex; align-items:center; justify-content:center; font-size:10px; color:var(--text-muted); }
@@ -234,6 +426,14 @@ header { background: rgba(8,6,14,0.85); backdrop-filter: blur(20px); border-bott
 </head>
 <body>
 
+<!-- Background dinâmico — 3 blobs flutuantes em loop infinito.
+     Position fixed, atrás de todo conteúdo, sem custo de interação. -->
+<div class="bg-orbs" aria-hidden="true">
+  <div class="orb orb-purple"></div>
+  <div class="orb orb-cyan"></div>
+  <div class="orb orb-yellow"></div>
+</div>
+
 <!-- Header simplificado — GMAX LEAGUE é seção separada da loja, sem nav central -->
 <header>
   <div class="header-content">
@@ -241,7 +441,7 @@ header { background: rgba(8,6,14,0.85); backdrop-filter: blur(20px); border-bott
       <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M19 12H5M12 19l-7-7 7-7"/></svg>
       Voltar ao Mercado
     </a>
-    <div class="league-brand" title="lobby v14-public-list-ttl20">
+    <div class="league-brand" title="lobby v15-energy-life">
       <span class="league-icon">🏆</span>
       <span class="league-name">GMAX <strong>LEAGUE</strong></span>
     </div>
@@ -271,7 +471,70 @@ header { background: rgba(8,6,14,0.85); backdrop-filter: blur(20px); border-bott
   </div>
   <div class="league-hero-cta">
     <a class="league-hero-link" href="#" onclick="alert('Em breve!');return false;">📊 Ranking</a>
-    <a class="league-hero-link" href="#" onclick="alert('Em breve!');return false;">❓ Como funciona</a>
+    <a class="league-hero-link" href="#howItWorks">❓ Como funciona</a>
+  </div>
+</section>
+
+<!-- ═══ COMO FUNCIONA ═══
+     4 passos animados: criar sala → convidar amigos → desafiar outra sala → jogar.
+     Cada card tem energy border (gradient conic rotativo) e ícone com animação própria. -->
+<section class="how-it-works" id="howItWorks">
+  <div class="section-title">⚡ Como funciona</div>
+  <div class="steps-grid">
+    <!-- Passo 1: Criar sala -->
+    <div class="energy-card step-card" data-color="purple">
+      <div class="step-num">PASSO 1</div>
+      <div class="step-icon">
+        <svg class="icon-bounce" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+          <rect x="3" y="3" width="18" height="18" rx="3"/>
+          <path d="M12 8v8M8 12h8"/>
+        </svg>
+      </div>
+      <div class="step-title">Crie sua sala</div>
+      <div class="step-desc">Login Steam e crie uma sala 5v5 com o nome do seu time.</div>
+    </div>
+
+    <!-- Passo 2: Convidar amigos -->
+    <div class="energy-card step-card" data-color="cyan">
+      <div class="step-num">PASSO 2</div>
+      <div class="step-icon">
+        <svg class="icon-pulse" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/>
+          <circle cx="9" cy="7" r="4"/>
+          <path d="M22 11h-6M19 8v6"/>
+        </svg>
+      </div>
+      <div class="step-title">Convide 4 amigos</div>
+      <div class="step-desc">Compartilha o link e teu time entra na sala. Quando bate 5/5, tá pronto.</div>
+    </div>
+
+    <!-- Passo 3: Desafiar -->
+    <div class="energy-card step-card" data-color="red">
+      <div class="step-num">PASSO 3</div>
+      <div class="step-icon">
+        <svg class="icon-shake" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M14.5 17.5 3 6V3h3l11.5 11.5"/>
+          <path d="m13 19 6-6M16 16l4 4M19 21l2-2"/>
+          <path d="m5 14 6 6M4 13l6 6M3 16l4-4"/>
+        </svg>
+      </div>
+      <div class="step-title">Desafie outra sala</div>
+      <div class="step-desc">Veja salas adversárias cheias e mande o desafio. Pick/ban de mapa rolando.</div>
+    </div>
+
+    <!-- Passo 4: Jogar -->
+    <div class="energy-card step-card" data-color="yellow">
+      <div class="step-num">PASSO 4</div>
+      <div class="step-icon">
+        <svg class="icon-spin" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+          <circle cx="12" cy="12" r="10"/>
+          <path d="M12 2v4M12 18v4M2 12h4M18 12h4"/>
+          <circle cx="12" cy="12" r="4"/>
+        </svg>
+      </div>
+      <div class="step-title">Jogue + ranking</div>
+      <div class="step-desc">CS2 abre automático no servidor. KDA conta pro ranking e premiação mensal.</div>
+    </div>
   </div>
 </section>
 
@@ -348,13 +611,13 @@ header { background: rgba(8,6,14,0.85); backdrop-filter: blur(20px); border-bott
 <div class="toast" id="toast"></div>
 
 <!-- Marker visível pra confirmar versão deployada — apaga após v testar -->
-<div style="position:fixed;bottom:8px;right:12px;font-size:10px;color:rgba(250,204,21,.7);font-family:monospace;pointer-events:none;z-index:1;background:rgba(0,0,0,.6);padding:3px 8px;border-radius:4px;">lobby v14-public-list-ttl20</div>
+<div style="position:fixed;bottom:8px;right:12px;font-size:10px;color:rgba(250,204,21,.7);font-family:monospace;pointer-events:none;z-index:1;background:rgba(0,0,0,.6);padding:3px 8px;border-radius:4px;">lobby v15-energy-life</div>
 
 <script>
 // =================================================================
 // MARKER
 // =================================================================
-//   lobby v14-public-list-ttl20
+//   lobby v15-energy-life
 // =================================================================
 
 // API_BASE primeiro — assim mesmo se Firebase falhar, doLogin() funciona
