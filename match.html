@@ -57,7 +57,10 @@ body { font-family: 'Inter', sans-serif; background: var(--bg-primary); color: v
 
 /* Action box (botão grande de confirmar / connectar) */
 .action-box { text-align:center; margin:24px auto; max-width:640px; }
-.btn-huge { padding:18px 36px; background:linear-gradient(135deg, var(--primary), var(--accent-cyan)); border:none; color:#fff; border-radius:14px; font-size:18px; font-weight:800; cursor:pointer; box-shadow:0 6px 24px rgba(139,92,246,.4); transition:all .15s; }
+.btn-huge { padding:18px 36px; background:linear-gradient(135deg, var(--primary), var(--accent-cyan)); border:none; color:#fff; border-radius:14px; font-size:18px; font-weight:800; cursor:pointer; box-shadow:0 6px 24px rgba(139,92,246,.4); transition:transform .08s, filter .12s, box-shadow .12s; will-change:transform; }
+.btn-huge:active:not(:disabled) { transform:scale(.96); filter:brightness(.85); }
+.btn-huge:disabled { opacity:.7; cursor:wait; }
+@keyframes spin { from { transform:rotate(0deg); } to { transform:rotate(360deg); } }
 .btn-huge:hover { transform:translateY(-2px); }
 .btn-huge:disabled { background:rgba(100,100,120,.2); color:var(--text-muted); cursor:not-allowed; box-shadow:none; transform:none; }
 .btn-connect { background:linear-gradient(135deg, #1b2838, #66c0f4); }
@@ -74,14 +77,40 @@ body { font-family: 'Inter', sans-serif; background: var(--bg-primary); color: v
 .map-card.picked { border-color:var(--accent-green); background:rgba(16,185,129,.12); }
 .map-card.picked::after { content:'✅ ESCOLHIDO'; position:absolute; bottom:6px; left:0; right:0; font-size:11px; color:var(--accent-green); font-weight:700; }
 .map-card .map-name { font-weight:700; }
-/* v6-icons-mp3: imagens reais dos mapas em vez de emojis */
-.map-card .map-img { width:100%; aspect-ratio: 16/9; background:rgba(139,92,246,.08); border-radius:8px; margin-bottom:8px; display:flex; align-items:center; justify-content:center; overflow:hidden; }
-.map-card .map-img img { width:100%; height:100%; object-fit:cover; display:block; }
-.map-card .map-img .fallback-icon { font-size:24px; }
+/* v6+v7: imagens reais dos mapas, formato quadrado, contain pra não cortar */
+.map-card .map-img { width:100%; aspect-ratio: 1/1; background:rgba(139,92,246,.05); border-radius:8px; margin-bottom:8px; display:flex; align-items:center; justify-content:center; overflow:hidden; padding:6px; }
+.map-card .map-img img { max-width:100%; max-height:100%; width:auto; height:auto; object-fit:contain; display:block; }
+.map-card .map-img .fallback-icon { font-size:42px; }
 
 /* Veto log */
-.veto-log { margin-top:18px; padding:14px; background:var(--bg-elevated); border-radius:10px; font-size:12px; color:var(--text-secondary); }
-.veto-log .row { padding:4px 0; }
+/* v8-chat: histórico de bans virou chat real-time entre os 2 times.
+   Mesmo padrão do chat de lobby — reuso visual + lógica. */
+.match-chat { margin-top:18px; padding:14px; background:var(--bg-elevated); border-radius:10px; display:flex; flex-direction:column; gap:8px; max-width:700px; margin-left:auto; margin-right:auto; }
+.match-chat .chat-header { font-size:11px; color:var(--text-muted); text-transform:uppercase; letter-spacing:.5px; display:flex; align-items:center; gap:6px; }
+.match-chat .chat-header .live-dot { width:6px; height:6px; border-radius:50%; background:var(--accent-green); box-shadow:0 0 6px var(--accent-green); animation:chatLive 1.6s ease-in-out infinite; }
+@keyframes chatLive { 0%,100% { opacity:1; } 50% { opacity:.4; } }
+.match-chat .chat-messages { max-height:200px; overflow-y:auto; padding-right:4px; display:flex; flex-direction:column; gap:4px; scrollbar-width:thin; scrollbar-color:rgba(139,92,246,.3) transparent; }
+.match-chat .chat-messages::-webkit-scrollbar { width:4px; }
+.match-chat .chat-messages::-webkit-scrollbar-thumb { background:rgba(139,92,246,.3); border-radius:2px; }
+.match-chat .chat-msg { display:flex; gap:8px; align-items:flex-start; font-size:12px; line-height:1.4; padding:3px 0; }
+.match-chat .chat-msg-avatar { width:22px; height:22px; border-radius:50%; flex-shrink:0; background:var(--bg-elevated); object-fit:cover; display:flex; align-items:center; justify-content:center; font-size:11px; font-weight:700; overflow:hidden; }
+.match-chat .chat-msg-avatar img { width:100%; height:100%; object-fit:cover; }
+.match-chat .chat-msg-body { display:flex; flex-direction:column; flex:1; min-width:0; }
+.match-chat .chat-msg-meta { display:flex; gap:6px; align-items:baseline; }
+.match-chat .chat-msg-name { font-weight:700; font-size:11px; max-width:140px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+.match-chat .chat-msg-name.team-a { color:#60a5fa; } /* azul Time A */
+.match-chat .chat-msg-name.team-b { color:#f87171; } /* vermelho Time B */
+.match-chat .chat-msg-time { font-size:10px; color:var(--text-muted); }
+.match-chat .chat-msg-text { color:var(--text-primary); word-break:break-word; }
+.match-chat .chat-msg.is-mine .chat-msg-name { color:var(--accent-yellow); }
+.match-chat .chat-empty { font-size:11px; color:var(--text-muted); text-align:center; padding:14px 0; }
+.match-chat .chat-form { display:flex; gap:6px; }
+.match-chat .chat-form input { flex:1; padding:8px 10px; background:rgba(0,0,0,.3); border:1px solid var(--border); border-radius:8px; color:var(--text-primary); font-size:12px; font-family:inherit; outline:none; transition:border-color .15s; }
+.match-chat .chat-form input:focus { border-color:var(--primary-light); }
+.match-chat .chat-form input:disabled { opacity:.5; }
+.match-chat .chat-send { padding:8px 14px; background:linear-gradient(135deg, var(--primary), var(--accent-cyan)); border:none; border-radius:8px; color:#fff; cursor:pointer; font-size:13px; font-weight:700; transition:filter .15s; }
+.match-chat .chat-send:hover:not(:disabled) { filter:brightness(1.15); }
+.match-chat .chat-send:disabled { opacity:.4; cursor:not-allowed; }
 
 /* Toast */
 .toast { position:fixed; bottom:24px; left:50%; transform:translateX(-50%); padding:12px 20px; background:var(--bg-elevated); border:1px solid var(--border); border-radius:10px; font-size:13px; opacity:0; pointer-events:none; transition:opacity .2s; z-index:100; }
@@ -148,7 +177,14 @@ body { font-family: 'Inter', sans-serif; background: var(--bg-primary); color: v
   <section class="maps-section" id="mapsSection" style="display:none;">
     <div class="captain-info" id="captainInfo">Aguardando capitão decidir…</div>
     <div class="maps-grid" id="mapsGrid"></div>
-    <div class="veto-log" id="vetoLog"></div>
+    <div class="match-chat" id="matchChat" style="display:none;">
+      <div class="chat-header"><span class="live-dot" aria-hidden="true"></span>💬 Chat dos times</div>
+      <div id="matchChatMessages" class="chat-messages" aria-live="polite"></div>
+      <form class="chat-form" onsubmit="sendMatchChatMessage(event)" autocomplete="off">
+        <input id="matchChatInput" type="text" maxlength="200" placeholder="Mensagem… (Enter envia)" />
+        <button type="submit" class="chat-send" id="matchChatSendBtn" title="Enviar (Enter)">➤</button>
+      </form>
+    </div>
   </section>
 
 </div>
@@ -157,7 +193,11 @@ body { font-family: 'Inter', sans-serif; background: var(--bg-primary); color: v
 
 <script>
 // =================================================================
-//   match v7-timeout-cleanup
+//   match v9-snappy
+//   - v9-snappy: optimistic UI nos botões (Confirmar match + Banir mapa)
+//     - _press(btn,'Confirmando…') troca texto + disable instantâneo
+//     - .btn-huge:active scale(.96) — feedback de press em ~50ms
+//     - veto cards ficam translúcidos no MESMO frame do click (sem esperar fetch)
 // =================================================================
 
 const API_BASE = 'https://gumax-backend-production.up.railway.app';
@@ -186,9 +226,11 @@ const firebaseConfig = {
   messagingSenderId: "678525908778",
   appId: "1:678525908778:web:56ee6d6a809c013b341053"
 };
+let db = null;
 try {
   firebase.initializeApp(firebaseConfig);
   auth = firebase.auth();
+  db = firebase.firestore(); // v8-chat: pra subcollection matches/{id}/chat
   _firebaseReady = true;
 } catch (e) {
   console.error('[firebase init]', e);
@@ -196,17 +238,25 @@ try {
 }
 
 // v6-icons-mp3: som de "match encontrada" (estilo GamersClub/FACEIT).
-// Toca uma vez por sessão quando user chega em status='confirming'.
+// Toca uma vez por sessão quando user chega em status='confirming' E PARA
+// quando user confirma OU status muda. Referência global pra poder pause().
 let _user = null;
 let _soundPlayed = false;
+let _matchSoundEl = null;
 function playMatchFoundSound() {
   if (_soundPlayed) return;
   _soundPlayed = true;
   try {
-    const audio = new Audio('sounds/match-found.mp3');
-    audio.volume = 0.6;
-    audio.play().catch(e => console.log('[sound] autoplay blocked:', e.message));
+    _matchSoundEl = new Audio('sounds/match-found.mp3');
+    _matchSoundEl.volume = 0.6;
+    _matchSoundEl.play().catch(e => console.log('[sound] autoplay blocked:', e.message));
   } catch (e) { /* tolera */ }
+}
+function stopMatchFoundSound() {
+  if (_matchSoundEl) {
+    try { _matchSoundEl.pause(); _matchSoundEl.currentTime = 0; } catch {}
+    _matchSoundEl = null;
+  }
 }
 let _idToken = null;
 let _matchData = null;
@@ -324,9 +374,10 @@ function renderStage(m) {
     if (myConfirmed) {
       actionBox.innerHTML = `<button class="btn-huge" disabled>✅ Você confirmou — aguardando outros</button>`;
     } else {
-      actionBox.innerHTML = `<button class="btn-huge" onclick="doConfirm()">✋ Estou no PC, confirmar partida</button>`;
+      actionBox.innerHTML = `<button class="btn-huge" onclick="doConfirm(this)">✋ Estou no PC, confirmar partida</button>`;
     }
   } else if (m.status === 'mappick') {
+    stopMatchFoundSound(); // mudou de stage — para o som
     stageLabel.textContent = 'Etapa 2 de 3';
     stageTitle.textContent = 'Picks & Bans de mapa';
     countdown.style.display = 'none';
@@ -387,7 +438,6 @@ function renderVeto() {
   const veto = m.mapVeto || {};
   const captainInfo = document.getElementById('captainInfo');
   const grid = document.getElementById('mapsGrid');
-  const log = document.getElementById('vetoLog');
 
   const banned = (veto.actions || []).filter(a => a.action === 'ban').map(a => a.map);
   const final = veto.finalMap;
@@ -408,7 +458,7 @@ function renderVeto() {
     const isBanned = banned.includes(map);
     const isPicked = final === map;
     const cls = isPicked ? 'picked' : (isBanned ? 'banned' : '');
-    const onclick = isMyTurn && !isBanned && !isPicked ? `onclick="doVeto('${map}')"` : '';
+    const onclick = isMyTurn && !isBanned && !isPicked ? `onclick="doVeto('${map}',this)"` : '';
     return `
       <div class="map-card ${cls}" ${onclick}>
         <div class="map-img">
@@ -419,10 +469,8 @@ function renderVeto() {
     `;
   }).join('');
 
-  log.innerHTML = `<strong>Histórico:</strong>` + (
-    (veto.actions || []).map(a => `<div class="row">Time ${a.team} <strong style="color:var(--accent-red);">${a.action.toUpperCase()}</strong> ${MAP_LABELS[a.map]?.name || a.map}</div>`).join('')
-    || '<div class="row" style="color:var(--text-muted);">nenhuma ação ainda</div>'
-  );
+  // Chat ativo durante o veto e as próximas etapas (substituiu histórico de bans)
+  setupMatchChat(MATCH_ID);
 }
 
 // ─── Countdown ───
@@ -472,19 +520,177 @@ async function handleConfirmTimeoutClientSide() {
 }
 
 // ─── Ações ───
-async function doConfirm() {
+// ─── Match Chat (Firestore real-time) ──────────────────────────────────────
+// Subcollection matches/{matchId}/chat/{messageId}. Member-only (uid em
+// teamA OR teamB do match). Permite os 2 times trocarem ideia durante veto
+// (substituiu histórico de bans, que era redundante já que ban aparece no card).
+let _chatUnsubscribe = null;
+let _chatActiveMatchId = null;
+let _chatLastSentAt = 0;
+let _chatProfileCache = null;
+
+function setupMatchChat(matchId) {
+  if (_chatActiveMatchId === matchId) return; // já ativo
+  teardownMatchChat();
+  if (!matchId || !_user || !db) return;
+  _chatActiveMatchId = matchId;
+  const wrap = document.getElementById('matchChat');
+  if (wrap) wrap.style.display = '';
+  const list = document.getElementById('matchChatMessages');
+  if (list) list.innerHTML = '<div class="chat-empty">Carregando…</div>';
+  fetchMyMatchChatProfile().catch(() => {});
   try {
+    _chatUnsubscribe = db.collection('matches').doc(matchId)
+      .collection('chat')
+      .orderBy('createdAt', 'asc')
+      .limitToLast(50)
+      .onSnapshot(snap => {
+        const msgs = [];
+        snap.forEach(doc => msgs.push({ id: doc.id, ...doc.data() }));
+        renderMatchChatMessages(msgs);
+      }, err => {
+        console.error('[match chat]', err);
+        if (list) list.innerHTML = `<div class="chat-empty" style="color:var(--accent-red);">Erro: ${escHtml(err.message)}</div>`;
+      });
+  } catch (e) {
+    console.error('[match chat setup]', e);
+  }
+}
+function teardownMatchChat() {
+  if (_chatUnsubscribe) { try { _chatUnsubscribe(); } catch {} _chatUnsubscribe = null; }
+  _chatActiveMatchId = null;
+}
+async function fetchMyMatchChatProfile() {
+  if (_chatProfileCache && _chatProfileCache.uid === _user.uid) return _chatProfileCache;
+  let name = _user.displayName || '', avatar = _user.photoURL || '', steamId = '';
+  try {
+    const udoc = await db.collection('users').doc(_user.uid).get();
+    if (udoc.exists) {
+      const d = udoc.data() || {};
+      name = d.steamName || d.fullName || name;
+      avatar = d.steamAvatar || d.photoURL || avatar;
+      steamId = d.steamId || (/^\d{17}$/.test(_user.uid) ? _user.uid : '');
+    }
+  } catch {}
+  if (!name) name = 'Anônimo';
+  _chatProfileCache = { uid: _user.uid, name, avatar, steamId, team: _myTeam };
+  return _chatProfileCache;
+}
+function renderMatchChatMessages(msgs) {
+  const list = document.getElementById('matchChatMessages');
+  if (!list) return;
+  if (!msgs.length) {
+    list.innerHTML = '<div class="chat-empty">Sem mensagens. Manda a primeira 👋</div>';
+    return;
+  }
+  const wasAtBottom = list.scrollHeight - list.scrollTop - list.clientHeight < 40;
+  list.innerHTML = msgs.map(renderMatchChatMessage).join('');
+  if (wasAtBottom) list.scrollTop = list.scrollHeight;
+}
+function renderMatchChatMessage(m) {
+  const ms = m.createdAt && m.createdAt.toMillis ? m.createdAt.toMillis() : null;
+  const time = ms ? formatMatchChatTime(ms) : '…';
+  const isMine = !!_user && m.uid === _user.uid;
+  const initial = escHtml((m.name || '?').charAt(0).toUpperCase());
+  const avatarInner = m.avatar
+    ? `<img src="${escHtml(m.avatar)}" alt="" onerror="this.style.display='none'">`
+    : initial;
+  const teamCls = m.team === 'A' ? 'team-a' : (m.team === 'B' ? 'team-b' : '');
+  return `<div class="chat-msg${isMine ? ' is-mine' : ''}">
+    <div class="chat-msg-avatar">${avatarInner}</div>
+    <div class="chat-msg-body">
+      <div class="chat-msg-meta">
+        <span class="chat-msg-name ${teamCls}" title="${escHtml(m.name || '')}">${escHtml(m.name || '?')}${m.team ? ' [' + m.team + ']' : ''}</span>
+        <span class="chat-msg-time">${time}</span>
+      </div>
+      <div class="chat-msg-text">${escHtml(m.text || '')}</div>
+    </div>
+  </div>`;
+}
+function formatMatchChatTime(ms) {
+  const diff = Date.now() - ms;
+  if (diff < 60_000) return 'agora';
+  if (diff < 3_600_000) return Math.floor(diff/60_000) + 'm';
+  if (diff < 86_400_000) return Math.floor(diff/3_600_000) + 'h';
+  const d = new Date(ms);
+  return d.getHours().toString().padStart(2,'0') + ':' + d.getMinutes().toString().padStart(2,'0');
+}
+async function sendMatchChatMessage(ev) {
+  if (ev) ev.preventDefault();
+  if (!_user || !_chatActiveMatchId) return;
+  const input = document.getElementById('matchChatInput');
+  if (!input) return;
+  const text = (input.value || '').trim();
+  if (!text || text.length > 200) return;
+  const now = Date.now();
+  if (now - _chatLastSentAt < 1500) { toast('Calma, espera 1.5s', ''); return; }
+  const profile = await fetchMyMatchChatProfile();
+  if (!profile) return;
+  const sendBtn = document.getElementById('matchChatSendBtn');
+  if (sendBtn) sendBtn.disabled = true;
+  input.disabled = true;
+  try {
+    await db.collection('matches').doc(_chatActiveMatchId)
+      .collection('chat').add({
+        uid: profile.uid,
+        steamId: profile.steamId || '',
+        name: profile.name.slice(0, 60),
+        avatar: profile.avatar || '',
+        team: _myTeam || null,
+        text,
+        createdAt: firebase.firestore.FieldValue.serverTimestamp(),
+      });
+    _chatLastSentAt = now;
+    input.value = '';
+  } catch (e) {
+    console.error('[match chat send]', e);
+    toast('Erro: ' + e.message, 'error');
+  } finally {
+    if (sendBtn) sendBtn.disabled = false;
+    input.disabled = false;
+    input.focus();
+  }
+}
+
+// v9-snappy: feedback visual instantâneo nos botões — match found e ban/pick map.
+// Igual ao pressBtn/releaseBtn do lobbies.html v34-snappy.
+function _press(btn, busyText) {
+  if (!btn || !btn.tagName || btn.dataset.busy === '1') return null;
+  btn.dataset.busy = '1';
+  btn.dataset.origHTML = btn.innerHTML;
+  btn.disabled = true;
+  if (busyText) btn.innerHTML = `<span style="display:inline-block;animation:spin 1s linear infinite;margin-right:6px;">⏳</span>${busyText}`;
+  return btn;
+}
+function _release(btn) {
+  if (!btn || !btn.dataset || btn.dataset.busy !== '1') return;
+  btn.disabled = false;
+  if (btn.dataset.origHTML) btn.innerHTML = btn.dataset.origHTML;
+  delete btn.dataset.busy; delete btn.dataset.origHTML;
+}
+
+async function doConfirm(btnEl) {
+  const btn = _press(btnEl, 'Confirmando…');
+  try {
+    stopMatchFoundSound(); // user clicou — para o som de match found
     const r = await fetch(`${API_BASE}/api/match/${MATCH_ID}/confirm`, {
       method: 'POST', headers: { 'Authorization': 'Bearer ' + _idToken }
     });
     const data = await r.json();
-    if (data.error) { toast(data.error, 'error'); return; }
+    if (data.error) { toast(data.error, 'error'); _release(btn); return; }
     toast('Confirmado! ✅', 'success');
     loadMatch();
-  } catch (e) { toast('Erro: ' + e.message, 'error'); }
+  } catch (e) { toast('Erro: ' + e.message, 'error'); _release(btn); }
 }
 
-async function doVeto(map) {
+async function doVeto(map, btnEl) {
+  // Feedback visual instantâneo — banimos no MESMO frame do click
+  if (btnEl) {
+    btnEl.style.opacity = '0.5';
+    btnEl.style.pointerEvents = 'none';
+    btnEl.style.transform = 'scale(.92)';
+    btnEl.style.transition = 'all .12s';
+  }
   try {
     const r = await fetch(`${API_BASE}/api/match/${MATCH_ID}/veto`, {
       method: 'POST',
@@ -492,11 +698,18 @@ async function doVeto(map) {
       body: JSON.stringify({ map })
     });
     const data = await r.json();
-    if (data.error) { toast(data.error, 'error'); return; }
+    if (data.error) {
+      toast(data.error, 'error');
+      if (btnEl) { btnEl.style.opacity=''; btnEl.style.pointerEvents=''; btnEl.style.transform=''; }
+      return;
+    }
     if (data.finalMap) toast(`🎯 Mapa: ${MAP_LABELS[data.finalMap]?.name || data.finalMap}!`, 'success');
     else toast(`Banido!`, 'success');
     loadMatch();
-  } catch (e) { toast('Erro: ' + e.message, 'error'); }
+  } catch (e) {
+    toast('Erro: ' + e.message, 'error');
+    if (btnEl) { btnEl.style.opacity=''; btnEl.style.pointerEvents=''; btnEl.style.transform=''; }
+  }
 }
 
 function escHtml(s) { return String(s || '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'})[c]); }
