@@ -157,7 +157,7 @@ body { font-family: 'Inter', sans-serif; background: var(--bg-primary); color: v
 
 <script>
 // =================================================================
-//   match v6-icons-mp3
+//   match v7-timeout-cleanup
 // =================================================================
 
 const API_BASE = 'https://gumax-backend-production.up.railway.app';
@@ -359,6 +359,12 @@ function renderStage(m) {
       <button class="btn-huge" onclick="location.href='lobbies.html'">Voltar pra Lobbies</button>
     `;
   } else if (m.status === 'cancelled') {
+    // v6-icons-mp3: confirm_timeout → redireciona direto pra lobbies (backend
+    // já deletou os 2 lobbies, nada pra mostrar aqui).
+    if (m.cancelReason === 'confirm_timeout') {
+      handleConfirmTimeoutClientSide();
+      return;
+    }
     stageLabel.textContent = 'Match cancelado';
     const reasonMap = {
       'confirm_timeout': 'Tempo de confirmação esgotado',
@@ -431,6 +437,11 @@ function startCountdown(targetMs) {
       el.textContent = '0:00';
       el.style.color = 'var(--accent-red)';
       clearInterval(_countdownTimer);
+      // v6-icons-mp3: timeout client-side. Dispara confirm pra forçar backend
+      // detectar expired (vai cancelar match + DELETAR lobbies). Redireciona
+      // direto pra lobbies.html sem mostrar tela "Match cancelado". Mais
+      // limpo que ficar com lobbies fantasma e flow confuso.
+      handleConfirmTimeoutClientSide();
       return;
     }
     const min = Math.floor(remaining / 60000);
@@ -440,6 +451,24 @@ function startCountdown(targetMs) {
   };
   tick();
   _countdownTimer = setInterval(tick, 1000);
+}
+
+let _timeoutHandled = false;
+async function handleConfirmTimeoutClientSide() {
+  if (_timeoutHandled) return;
+  _timeoutHandled = true;
+  try {
+    // Hit /confirm pra backend detectar expired e deletar lobbies
+    const token = await firebase.auth().currentUser?.getIdToken();
+    if (token) {
+      await fetch(`${API_BASE}/api/match/${MATCH_ID}/confirm`, {
+        method: 'POST',
+        headers: { 'Authorization': 'Bearer ' + token }
+      }).catch(() => {});
+    }
+  } catch {}
+  // Redireciona pra lobbies — backend já limpou os 2 lobbies
+  setTimeout(() => location.href = 'lobbies.html', 300);
 }
 
 // ─── Ações ───
