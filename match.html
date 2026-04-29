@@ -425,11 +425,11 @@ function renderStage(m) {
         🎮 CONECTAR NO SERVIDOR
       </button>
       <p style="margin-top:14px;font-size:12px;color:var(--text-muted);">
-        Mapa: <strong style="color:var(--primary-light);">${m.mapVeto?.finalMap || ''}</strong> · Servidor: ${m.serverInfo?.ip}:${m.serverInfo?.port} · Senha: <code style="color:var(--accent-yellow);">${m.serverInfo?.password}</code>
+        Mapa: <strong style="color:var(--primary-light);">${m.mapVeto?.finalMap || ''}</strong> · Servidor: ${m.serverInfo?.ip}:${m.serverInfo?.port}
       </p>
       <p style="margin-top:6px;font-size:11px;color:var(--text-muted);">
         Se nada acontecer ao clicar, cole no console do CS2 (tecla \`):<br>
-        <code style="color:var(--accent-cyan);">connect ${m.serverInfo?.ip}:${m.serverInfo?.port}; password ${m.serverInfo?.password}</code>
+        <code style="color:var(--accent-cyan);">connect ${m.serverInfo?.ip}:${m.serverInfo?.port}</code>
       </p>
     `;
   } else if (m.status === 'finished') {
@@ -710,13 +710,12 @@ async function doConfirm(btnEl) {
     });
     const data = await r.json();
     if (data.error) { toast(data.error, 'error'); _release(btn); return; }
-    toast('Confirmado! ✅', 'success');
+    toast('Confirmado!', 'success');
     loadMatch();
   } catch (e) { toast('Erro: ' + e.message, 'error'); _release(btn); }
 }
 
 async function doVeto(map, btnEl) {
-  // Feedback visual instantaneo — banimos no MESMO frame do click
   if (btnEl) {
     btnEl.style.opacity = '0.5';
     btnEl.style.pointerEvents = 'none';
@@ -735,8 +734,8 @@ async function doVeto(map, btnEl) {
       if (btnEl) { btnEl.style.opacity=''; btnEl.style.pointerEvents=''; btnEl.style.transform=''; }
       return;
     }
-    if (data.finalMap) toast(`🎯 Mapa: ${MAP_LABELS[data.finalMap]?.name || data.finalMap}!`, 'success');
-    else toast(`Banido!`, 'success');
+    if (data.finalMap) toast(`Mapa: ${MAP_LABELS[data.finalMap]?.name || data.finalMap}!`, 'success');
+    else toast('Banido!', 'success');
     loadMatch();
   } catch (e) {
     toast('Erro: ' + e.message, 'error');
