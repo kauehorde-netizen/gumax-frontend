@@ -704,4 +704,48 @@ function _release(btn) {
 async function doConfirm(btnEl) {
   const btn = _press(btnEl, 'Confirmando…');
   try {
-    stopMatchFoundSound(); // user clicou
+    stopMatchFoundSound(); // user clicou — para o som de match found
+    const r = await fetch(`${API_BASE}/api/match/${MATCH_ID}/confirm`, {
+      method: 'POST', headers: { 'Authorization': 'Bearer ' + _idToken }
+    });
+    const data = await r.json();
+    if (data.error) { toast(data.error, 'error'); _release(btn); return; }
+    toast('Confirmado! ✅', 'success');
+    loadMatch();
+  } catch (e) { toast('Erro: ' + e.message, 'error'); _release(btn); }
+}
+
+async function doVeto(map, btnEl) {
+  // Feedback visual instantaneo — banimos no MESMO frame do click
+  if (btnEl) {
+    btnEl.style.opacity = '0.5';
+    btnEl.style.pointerEvents = 'none';
+    btnEl.style.transform = 'scale(.92)';
+    btnEl.style.transition = 'all .12s';
+  }
+  try {
+    const r = await fetch(`${API_BASE}/api/match/${MATCH_ID}/veto`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + _idToken },
+      body: JSON.stringify({ map })
+    });
+    const data = await r.json();
+    if (data.error) {
+      toast(data.error, 'error');
+      if (btnEl) { btnEl.style.opacity=''; btnEl.style.pointerEvents=''; btnEl.style.transform=''; }
+      return;
+    }
+    if (data.finalMap) toast(`🎯 Mapa: ${MAP_LABELS[data.finalMap]?.name || data.finalMap}!`, 'success');
+    else toast(`Banido!`, 'success');
+    loadMatch();
+  } catch (e) {
+    toast('Erro: ' + e.message, 'error');
+    if (btnEl) { btnEl.style.opacity=''; btnEl.style.pointerEvents=''; btnEl.style.transform=''; }
+  }
+}
+
+function escHtml(s) { return String(s || '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'})[c]); }
+</script>
+
+</body>
+</html>
