@@ -1478,6 +1478,14 @@ async function openChallengeModal(challengerLobbyId, expiresAt) {
   // Idempotente: se já tá aberto pra esse mesmo desafiante, só atualiza countdown
   if (_challengeModalChallengerId === challengerLobbyId) return;
   _challengeModalChallengerId = challengerLobbyId;
+  // v33-noredirect+sound: toca som de "match found" quando desafio chega
+  // (estilo GamersClub/FACEIT). Defensivo — autoplay pode ser bloqueado se
+  // user nunca interagiu com a página (clicou em algo) — silencia falha.
+  try {
+    const audio = new Audio('sounds/match-found.mp3');
+    audio.volume = 0.6;
+    audio.play().catch(() => {});
+  } catch {}
   // expiresAt vem como Firestore Timestamp ({_seconds, _nanoseconds}) ou ms
   _challengeModalExpiresAt = expiresAt?._seconds ? expiresAt._seconds * 1000
     : (expiresAt?.toMillis ? expiresAt.toMillis() : (typeof expiresAt === 'number' ? expiresAt : Date.now() + 30000));
