@@ -1294,6 +1294,9 @@ async function loadMyLobby() {
 // v33-noredirect: memoization signature pra evitar re-render do myLobbyContent
 // quando dados não mudaram (sem reflow do DOM, mantém scroll/foco).
 let _myLobbySignature = '';
+// v34-snappy: rastreia o matchId "stale" que motivou o ?nomatchredirect=1.
+// Só ESSE matchId pula redirect; matches NOVOS (aceitos depois) redirecionam normal.
+let _initialStaleMatchId = null;
 
 function renderMyLobby(lobby) {
   const container = document.getElementById('myLobbyContent');
@@ -1332,13 +1335,20 @@ function renderMyLobby(lobby) {
     closeChallengeModal();
   }
   // Detecta match criado (status in_match) — redireciona pra match.html
-  // v33-norerirect: ?nomatchredirect=1 na URL pula esse redirect (escape do loop infinito
-  // quando lobby fica preso em status='in_match' apontando pra match cancelado).
-  // Útil pra clicar "Encerrar Sala" e desbloquear o estado.
+  // v34-snappy fix: ?nomatchredirect=1 só pula o redirect do PRIMEIRO poll (matchId
+  // que já existia quando carregou a página — escape do loop de match cancelado).
+  // QUALQUER matchId NOVO (que aparece depois da carga) redireciona normalmente
+  // — senão o segundo PC fica preso na lobby quando aceita o desafio.
   const urlParams = new URLSearchParams(location.search);
-  if (lobby.status === 'in_match' && lobby.matchId && urlParams.get('nomatchredirect') !== '1') {
-    location.href = `match.html?id=${lobby.matchId}`;
-    return;
+  const escapeLoop = urlParams.get('nomatchredirect') === '1';
+  // Memoiza o matchId que veio no PRIMEIRO poll com status=in_match — só esse é "stale".
+  if (lobby.status === 'in_match' && lobby.matchId) {
+    if (!_initialStaleMatchId) _initialStaleMatchId = escapeLoop ? lobby.matchId : '__none__';
+    const isStaleInitial = escapeLoop && lobby.matchId === _initialStaleMatchId;
+    if (!isStaleInitial) {
+      location.href = `match.html?id=${lobby.matchId}`;
+      return;
+    }
   }
 
   // v33-noredirect: signature do que afeta o render (slots, status, banner, owner).
@@ -1863,21 +1873,4 @@ async function handleSteamCallback() {
   // Limpa openid.* + steam_callback da URL pra não disparar de novo no F5
   const url = new URL(location.href);
   [...url.searchParams.keys()].forEach(k => {
-    if (k.startsWith('openid.') || k === 'steam_callback') url.searchParams.delete(k);
-  });
-  history.replaceState({}, '', url.toString());
-}
-
-// ═══ Bootstrap (rodando no fim, depois que TODOS os `let` estão inicializados)
-// Antes eu chamava startPolling() lá em cima e dava TDZ porque _pollTimer
-// (declarado mais abaixo) ainda estava em zona morta. Agora roda depois de tudo. ═══
-if (_firebaseReady) {
-  // 1. Processa callback Steam (se URL tem ?steam_callback=1)
-  handleSteamCallback().catch(e => console.error('[steam callback]', e));
-}
-// 2. Inicia polling público de lobbies (independente de auth)
-startPolling();
-</script>
-
-</body>
-</html>
+    if (k.startsWith('openid.') || k === 'steam_callb
