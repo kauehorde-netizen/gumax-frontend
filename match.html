@@ -154,7 +154,7 @@ body { font-family: 'Inter', sans-serif; background: var(--bg-primary); color: v
 
 <script>
 // =================================================================
-//   match v4-perf
+//   match v5-cancel-detail
 // =================================================================
 
 const API_BASE = 'https://gumax-backend-production.up.railway.app';
@@ -340,9 +340,19 @@ function renderStage(m) {
     `;
   } else if (m.status === 'cancelled') {
     stageLabel.textContent = 'Match cancelado';
-    stageTitle.textContent = m.cancelReason === 'confirm_timeout' ? 'Tempo de confirmação esgotado' : 'Match cancelado';
+    const reasonMap = {
+      'confirm_timeout': 'Tempo de confirmação esgotado',
+      'server_misconfigured': '⚙️ Servidor mal configurado (faltam env vars)',
+      'rcon_lib_missing': '📦 Biblioteca RCON não instalada no backend',
+      'rcon_failed': '🔌 RCON falhou ao conectar no servidor CS2',
+    };
+    stageTitle.textContent = reasonMap[m.cancelReason] || ('Match cancelado: ' + (m.cancelReason || 'desconhecido'));
     countdown.style.display = 'none';
-    actionBox.innerHTML = `<button class="btn-huge" onclick="location.href='lobbies.html'">Voltar pra Lobbies</button>`;
+    // Mostra detalhe exato (env var faltando, mensagem do RCON, etc.)
+    const detailHtml = m.cancelDetail
+      ? `<p style="color:var(--accent-red);font-size:13px;margin:14px 0;font-family:monospace;background:rgba(0,0,0,.3);padding:10px;border-radius:8px;text-align:left;">${escHtml(m.cancelDetail)}</p>`
+      : '';
+    actionBox.innerHTML = detailHtml + `<button class="btn-huge" onclick="location.href='lobbies.html'">Voltar pra Lobbies</button>`;
   }
 }
 
