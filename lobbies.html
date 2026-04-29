@@ -1384,21 +1384,10 @@ function renderMyLobby(lobby) {
   _myLobbyOwner = lobby.ownerId === (_user && _user.uid);
   _myLobbyStatus = lobby.status; // v33-noredirect: backend define status (open/full/challenged)
 
-  // v35-inline: trackear quem tá me desafiando — agora UI é INLINE no card do
-  // grid de lobbies (sala desafiante pulsa vermelho c/ botão "Aceitar" dentro).
-  // Suporta múltiplos desafios simultâneos (futuro: mais de 1 lobby pode tentar
-  // me desafiar). Modal global REMOVIDO — só toca som curto quando NOVO desafio.
+  // v35-inline: trackear quem tá me desafiando — UI INLINE no card do grid
+  // (sala desafiante pulsa vermelho c/ botão "Aceitar" dentro). Suporta múltiplos
+  // desafios simultâneos. Sem som (user pediu) — só o pulse visual chama atenção.
   const newChallengedBy = lobby.challengedBy || null;
-  if (newChallengedBy && newChallengedBy !== _myChallengedBy) {
-    // Novo desafiante (não era esse antes) — toca alarme curto
-    try {
-      const audio = new Audio('sounds/match-found.mp3');
-      audio.volume = 0.4;
-      audio.play().catch(() => {});
-      // Para o som depois de 2s pra não ficar irritante
-      setTimeout(() => { try { audio.pause(); audio.currentTime = 0; } catch {} }, 2000);
-    } catch {}
-  }
   _myChallengedBy = newChallengedBy;
   _myChallengeExpiresAt = lobby.challengeExpiresAt || null;
   closeChallengeModal();
@@ -1855,6 +1844,10 @@ function renderChatMessage(m) {
         <a class="chat-msg-name" href="${profileLink}" title="${escHtml(m.name || '')}">${escHtml(m.name || '?')}</a>
         <span class="chat-msg-time" title="${escHtml(titleAttr)}">${time}</span>
       </div>
+      <div class="chat-msg-meta">
+        <a class="chat-msg-name" href="${profileLink}" title="${escHtml(m.name || '')}">${escHtml(m.name || '?')}</a>
+        <span class="chat-msg-time" title="${escHtml(titleAttr)}">${time}</span>
+      </div>
       <div class="chat-msg-text">${escHtml(m.text || '')}</div>
     </div>
   </div>`;
@@ -1887,9 +1880,8 @@ async function sendChatMessage(ev) {
   if (!input) return;
   const text = (input.value || '').trim();
   if (!text) return;
-  if (text.length > 200) { toast('Máximo 200 caracteres', 'error'); return; }
+  if (text.length > 200) { toast('Maximo 200 caracteres', 'error'); return; }
 
-  // Rate limit cliente: 1 msg / 1.5s.
   const now = Date.now();
   if (now - _chatLastSentAt < 1500) {
     toast('Calma, espera 1.5s', '');
