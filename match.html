@@ -431,7 +431,16 @@ function renderStage(m) {
         Se nada acontecer ao clicar, cole no console do CS2 (tecla \`):<br>
         <code style="color:var(--accent-cyan);">connect ${m.serverInfo?.ip}:${m.serverInfo?.port}</code>
       </p>
+      <div style="margin-top:18px;padding-top:14px;border-top:1px dashed var(--border);">
+        <p style="font-size:11px;color:var(--text-muted);margin-bottom:8px;">
+          <span id="abortCountdown" style="color:var(--accent-yellow);font-family:'JetBrains Mono', monospace;">3:00</span> pra auto-cancelar (sala libera se ninguém entrar)
+        </p>
+        <button class="btn-secondary-small" onclick="abortMatch(this)" style="padding:6px 14px;background:rgba(239,68,68,.12);border:1px solid rgba(239,68,68,.4);color:var(--accent-red);border-radius:8px;font-size:11px;cursor:pointer;">
+          ✕ Encerrar partida e liberar sala
+        </button>
+      </div>
     `;
+    startAbortCountdown(m);
   } else if (m.status === 'finished') {
     stageLabel.textContent = 'Match finalizado';
     const winner = m.winner === 'A' ? 'Time A 🟦 venceu!' : m.winner === 'B' ? 'Time B 🟥 venceu!' : 'Empate!';
@@ -691,7 +700,7 @@ function _press(btn, busyText) {
   btn.dataset.busy = '1';
   btn.dataset.origHTML = btn.innerHTML;
   btn.disabled = true;
-  if (busyText) btn.innerHTML = `<span style="display:inline-block;animation:spin 1s linear infinite;margin-right:6px;">⏳</span>${busyText}`;
+  if (busyText) btn.innerHTML = `<span style="display:inline-block;animation:spin 1s linear infinite;margin-right:6px;">&#9203;</span>${busyText}`;
   return btn;
 }
 function _release(btn) {
@@ -701,10 +710,51 @@ function _release(btn) {
   delete btn.dataset.busy; delete btn.dataset.origHTML;
 }
 
-async function doConfirm(btnEl) {
-  const btn = _press(btnEl, 'Confirmando…');
+// v36-nopass: abort manual + auto-timeout 3min
+let _abortTimer = null;
+let _abortStartedAt = null;
+function startAbortCountdown(m) {
+  if (_abortTimer && _abortStartedAt && _abortStartedAt.matchId === MATCH_ID) return;
+  if (_abortTimer) clearInterval(_abortTimer);
+  const startedMs = m.startedAt?._seconds ? m.startedAt._seconds * 1000
+    : (m.startedAt?.toMillis ? m.startedAt.toMillis() : Date.now());
+  _abortStartedAt = { matchId: MATCH_ID, startedMs };
+  const tick = () => {
+    const remaining = startedMs + 180000 - Date.now();
+    const el = document.getElementById('abortCountdown');
+    if (!el) { clearInterval(_abortTimer); return; }
+    if (remaining <= 0) {
+      clearInterval(_abortTimer);
+      el.textContent = 'Cancelando...';
+      abortMatch(null, true);
+      return;
+    }
+    const sec = Math.floor(remaining / 1000);
+    el.textContent = Math.floor(sec/60) + ':' + String(sec%60).padStart(2,'0');
+  };
+  tick();
+  _abortTimer = setInterval(tick, 1000);
+}
+async function abortMatch(btnEl, isAuto) {
+  if (!isAuto && !confirm('Cancelar partida e liberar sua sala? Todos os jogadores voltam pras lobbies.')) return;
+  const btn = btnEl ? _press(btnEl, 'Cancelando...') : null;
   try {
-    stopMatchFoundSound(); // user clicou — para o som de match found
+    const r = await fetch(`${API_BASE}/api/match/${MATCH_ID}/abort`, {
+      method: 'POST', headers: { 'Authorization': 'Bearer ' + _idToken }
+    });
+    const data = await r.json();
+    if (data.error && data.error !== 'match_already_ended') {
+      toast(data.error, 'error'); _release(btn); return;
+    }
+    if (_abortTimer) clearInterval(_abortTimer);
+    location.href = 'lobbies.html?nomatchredirect=1';
+  } catch (e) { toast('Erro: ' + e.message, 'error'); _release(btn); }
+}
+
+async function doConfirm(btnEl) {
+  const btn = _press(btnEl, 'Confirmando...');
+  try {
+    stopMatchFoundSound();
     const r = await fetch(`${API_BASE}/api/match/${MATCH_ID}/confirm`, {
       method: 'POST', headers: { 'Authorization': 'Bearer ' + _idToken }
     });
@@ -734,7 +784,7 @@ async function doVeto(map, btnEl) {
       if (btnEl) { btnEl.style.opacity=''; btnEl.style.pointerEvents=''; btnEl.style.transform=''; }
       return;
     }
-    if (data.finalMap) toast(`Mapa: ${MAP_LABELS[data.finalMap]?.name || data.finalMap}!`, 'success');
+    if (data.finalMap) toast('Mapa: ' + (MAP_LABELS[data.finalMap]?.name || data.finalMap) + '!', 'success');
     else toast('Banido!', 'success');
     loadMatch();
   } catch (e) {
