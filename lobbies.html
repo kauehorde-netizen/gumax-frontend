@@ -42,7 +42,7 @@ body {
   overflow-x:hidden;
 }
 /* Camada de blobs flutuando — orbs com blur são caros (blur cost ≈ radius²).
-   v30-2btn: reduzi blur 80→32px, sizes ~30%, removi scale (só translate),
+   v31-bigicons: reduzi blur 80→32px, sizes ~30%, removi scale (só translate),
    slowed animation 24-32s → 50-65s. Resultado: ~10x menos cost, mantém vibe.
    contain: paint isola repaint do main flow. */
 .bg-orbs { position:fixed; inset:0; pointer-events:none; z-index:0; overflow:hidden; contain:strict; }
@@ -62,7 +62,7 @@ header { z-index:100; }
 .modal-backdrop { z-index:200; }
 
 /* ── Header padrão do site (mesma estética do index/rifas) ── */
-/* v30-2btn: backdrop-filter blur 20→10px (perceptualmente igual, custo ~4x menor). */
+/* v31-bigicons: backdrop-filter blur 20→10px (perceptualmente igual, custo ~4x menor). */
 header { background: rgba(8,6,14,0.92); backdrop-filter: blur(10px); border-bottom: 1px solid var(--border); position: sticky; top: 0; z-index: 100; will-change:auto; }
 .header-content { max-width: 1400px; margin: 0 auto; padding: 12px 24px; display: flex; align-items: center; justify-content: space-between; gap: 24px; }
 .header-content .logo { width: 80px; height: auto; cursor: pointer; }
@@ -124,7 +124,7 @@ header { background: rgba(8,6,14,0.92); backdrop-filter: blur(10px); border-bott
 }
 
 /* Linha de "shine" deslizando horizontalmente — bem sutil
-   v30-2btn: 8s → 24s (3x menos repaint). Background-position animation
+   v31-bigicons: 8s → 24s (3x menos repaint). Background-position animation
    pinta toda área do hero a cada frame; period maior alivia. */
 .league-hero::before {
   content:''; position:absolute; inset:0; pointer-events:none; z-index:0;
@@ -197,7 +197,7 @@ header { background: rgba(8,6,14,0.92); backdrop-filter: blur(10px); border-bott
   overflow:hidden;
   isolation:isolate;
   transition:transform .25s ease;
-  /* v30-2btn: removi backdrop-filter:blur(8px) — caro e quase imperceptível
+  /* v31-bigicons: removi backdrop-filter:blur(8px) — caro e quase imperceptível
      porque o background-gradient já é opaco o suficiente. */
   contain:layout style paint;
 }
@@ -221,7 +221,7 @@ header { background: rgba(8,6,14,0.92); backdrop-filter: blur(10px); border-bott
 }
 
 /* Camada 2: LASER ORBITAL — ponto bright girando com glow.
-   v30-2btn: 3.6s → 14s (ainda visível, mas 4x menos repaint), drop-shadow
+   v31-bigicons: 3.6s → 14s (ainda visível, mas 4x menos repaint), drop-shadow
    reduzido pra 1 layer (2 layers de drop-shadow é caro). */
 .energy-card::after {
   content:''; position:absolute; inset:-2px; border-radius:18px; padding:2px;
@@ -256,8 +256,9 @@ header { background: rgba(8,6,14,0.92); backdrop-filter: blur(10px); border-bott
 /* Conteúdo dos steps */
 .step-card { text-align:center; min-height:230px; display:flex; flex-direction:column; align-items:center; }
 .step-card .step-num { display:inline-block; padding:4px 12px; background:rgba(250,204,21,.15); color:var(--accent-yellow); border:1px solid rgba(250,204,21,.3); border-radius:12px; font-size:10px; font-weight:800; letter-spacing:1px; margin-bottom:14px; }
-.step-card .step-icon { width:72px; height:72px; margin:8px auto 14px; display:flex; align-items:center; justify-content:center; background:linear-gradient(135deg, rgba(139,92,246,.18), rgba(34,211,238,.12)); border-radius:18px; position:relative; }
-.step-card .step-icon svg { width:42px; height:42px; color:var(--primary-light); position:relative; z-index:2; will-change:transform; }
+/* v31-bigicons: removi quadrado interno + dobrei size do SVG (42 → 84) */
+.step-card .step-icon { width:auto; height:auto; margin:10px auto 16px; display:flex; align-items:center; justify-content:center; position:relative; }
+.step-card .step-icon svg { width:84px; height:84px; color:var(--primary-light); position:relative; z-index:2; will-change:transform; }
 .step-card .step-title { font-size:14px; font-weight:700; margin-bottom:6px; color:var(--text-primary); }
 .step-card .step-desc { font-size:12px; color:var(--text-secondary); line-height:1.5; }
 
@@ -396,10 +397,10 @@ header { background: rgba(8,6,14,0.92); backdrop-filter: blur(10px); border-bott
     rgba(139,92,246,.4)   360deg);
   -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
   -webkit-mask-composite: xor; mask-composite: exclude;
-  animation: energyRotate 30s linear infinite; /* v30-2btn: 10s → 30s */
+  animation: energyRotate 30s linear infinite; /* v31-bigicons: 10s → 30s */
   pointer-events:none; z-index:-1;
 }
-/* Camada 2: laser orbital — v30-2btn: 4.4s → 14s, 1 drop-shadow só. */
+/* Camada 2: laser orbital — v31-bigicons: 4.4s → 14s, 1 drop-shadow só. */
 .my-lobby-card::after {
   content:''; position:absolute; inset:-2px; border-radius:16px; padding:2px;
   background: conic-gradient(from var(--laser-angle, 0deg),
@@ -538,11 +539,11 @@ header { background: rgba(8,6,14,0.92); backdrop-filter: blur(10px); border-bott
     rgba(139,92,246,.4)  360deg);
   -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
   -webkit-mask-composite: xor; mask-composite: exclude;
-  animation: energyRotate 30s linear infinite; /* v30-2btn: 10s → 30s */
+  animation: energyRotate 30s linear infinite; /* v31-bigicons: 10s → 30s */
   pointer-events:none; z-index:-1;
 }
 
-/* Camada 2: laser orbital brilhante — v30-2btn: 4s → 14s + 1 drop-shadow */
+/* Camada 2: laser orbital brilhante — v31-bigicons: 4s → 14s + 1 drop-shadow */
 .lobby-card::after {
   content:''; position:absolute; inset:-2px; border-radius:16px; padding:2px;
   background: conic-gradient(from var(--laser-angle, 0deg),
@@ -690,7 +691,7 @@ header { background: rgba(8,6,14,0.92); backdrop-filter: blur(10px); border-bott
       <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M19 12H5M12 19l-7-7 7-7"/></svg>
       Voltar ao Mercado
     </a>
-    <div class="league-brand" title="lobby v30-2btn">
+    <div class="league-brand" title="lobby v31-bigicons">
       <!-- Logo em vídeo (fundo preto fica transparente via mix-blend-mode:screen).
            muted+playsinline são obrigatórios pra autoplay funcionar nos browsers. -->
       <video class="league-logo-video" src="logogu.mp4" autoplay loop muted playsinline preload="auto"></video>
@@ -913,13 +914,13 @@ header { background: rgba(8,6,14,0.92); backdrop-filter: blur(10px); border-bott
 <div class="toast" id="toast"></div>
 
 <!-- Marker discreto persistente (canto inferior direito) — pra dev/debug -->
-<div style="position:fixed;bottom:8px;right:12px;font-size:10px;color:rgba(250,204,21,.5);font-family:monospace;pointer-events:none;z-index:1;background:rgba(0,0,0,.4);padding:3px 8px;border-radius:4px;">lobby v30-2btn</div>
+<div style="position:fixed;bottom:8px;right:12px;font-size:10px;color:rgba(250,204,21,.5);font-family:monospace;pointer-events:none;z-index:1;background:rgba(0,0,0,.4);padding:3px 8px;border-radius:4px;">lobby v31-bigicons</div>
 
 <script>
 // =================================================================
 // MARKER
 // =================================================================
-//   lobby v30-2btn
+//   lobby v31-bigicons
 //   - Subcollection lobbies/{id}/chat com onSnapshot real-time
 //   - UI compacta na sidebar (fora de myLobbyContent pra não morrer no poll)
 //   - Rate limit 1.5s + maxlength 200 + rules robustas (uid==auth, member-only)
@@ -1052,7 +1053,7 @@ async function doLogout() {
 }
 
 // ─── Polling 5s — rodando SEMPRE (lista pública) ───
-// v30-2btn: 3s → 5s. Mudança imperceptível pro user mas reduz 40% das requisições.
+// v31-bigicons: 3s → 5s. Mudança imperceptível pro user mas reduz 40% das requisições.
 // Para quando aba vai pra background (visibilitychange) — economiza CPU em laptops.
 // loadList é público (sem auth); loadMyLobby só dispara se user logado.
 let _pollTimer = null;
@@ -1093,7 +1094,7 @@ function renderList(lobbies) {
   const grid = document.getElementById('lobbiesGrid');
   const empty = document.getElementById('lobbiesEmpty');
 
-  // v30-2btn: gera signature dos dados que afetam o render. Se igual ao último,
+  // v31-bigicons: gera signature dos dados que afetam o render. Se igual ao último,
   // skip o innerHTML (evita reflow + paint do grid inteiro a cada 5s).
   // Inclui _myLobbyId/Filled/Owner porque esses afetam botões dos cards.
   const sig = JSON.stringify([
@@ -1116,7 +1117,7 @@ function renderLobbyCard(lobby) {
     ? `<div class="lobby-slot filled" title="${escHtml(s.name)}">${s.avatar ? `<img src="${s.avatar}" onerror="this.style.display='none'">` : ''}</div>`
     : `<div class="lobby-slot">·</div>`
   ).join('');
-  // v30-2btn: usa lobby.status === 'full' (backend decide threshold) em vez
+  // v31-bigicons: usa lobby.status === 'full' (backend decide threshold) em vez
   // de hardcoded === 5. Permite testar 1v1 quando LOBBY_FULL_THRESHOLD=1 no Railway.
   const isFull = lobby.status === 'full' || lobby.status === 'challenged' || lobby.filled === 5;
   const isMine = !!_user && lobby.id === _myLobbyId;
@@ -1124,7 +1125,7 @@ function renderLobbyCard(lobby) {
   let cls = lobby.status === 'challenged' ? 'challenged' : (isFull ? 'full' : '');
   if (isMine) cls += ' mine';
 
-  // v30-2btn: modo teste — 2 botões lado a lado em salas adversárias
+  // v31-bigicons: modo teste — 2 botões lado a lado em salas adversárias
   // (Entrar OU Desafiar). Backend ALLOW_PARTIAL_CHALLENGE=1 aceita desafio
   // mesmo com lobby não-cheio. Permite teste com 30 amigos sem precisar 5+5.
   let actionHtml;
@@ -1173,7 +1174,7 @@ function updateStats(lobbies) {
 // ─── Minha sala (sidebar) ───
 let _myLobbyFilled = 0;
 let _myLobbyOwner = false;
-let _myLobbyStatus = null; // v30-2btn: 'open' | 'full' | 'challenged' | 'in_match'
+let _myLobbyStatus = null; // v31-bigicons: 'open' | 'full' | 'challenged' | 'in_match'
 
 // Cache de stats dos jogadores (level/KDR/streak) — evita refetch em cada poll.
 // Key = steamId, value = { level, kdrRecent10, winStreak, matches, fetchedAt }.
@@ -1246,7 +1247,7 @@ async function loadMyLobby() {
   }
 }
 
-// v30-2btn: memoization signature pra evitar re-render do myLobbyContent
+// v31-bigicons: memoization signature pra evitar re-render do myLobbyContent
 // quando dados não mudaram (sem reflow do DOM, mantém scroll/foco).
 let _myLobbySignature = '';
 
@@ -1277,7 +1278,7 @@ function renderMyLobby(lobby) {
   _myLobbyId = lobby.id;
   _myLobbyFilled = (lobby.slots || []).filter(s => s != null).length;
   _myLobbyOwner = lobby.ownerId === (_user && _user.uid);
-  _myLobbyStatus = lobby.status; // v30-2btn: backend define status (open/full/challenged)
+  _myLobbyStatus = lobby.status; // v31-bigicons: backend define status (open/full/challenged)
 
   // Detecta desafio recebido pra abrir modal customizado (substitui confirm())
   if (lobby.challengedBy && _myLobbyOwner) {
@@ -1292,7 +1293,7 @@ function renderMyLobby(lobby) {
     return;
   }
 
-  // v30-2btn: signature do que afeta o render (slots, status, banner, owner).
+  // v31-bigicons: signature do que afeta o render (slots, status, banner, owner).
   // Se igual ao último render, pula tudo abaixo (innerHTML + fetchPlayerStats).
   // Setup do chat ainda dispara (idempotente) por segurança.
   const sig = JSON.stringify([
