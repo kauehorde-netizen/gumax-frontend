@@ -44,6 +44,22 @@ body { font-family: 'Inter', sans-serif; background: var(--bg-primary); color: v
 .team-card.team-a { border-color:rgba(34,211,238,.4); }
 .team-card.team-b { border-color:rgba(239,68,68,.4); }
 .team-card h2 { font-size:14px; color:var(--text-muted); text-transform:uppercase; letter-spacing:.5px; margin-bottom:14px; text-align:center; }
+
+/* v10-layout: layout 3 colunas (Sala A | Centro | Sala B) */
+.match-layout {
+  display:grid;
+  grid-template-columns: 240px 1fr 240px;
+  gap:20px;
+  align-items:start;
+}
+.match-side { position:sticky; top:20px; }
+.match-side .team-card { padding:14px; }
+.match-side .team-card h2 { font-size:13px; }
+.match-main { min-width:0; } /* impede overflow do conteúdo central */
+@media (max-width:1100px) {
+  .match-layout { grid-template-columns: 1fr; }
+  .match-side { position:static; }
+}
 .player-row { display:flex; align-items:center; gap:10px; padding:8px 0; border-bottom:1px solid rgba(255,255,255,.04); }
 .player-row:last-child { border-bottom:none; }
 .player-avatar { width:34px; height:34px; border-radius:50%; background:rgba(139,92,246,.2); flex-shrink:0; display:flex; align-items:center; justify-content:center; font-size:13px; }
@@ -157,35 +173,41 @@ body { font-family: 'Inter', sans-serif; background: var(--bg-primary); color: v
     <div class="countdown" id="countdown" style="display:none;">--:--</div>
   </header>
 
-  <!-- Times -->
-  <div class="teams-row">
-    <div class="team-card team-a">
-      <h2>Time A 🟦</h2>
-      <div id="teamAList"></div>
-    </div>
-    <div class="vs-divider">VS</div>
-    <div class="team-card team-b">
-      <h2>Time B 🟥</h2>
-      <div id="teamBList"></div>
-    </div>
+  <!-- v10-layout: 3 colunas (Sala A | Centro | Sala B) — sidebars sticky com rosters -->
+  <div class="match-layout">
+    <aside class="match-side match-side-left">
+      <div class="team-card team-a">
+        <h2>SALA A 🟦</h2>
+        <div id="teamAList"></div>
+      </div>
+    </aside>
+
+    <main class="match-main">
+      <!-- Action box dinâmico (varia conforme stage) -->
+      <div id="actionBox" class="action-box"></div>
+
+      <!-- Pick/ban (só visível em status='mappick') -->
+      <section class="maps-section" id="mapsSection" style="display:none;">
+        <div class="captain-info" id="captainInfo">Aguardando capitão decidir…</div>
+        <div class="maps-grid" id="mapsGrid"></div>
+        <div class="match-chat" id="matchChat" style="display:none;">
+          <div class="chat-header"><span class="live-dot" aria-hidden="true"></span>💬 Chat geral</div>
+          <div id="matchChatMessages" class="chat-messages" aria-live="polite"></div>
+          <form class="chat-form" onsubmit="sendMatchChatMessage(event)" autocomplete="off">
+            <input id="matchChatInput" type="text" maxlength="200" placeholder="Mensagem… (Enter envia)" />
+            <button type="submit" class="chat-send" id="matchChatSendBtn" title="Enviar (Enter)">➤</button>
+          </form>
+        </div>
+      </section>
+    </main>
+
+    <aside class="match-side match-side-right">
+      <div class="team-card team-b">
+        <h2>SALA B 🟥</h2>
+        <div id="teamBList"></div>
+      </div>
+    </aside>
   </div>
-
-  <!-- Action box dinâmico (varia conforme stage) -->
-  <div id="actionBox" class="action-box"></div>
-
-  <!-- Pick/ban (só visível em status='mappick') -->
-  <section class="maps-section" id="mapsSection" style="display:none;">
-    <div class="captain-info" id="captainInfo">Aguardando capitão decidir…</div>
-    <div class="maps-grid" id="mapsGrid"></div>
-    <div class="match-chat" id="matchChat" style="display:none;">
-      <div class="chat-header"><span class="live-dot" aria-hidden="true"></span>💬 Chat dos times</div>
-      <div id="matchChatMessages" class="chat-messages" aria-live="polite"></div>
-      <form class="chat-form" onsubmit="sendMatchChatMessage(event)" autocomplete="off">
-        <input id="matchChatInput" type="text" maxlength="200" placeholder="Mensagem… (Enter envia)" />
-        <button type="submit" class="chat-send" id="matchChatSendBtn" title="Enviar (Enter)">➤</button>
-      </form>
-    </div>
-  </section>
 
 </div>
 
@@ -193,7 +215,12 @@ body { font-family: 'Inter', sans-serif; background: var(--bg-primary); color: v
 
 <script>
 // =================================================================
-//   match v9-snappy
+//   match v10-layout
+//   - v10-layout: 3 colunas (Sala A esquerda | conteúdo | Sala B direita)
+//     - team-card vira sidebar sticky (top:20px)
+//     - chat dos times virou "Chat geral"
+//     - steam:// connect URL agora usa steam://connect/IP:PORT/PASS (force connect)
+//     - botão "ENTRAR NO SERVIDOR" → "CONECTAR NO SERVIDOR" + comando manual
 //   - v9-snappy: optimistic UI nos botões (Confirmar match + Banir mapa)
 //     - _press(btn,'Confirmando…') troca texto + disable instantâneo
 //     - .btn-huge:active scale(.96) — feedback de press em ~50ms
@@ -394,10 +421,14 @@ function renderStage(m) {
     const url = m.serverInfo?.connectUrl || '#';
     actionBox.innerHTML = `
       <button class="btn-huge btn-connect" onclick="window.location.href='${url}'">
-        🎮 ENTRAR NO SERVIDOR (CS2 abre automático)
+        🎮 CONECTAR NO SERVIDOR
       </button>
       <p style="margin-top:14px;font-size:12px;color:var(--text-muted);">
         Mapa: <strong style="color:var(--primary-light);">${m.mapVeto?.finalMap || ''}</strong> · Servidor: ${m.serverInfo?.ip}:${m.serverInfo?.port} · Senha: <code style="color:var(--accent-yellow);">${m.serverInfo?.password}</code>
+      </p>
+      <p style="margin-top:6px;font-size:11px;color:var(--text-muted);">
+        Se nada acontecer ao clicar, cole no console do CS2 (tecla \`):<br>
+        <code style="color:var(--accent-cyan);">connect ${m.serverInfo?.ip}:${m.serverInfo?.port}; password ${m.serverInfo?.password}</code>
       </p>
     `;
   } else if (m.status === 'finished') {
@@ -677,43 +708,4 @@ async function doConfirm(btnEl) {
       method: 'POST', headers: { 'Authorization': 'Bearer ' + _idToken }
     });
     const data = await r.json();
-    if (data.error) { toast(data.error, 'error'); _release(btn); return; }
-    toast('Confirmado! ✅', 'success');
-    loadMatch();
-  } catch (e) { toast('Erro: ' + e.message, 'error'); _release(btn); }
-}
-
-async function doVeto(map, btnEl) {
-  // Feedback visual instantâneo — banimos no MESMO frame do click
-  if (btnEl) {
-    btnEl.style.opacity = '0.5';
-    btnEl.style.pointerEvents = 'none';
-    btnEl.style.transform = 'scale(.92)';
-    btnEl.style.transition = 'all .12s';
-  }
-  try {
-    const r = await fetch(`${API_BASE}/api/match/${MATCH_ID}/veto`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + _idToken },
-      body: JSON.stringify({ map })
-    });
-    const data = await r.json();
-    if (data.error) {
-      toast(data.error, 'error');
-      if (btnEl) { btnEl.style.opacity=''; btnEl.style.pointerEvents=''; btnEl.style.transform=''; }
-      return;
-    }
-    if (data.finalMap) toast(`🎯 Mapa: ${MAP_LABELS[data.finalMap]?.name || data.finalMap}!`, 'success');
-    else toast(`Banido!`, 'success');
-    loadMatch();
-  } catch (e) {
-    toast('Erro: ' + e.message, 'error');
-    if (btnEl) { btnEl.style.opacity=''; btnEl.style.pointerEvents=''; btnEl.style.transform=''; }
-  }
-}
-
-function escHtml(s) { return String(s || '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'})[c]); }
-</script>
-
-</body>
-</html>
+    if (data.error) { toast(data.error, 'error'); 
