@@ -78,11 +78,21 @@ header {
   padding: 0 24px;
   text-align: center;
 }
-.hero-shield {
+.hero-logo {
   display: inline-block;
-  margin-bottom: 24px;
-  filter: drop-shadow(0 0 20px rgba(34, 211, 238, .35));
-  animation: shieldFloat 4s ease-in-out infinite alternate;
+  margin-bottom: 8px;
+  filter: drop-shadow(0 0 32px rgba(139, 92, 246, .55)) drop-shadow(0 0 12px rgba(139, 92, 246, .4));
+  animation: logoFloat 4s ease-in-out infinite alternate;
+}
+.hero-logo-img {
+  width: 480px;
+  max-width: 90vw;
+  height: auto;
+  display: block;
+}
+@keyframes logoFloat {
+  from { transform: translateY(0); }
+  to   { transform: translateY(-6px); }
 }
 @keyframes shieldFloat {
   from { transform: translateY(0); }
@@ -305,24 +315,12 @@ footer {
 
 <!-- ─── Hero ─── -->
 <section class="hero">
-  <div class="hero-shield">
-    <svg viewBox="0 0 100 100" width="120" height="120">
-      <defs>
-        <linearGradient id="dlShieldGrad" x1="0%" y1="0%" x2="100%" y2="100%">
-          <stop offset="0%" stop-color="#22d3ee"/>
-          <stop offset="100%" stop-color="#8b5cf6"/>
-        </linearGradient>
-      </defs>
-      <path d="M50 8 L18 22 V52 C18 70 32 86 50 92 C68 86 82 70 82 52 V22 Z"
-            fill="none" stroke="url(#dlShieldGrad)" stroke-width="2.8" stroke-linejoin="round"/>
-      <path d="M38 52 L46 60 L62 42"
-            fill="none" stroke="url(#dlShieldGrad)" stroke-width="3.5" stroke-linecap="round" stroke-linejoin="round"/>
-    </svg>
+  <div class="hero-logo">
+    <img src="gmax-guard-logo.png" alt="GMAX GUARD" class="hero-logo-img">
   </div>
 
   <p class="eyebrow">Anti-Cheat · v1.0</p>
-  <h1>GMAX <span class="accent">GUARD</span></h1>
-  <p class="tagline">
+  <p class="tagline" style="margin-top:18px;">
     O anti-cheat oficial da Gumax League. Detecta cheats em tempo real, valida sua conta Steam e protege a integridade competitiva. <strong style="color:var(--accent-cyan);">Obrigatório</strong> pra entrar nas partidas 5v5.
   </p>
 
@@ -443,3 +441,4 @@ footer {
 
 </body>
 </html>
+                                                                                                                                                                                                                                                                                                                                                                     
