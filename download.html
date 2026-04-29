@@ -326,7 +326,7 @@ footer {
 
   <div class="cta-row">
     <a class="btn-download" id="dlBtn"
-       href="https://github.com/kauehorde-netizen/gumax-frontend/releases/latest/download/GMAX-GUARD-Setup.exe"
+       href="https://github.com/kauehorde-netizen/gumax-frontend/releases/latest/download/GMAX-GUARD-1.0.0.exe"
        download>
       <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round">
         <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
@@ -381,26 +381,42 @@ footer {
   </div>
 </section>
 
-<!-- ─── Como instalar ─── -->
+<!-- ─── Como usar ─── -->
 <section class="steps">
-  <p class="section-title">Como instalar</p>
+  <p class="section-title">Como usar</p>
   <h2 class="section-h">3 passos, 1 minuto</h2>
   <div class="steps-list">
     <div class="step">
       <span class="step-num">1</span>
       <h4>Baixar</h4>
-      <p>Clica no botão acima pra baixar o instalador Windows. Tamanho: ~85MB.</p>
+      <p>Clica no botão acima pra baixar o GMAX GUARD. É um <strong>arquivo único</strong> (.exe portátil) — não precisa instalar nada.</p>
     </div>
     <div class="step">
       <span class="step-num">2</span>
-      <h4>Instalar</h4>
-      <p>Abre o <code>GMAX-GUARD-Setup.exe</code> e segue o wizard. Clica em "Instalar" — não pede permissão de admin.</p>
+      <h4>Executar</h4>
+      <p>Dá duplo-clique no <code>GMAX-GUARD-1.0.0.exe</code>. Na 1ª vez o Windows pode mostrar um aviso → clica em <strong>"Mais informações"</strong> → <strong>"Executar mesmo assim"</strong>. <a href="#smartscreen" style="color:var(--accent-cyan);">Por que esse aviso?</a></p>
     </div>
     <div class="step">
       <span class="step-num">3</span>
       <h4>Pronto pra jogar</h4>
-      <p>Quando entrar em uma partida, o site chama o GUARD automaticamente. Verificação leva ~7 segundos.</p>
+      <p>Quando entrar em uma partida na Gumax League, o site chama o GUARD automaticamente. Verificação leva ~7 segundos.</p>
     </div>
+  </div>
+
+  <!-- ─── Aviso SmartScreen ─── -->
+  <div id="smartscreen" style="margin-top:32px;padding:20px 24px;background:rgba(250,204,21,.06);border:1px solid rgba(250,204,21,.25);border-radius:12px;max-width:760px;margin-left:auto;margin-right:auto;">
+    <h3 style="font-size:14px;color:var(--accent-yellow);margin-bottom:10px;">⚠️ Aviso "Windows protegeu seu PC"?</h3>
+    <p style="font-size:12px;color:var(--text-secondary);line-height:1.6;">
+      Esse aviso aparece porque o GMAX GUARD ainda <strong>não tem assinatura digital paga</strong> (custa ~US$500/ano e estamos em beta). Não significa que o app é malicioso — significa que o Windows não reconhece a Gumax como editor "verificado" ainda.
+    </p>
+    <p style="font-size:12px;color:var(--text-secondary);line-height:1.6;margin-top:10px;">
+      <strong style="color:var(--text-primary);">Pra passar pelo aviso:</strong>
+      Clica em <strong>"Mais informações"</strong> e depois em <strong>"Executar mesmo assim"</strong>. À medida que mais jogadores baixarem, o Windows vai aprendendo que o app é seguro e o aviso some sozinho.
+    </p>
+    <p style="font-size:11px;color:var(--text-muted);line-height:1.5;margin-top:14px;">
+      Quer verificar você mesmo que é seguro? O código-fonte é aberto:
+      <a href="https://github.com/kauehorde-netizen/gumax-frontend" target="_blank" style="color:var(--accent-cyan);">github.com/kauehorde-netizen/gumax-frontend</a>
+    </p>
   </div>
 </section>
 
@@ -410,35 +426,4 @@ footer {
   <h2 class="section-h">O que o GUARD faz <span class="accent">e não faz</span></h2>
   <div class="info">
     <p><strong>✅ O GUARD lê:</strong></p>
-    <p>• Lista de processos rodando (compara com blacklist de cheats conhecidos)<br>
-       • Conta Steam ativa via <code>loginusers.vdf</code> (pra confirmar que bate com o login do site)<br>
-       • Identificadores únicos de hardware via WMI (CPU, motherboard, disco) → hashados antes de enviar<br>
-       • Caminho de instalação do CS2 e arquivos críticos do jogo</p>
-    <br>
-    <p><strong>❌ O GUARD NÃO lê:</strong></p>
-    <p>• Histórico de navegação<br>
-       • Senhas, cookies, dados pessoais<br>
-       • Microfone, câmera, ou áudio do sistema<br>
-       • Outros jogos instalados ou outras pastas do disco<br>
-       • Nada que não seja relacionado a anti-cheat de CS2</p>
-    <br>
-    <p style="margin-top:18px;font-size:11px;">
-      <strong>Open issues</strong>: encontrou bug ou falso positivo? Reporta no GitHub:
-      <a href="https://github.com/kauehorde-netizen/gumax-frontend/issues" style="color:var(--accent-cyan);" target="_blank">github.com/kauehorde-netizen/gumax-frontend/issues</a>
-    </p>
-  </div>
-</section>
-
-<footer>
-  GMAX GUARD v1.0 · Gumax League © 2026 · Feito com ❤️ no Brasil
-</footer>
-
-<script>
-// Atualiza link de download dinamicamente quando GitHub Release for publicada.
-// Por enquanto aponta pro release "latest" do repo do frontend.
-// TODO: criar repo dedicado gumax-guard pra releases serem isoladas.
-</script>
-
-</body>
-</html>
-                                                                                                                                                                                                                                                                                                                                                                     
+    <p>• Lista de processos rodando (compara com blacklist de cheats co
