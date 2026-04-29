@@ -582,7 +582,11 @@ header { background: rgba(8,6,14,0.92); backdrop-filter: blur(10px); border-bott
 .lobby-slot { flex:1; aspect-ratio:1; border-radius:50%; background:rgba(139,92,246,.08); border:1.5px dashed rgba(139,92,246,.25); display:flex; align-items:center; justify-content:center; font-size:10px; color:var(--text-muted); }
 .lobby-slot.filled { border:2px solid var(--primary); background:rgba(139,92,246,.15); border-style:solid; }
 .lobby-slot.filled img { width:100%; height:100%; border-radius:50%; object-fit:cover; }
-.lobby-action { width:100%; padding:8px; border:none; border-radius:8px; font-weight:700; font-size:12px; cursor:pointer; transition:all .15s; }
+/* v34-snappy: transition rápida + active state visível instantaneamente — feedback de press sem esperar fetch */
+.lobby-action { width:100%; padding:8px; border:none; border-radius:8px; font-weight:700; font-size:12px; cursor:pointer; transition:background .12s, filter .12s, transform .08s, opacity .12s; will-change:transform; }
+.lobby-action:active:not(:disabled) { transform:scale(.96); filter:brightness(.85); }
+.lobby-action:disabled { opacity:.7; cursor:wait; }
+@keyframes spin { from { transform:rotate(0deg); } to { transform:rotate(360deg); } }
 .lobby-action.btn-join    { background:rgba(139,92,246,.2); color:var(--primary-light); border:1px solid rgba(139,92,246,.4); }
 .lobby-action.btn-join:hover { background:rgba(139,92,246,.35); }
 .lobby-action.btn-challenge { background:linear-gradient(135deg,var(--primary),var(--accent-cyan)); color:#fff; }
@@ -927,7 +931,11 @@ header { background: rgba(8,6,14,0.92); backdrop-filter: blur(10px); border-bott
 // =================================================================
 // MARKER
 // =================================================================
-//   lobby v33-noredirect
+//   lobby v34-snappy
+//   - v34-snappy: optimistic UI nos botões (Entrar/Desafiar/Criar/Sair/Kick)
+//     - pressBtn(btn, 'Entrando…') troca texto + disable INSTANTANEAMENTE
+//     - bumpPoll() = Promise.all paralelo (loadList + loadMyLobby)
+//     - CSS :active scale(.96) → feedback de press visual em ~50ms
 //   - Subcollection lobbies/{id}/chat com onSnapshot real-time
 //   - UI compacta na sidebar (fora de myLobbyContent pra não morrer no poll)
 //   - Rate limit 1.5s + maxlength 200 + rules robustas (uid==auth, member-only)
@@ -1084,6 +1092,35 @@ document.addEventListener('visibilitychange', () => {
   if (!document.hidden) pollTick();
 });
 
+// ─── v34-snappy: feedback visual instantâneo em qualquer botão ─────────────
+// Resolve o "lag de 2s" — em vez de esperar fetch terminar pra UI mudar,
+// botão fica disabled + mostra texto "Entrando…" no MESMO frame do click.
+// Estilo GamersClub/Discord: action visual em <50ms, fetch acontece em background.
+// uso: pressBtn(this, 'Entrando…') no início do handler.
+function pressBtn(btn, busyText) {
+  if (!btn || !btn.tagName) return null;
+  if (btn.dataset.busy === '1') return null; // já tá processando, ignora double-click
+  btn.dataset.busy = '1';
+  btn.dataset.origHTML = btn.innerHTML;
+  btn.disabled = true;
+  if (busyText) btn.innerHTML = `<span style="display:inline-block;animation:spin 1s linear infinite;margin-right:4px;">⏳</span>${busyText}`;
+  return btn;
+}
+function releaseBtn(btn) {
+  if (!btn || !btn.dataset || btn.dataset.busy !== '1') return;
+  btn.disabled = false;
+  if (btn.dataset.origHTML) btn.innerHTML = btn.dataset.origHTML;
+  delete btn.dataset.busy;
+  delete btn.dataset.origHTML;
+}
+// Refresh em paralelo após cada ação — ~300ms a menos que o sequencial.
+function bumpPoll() {
+  const tasks = [];
+  tasks.push(loadList());
+  if (_idToken) tasks.push(loadMyLobby());
+  return Promise.all(tasks);
+}
+
 // ─── Listar lobbies (PÚBLICO — não precisa de auth) ───
 async function loadList() {
   try {
@@ -1147,10 +1184,10 @@ function renderLobbyCard(lobby) {
     const hasSlot = lobby.filled < 5;
     const canChallenge = _myLobbyOwner && _myLobbyId && _myLobbyId !== lobby.id;
     const joinBtn = hasSlot
-      ? `<button class="lobby-action btn-join" style="flex:1;" onclick="joinLobby('${lobby.id}')">Entrar (${lobby.filled}/5)</button>`
+      ? `<button class="lobby-action btn-join" style="flex:1;" onclick="joinLobby(this,'${lobby.id}')">Entrar (${lobby.filled}/5)</button>`
       : `<button class="lobby-action btn-disabled" style="flex:1;" disabled>Cheia 5/5</button>`;
     const challengeBtn = canChallenge
-      ? `<button class="lobby-action btn-challenge-icon" onclick="challengeLobby('${lobby.id}')" title="Desafiar essa sala">⚔️</button>`
+      ? `<button class="lobby-action btn-challenge-icon" onclick="challengeLobby(this,'${lobby.id}')" title="Desafiar essa sala">⚔️</button>`
       : '';
     actionHtml = `<div style="display:flex;gap:6px;align-items:stretch;">${joinBtn}${challengeBtn}</div>`;
   }
@@ -1323,7 +1360,7 @@ function renderMyLobby(lobby) {
   const slotsHtml = (lobby.slots || []).map((s, i) => {
     if (!s) return `<div class="slot-row slot-empty"><div class="slot-avatar">?</div><div class="slot-name">vazio</div></div>`;
     const kickBtn = (_myLobbyOwner && s.uid !== _user.uid)
-      ? `<button class="slot-kick" onclick="kickPlayer('${s.uid}')" title="Remover">×</button>` : '';
+      ? `<button class="slot-kick" onclick="kickPlayer('${s.uid}',this)" title="Remover">×</button>` : '';
     const cached = _playerStatsCache.get(s.steamId);
     const profileLink = s.steamId ? `jogador.html?id=${encodeURIComponent(s.steamId)}` : '#';
     return `<div class="slot-row" data-steamid="${escHtml(s.steamId || '')}">
@@ -1354,7 +1391,7 @@ function renderMyLobby(lobby) {
     <div style="font-weight:700;margin-bottom:8px;">${escHtml(lobby.name)}</div>
     ${slotsHtml}
     ${challengingBanner}
-    <button class="btn-leave" onclick="leaveMyLobby()">${_myLobbyOwner ? '🏁 Encerrar Sala' : '🚪 Sair'}</button>
+    <button class="btn-leave" onclick="leaveMyLobby(this)">${_myLobbyOwner ? '🏁 Encerrar Sala' : '🚪 Sair'}</button>
   `;
 
   // Após renderizar com placeholders, busca stats em batch e atualiza in-place
@@ -1392,9 +1429,12 @@ function openCreateModal() {
 }
 function closeCreateModal() { document.getElementById('createModal').classList.remove('show'); }
 
+// v34-snappy: optimistic UI — botão muda visual no MESMO frame do click,
+// fetch acontece em background, refresh em paralelo (Promise.all → bumpPoll).
 async function submitCreate() {
   if (!_idToken) { toast('Faça login primeiro', 'error'); return; }
   const name = document.getElementById('lobbyNameInput').value.trim();
+  const btn = pressBtn(document.querySelector('#createModal .btn-create'), 'Criando…');
   try {
     const r = await fetch(`${API_BASE}/api/lobby/create`, {
       method: 'POST',
@@ -1402,15 +1442,20 @@ async function submitCreate() {
       body: JSON.stringify({ name })
     });
     const data = await r.json();
-    if (data.error) { toast(data.error === 'already_in_lobby' ? 'Você já tá numa sala' : data.error, 'error'); return; }
+    if (data.error) { toast(data.error === 'already_in_lobby' ? 'Você já tá numa sala' : data.error, 'error'); releaseBtn(btn); return; }
     closeCreateModal();
     toast('Sala criada!', 'success');
-    loadMyLobby(); loadList();
-  } catch (e) { toast('Erro: ' + e.message, 'error'); }
+    bumpPoll();
+  } catch (e) { toast('Erro: ' + e.message, 'error'); releaseBtn(btn); }
 }
 
-async function joinLobby(lobbyId) {
+async function joinLobby(btnOrId, maybeLobbyId) {
+  // backwards-compat: aceita (lobbyId) ou (btn, lobbyId)
+  let btn = null, lobbyId;
+  if (typeof btnOrId === 'string') { lobbyId = btnOrId; }
+  else { btn = pressBtn(btnOrId, 'Entrando…'); lobbyId = maybeLobbyId; }
   if (!_idToken) {
+    releaseBtn(btn);
     toast('Login Steam pra entrar na sala…', '');
     setTimeout(() => doLogin(), 600);
     return;
@@ -1421,28 +1466,30 @@ async function joinLobby(lobbyId) {
       headers: { 'Authorization': 'Bearer ' + _idToken }
     });
     const data = await r.json();
-    if (data.error) { toast(data.error, 'error'); return; }
+    if (data.error) { toast(data.error, 'error'); releaseBtn(btn); return; }
     toast('Entrou na sala!', 'success');
-    loadMyLobby(); loadList();
-  } catch (e) { toast('Erro: ' + e.message, 'error'); }
+    bumpPoll();
+  } catch (e) { toast('Erro: ' + e.message, 'error'); releaseBtn(btn); }
 }
 
-async function leaveMyLobby() {
+async function leaveMyLobby(btnEl) {
   if (!_myLobbyId || !_idToken) return;
   if (_myLobbyOwner && !confirm('Você é o dono. Encerrar a sala vai expulsar todos. Confirma?')) return;
+  const btn = pressBtn(btnEl || document.querySelector('.btn-leave'), 'Saindo…');
   try {
     await fetch(`${API_BASE}/api/lobby/${_myLobbyId}/leave`, {
       method: 'POST',
       headers: { 'Authorization': 'Bearer ' + _idToken }
     });
     _myLobbyId = null;
-    loadMyLobby(); loadList();
-  } catch (e) { toast('Erro: ' + e.message, 'error'); }
+    bumpPoll();
+  } catch (e) { toast('Erro: ' + e.message, 'error'); releaseBtn(btn); }
 }
 
-async function kickPlayer(targetUid) {
+async function kickPlayer(targetUid, btnEl) {
   if (!_myLobbyId || !_idToken) return;
   if (!confirm('Remover esse jogador da sala?')) return;
+  const btn = pressBtn(btnEl, '×');
   try {
     await fetch(`${API_BASE}/api/lobby/${_myLobbyId}/kick`, {
       method: 'POST',
@@ -1450,11 +1497,14 @@ async function kickPlayer(targetUid) {
       body: JSON.stringify({ targetUid })
     });
     loadMyLobby();
-  } catch (e) { toast('Erro: ' + e.message, 'error'); }
+  } catch (e) { toast('Erro: ' + e.message, 'error'); releaseBtn(btn); }
 }
 
-async function challengeLobby(targetLobbyId) {
-  if (!_myLobbyId || !_idToken) return;
+async function challengeLobby(btnOrId, maybeTargetLobbyId) {
+  let btn = null, targetLobbyId;
+  if (typeof btnOrId === 'string') { targetLobbyId = btnOrId; }
+  else { btn = pressBtn(btnOrId, '⚔️'); targetLobbyId = maybeTargetLobbyId; }
+  if (!_myLobbyId || !_idToken) { releaseBtn(btn); return; }
   try {
     const r = await fetch(`${API_BASE}/api/lobby/${_myLobbyId}/challenge`, {
       method: 'POST',
@@ -1462,10 +1512,10 @@ async function challengeLobby(targetLobbyId) {
       body: JSON.stringify({ targetLobbyId })
     });
     const data = await r.json();
-    if (data.error) { toast(data.error, 'error'); return; }
+    if (data.error) { toast(data.error, 'error'); releaseBtn(btn); return; }
     toast('Desafio enviado! Aguardando resposta…', 'success');
-    loadMyLobby(); loadList();
-  } catch (e) { toast('Erro: ' + e.message, 'error'); }
+    bumpPoll();
+  } catch (e) { toast('Erro: ' + e.message, 'error'); releaseBtn(btn); }
 }
 
 // ─── Modal de DESAFIO RECEBIDO (substitui o confirm() bloqueante) ───
