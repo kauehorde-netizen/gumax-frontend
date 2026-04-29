@@ -1094,14 +1094,13 @@ async function doLogout() {
   location.href = 'index.html';
 }
 
-// ─── Polling 5s — rodando SEMPRE (lista pública) ───
-// v33-noredirect: 3s → 5s. Mudança imperceptível pro user mas reduz 40% das requisições.
-// Para quando aba vai pra background (visibilitychange) — economiza CPU em laptops.
-// loadList é público (sem auth); loadMyLobby só dispara se user logado.
+// ─── Polling 2s — rodando SEMPRE (lista pública) ───
+// v36-nopass: 5s → 2s. Desafios aparecem em <2s no card desafiado.
+// (Idealmente migrar pra Firestore onSnapshot pra zero delay; depois.)
 let _pollTimer = null;
-let _lastLobbiesData = null; // cache pra re-render quando auth state muda
-let _lastListSignature = ''; // hash dos dados pra evitar re-render se nada mudou
-const POLL_INTERVAL_MS = 5000;
+let _lastLobbiesData = null;
+let _lastListSignature = '';
+const POLL_INTERVAL_MS = 2000;
 
 function startPolling() {
   if (_pollTimer) clearInterval(_pollTimer);
@@ -1842,6 +1841,9 @@ function renderChatMessage(m) {
     <div class="chat-msg-body">
       <div class="chat-msg-meta">
         <a class="chat-msg-name" href="${profileLink}" title="${escHtml(m.name || '')}">${escHtml(m.name || '?')}</a>
+        <span class="chat-msg-time" title="${escHtml(titleAttr)}">${time}</span>
+      </div>
+   <a class="chat-msg-name" href="${profileLink}" title="${escHtml(m.name || '')}">${escHtml(m.name || '?')}</a>
         <span class="chat-msg-time" title="${escHtml(titleAttr)}">${time}</span>
       </div>
       <div class="chat-msg-meta">
