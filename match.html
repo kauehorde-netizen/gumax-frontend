@@ -438,7 +438,10 @@ function renderStage(m) {
         <p style="margin-top:12px;font-size:11px;color:var(--text-muted);">
           Mapa: <strong style="color:var(--primary-light);">${m.mapVeto?.finalMap || ''}</strong>
         </p>
-        <p style="margin-top:14px;font-size:10px;color:var(--text-muted);">
+        <p style="margin-top:14px;font-size:11px;color:var(--accent-yellow);background:rgba(250,204,21,.08);border:1px solid rgba(250,204,21,.25);padding:8px 12px;border-radius:6px;">
+          ⚠️ <strong>Quando entrar no servidor</strong>, digite <code style="background:rgba(0,0,0,.3);padding:1px 5px;border-radius:3px;color:var(--accent-yellow);">.ready</code> no chat. A partida começa quando todos estiverem ready (5 de cada lado).
+        </p>
+        <p style="margin-top:10px;font-size:10px;color:var(--text-muted);">
           Não tem o GUARD instalado?
           <a href="download.html" target="_blank" style="color:var(--accent-cyan);text-decoration:underline;">Baixar agora →</a>
         </p>
@@ -802,17 +805,4 @@ async function doVeto(map, btnEl) {
       if (btnEl) { btnEl.style.opacity=''; btnEl.style.pointerEvents=''; btnEl.style.transform=''; }
       return;
     }
-    if (data.finalMap) toast(`🎯 Mapa: ${MAP_LABELS[data.finalMap]?.name || data.finalMap}!`, 'success');
-    else toast(`Banido!`, 'success');
-    loadMatch();
-  } catch (e) {
-    toast('Erro: ' + e.message, 'error');
-    if (btnEl) { btnEl.style.opacity=''; btnEl.style.pointerEvents=''; btnEl.style.transform=''; }
-  }
-}
-
-function escHtml(s) { return String(s || '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'})[c]); }
-</script>
-
-</body>
-</html>
+    if (data.finalMap) toast(`🎯 Mapa
