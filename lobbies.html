@@ -253,9 +253,51 @@ header { background: rgba(8,6,14,0.92); backdrop-filter: blur(10px); border-bott
 @keyframes energyRotate { from { --energy-angle:0deg; } to { --energy-angle:360deg; } }
 @keyframes laserOrbit   { from { --laser-angle: 0deg; } to { --laser-angle: 360deg; } }
 
-/* Conteúdo dos steps */
-.step-card { text-align:center; min-height:230px; display:flex; flex-direction:column; align-items:center; }
-.step-card .step-num { display:inline-block; padding:4px 12px; background:rgba(250,204,21,.15); color:var(--accent-yellow); border:1px solid rgba(250,204,21,.3); border-radius:12px; font-size:10px; font-weight:800; letter-spacing:1px; margin-bottom:14px; }
+/* Conteúdo dos steps — v37: PASSO X removido (visualmente), cards mais baixos */
+.step-card { text-align:center; min-height:auto; padding-top:8px; padding-bottom:8px; display:flex; flex-direction:column; align-items:center; }
+.step-card .step-num { display:none; }
+
+/* v37: banner de download do anti-cheat — logo abaixo dos cards "Como funciona" */
+.ac-banner {
+  display:flex; align-items:center; gap:14px;
+  max-width:780px; margin:18px auto 0; padding:14px 22px;
+  background:linear-gradient(135deg, rgba(34,211,238,.10), rgba(139,92,246,.10));
+  border:1px solid rgba(34,211,238,.35);
+  border-radius:12px;
+  text-decoration:none; color:var(--text-primary);
+  transition:transform .15s, border-color .2s, filter .15s;
+  position:relative; overflow:hidden;
+}
+.ac-banner::before {
+  content:''; position:absolute; inset:-1px; pointer-events:none; border-radius:13px;
+  background:linear-gradient(120deg, transparent 30%, rgba(34,211,238,.07) 50%, transparent 70%);
+  background-size:220% 100%; animation:acShine 9s linear infinite; z-index:0;
+}
+@keyframes acShine { 0% { background-position:0% 0; } 100% { background-position:200% 0; } }
+.ac-banner:hover { border-color:var(--accent-cyan); transform:translateY(-2px); filter:brightness(1.08); }
+.ac-banner-icon { font-size:22px; filter:drop-shadow(0 0 8px rgba(34,211,238,.55)); position:relative; z-index:1; }
+.ac-banner-text { flex:1; min-width:0; display:flex; flex-direction:column; gap:2px; position:relative; z-index:1; }
+.ac-banner-text strong { font-size:13px; letter-spacing:.6px; color:var(--accent-cyan); font-weight:800; }
+.ac-banner-sub { font-size:11px; color:var(--text-muted); letter-spacing:.3px; }
+.ac-banner-arrow { font-size:18px; color:var(--accent-cyan); position:relative; z-index:1; transition:transform .2s; }
+.ac-banner:hover .ac-banner-arrow { transform:translateX(4px); }
+
+/* v37: footer com logo do GMAX GUARD */
+.guard-footer {
+  margin:48px auto 24px; padding:18px 24px;
+  display:flex; align-items:center; justify-content:center; gap:14px;
+  border-top:1px solid var(--border);
+  max-width:1400px;
+}
+.guard-footer-logo {
+  display:inline-flex; align-items:center; gap:10px;
+  text-decoration:none; opacity:.65; transition:opacity .2s, filter .2s;
+}
+.guard-footer-logo:hover { opacity:1; filter:drop-shadow(0 0 12px rgba(139,92,246,.4)); }
+.guard-footer-logo img { height:28px; width:auto; }
+.guard-footer-text { font-size:11px; color:var(--text-muted); letter-spacing:.3px; }
+.guard-footer-text a { color:var(--accent-cyan); text-decoration:none; }
+.guard-footer-text a:hover { text-decoration:underline; }
 /* v33-noredirect: removi quadrado interno + dobrei size do SVG (42 → 84) */
 .step-card .step-icon { width:auto; height:auto; margin:10px auto 16px; display:flex; align-items:center; justify-content:center; position:relative; }
 .step-card .step-icon svg { width:84px; height:84px; color:var(--primary-light); position:relative; z-index:2; will-change:transform; }
@@ -863,6 +905,16 @@ header { background: rgba(8,6,14,0.92); backdrop-filter: blur(10px); border-bott
       <div class="step-desc">CS2 abre automático no servidor. KDA conta pro ranking e premiação mensal.</div>
     </div>
   </div>
+
+  <!-- v37: banner de download do GMAX GUARD logo abaixo dos cards "Como funciona" -->
+  <a href="download.html" class="ac-banner" title="Baixar GMAX GUARD anti-cheat">
+    <span class="ac-banner-icon">🛡️</span>
+    <span class="ac-banner-text">
+      <strong>FAÇA O DOWNLOAD DO ANTI-CHEAT GMAX GUARD</strong>
+      <span class="ac-banner-sub">Obrigatório pra entrar em partidas competitivas · Windows 10/11 · 70MB</span>
+    </span>
+    <span class="ac-banner-arrow">→</span>
+  </a>
 </section>
 
 <div class="lobby-shell">
@@ -923,6 +975,16 @@ header { background: rgba(8,6,14,0.92); backdrop-filter: blur(10px); border-bott
     </div>
   </div>
 </div>
+
+<!-- v37: footer com logo GMAX GUARD linkando pra página de download -->
+<footer class="guard-footer">
+  <a href="download.html" class="guard-footer-logo" title="Saiba mais sobre o GMAX GUARD">
+    <img src="gmax-guard-logo.png" alt="GMAX GUARD">
+  </a>
+  <span class="guard-footer-text">
+    Protegido por <a href="download.html">GMAX GUARD</a> · Anti-cheat oficial
+  </span>
+</footer>
 
 <!-- Modal: DESAFIO RECEBIDO (substitui o confirm() nativo bloqueante) -->
 <div class="modal-backdrop" id="challengeModal">
@@ -1843,13 +1905,6 @@ function renderChatMessage(m) {
         <a class="chat-msg-name" href="${profileLink}" title="${escHtml(m.name || '')}">${escHtml(m.name || '?')}</a>
         <span class="chat-msg-time" title="${escHtml(titleAttr)}">${time}</span>
       </div>
-   <a class="chat-msg-name" href="${profileLink}" title="${escHtml(m.name || '')}">${escHtml(m.name || '?')}</a>
-        <span class="chat-msg-time" title="${escHtml(titleAttr)}">${time}</span>
-      </div>
-      <div class="chat-msg-meta">
-        <a class="chat-msg-name" href="${profileLink}" title="${escHtml(m.name || '')}">${escHtml(m.name || '?')}</a>
-        <span class="chat-msg-time" title="${escHtml(titleAttr)}">${time}</span>
-      </div>
       <div class="chat-msg-text">${escHtml(m.text || '')}</div>
     </div>
   </div>`;
@@ -1882,8 +1937,9 @@ async function sendChatMessage(ev) {
   if (!input) return;
   const text = (input.value || '').trim();
   if (!text) return;
-  if (text.length > 200) { toast('Maximo 200 caracteres', 'error'); return; }
+  if (text.length > 200) { toast('Máximo 200 caracteres', 'error'); return; }
 
+  // Rate limit cliente: 1 msg / 1.5s. (Defesa em profundidade — rules não cobrem.)
   const now = Date.now();
   if (now - _chatLastSentAt < 1500) {
     toast('Calma, espera 1.5s', '');
@@ -1891,7 +1947,7 @@ async function sendChatMessage(ev) {
   }
 
   const profile = await fetchMyChatProfile();
-  if (!profile) { toast('Nao foi possivel identificar seu perfil', 'error'); return; }
+  if (!profile) { toast('Não foi possível identificar seu perfil', 'error'); return; }
 
   const sendBtn = document.getElementById('chatSendBtn');
   if (sendBtn) sendBtn.disabled = true;
@@ -1911,7 +1967,8 @@ async function sendChatMessage(ev) {
     updateChatCount();
   } catch (e) {
     console.error('[chat send]', e);
-    const msg = e.code === 'permission-denied' ? 'Voce nao esta mais nessa sala' : ('Erro: ' + e.message);
+    // permission-denied = user não é membro mais (kick/leave/expire)
+    const msg = e.code === 'permission-denied' ? 'Você não está mais nessa sala' : ('Erro: ' + e.message);
     toast(msg, 'error');
   } finally {
     if (sendBtn) sendBtn.disabled = false;
@@ -1920,8 +1977,14 @@ async function sendChatMessage(ev) {
   }
 }
 
+// ─── Helpers ───
 function escHtml(s) { return String(s || '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'})[c]); }
 
+// ─── Steam callback handler ───
+// Mesmo padrão do index.html. Steam volta com ?steam_callback=1&openid.*=...
+// Trocamos os openid params pelo Firebase customToken via backend, e fazemos
+// signInWithCustomToken pra completar o login. Sem isso, login redireciona pra
+// cá e o user fica deslogado pq ninguém processa os parâmetros.
 async function handleSteamCallback() {
   const params = new URLSearchParams(window.location.search);
   if (params.get('steam_callback') !== '1') return;
@@ -1943,12 +2006,13 @@ async function handleSteamCallback() {
       await auth.signInWithCustomToken(d.firebaseCustomToken);
       toast('Login Steam realizado!', 'success');
     } else {
-      toast('Falha no login Steam: ' + (d.error || 'invalido'), 'error');
+      toast('Falha no login Steam: ' + (d.error || 'inválido'), 'error');
     }
   } catch (e) {
     toast('Erro no login Steam: ' + e.message, 'error');
   }
 
+  // Limpa openid.* + steam_callback da URL pra não disparar de novo no F5
   const url = new URL(location.href);
   [...url.searchParams.keys()].forEach(k => {
     if (k.startsWith('openid.') || k === 'steam_callback') url.searchParams.delete(k);
@@ -1956,9 +2020,14 @@ async function handleSteamCallback() {
   history.replaceState({}, '', url.toString());
 }
 
+// ═══ Bootstrap (rodando no fim, depois que TODOS os `let` estão inicializados)
+// Antes eu chamava startPolling() lá em cima e dava TDZ porque _pollTimer
+// (declarado mais abaixo) ainda estava em zona morta. Agora roda depois de tudo. ═══
 if (_firebaseReady) {
+  // 1. Processa callback Steam (se URL tem ?steam_callback=1)
   handleSteamCallback().catch(e => console.error('[steam callback]', e));
 }
+// 2. Inicia polling público de lobbies (independente de auth)
 startPolling();
 </script>
 
