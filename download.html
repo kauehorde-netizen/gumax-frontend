@@ -1,0 +1,445 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>GMAX GUARD — Download · Gumax League</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<style>
+:root {
+  --bg-primary: #0a0612;
+  --bg-secondary: #110a1f;
+  --bg-elevated: #1a0f2e;
+  --primary: #8b5cf6;
+  --primary-light: #a78bfa;
+  --accent-cyan: #22d3ee;
+  --accent-yellow: #facc15;
+  --accent-green: #10b981;
+  --accent-red: #ef4444;
+  --text-primary: #e0e7ff;
+  --text-secondary: #a5a3b8;
+  --text-muted: #6b6885;
+  --border: rgba(139,92,246,.18);
+}
+* { box-sizing: border-box; margin: 0; padding: 0; }
+body {
+  font-family: 'Inter', sans-serif;
+  background:
+    radial-gradient(ellipse at top, rgba(34,211,238,.06), transparent 70%),
+    radial-gradient(ellipse at bottom, rgba(139,92,246,.05), transparent 70%),
+    var(--bg-primary);
+  color: var(--text-primary);
+  min-height: 100vh;
+  overflow-x: hidden;
+}
+
+/* ─── Header ──────────────────────────────────────────────────── */
+header {
+  background: rgba(8,6,14,.92);
+  backdrop-filter: blur(10px);
+  border-bottom: 1px solid var(--border);
+  padding: 14px 24px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  position: sticky;
+  top: 0;
+  z-index: 100;
+}
+.back-link {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 14px;
+  background: rgba(255,255,255,.04);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  color: var(--text-secondary);
+  text-decoration: none;
+  font-size: 13px;
+  font-weight: 600;
+  transition: all .15s;
+}
+.back-link:hover { background: rgba(255,255,255,.08); color: var(--text-primary); }
+
+.brand-title {
+  font-size: 18px;
+  font-weight: 800;
+  letter-spacing: 1.5px;
+  background: linear-gradient(135deg, #facc15, #f97316 60%, #ef4444);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+}
+
+/* ─── Hero ────────────────────────────────────────────────────── */
+.hero {
+  max-width: 980px;
+  margin: 60px auto 40px;
+  padding: 0 24px;
+  text-align: center;
+}
+.hero-shield {
+  display: inline-block;
+  margin-bottom: 24px;
+  filter: drop-shadow(0 0 20px rgba(34, 211, 238, .35));
+  animation: shieldFloat 4s ease-in-out infinite alternate;
+}
+@keyframes shieldFloat {
+  from { transform: translateY(0); }
+  to   { transform: translateY(-8px); }
+}
+.eyebrow {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 11px;
+  letter-spacing: 4px;
+  color: var(--accent-cyan);
+  text-transform: uppercase;
+  margin-bottom: 14px;
+}
+.hero h1 {
+  font-size: 56px;
+  font-weight: 900;
+  letter-spacing: -1px;
+  line-height: 1.05;
+  margin-bottom: 18px;
+}
+.hero h1 .accent {
+  background: linear-gradient(135deg, var(--accent-cyan), var(--primary-light));
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+}
+.hero p.tagline {
+  font-size: 17px;
+  color: var(--text-secondary);
+  max-width: 620px;
+  margin: 0 auto 36px;
+  line-height: 1.6;
+}
+
+.cta-row {
+  display: inline-flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 16px;
+}
+.btn-download {
+  display: inline-flex;
+  align-items: center;
+  gap: 12px;
+  padding: 18px 36px;
+  background: linear-gradient(135deg, var(--accent-cyan), var(--primary));
+  border: none;
+  color: #fff;
+  border-radius: 14px;
+  font-size: 16px;
+  font-weight: 800;
+  letter-spacing: 1px;
+  cursor: pointer;
+  text-decoration: none;
+  box-shadow: 0 8px 28px rgba(34, 211, 238, .35);
+  transition: transform .15s, box-shadow .2s, filter .15s;
+}
+.btn-download:hover {
+  transform: translateY(-3px);
+  box-shadow: 0 12px 36px rgba(34, 211, 238, .5);
+  filter: brightness(1.08);
+}
+.btn-download:active { transform: translateY(0); }
+
+.dl-meta {
+  display: inline-flex;
+  gap: 18px;
+  font-size: 11px;
+  color: var(--text-muted);
+  font-family: 'JetBrains Mono', monospace;
+  letter-spacing: .5px;
+}
+.dl-meta span { display: inline-flex; align-items: center; gap: 6px; }
+
+/* ─── Why section ─────────────────────────────────────────────── */
+.why {
+  max-width: 1100px;
+  margin: 80px auto;
+  padding: 0 24px;
+}
+.section-title {
+  text-align: center;
+  font-size: 11px;
+  letter-spacing: 3px;
+  color: var(--accent-cyan);
+  text-transform: uppercase;
+  margin-bottom: 12px;
+  font-family: 'JetBrains Mono', monospace;
+}
+.section-h {
+  text-align: center;
+  font-size: 32px;
+  font-weight: 800;
+  margin-bottom: 40px;
+  letter-spacing: -.5px;
+}
+.section-h .accent {
+  background: linear-gradient(135deg, var(--accent-cyan), var(--primary-light));
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+}
+
+.feature-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+  gap: 16px;
+}
+.feature {
+  background: linear-gradient(135deg, rgba(26,15,46,.85), rgba(20,12,38,.95));
+  border: 1px solid var(--border);
+  border-radius: 14px;
+  padding: 24px;
+  position: relative;
+  overflow: hidden;
+  transition: transform .25s, border-color .25s;
+}
+.feature:hover {
+  transform: translateY(-4px);
+  border-color: rgba(34,211,238,.3);
+}
+.feature-icon {
+  width: 40px; height: 40px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 10px;
+  background: rgba(34, 211, 238, .12);
+  color: var(--accent-cyan);
+  margin-bottom: 14px;
+  font-size: 22px;
+}
+.feature h3 {
+  font-size: 15px;
+  font-weight: 700;
+  margin-bottom: 8px;
+}
+.feature p {
+  font-size: 12px;
+  color: var(--text-secondary);
+  line-height: 1.6;
+}
+
+/* ─── Steps ───────────────────────────────────────────────────── */
+.steps {
+  max-width: 980px;
+  margin: 80px auto;
+  padding: 0 24px;
+}
+.steps-list {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(230px, 1fr));
+  gap: 12px;
+}
+.step {
+  background: var(--bg-elevated);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  padding: 20px;
+  position: relative;
+}
+.step-num {
+  position: absolute;
+  top: -10px; left: 16px;
+  width: 28px; height: 28px;
+  background: linear-gradient(135deg, var(--accent-cyan), var(--primary));
+  color: #fff;
+  border-radius: 50%;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 12px;
+  font-weight: 800;
+}
+.step h4 {
+  font-size: 14px;
+  font-weight: 700;
+  margin-bottom: 6px;
+  margin-top: 6px;
+}
+.step p {
+  font-size: 12px;
+  color: var(--text-secondary);
+  line-height: 1.5;
+}
+
+/* ─── Trust ───────────────────────────────────────────────────── */
+.trust {
+  max-width: 800px;
+  margin: 80px auto;
+  padding: 0 24px;
+  text-align: center;
+}
+.trust .info {
+  background: var(--bg-elevated);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  padding: 24px;
+  text-align: left;
+  font-size: 12px;
+  color: var(--text-secondary);
+  line-height: 1.7;
+}
+.trust .info strong { color: var(--text-primary); }
+
+footer {
+  text-align: center;
+  padding: 40px 24px;
+  color: var(--text-muted);
+  font-size: 11px;
+  border-top: 1px solid var(--border);
+}
+</style>
+</head>
+<body>
+
+<header>
+  <a class="back-link" href="lobbies.html">← Voltar pro Mercado</a>
+  <span class="brand-title">GMAX LEAGUE</span>
+  <span style="width:120px;"></span>
+</header>
+
+<!-- ─── Hero ─── -->
+<section class="hero">
+  <div class="hero-shield">
+    <svg viewBox="0 0 100 100" width="120" height="120">
+      <defs>
+        <linearGradient id="dlShieldGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+          <stop offset="0%" stop-color="#22d3ee"/>
+          <stop offset="100%" stop-color="#8b5cf6"/>
+        </linearGradient>
+      </defs>
+      <path d="M50 8 L18 22 V52 C18 70 32 86 50 92 C68 86 82 70 82 52 V22 Z"
+            fill="none" stroke="url(#dlShieldGrad)" stroke-width="2.8" stroke-linejoin="round"/>
+      <path d="M38 52 L46 60 L62 42"
+            fill="none" stroke="url(#dlShieldGrad)" stroke-width="3.5" stroke-linecap="round" stroke-linejoin="round"/>
+    </svg>
+  </div>
+
+  <p class="eyebrow">Anti-Cheat · v1.0</p>
+  <h1>GMAX <span class="accent">GUARD</span></h1>
+  <p class="tagline">
+    O anti-cheat oficial da Gumax League. Detecta cheats em tempo real, valida sua conta Steam e protege a integridade competitiva. <strong style="color:var(--accent-cyan);">Obrigatório</strong> pra entrar nas partidas 5v5.
+  </p>
+
+  <div class="cta-row">
+    <a class="btn-download" id="dlBtn"
+       href="https://github.com/kauehorde-netizen/gumax-frontend/releases/latest/download/GMAX-GUARD-Setup.exe"
+       download>
+      <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round">
+        <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
+        <polyline points="7 10 12 15 17 10"/>
+        <line x1="12" y1="15" x2="12" y2="3"/>
+      </svg>
+      BAIXAR GMAX GUARD
+    </a>
+    <div class="dl-meta">
+      <span>🪟 Windows 10/11</span>
+      <span>📦 ~85MB</span>
+      <span>🔒 SHA256 verificado</span>
+    </div>
+  </div>
+</section>
+
+<!-- ─── Por que ─── -->
+<section class="why">
+  <p class="section-title">Por que existe</p>
+  <h2 class="section-h">Combatendo cheaters <span class="accent">de cara</span></h2>
+  <div class="feature-grid">
+    <div class="feature">
+      <div class="feature-icon">🛡️</div>
+      <h3>Detecção em camadas</h3>
+      <p>Escaneia processos rodando, módulos injetados em CS2, integridade de arquivos do jogo e regiões de memória suspeitas — tudo antes de você entrar.</p>
+    </div>
+    <div class="feature">
+      <div class="feature-icon">🔐</div>
+      <h3>Anti-smurf</h3>
+      <p>Verifica que a conta logada no Steam Client é a mesma do site. Conta diferente? Acesso negado. Resolve smurf e account-sharing.</p>
+    </div>
+    <div class="feature">
+      <div class="feature-icon">⚡</div>
+      <h3>Hardware ID</h3>
+      <p>Gera fingerprint único da sua máquina (CPU + Motherboard + Disco). Cheater banido não consegue voltar com Steam novo — precisa trocar PC.</p>
+    </div>
+    <div class="feature">
+      <div class="feature-icon">📋</div>
+      <h3>Blacklist atualizada</h3>
+      <p>Banco de dados com 4.892 assinaturas de cheats conhecidos (Osiris, Aimware, OneTap, Neverlose, GameSense, etc.) — atualizado semanalmente.</p>
+    </div>
+    <div class="feature">
+      <div class="feature-icon">🚫</div>
+      <h3>Sem servidor sem GUARD</h3>
+      <p>O IP e a porta do servidor de partida são revelados <strong>somente após</strong> as verificações passarem. Quem não tem o GUARD não joga.</p>
+    </div>
+    <div class="feature">
+      <div class="feature-icon">🔒</div>
+      <h3>Privacidade respeitada</h3>
+      <p>HWID enviado é hashado (SHA256). Não rastreamos navegação, microfone, câmera, ou qualquer outra coisa fora do escopo do anti-cheat.</p>
+    </div>
+  </div>
+</section>
+
+<!-- ─── Como instalar ─── -->
+<section class="steps">
+  <p class="section-title">Como instalar</p>
+  <h2 class="section-h">3 passos, 1 minuto</h2>
+  <div class="steps-list">
+    <div class="step">
+      <span class="step-num">1</span>
+      <h4>Baixar</h4>
+      <p>Clica no botão acima pra baixar o instalador Windows. Tamanho: ~85MB.</p>
+    </div>
+    <div class="step">
+      <span class="step-num">2</span>
+      <h4>Instalar</h4>
+      <p>Abre o <code>GMAX-GUARD-Setup.exe</code> e segue o wizard. Clica em "Instalar" — não pede permissão de admin.</p>
+    </div>
+    <div class="step">
+      <span class="step-num">3</span>
+      <h4>Pronto pra jogar</h4>
+      <p>Quando entrar em uma partida, o site chama o GUARD automaticamente. Verificação leva ~7 segundos.</p>
+    </div>
+  </div>
+</section>
+
+<!-- ─── Trust ─── -->
+<section class="trust">
+  <p class="section-title">Transparência</p>
+  <h2 class="section-h">O que o GUARD faz <span class="accent">e não faz</span></h2>
+  <div class="info">
+    <p><strong>✅ O GUARD lê:</strong></p>
+    <p>• Lista de processos rodando (compara com blacklist de cheats conhecidos)<br>
+       • Conta Steam ativa via <code>loginusers.vdf</code> (pra confirmar que bate com o login do site)<br>
+       • Identificadores únicos de hardware via WMI (CPU, motherboard, disco) → hashados antes de enviar<br>
+       • Caminho de instalação do CS2 e arquivos críticos do jogo</p>
+    <br>
+    <p><strong>❌ O GUARD NÃO lê:</strong></p>
+    <p>• Histórico de navegação<br>
+       • Senhas, cookies, dados pessoais<br>
+       • Microfone, câmera, ou áudio do sistema<br>
+       • Outros jogos instalados ou outras pastas do disco<br>
+       • Nada que não seja relacionado a anti-cheat de CS2</p>
+    <br>
+    <p style="margin-top:18px;font-size:11px;">
+      <strong>Open issues</strong>: encontrou bug ou falso positivo? Reporta no GitHub:
+      <a href="https://github.com/kauehorde-netizen/gumax-frontend/issues" style="color:var(--accent-cyan);" target="_blank">github.com/kauehorde-netizen/gumax-frontend/issues</a>
+    </p>
+  </div>
+</section>
+
+<footer>
+  GMAX GUARD v1.0 · Gumax League © 2026 · Feito com ❤️ no Brasil
+</footer>
+
+<script>
+// Atualiza link de download dinamicamente quando GitHub Release for publicada.
+// Por enquanto aponta pro release "latest" do repo do frontend.
+// TODO: criar repo dedicado gumax-guard pra releases serem isoladas.
+</script>
+
+</body>
+</html>
