@@ -2152,7 +2152,7 @@ footer {
 <!-- SEARCH & FILTERS -->
 <section class="search-section" id="marketplace">
   <!-- Marca visível pra confirmar versão deployada. -->
-  <div style="font-size: 10px; color: rgba(139,92,246,0.5); text-align: right; margin-bottom: 4px;">search v67-filter-fix</div>
+  <div style="font-size: 10px; color: rgba(139,92,246,0.5); text-align: right; margin-bottom: 4px;">search v68-iconurl-permissive</div>
 
   <!-- BUFF-style category picker com SVG icons (Faca, Luvas, Rifle, ...).
        Clicar num modelo (ex: AK-47) filtra a grid e rola pra seção. -->
@@ -3386,13 +3386,17 @@ async function loadYoupinTopSellers(limit = 40) {
           }
         }
 
-        // iconUrl válido = hash longo da Steam (sem '/' nem 'http'). Se vier vazio
-        // ou parece URL completa, deixa imagem em branco (placeholder no card).
-        const iconHash = (it.iconUrl || '').trim();
-        const looksValid = iconHash.length > 20 && !iconHash.includes('/') && !iconHash.startsWith('http');
-        const imageUrl = looksValid
-          ? `https://community.cloudflare.steamstatic.com/economy/image/${iconHash}/256fx256f`
-          : '';
+        // iconUrl pode vir em 3 formatos do backend:
+        //  1) URL completa http(s)://...           → usa direto (vem do ByMykel resolve)
+        //  2) Hash longo Steam (>20 chars, sem /)  → monta URL Steam CDN
+        //  3) String vazia ou inválida             → placeholder no card
+        let imageUrl = '';
+        const raw = String(it.iconUrl || '').trim();
+        if (raw.startsWith('http')) {
+          imageUrl = raw;
+        } else if (raw.length > 20 && !raw.includes('/')) {
+          imageUrl = `https://community.cloudflare.steamstatic.com/economy/image/${raw}/256fx256f`;
+        }
 
         return {
           id: 10000 + i,
