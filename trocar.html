@@ -1,0 +1,392 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Trocar Skin (Upgrade/Downgrade) — Gumax Skins</title>
+<meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
+<style>
+  :root {
+    --bg-primary: #0d0d11;
+    --bg-card: rgba(20,20,28,.6);
+    --border: rgba(139,92,246,.18);
+    --primary: #8b5cf6;
+    --primary-light: #a78bfa;
+    --accent-yellow: #fbbf24;
+    --accent-green: #10b981;
+    --accent-red: #ef4444;
+    --accent-cyan: #22d3ee;
+    --text-primary: #f8fafc;
+    --text-secondary: #94a3b8;
+    --text-muted: #64748b;
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0;
+    background: var(--bg-primary);
+    color: var(--text-primary);
+    font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+    min-height: 100vh;
+  }
+  .topbar {
+    display: flex; align-items: center; justify-content: space-between;
+    padding: 14px 24px; border-bottom: 1px solid var(--border);
+    background: rgba(13,13,17,.85); backdrop-filter: blur(12px);
+    position: sticky; top: 0; z-index: 50;
+  }
+  .topbar a { color: var(--text-secondary); text-decoration: none; font-size: 13px; margin-right: 16px; }
+  .topbar a:hover { color: var(--text-primary); }
+  .brand { font-weight: 800; font-size: 18px; background: linear-gradient(135deg, var(--primary), #a78bfa); -webkit-background-clip: text; color: transparent; }
+  .container { max-width: 900px; margin: 30px auto; padding: 0 24px; }
+  .hero {
+    text-align: center; margin-bottom: 24px;
+  }
+  .hero h1 { font-size: 32px; margin: 0 0 8px; }
+  .hero p { color: var(--text-secondary); font-size: 14px; max-width: 600px; margin: 0 auto; line-height: 1.5; }
+  .panel {
+    background: var(--bg-card); border: 1px solid var(--border);
+    border-radius: 14px; padding: 22px; margin-bottom: 18px;
+    backdrop-filter: blur(8px);
+  }
+  h2 { font-size: 18px; margin: 0 0 12px; }
+  .step-num {
+    display: inline-flex; align-items: center; justify-content: center;
+    width: 28px; height: 28px; border-radius: 50%; background: var(--primary);
+    color: #fff; font-weight: 800; font-size: 14px; margin-right: 10px;
+  }
+  .form { display: grid; gap: 12px; }
+  .form input, .form select {
+    width: 100%; padding: 10px 12px; background: rgba(0,0,0,.35);
+    border: 1px solid var(--border); color: var(--text-primary); border-radius: 8px;
+    font-size: 14px;
+  }
+  .form input:focus, .form select:focus { outline: none; border-color: var(--primary); }
+  label { font-size: 12px; color: var(--text-secondary); font-weight: 600; }
+  .btn {
+    padding: 10px 18px; border-radius: 8px; cursor: pointer;
+    border: 1px solid var(--border); background: var(--bg-card); color: var(--text-primary);
+    font-weight: 600; font-size: 14px; transition: all .15s;
+  }
+  .btn:hover { transform: translateY(-1px); }
+  .btn-primary {
+    background: linear-gradient(135deg, var(--primary), var(--primary-light));
+    border: none; color: #fff;
+  }
+  .btn-success {
+    background: linear-gradient(135deg, var(--accent-green), #22d3ee);
+    border: none; color: #fff;
+  }
+  .skin-row {
+    display: flex; gap: 10px; align-items: center; padding: 10px;
+    background: rgba(0,0,0,.25); border: 1px solid var(--border); border-radius: 8px;
+    margin-bottom: 8px;
+  }
+  .skin-row input { flex: 1; }
+  .skin-row .price-tag {
+    color: var(--accent-yellow); font-weight: 700; font-size: 14px; min-width: 100px; text-align: right;
+  }
+  .summary {
+    background: linear-gradient(135deg, rgba(139,92,246,.06), rgba(167,139,250,.04));
+    border: 1px solid var(--border); border-radius: 12px; padding: 16px; margin-top: 14px;
+  }
+  .summary-row {
+    display: flex; justify-content: space-between; padding: 6px 0;
+    border-bottom: 1px dashed var(--border);
+  }
+  .summary-row:last-child { border-bottom: none; }
+  .summary-row.diff {
+    font-weight: 800; font-size: 16px; padding-top: 12px;
+  }
+  .summary-row.diff.positive { color: var(--accent-yellow); }
+  .summary-row.diff.negative { color: var(--accent-green); }
+  .toast {
+    position: fixed; top: 16px; right: 16px; z-index: 9999;
+    background: var(--bg-card); border: 1px solid var(--border); padding: 12px 16px;
+    border-radius: 10px; backdrop-filter: blur(12px); font-size: 13px;
+    opacity: 0; transform: translateY(-10px); transition: all .25s;
+  }
+  .toast.show { opacity: 1; transform: translateY(0); }
+  .toast.error { border-color: rgba(239,68,68,.4); }
+  .toast.success { border-color: rgba(16,185,129,.4); }
+  .info-box {
+    background: rgba(34,211,238,.06); border-left: 3px solid var(--accent-cyan);
+    padding: 12px 14px; border-radius: 6px; margin-top: 12px; font-size: 13px;
+    color: var(--text-secondary); line-height: 1.5;
+  }
+  code { background: rgba(0,0,0,.4); padding: 2px 6px; border-radius: 4px; font-family: monospace; font-size: 12px; }
+</style>
+</head>
+<body>
+
+<div class="topbar">
+  <div>
+    <span class="brand">Gumax Skins</span>
+    <span style="margin-left: 18px; color: var(--text-muted); font-size: 13px;">Trocar Skin</span>
+  </div>
+  <div>
+    <a href="index.html">Marketplace</a>
+    <a href="vender.html">Vender</a>
+    <a href="perfil.html">Meu perfil</a>
+  </div>
+</div>
+
+<div class="container">
+  <div class="hero">
+    <h1>🔄 Trocar Skin</h1>
+    <p>Mande uma skin que você tem e receba outra de volta. Se a skin que quer for <b>mais cara</b>, você paga a diferença via PIX. Se for <b>mais barata</b>, a Gumax devolve a diferença em PIX.</p>
+  </div>
+
+  <div class="panel" id="loginPanel">
+    <h2>🔒 Login necessário</h2>
+    <p style="color: var(--text-secondary);">Faça login com Steam pra continuar.</p>
+    <button class="btn btn-primary" onclick="location.href='index.html'">Fazer login</button>
+  </div>
+
+  <div id="flowPanel" style="display:none;">
+
+    <div class="panel">
+      <h2><span class="step-num">1</span> Skin que você vai mandar</h2>
+      <p style="color: var(--text-secondary); font-size: 13px;">Cole o nome exato (market_hash_name) da skin que você tem e quer trocar.</p>
+      <div id="offeredList" style="margin-top: 14px;">
+        <div class="skin-row">
+          <input class="offered-name" placeholder="ex: AK-47 | Redline (Field-Tested)" autocomplete="off">
+          <span class="price-tag" data-price="">—</span>
+        </div>
+      </div>
+      <button class="btn" id="addOfferedBtn" style="margin-top: 8px; font-size: 12px; padding: 6px 12px;">+ Adicionar outra skin</button>
+      <button class="btn btn-primary" id="quoteOfferedBtn" style="margin-top: 8px;">Cotar minhas skins</button>
+      <div id="offeredTotalDisplay" style="margin-top: 14px; display: none;"></div>
+    </div>
+
+    <div class="panel" id="targetPanel" style="display:none;">
+      <h2><span class="step-num">2</span> Skin que você quer receber</h2>
+      <p style="color: var(--text-secondary); font-size: 13px;">Pode ser uma skin do estoque Full ou qualquer skin do catálogo Youpin.</p>
+      <div id="targetList" style="margin-top: 14px;">
+        <div class="skin-row">
+          <input class="target-name" placeholder="ex: ★ Karambit | Doppler Phase 2 (Factory New)" autocomplete="off">
+          <span class="price-tag" data-price="">—</span>
+        </div>
+      </div>
+      <button class="btn" id="addTargetBtn" style="margin-top: 8px; font-size: 12px; padding: 6px 12px;">+ Adicionar outra skin</button>
+      <button class="btn btn-primary" id="quoteTargetBtn" style="margin-top: 8px;">Cotar skins desejadas</button>
+    </div>
+
+    <div class="panel" id="summaryPanel" style="display:none;">
+      <h2><span class="step-num">3</span> Resumo da troca</h2>
+      <div class="summary" id="summaryBox"></div>
+      <div class="form" style="margin-top: 16px;">
+        <div>
+          <label>Trade Link Steam (obrigatório)</label>
+          <input id="tradeLink" placeholder="https://steamcommunity.com/tradeoffer/new/?partner=...&token=...">
+        </div>
+        <div id="pixKeyWrap" style="display:none;">
+          <label>Sua chave PIX (pra você receber)</label>
+          <input id="pixKey" placeholder="CPF, e-mail ou chave aleatória">
+        </div>
+      </div>
+      <button class="btn btn-success" id="confirmBtn" style="margin-top: 16px; width: 100%; padding: 14px;">Confirmar troca</button>
+      <div class="info-box">
+        <b>Como funciona:</b> após confirmar, a Gumax cria a transação. Se for upgrade, você paga a diferença via PIX. Quando estivermos com seu pagamento + sua skin no Trade, enviamos a nova skin pra você. Tudo rastreado em <a href="perfil.html" style="color: var(--primary-light);">Meu perfil</a>.
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<div id="toast" class="toast"></div>
+
+<script src="https://www.gstatic.com/firebasejs/10.5.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.5.0/firebase-auth-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.5.0/firebase-firestore-compat.js"></script>
+<script>
+const API_BASE = 'https://gumax-backend-production.up.railway.app';
+
+const firebaseConfig = {
+  apiKey: 'AIzaSyAHHQrWlwGsWg2Jp-7rHo9Qqm1DfAR8RnE',
+  authDomain: 'gumax-skins.firebaseapp.com',
+  projectId: 'gumax-skins',
+  storageBucket: 'gumax-skins.firebasestorage.app',
+  messagingSenderId: '527907094290',
+  appId: '1:527907094290:web:f88c2f36d5d6e0a6f4b7e0',
+};
+firebase.initializeApp(firebaseConfig);
+const auth = firebase.auth();
+const db = firebase.firestore();
+
+let _offeredQuotes = [];
+let _targetQuotes = [];
+let _txType = null;  // 'upgrade' | 'downgrade'
+
+function showToast(msg, type = 'info') {
+  const t = document.getElementById('toast');
+  t.textContent = msg;
+  t.className = 'toast show ' + type;
+  setTimeout(() => t.className = 'toast', 3500);
+}
+
+function fmtR(v) { return 'R$ ' + Number(v || 0).toFixed(2).replace('.', ','); }
+
+function escHtml(s) {
+  return String(s || '').replace(/[&<>"']/g, c => ({
+    '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;'
+  }[c]));
+}
+
+// ── Adicionar / remover linhas ────────────────────────────────────
+document.getElementById('addOfferedBtn').addEventListener('click', () => {
+  const list = document.getElementById('offeredList');
+  list.insertAdjacentHTML('beforeend', `
+    <div class="skin-row">
+      <input class="offered-name" placeholder="ex: AWP | Hyper Beast (Minimal Wear)" autocomplete="off">
+      <span class="price-tag" data-price="">—</span>
+    </div>
+  `);
+});
+
+document.getElementById('addTargetBtn').addEventListener('click', () => {
+  const list = document.getElementById('targetList');
+  list.insertAdjacentHTML('beforeend', `
+    <div class="skin-row">
+      <input class="target-name" placeholder="ex: USP-S | Printstream (Factory New)" autocomplete="off">
+      <span class="price-tag" data-price="">—</span>
+    </div>
+  `);
+});
+
+// ── Cotar skins via /api/buyback/quote ─────────────────────────────
+async function quoteNames(selector) {
+  const inputs = document.querySelectorAll(selector);
+  const names = [...inputs].map(i => i.value.trim()).filter(Boolean);
+  if (!names.length) {
+    showToast('Adicione ao menos 1 skin', 'error');
+    return null;
+  }
+  const r = await fetch(`${API_BASE}/api/buyback/quote`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ names }),
+  });
+  if (!r.ok) {
+    const err = await r.json().catch(() => ({}));
+    showToast('Erro ao cotar: ' + (err.error || r.status), 'error');
+    return null;
+  }
+  const data = await r.json();
+  return data.quotes || [];
+}
+
+document.getElementById('quoteOfferedBtn').addEventListener('click', async () => {
+  const quotes = await quoteNames('.offered-name');
+  if (!quotes) return;
+  _offeredQuotes = quotes;
+  // Atualiza preços nas linhas
+  const inputs = document.querySelectorAll('.offered-name');
+  inputs.forEach(i => {
+    const q = quotes.find(x => x.name === i.value.trim() || x.market_hash_name === i.value.trim());
+    const tag = i.parentElement.querySelector('.price-tag');
+    if (q && q.offerBRL) {
+      tag.textContent = fmtR(q.offerBRL);
+      tag.dataset.price = q.offerBRL;
+    } else {
+      tag.textContent = '— não encontrado';
+      tag.style.color = 'var(--accent-red)';
+    }
+  });
+  const total = quotes.reduce((s, q) => s + (q.offerBRL || 0), 0);
+  document.getElementById('offeredTotalDisplay').style.display = 'block';
+  document.getElementById('offeredTotalDisplay').innerHTML = `<div style="text-align:right; font-size: 18px; font-weight: 800; color: var(--accent-yellow);">Total ofertado: ${fmtR(total)}</div>`;
+  document.getElementById('targetPanel').style.display = 'block';
+});
+
+document.getElementById('quoteTargetBtn').addEventListener('click', async () => {
+  const quotes = await quoteNames('.target-name');
+  if (!quotes) return;
+  _targetQuotes = quotes;
+  const inputs = document.querySelectorAll('.target-name');
+  inputs.forEach(i => {
+    const q = quotes.find(x => x.name === i.value.trim() || x.market_hash_name === i.value.trim());
+    const tag = i.parentElement.querySelector('.price-tag');
+    if (q && q.saleBRL) {
+      tag.textContent = fmtR(q.saleBRL);
+      tag.dataset.price = q.saleBRL;
+    } else {
+      tag.textContent = '— não encontrado';
+      tag.style.color = 'var(--accent-red)';
+    }
+  });
+  showSummary();
+});
+
+function showSummary() {
+  const offeredTotal = _offeredQuotes.reduce((s, q) => s + (q.offerBRL || 0), 0);
+  const targetTotal  = _targetQuotes.reduce((s, q) => s + (q.saleBRL || 0), 0);
+  const diff = targetTotal - offeredTotal;
+  _txType = diff > 0 ? 'upgrade' : 'downgrade';
+
+  const box = document.getElementById('summaryBox');
+  box.innerHTML = `
+    <div class="summary-row"><span>Total das suas skins (oferecidas)</span><span>${fmtR(offeredTotal)}</span></div>
+    <div class="summary-row"><span>Total das skins desejadas</span><span>${fmtR(targetTotal)}</span></div>
+    <div class="summary-row diff ${diff > 0 ? 'positive' : 'negative'}">
+      <span>${diff > 0 ? '⬆️ Você paga' : '⬇️ Você recebe'}</span>
+      <span>${fmtR(Math.abs(diff))} via PIX</span>
+    </div>
+  `;
+  document.getElementById('summaryPanel').style.display = 'block';
+  // Mostra campo PIX só se downgrade (Gu vai pagar ao user)
+  document.getElementById('pixKeyWrap').style.display = (_txType === 'downgrade') ? 'block' : 'none';
+}
+
+document.getElementById('confirmBtn').addEventListener('click', async () => {
+  const u = auth.currentUser;
+  if (!u) return showToast('Sessão expirada — faça login', 'error');
+  const tradeLink = document.getElementById('tradeLink').value.trim();
+  const pixKey    = document.getElementById('pixKey').value.trim();
+  if (!tradeLink || !/steamcommunity\.com\/tradeoffer/.test(tradeLink)) {
+    return showToast('Trade Link Steam inválido', 'error');
+  }
+  if (_txType === 'downgrade' && !pixKey) {
+    return showToast('Chave PIX obrigatória pra downgrade', 'error');
+  }
+  let token;
+  try { token = await u.getIdToken(); } catch (e) {
+    return showToast('Erro de auth', 'error');
+  }
+  const userDoc = await db.collection('users').doc(u.uid).get();
+  const userData = userDoc.data() || {};
+  try {
+    const r = await fetch(`${API_BASE}/api/buyback/create`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
+      body: JSON.stringify({
+        type: _txType,
+        offered: _offeredQuotes.map(q => ({ name: q.name || q.market_hash_name })),
+        target:  _targetQuotes.map(q => ({ name: q.name || q.market_hash_name })),
+        tradeLink,
+        pixKey: pixKey || null,
+        steamId: userData.steamId || u.uid,
+        userName: userData.fullName || userData.steamName || u.displayName || 'Cliente',
+      }),
+    });
+    const data = await r.json();
+    if (!r.ok) throw new Error(data.error || `HTTP ${r.status}`);
+    showToast('Troca criada! Acompanhe em "Meu perfil".', 'success');
+    setTimeout(() => location.href = 'perfil.html', 1500);
+  } catch (e) {
+    console.error(e);
+    showToast('Erro: ' + e.message, 'error');
+  }
+});
+
+auth.onAuthStateChanged((user) => {
+  if (user) {
+    document.getElementById('loginPanel').style.display = 'none';
+    document.getElementById('flowPanel').style.display = 'block';
+  } else {
+    document.getElementById('loginPanel').style.display = 'block';
+    document.getElementById('flowPanel').style.display = 'none';
+  }
+});
+</script>
+</body>
+</html>
