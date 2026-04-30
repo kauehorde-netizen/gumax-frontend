@@ -504,7 +504,7 @@ function renderVeto() {
   } else if (m.status !== 'mappick') {
     captainInfo.innerHTML = `🔄 Aguardando começar…`;
   } else {
-    const action = ((m.mapVeto?.turn || 0) % 2 === 0) ? 'BANIR' : 'BANIR'; // 6 bans então sempre é ban
+    const action = ((m.mapVeto?.turn || 0) % 2 === 0) ? 'BANIR' : 'BANIR'; // 7 bans (8 mapas) então sempre é ban
     captainInfo.innerHTML = isMyTurn
       ? `<strong style="color:var(--accent-yellow);">🔥 SUA VEZ:</strong> escolha um mapa pra <strong>BANIR</strong> (clique no card)`
       : `Aguardando capitão do <strong>Time ${veto.activeTeam}</strong> banir um mapa…`;
@@ -807,4 +807,15 @@ async function doVeto(map, btnEl) {
     }
     if (data.finalMap) toast(`🎯 Mapa: ${MAP_LABELS[data.finalMap]?.name || data.finalMap}!`, 'success');
     else toast(`Banido!`, 'success');
-    loadMatch(
+    loadMatch();
+  } catch (e) {
+    toast('Erro: ' + e.message, 'error');
+    if (btnEl) { btnEl.style.opacity=''; btnEl.style.pointerEvents=''; btnEl.style.transform=''; }
+  }
+}
+
+function escHtml(s) { return String(s || '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'})[c]); }
+</script>
+
+</body>
+</html>
