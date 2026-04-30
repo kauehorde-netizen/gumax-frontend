@@ -1165,19 +1165,33 @@ async function doLogout() {
   location.href = 'index.html';
 }
 
-// ─── Polling 2s — rodando SEMPRE (lista pública) ───
-// v36-nopass: 5s → 2s. Desafios aparecem em <2s no card desafiado.
-// (Idealmente migrar pra Firestore onSnapshot pra zero delay; depois.)
+// ─── Polling adaptativo (lista pública) ───
+// v38-quota: 2s → 6s pra economizar reads do Firestore (Spark plan).
+// Pausa quando aba está em background (document.hidden) — outro user com 5
+// abas abertas em segundo plano não justifica gastar quota.
+// (Idealmente migrar pra Firestore onSnapshot, mas otimização de polling
+// já dá 70-80% de redução com UX praticamente igual.)
 let _pollTimer = null;
 let _lastLobbiesData = null;
 let _lastListSignature = '';
-const POLL_INTERVAL_MS = 2000;
+const POLL_INTERVAL_MS = 6000;
 
 function startPolling() {
   if (_pollTimer) clearInterval(_pollTimer);
   loadList();
   if (_idToken) loadMyLobby();
-  _pollTimer = setInterval(pollTick, POLL_INTERVAL_MS);
+  _pollTimer = setInterval(() => {
+    // v38-quota: skip tick quando aba não está visível
+    if (document.hidden) return;
+    pollTick();
+  }, POLL_INTERVAL_MS);
+  // Roda 1 tick imediato quando a aba volta a ficar visível, em vez de
+  // esperar até 6s pro próximo intervalo
+  document.addEventListener('visibilitychange', () => {
+    if (!document.hidden && _pollTimer) {
+      pollTick();
+    }
+  });
 }
 function pollTick() {
   if (document.hidden) return; // aba em background → skip
