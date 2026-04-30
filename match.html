@@ -438,8 +438,8 @@ function renderStage(m) {
         <p style="margin-top:12px;font-size:11px;color:var(--text-muted);">
           Mapa: <strong style="color:var(--primary-light);">${m.mapVeto?.finalMap || ''}</strong>
         </p>
-        <p style="margin-top:14px;font-size:11px;color:var(--accent-yellow);background:rgba(250,204,21,.08);border:1px solid rgba(250,204,21,.25);padding:8px 12px;border-radius:6px;">
-          ⚠️ <strong>Quando entrar no servidor</strong>, digite <code style="background:rgba(0,0,0,.3);padding:1px 5px;border-radius:3px;color:var(--accent-yellow);">.ready</code> no chat. A partida começa quando todos estiverem ready (5 de cada lado).
+        <p style="margin-top:14px;font-size:11px;color:var(--accent-green);background:rgba(16,185,129,.08);border:1px solid rgba(16,185,129,.25);padding:8px 12px;border-radius:6px;">
+          ✓ <strong>Auto-ready ativado.</strong> Entrou = pronto. Partida inicia automaticamente em ~30s após o servidor estar pronto.
         </p>
         <p style="margin-top:10px;font-size:10px;color:var(--text-muted);">
           Não tem o GUARD instalado?
@@ -805,4 +805,6 @@ async function doVeto(map, btnEl) {
       if (btnEl) { btnEl.style.opacity=''; btnEl.style.pointerEvents=''; btnEl.style.transform=''; }
       return;
     }
-    if (data.finalMap) toast(`🎯 Mapa
+    if (data.finalMap) toast(`🎯 Mapa: ${MAP_LABELS[data.finalMap]?.name || data.finalMap}!`, 'success');
+    else toast(`Banido!`, 'success');
+    loadMatch(
