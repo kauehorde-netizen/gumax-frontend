@@ -2029,4 +2029,16 @@ async function handleSteamCallback() {
   history.replaceState({}, '', url.toString());
 }
 
-// ═══ Bootstrap (rodando no fim, depois que TODOS os `let` est
+// ═══ Bootstrap (rodando no fim, depois que TODOS os `let` estão inicializados)
+// Antes eu chamava startPolling() lá em cima e dava TDZ porque _pollTimer
+// (declarado mais abaixo) ainda estava em zona morta. Agora roda depois de tudo. ═══
+if (_firebaseReady) {
+  // 1. Processa callback Steam (se URL tem ?steam_callback=1)
+  handleSteamCallback().catch(e => console.error('[steam callback]', e));
+}
+// 2. Inicia polling público de lobbies (independente de auth)
+startPolling();
+</script>
+
+</body>
+</html>
