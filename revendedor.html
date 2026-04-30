@@ -3,1170 +3,406 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Gumax Skins | Painel Revendedor</title>
-<link rel="icon" href="https://static.wixstatic.com/media/874864_b598e856481740e7ae752771a661c242~mv2.png/v1/fill/w_64,h_64,al_c,q_85,enc_auto/874864_b598e856481740e7ae752771a661c242~mv2.png">
-<link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800;900&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
-<script src="https://www.gstatic.com/firebasejs/10.5.0/firebase-app-compat.js"></script>
-<script src="https://www.gstatic.com/firebasejs/10.5.0/firebase-auth-compat.js"></script>
-<script src="https://www.gstatic.com/firebasejs/10.5.0/firebase-firestore-compat.js"></script>
-
+<title>Revendedor — Gumax Skins</title>
+<meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
 <style>
-* { box-sizing: border-box; margin: 0; padding: 0; }
-
-:root {
-  --bg: #08060e;
-  --bg-card: #110e1a;
-  --bg-elevated: #1a1528;
-  --bg-input: #13101e;
-  --text-primary: #ece8f4;
-  --text-secondary: #9890a8;
-  --text-muted: #5e5670;
-  --border: #241e35;
-  --primary: #8B5CF6;
-  --primary-dark: #7C3AED;
-  --primary-light: #A78BFA;
-  --accent-yellow: #FACC15;
-  --success: #22c55e;
-  --danger: #ef4444;
-  --warning: #f59e0b;
-}
-
-body {
-  background: var(--bg);
-  background-image:
-    radial-gradient(ellipse at 50% 0%, rgba(139, 92, 246, .07) 0%, transparent 50%),
-    radial-gradient(ellipse at 80% 100%, rgba(250, 204, 21, .03) 0%, transparent 40%);
-  color: var(--text-primary);
-  font-family: 'Outfit', sans-serif;
-  min-height: 100vh;
-}
-
-/* LOGIN */
-.login-screen {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  min-height: 100vh;
-  padding: 20px;
-}
-
-.login-box {
-  background: var(--bg-card);
-  border: 1px solid var(--border);
-  border-radius: 16px;
-  padding: 48px;
-  max-width: 480px;
-  width: 100%;
-  text-align: center;
-}
-
-.login-box img { width: 180px; margin-bottom: 24px; }
-.login-box h2 { font-size: 22px; margin-bottom: 8px; color: var(--accent-yellow); }
-.login-box p { color: var(--text-secondary); font-size: 14px; margin-bottom: 32px; line-height: 1.6; }
-
-/* SHARED STYLES */
-.btn {
-  padding: 10px 20px;
-  border: none;
-  border-radius: 8px;
-  font-family: 'Outfit', sans-serif;
-  font-weight: 600;
-  font-size: 14px;
-  cursor: pointer;
-  transition: all .2s;
-  display: inline-flex;
-  align-items: center;
-  gap: 8px;
-  text-decoration: none;
-}
-
-.btn-primary { background: var(--primary); color: white; }
-.btn-primary:hover { background: var(--primary-dark); }
-.btn-secondary { background: var(--bg-elevated); color: var(--text-primary); border: 1px solid var(--border); }
-.btn-secondary:hover { border-color: var(--primary); }
-.btn-danger { background: var(--danger); color: white; }
-.btn-success { background: var(--success); color: white; }
-.btn-small { padding: 6px 12px; font-size: 12px; }
-.btn-google {
-  background: white;
-  color: #1a1a1a;
-  padding: 14px 28px;
-  font-size: 15px;
-  font-weight: 600;
-  border-radius: 10px;
-  width: 100%;
-  justify-content: center;
-}
-.btn-google:hover {
-  background: #f3f3f3;
-  transform: translateY(-1px);
-  box-shadow: 0 4px 12px rgba(139, 92, 246, .2);
-}
-
-/* DASHBOARD */
-.dashboard { display: none; }
-
-.top-bar {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  padding: 16px 32px;
-  background: var(--bg-card);
-  border-bottom: 1px solid var(--border);
-  position: sticky;
-  top: 0;
-  z-index: 50;
-}
-
-.top-bar-left {
-  display: flex;
-  align-items: center;
-  gap: 16px;
-}
-
-.top-bar-left img { width: 100px; }
-.top-bar-left .divider { width: 1px; height: 24px; background: var(--border); }
-.top-bar-left span { color: var(--accent-yellow); font-weight: 600; font-size: 14px; }
-
-.top-bar-right {
-  display: flex;
-  align-items: center;
-  gap: 16px;
-}
-
-.user-info {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-}
-
-.user-avatar {
-  width: 32px;
-  height: 32px;
-  border-radius: 50%;
-  background: var(--bg-elevated);
-  border: 2px solid var(--primary);
-}
-
-.user-name { font-weight: 600; font-size: 14px; }
-
-.main-content {
-  max-width: 1200px;
-  margin: 0 auto;
-  padding: 32px;
-}
-
-/* TABS */
-.tabs {
-  display: flex;
-  gap: 4px;
-  background: var(--bg-card);
-  border: 1px solid var(--border);
-  border-radius: 10px;
-  padding: 4px;
-  margin-bottom: 32px;
-  width: fit-content;
-}
-
-.tab {
-  padding: 10px 20px;
-  border-radius: 8px;
-  font-size: 14px;
-  font-weight: 500;
-  cursor: pointer;
-  color: var(--text-secondary);
-  transition: all .2s;
-}
-
-.tab:hover { color: var(--text-primary); }
-.tab.active { background: var(--primary); color: white; }
-
-/* STATS */
-.stats-grid {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-  gap: 16px;
-  margin-bottom: 32px;
-}
-
-.stat-card {
-  background: var(--bg-card);
-  border: 1px solid var(--border);
-  border-radius: 12px;
-  padding: 20px;
-}
-
-.stat-card .stat-label { font-size: 12px; color: var(--text-muted); text-transform: uppercase; letter-spacing: 1px; margin-bottom: 8px; }
-.stat-card .stat-value { font-size: 28px; font-weight: 700; }
-
-/* BALANCE BAR */
-.balance-bar {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  background: linear-gradient(135deg, rgba(139, 92, 246, .15), rgba(250, 204, 21, .1));
-  border: 1px solid var(--border);
-  border-radius: 12px;
-  padding: 20px 28px;
-  margin-bottom: 32px;
-}
-
-.balance-left .label { font-size: 12px; color: var(--text-muted); text-transform: uppercase; letter-spacing: 1px; }
-.balance-left .value { font-size: 32px; font-weight: 800; color: var(--accent-yellow); }
-.balance-left .sub { font-size: 12px; color: var(--text-secondary); margin-top: 4px; }
-
-/* TABLE */
-.data-table-wrapper {
-  background: var(--bg-card);
-  border: 1px solid var(--border);
-  border-radius: 12px;
-  overflow: hidden;
-  margin-bottom: 24px;
-}
-
-.table-header {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  padding: 16px 20px;
-  border-bottom: 1px solid var(--border);
-}
-
-.table-header h3 { font-size: 16px; font-weight: 600; }
-
-.data-table { width: 100%; border-collapse: collapse; }
-
-.data-table th {
-  padding: 12px 16px;
-  text-align: left;
-  font-size: 11px;
-  color: var(--text-muted);
-  text-transform: uppercase;
-  letter-spacing: 1px;
-  border-bottom: 1px solid var(--border);
-  font-weight: 600;
-}
-
-.data-table td {
-  padding: 12px 16px;
-  font-size: 14px;
-  border-bottom: 1px solid rgba(36, 30, 53, .5);
-}
-
-.data-table tr:hover { background: rgba(139, 92, 246, .03); }
-
-.badge {
-  display: inline-block;
-  padding: 3px 10px;
-  border-radius: 20px;
-  font-size: 11px;
-  font-weight: 600;
-}
-
-.badge-full { background: rgba(250, 204, 21, .15); color: var(--accent-yellow); }
-.badge-active { background: rgba(34, 197, 94, .15); color: var(--success); }
-.badge-pending { background: rgba(245, 158, 11, .15); color: var(--warning); }
-.badge-sold { background: rgba(139, 92, 246, .15); color: var(--primary-light); }
-
-/* INVENTORY GRID */
-.inventory-grid {
-  display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
-  gap: 12px;
-  margin-bottom: 24px;
-}
-
-.inv-card {
-  background: var(--bg-card);
-  border: 1px solid var(--border);
-  border-radius: 10px;
-  padding: 12px;
-  cursor: pointer;
-  transition: all .2s;
-  position: relative;
-}
-
-.inv-card:hover { border-color: var(--primary); transform: translateY(-2px); }
-.inv-card.selected { border-color: var(--success); background: rgba(34, 197, 94, .05); }
-.inv-card.already-listed { opacity: .5; pointer-events: none; }
-
-.inv-card img { width: 100%; height: 100px; object-fit: contain; margin-bottom: 8px; }
-.inv-card .inv-name { font-size: 12px; font-weight: 600; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-.inv-card .inv-wear { font-size: 11px; color: var(--text-muted); }
-.inv-card .inv-check {
-  position: absolute;
-  top: 8px;
-  right: 8px;
-  width: 22px;
-  height: 22px;
-  border-radius: 50%;
-  background: var(--success);
-  color: white;
-  display: none;
-  align-items: center;
-  justify-content: center;
-  font-size: 12px;
-}
-.inv-card.selected .inv-check { display: flex; }
-.inv-card.already-listed::after {
-  content: 'Já listada';
-  position: absolute;
-  top: 8px;
-  right: 8px;
-  font-size: 10px;
-  background: var(--bg-elevated);
-  padding: 2px 8px;
-  border-radius: 10px;
-  color: var(--text-muted);
-}
-
-/* MODAL */
-.modal-overlay {
-  position: fixed;
-  inset: 0;
-  background: rgba(0, 0, 0, .7);
-  backdrop-filter: blur(4px);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  z-index: 1000;
-  opacity: 0;
-  pointer-events: none;
-  transition: opacity .2s;
-}
-
-.modal-overlay.show { opacity: 1; pointer-events: all; }
-
-.modal {
-  background: var(--bg-card);
-  border: 1px solid var(--border);
-  border-radius: 16px;
-  padding: 32px;
-  max-width: 700px;
-  width: 90%;
-  max-height: 90vh;
-  overflow-y: auto;
-}
-
-.modal h2 { font-size: 20px; margin-bottom: 8px; }
-.modal .modal-sub { font-size: 13px; color: var(--text-secondary); margin-bottom: 24px; }
-
-.form-group { margin-bottom: 16px; }
-.form-group label { display: block; font-size: 12px; color: var(--text-secondary); margin-bottom: 6px; font-weight: 500; }
-
-.form-control {
-  width: 100%;
-  padding: 10px 14px;
-  background: var(--bg-input);
-  border: 1px solid var(--border);
-  border-radius: 8px;
-  color: var(--text-primary);
-  font-family: 'Outfit', sans-serif;
-  font-size: 14px;
-  outline: none;
-  transition: border-color .2s;
-}
-
-.form-control:focus { border-color: var(--primary); }
-
-.form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
-
-.form-actions { display: flex; gap: 12px; margin-top: 24px; justify-content: flex-end; }
-
-/* EMPTY */
-.empty-state { text-align: center; padding: 60px 20px; color: var(--text-muted); }
-
-/* LOADING */
-.loading-spinner {
-  display: inline-block;
-  width: 40px;
-  height: 40px;
-  border: 3px solid var(--border);
-  border-top: 3px solid var(--primary);
-  border-radius: 50%;
-  animation: spin 1s linear infinite;
-}
-
-@keyframes spin { to { transform: rotate(360deg); } }
-
-/* TOAST */
-.toast {
-  position: fixed;
-  bottom: 24px;
-  right: 24px;
-  padding: 14px 24px;
-  background: var(--bg-elevated);
-  border: 1px solid var(--border);
-  border-radius: 10px;
-  font-size: 14px;
-  z-index: 9999;
-  transform: translateY(100px);
-  opacity: 0;
-  transition: all .3s;
-}
-
-.toast.show { transform: translateY(0); opacity: 1; }
-.toast.success { border-color: var(--success); }
-.toast.error { border-color: var(--danger); }
-
-/* SECTION */
-.section { display: none; }
-.section.active { display: block; }
-
-/* COMMISSION INFO */
-.commission-notice {
-  background: rgba(250, 204, 21, .08);
-  border: 1px solid rgba(250, 204, 21, .2);
-  border-radius: 10px;
-  padding: 16px 20px;
-  font-size: 13px;
-  color: var(--text-secondary);
-  margin-bottom: 24px;
-  line-height: 1.6;
-}
-
-.commission-notice strong { color: var(--accent-yellow); }
-
-/* RESPONSIVE */
-@media (max-width: 768px) {
-  .main-content { padding: 16px; }
-  .stats-grid { grid-template-columns: 1fr 1fr; }
-  .form-row { grid-template-columns: 1fr; }
-  .inventory-grid { grid-template-columns: repeat(auto-fill, minmax(140px, 1fr)); }
-  .balance-bar { flex-direction: column; gap: 16px; text-align: center; }
-  .tabs { width: 100%; overflow-x: auto; }
-}
+  :root {
+    --bg-primary: #0d0d11;
+    --bg-card: rgba(20,20,28,.6);
+    --border: rgba(139,92,246,.18);
+    --primary: #8b5cf6;
+    --accent-yellow: #fbbf24;
+    --accent-green: #10b981;
+    --accent-red:   #ef4444;
+    --text-primary: #f8fafc;
+    --text-secondary: #94a3b8;
+    --text-muted: #64748b;
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0;
+    background: var(--bg-primary);
+    color: var(--text-primary);
+    font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+    min-height: 100vh;
+  }
+  .topbar {
+    display: flex; align-items: center; justify-content: space-between;
+    padding: 14px 24px; border-bottom: 1px solid var(--border);
+    background: rgba(13,13,17,.85); backdrop-filter: blur(12px);
+    position: sticky; top: 0; z-index: 50;
+  }
+  .topbar a { color: var(--text-secondary); text-decoration: none; font-size: 13px; margin-right: 16px; }
+  .topbar a:hover { color: var(--text-primary); }
+  .brand { font-weight: 800; font-size: 18px; background: linear-gradient(135deg, var(--primary), #a78bfa); -webkit-background-clip: text; color: transparent; }
+  .container { max-width: 1100px; margin: 30px auto; padding: 0 24px; }
+  .panel {
+    background: var(--bg-card); border: 1px solid var(--border);
+    border-radius: 14px; padding: 22px; margin-bottom: 18px;
+    backdrop-filter: blur(8px);
+  }
+  h1 { font-size: 26px; margin: 0 0 6px; }
+  h2 { font-size: 18px; margin: 0 0 12px; color: var(--text-primary); }
+  p.muted { color: var(--text-secondary); font-size: 13px; line-height: 1.5; }
+  .badge {
+    display: inline-block; padding: 3px 10px; border-radius: 999px;
+    font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: .5px;
+  }
+  .badge-pending { background: rgba(251,191,36,.15); color: var(--accent-yellow); border: 1px solid rgba(251,191,36,.3); }
+  .badge-active  { background: rgba(16,185,129,.15); color: var(--accent-green); border: 1px solid rgba(16,185,129,.3); }
+  .badge-blocked { background: rgba(239,68,68,.15); color: var(--accent-red); border: 1px solid rgba(239,68,68,.3); }
+  .grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(280px,1fr)); gap: 12px; }
+  .skin-card {
+    background: rgba(0,0,0,.3); border: 1px solid var(--border); border-radius: 10px;
+    padding: 12px; display: flex; flex-direction: column; gap: 6px;
+  }
+  .skin-card img { width: 100%; height: 110px; object-fit: contain; background: rgba(0,0,0,.2); border-radius: 8px; }
+  .skin-card .name { font-size: 13px; font-weight: 700; }
+  .skin-card .price { color: var(--accent-yellow); font-weight: 800; font-size: 16px; }
+  .form { display: grid; gap: 12px; }
+  .form label { display: block; font-size: 12px; color: var(--text-secondary); margin-bottom: 4px; font-weight: 600; }
+  .form input, .form select, .form textarea {
+    width: 100%; padding: 10px 12px; background: rgba(0,0,0,.35);
+    border: 1px solid var(--border); color: var(--text-primary); border-radius: 8px;
+    font-size: 14px;
+  }
+  .form input:focus, .form select:focus, .form textarea:focus {
+    outline: none; border-color: var(--primary);
+  }
+  .row2 { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+  .btn {
+    padding: 10px 18px; border-radius: 8px; cursor: pointer;
+    border: 1px solid var(--border); background: var(--bg-card); color: var(--text-primary);
+    font-weight: 600; font-size: 14px; transition: all .15s;
+  }
+  .btn:hover { transform: translateY(-1px); }
+  .btn-primary {
+    background: linear-gradient(135deg, var(--primary), #a78bfa);
+    border: none; color: #fff;
+  }
+  .btn-danger { color: var(--accent-red); border-color: rgba(239,68,68,.3); }
+  .empty {
+    padding: 40px 24px; text-align: center; color: var(--text-secondary);
+    border: 1px dashed var(--border); border-radius: 12px;
+  }
+  .stat-row { display: flex; gap: 24px; flex-wrap: wrap; margin: 14px 0; }
+  .stat { background: rgba(0,0,0,.25); border: 1px solid var(--border); border-radius: 10px; padding: 12px 16px; min-width: 140px; }
+  .stat .v { font-size: 22px; font-weight: 800; color: var(--accent-yellow); }
+  .stat .l { font-size: 11px; color: var(--text-muted); text-transform: uppercase; letter-spacing: .5px; }
+  .toast {
+    position: fixed; top: 16px; right: 16px; z-index: 9999;
+    background: var(--bg-card); border: 1px solid var(--border); padding: 12px 16px;
+    border-radius: 10px; backdrop-filter: blur(12px); font-size: 13px;
+    opacity: 0; transform: translateY(-10px); transition: all .25s;
+  }
+  .toast.show { opacity: 1; transform: translateY(0); }
+  .toast.error { border-color: rgba(239,68,68,.4); }
+  .toast.success { border-color: rgba(16,185,129,.4); }
 </style>
 </head>
 <body>
 
-<!-- LOGIN SCREEN -->
-<div class="login-screen" id="loginScreen">
-  <div class="login-box">
-    <img src="https://static.wixstatic.com/media/874864_b598e856481740e7ae752771a661c242~mv2.png/v1/fill/w_600,h_235,al_c,q_85,enc_auto/874864_b598e856481740e7ae752771a661c242~mv2.png" alt="Gumax Skins">
-    <h2>Painel do Revendedor</h2>
-    <p>Anuncie suas skins no Gumax Marketplace e venda com facilidade. Comissão de apenas <strong>2%</strong> por venda.</p>
-    <button class="btn btn-google" onclick="loginWithGoogle()">
-      <svg width="20" height="20" viewBox="0 0 24 24"><path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/><path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"/><path fill="#FBBC05" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z"/><path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"/></svg>
-      Entrar com Google
-    </button>
-    <br>
-    <p style="font-size: 12px; color: var(--text-muted); margin-top: 16px; line-height: 1.6;">
-      Ao fazer login, você cria automaticamente uma conta de revendedor.<br>
-      Aguarde a aprovação do administrador para começar a listar skins.
-    </p>
-    <br>
-    <a href="index.html" style="color: var(--text-muted); font-size: 13px; text-decoration: none;">← Voltar ao Marketplace</a>
+<div class="topbar">
+  <div>
+    <span class="brand">Gumax Skins</span>
+    <span style="margin-left: 18px; color: var(--text-muted); font-size: 13px;">Painel Revendedor</span>
+  </div>
+  <div>
+    <a href="index.html">Marketplace</a>
+    <a href="perfil.html">Meu perfil</a>
+    <a href="#" id="logoutBtn">Sair</a>
   </div>
 </div>
 
-<!-- DASHBOARD -->
-<div class="dashboard" id="dashboard">
+<div class="container">
 
-  <!-- TOP BAR -->
-  <div class="top-bar">
-    <div class="top-bar-left">
-      <a href="index.html"><img src="https://static.wixstatic.com/media/874864_b598e856481740e7ae752771a661c242~mv2.png/v1/fill/w_600,h_235,al_c,q_85,enc_auto/874864_b598e856481740e7ae752771a661c242~mv2.png" alt="Gumax"></a>
-      <div class="divider"></div>
-      <span>REVENDEDOR</span>
-    </div>
-    <div class="top-bar-right">
-      <div class="user-info">
-        <img class="user-avatar" id="userAvatar" src="" alt="">
-        <span class="user-name" id="userName">Revendedor</span>
-      </div>
-      <button class="btn btn-secondary btn-small" onclick="logout()">Sair</button>
+  <div class="panel" id="statusPanel" style="display:none;">
+    <h1>Painel do Revendedor</h1>
+    <p class="muted" id="statusDescription"></p>
+    <div class="stat-row">
+      <div class="stat"><div class="v" id="statSkinsCount">0</div><div class="l">Skins listadas</div></div>
+      <div class="stat"><div class="v" id="statSalesCount">0</div><div class="l">Vendas totais</div></div>
+      <div class="stat"><div class="v" id="statBalance">R$ 0,00</div><div class="l">Saldo a sacar</div></div>
     </div>
   </div>
 
-  <div class="main-content">
-
-    <!-- BALANCE BAR -->
-    <div class="balance-bar">
-      <div class="balance-left">
-        <div class="label">Seu Saldo Disponível</div>
-        <div class="value" id="userBalance">R$ 0,00</div>
-        <div class="sub">Comissão Gumax: 2% por venda • Pagamento manual via PIX</div>
-      </div>
-      <button class="btn btn-primary" onclick="requestWithdraw()">Solicitar Saque</button>
-    </div>
-
-    <!-- TABS -->
-    <div class="tabs">
-      <div class="tab active" onclick="switchTab('skins')">Minhas Skins</div>
-      <div class="tab" onclick="switchTab('add')">+ Adicionar Skin</div>
-      <div class="tab" onclick="switchTab('sales')">Vendas</div>
-      <div class="tab" onclick="switchTab('earnings')">Ganhos</div>
-    </div>
-
-    <!-- MY SKINS SECTION -->
-    <div class="section active" id="section-skins">
-      <div class="stats-grid">
-        <div class="stat-card">
-          <div class="stat-label">Skins Listadas</div>
-          <div class="stat-value" id="statListed">0</div>
-        </div>
-        <div class="stat-card">
-          <div class="stat-label">Skins Vendidas</div>
-          <div class="stat-value" id="statSold">0</div>
-        </div>
-        <div class="stat-card">
-          <div class="stat-label">Faturamento Total</div>
-          <div class="stat-value" id="statRevenue">R$ 0</div>
-        </div>
-        <div class="stat-card">
-          <div class="stat-label">Ganho Líquido (98%)</div>
-          <div class="stat-value" id="statNet">R$ 0</div>
-        </div>
-      </div>
-
-      <div class="commission-notice">
-        <strong>Como funciona:</strong> Você lista skins do seu inventário Steam. Quando alguém comprar, a Gumax retém <strong>2% de comissão</strong> e você recebe os <strong>98% restantes</strong>. Só é possível listar skins que estão no seu inventário Steam (verificação automática).
-      </div>
-
-      <div class="data-table-wrapper">
-        <div class="table-header">
-          <h3>Skins Listadas</h3>
-          <button class="btn btn-primary btn-small" onclick="switchTab('add')">+ Listar Nova Skin</button>
-        </div>
-        <table class="data-table">
-          <thead>
-            <tr>
-              <th>Skin</th>
-              <th>Preço</th>
-              <th>Comissão (2%)</th>
-              <th>Você Recebe</th>
-              <th>Status</th>
-              <th>Ações</th>
-            </tr>
-          </thead>
-          <tbody id="mySkinsTable">
-            <tr><td colspan="6" class="empty-state"><p>Nenhuma skin listada. Clique em "+ Adicionar Skin" para listar uma nova.</p></td></tr>
-          </tbody>
-        </table>
-      </div>
-    </div>
-
-    <!-- ADD SKIN SECTION (Formulário manual) -->
-    <div class="section" id="section-add">
-      <div style="margin-bottom: 20px;">
-        <h2 style="font-size: 20px;">Adicionar Nova Skin</h2>
-        <p style="color: var(--text-secondary); font-size: 13px; margin-top: 4px;">Preencha os dados da skin que você possui e deseja vender</p>
-      </div>
-
-      <div class="commission-notice">
-        <strong>Importante:</strong> Só liste skins que você <strong>realmente possui</strong> no seu inventário Steam. Após a venda, você terá que transferir a skin para o comprador. Liste dados reais — a Gumax pode verificar manualmente e bloquear contas que listam skins falsas.
-      </div>
-
-      <div class="data-table-wrapper" style="padding: 28px;">
-        <div class="form-row">
-          <div class="form-group">
-            <label>Nome da Skin *</label>
-            <input type="text" class="form-control" id="addSkinName" placeholder="Ex: AK-47 | Asiimov">
-          </div>
-          <div class="form-group">
-            <label>URL da Imagem</label>
-            <input type="text" class="form-control" id="addSkinImage" placeholder="https://...">
-          </div>
-        </div>
-
-        <div class="form-row">
-          <div class="form-group">
-            <label>Preço (R$) *</label>
-            <input type="number" class="form-control" id="addSkinPrice" placeholder="349.90" step="0.01">
-          </div>
-          <div class="form-group">
-            <label>Desconto (%) — opcional</label>
-            <input type="number" class="form-control" id="addSkinDiscount" value="0" min="0" max="99">
-          </div>
-        </div>
-
-        <div class="form-row">
-          <div class="form-group">
-            <label>Float Value</label>
-            <input type="number" class="form-control" id="addSkinFloat" placeholder="0.25" step="0.001" min="0" max="1">
-          </div>
-          <div class="form-group">
-            <label>Wear</label>
-            <select class="form-control" id="addSkinWear">
-              <option value="FN">Factory New</option>
-              <option value="MW">Minimal Wear</option>
-              <option value="FT" selected>Field-Tested</option>
-              <option value="WW">Well-Worn</option>
-              <option value="BS">Battle-Scarred</option>
-            </select>
-          </div>
-        </div>
-
-        <div class="form-row">
-          <div class="form-group">
-            <label>Raridade</label>
-            <select class="form-control" id="addSkinRarity">
-              <option value="Mil-Spec">Mil-Spec</option>
-              <option value="Restricted">Restricted</option>
-              <option value="Classified">Classified</option>
-              <option value="Covert" selected>Covert</option>
-              <option value="Contraband">Contraband</option>
-            </select>
-          </div>
-          <div class="form-group">
-            <label>Link do Inventário Steam (para verificação)</label>
-            <input type="text" class="form-control" id="addSkinSteamUrl" placeholder="https://steamcommunity.com/id/seu-id/inventory">
-          </div>
-        </div>
-
-        <div style="background: rgba(250, 204, 21, .08); border: 1px solid rgba(250, 204, 21, .2); border-radius: 10px; padding: 16px; margin: 16px 0;">
-          <div style="display: flex; justify-content: space-between; align-items: center;">
-            <div>
-              <div style="font-size: 11px; color: var(--text-muted); text-transform: uppercase; letter-spacing: 1px;">Seu ganho líquido (98%)</div>
-              <div id="addSkinNetPreview" style="font-size: 22px; font-weight: 700; color: var(--success); margin-top: 4px;">R$ 0,00</div>
-            </div>
-            <div style="text-align: right;">
-              <div style="font-size: 11px; color: var(--text-muted); text-transform: uppercase; letter-spacing: 1px;">Comissão Gumax (2%)</div>
-              <div id="addSkinCommissionPreview" style="font-size: 16px; color: var(--danger); margin-top: 4px;">R$ 0,00</div>
-            </div>
-          </div>
-        </div>
-
-        <div class="form-actions">
-          <button class="btn btn-secondary" onclick="clearAddForm()">Limpar</button>
-          <button class="btn btn-primary" onclick="submitNewSkin()">Publicar Skin</button>
-        </div>
-      </div>
-    </div>
-
-    <!-- SALES SECTION -->
-    <div class="section" id="section-sales">
-      <h2 style="font-size: 20px; margin-bottom: 20px;">Histórico de Vendas</h2>
-
-      <div class="data-table-wrapper">
-        <table class="data-table">
-          <thead>
-            <tr>
-              <th>Data</th>
-              <th>Skin</th>
-              <th>Comprador</th>
-              <th>Valor</th>
-              <th>Comissão</th>
-              <th>Seu Ganho</th>
-              <th>Status</th>
-            </tr>
-          </thead>
-          <tbody id="salesTable">
-            <tr><td colspan="7" class="empty-state"><p>Nenhuma venda realizada ainda</p></td></tr>
-          </tbody>
-        </table>
-      </div>
-    </div>
-
-    <!-- EARNINGS SECTION -->
-    <div class="section" id="section-earnings">
-      <h2 style="font-size: 20px; margin-bottom: 20px;">Detalhes de Ganhos</h2>
-
-      <div class="stats-grid">
-        <div class="stat-card">
-          <div class="stat-label">Total Bruto</div>
-          <div class="stat-value" id="earningsGross">R$ 0</div>
-        </div>
-        <div class="stat-card">
-          <div class="stat-label">Total Comissão (2%)</div>
-          <div class="stat-value" id="earningsCommission" style="color: var(--danger);">R$ 0</div>
-        </div>
-        <div class="stat-card">
-          <div class="stat-label">Total Líquido</div>
-          <div class="stat-value" id="earningsNet" style="color: var(--success);">R$ 0</div>
-        </div>
-        <div class="stat-card">
-          <div class="stat-label">Já Sacado</div>
-          <div class="stat-value" id="earningsWithdrawn">R$ 0</div>
-        </div>
-      </div>
-
-      <div class="commission-notice">
-        Para solicitar um saque, clique em "Solicitar Saque" no topo da página. O Gu processará o pagamento via PIX manualmente.
-      </div>
-
-      <div class="data-table-wrapper">
-        <div class="table-header"><h3>Histórico de Saques</h3></div>
-        <table class="data-table">
-          <thead>
-            <tr>
-              <th>Data</th>
-              <th>Valor</th>
-              <th>Chave PIX</th>
-              <th>Status</th>
-            </tr>
-          </thead>
-          <tbody id="withdrawalsTable">
-            <tr><td colspan="4" class="empty-state"><p>Nenhum saque solicitado</p></td></tr>
-          </tbody>
-        </table>
-      </div>
-    </div>
-
+  <div class="panel" id="loginPanel">
+    <h2>🔒 Login necessário</h2>
+    <p class="muted">Pra acessar o painel de revendedor você precisa estar logado com sua conta Steam.</p>
+    <button class="btn btn-primary" id="goLoginBtn" style="margin-top: 12px;">Fazer login</button>
   </div>
+
+  <div class="panel" id="applyPanel" style="display:none;">
+    <h2>Quer ser revendedor?</h2>
+    <p class="muted">Cadastre suas skins na Gumax e ganhe comissão em cada venda. A equipe Gumax cuida da entrega e suporte; você só precisa enviar a skin via Trade quando vendermos.</p>
+    <button class="btn btn-primary" id="applyBtn" style="margin-top: 12px;">Solicitar acesso</button>
+  </div>
+
+  <div class="panel" id="addSkinPanel" style="display:none;">
+    <h2>Cadastrar nova skin</h2>
+    <p class="muted">As skins ficam pendentes de aprovação até a equipe Gumax verificar o item no seu inventário Steam.</p>
+    <div class="form" style="margin-top: 14px;">
+      <div>
+        <label>Nome completo da skin (market_hash_name)</label>
+        <input id="skinName" placeholder="ex: AK-47 | Redline (Field-Tested)" autocomplete="off">
+      </div>
+      <div class="row2">
+        <div>
+          <label>Wear</label>
+          <select id="skinWear">
+            <option value="Factory New">Factory New</option>
+            <option value="Minimal Wear">Minimal Wear</option>
+            <option value="Field-Tested" selected>Field-Tested</option>
+            <option value="Well-Worn">Well-Worn</option>
+            <option value="Battle-Scarred">Battle-Scarred</option>
+          </select>
+        </div>
+        <div>
+          <label>Float (0.000–1.000)</label>
+          <input id="skinFloat" type="number" step="0.001" min="0" max="1" placeholder="0.245">
+        </div>
+      </div>
+      <div class="row2">
+        <div>
+          <label>Pattern Index (0–999)</label>
+          <input id="skinPattern" type="number" min="0" max="1000" placeholder="opcional">
+        </div>
+        <div>
+          <label>Preço pedido (R$)</label>
+          <input id="skinPrice" type="number" step="0.01" min="0" placeholder="350.00">
+        </div>
+      </div>
+      <div>
+        <label>Link inspect (steam://...)</label>
+        <input id="skinInspect" placeholder="cole aqui o link de inspeção da skin">
+      </div>
+      <div>
+        <label>Observações (opcional)</label>
+        <textarea id="skinNotes" rows="2" placeholder="ex: stickers craftadas, item raro..."></textarea>
+      </div>
+      <div>
+        <button class="btn btn-primary" id="saveSkinBtn">Cadastrar skin</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="panel" id="mySkinsPanel" style="display:none;">
+    <h2>Minhas skins listadas</h2>
+    <div id="mySkinsGrid" class="grid" style="margin-top: 14px;"></div>
+    <div id="mySkinsEmpty" class="empty" style="display:none;">
+      Você ainda não cadastrou nenhuma skin. Use o formulário acima pra adicionar a primeira.
+    </div>
+  </div>
+
 </div>
 
-<!-- WITHDRAW MODAL -->
-<div class="modal-overlay" id="withdrawModal" onclick="if(event.target===this)closeWithdrawModal()">
-  <div class="modal">
-    <h2>Solicitar Saque</h2>
-    <div class="modal-sub">O pagamento será processado manualmente via PIX pelo Gu.</div>
+<div id="toast" class="toast"></div>
 
-    <div class="form-group">
-      <label>Valor do Saque (R$)</label>
-      <input type="number" class="form-control" id="withdrawAmount" placeholder="0.00" step="0.01">
-    </div>
-    <div class="form-group">
-      <label>Chave PIX</label>
-      <input type="text" class="form-control" id="withdrawPix" placeholder="Sua chave PIX (CPF, e-mail, celular ou aleatória)">
-    </div>
-
-    <div class="form-actions">
-      <button class="btn btn-secondary" onclick="closeWithdrawModal()">Cancelar</button>
-      <button class="btn btn-primary" onclick="submitWithdraw()">Solicitar</button>
-    </div>
-  </div>
-</div>
-
-<!-- TOAST -->
-<div class="toast" id="toast"></div>
-
+<script src="https://www.gstatic.com/firebasejs/10.5.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.5.0/firebase-auth-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.5.0/firebase-firestore-compat.js"></script>
 <script>
-// ============= FIREBASE INIT =============
 const firebaseConfig = {
-  apiKey: "AIzaSyCN0TV59kJNQMsaQ-5d9dSTowirxFcuHG0",
-  authDomain: "gumax-skins.firebaseapp.com",
-  projectId: "gumax-skins",
-  storageBucket: "gumax-skins.firebasestorage.app",
-  messagingSenderId: "678525908778",
-  appId: "1:678525908778:web:56ee6d6a809c013b341053"
+  apiKey: 'AIzaSyAHHQrWlwGsWg2Jp-7rHo9Qqm1DfAR8RnE',
+  authDomain: 'gumax-skins.firebaseapp.com',
+  projectId: 'gumax-skins',
+  storageBucket: 'gumax-skins.firebasestorage.app',
+  messagingSenderId: '527907094290',
+  appId: '1:527907094290:web:f88c2f36d5d6e0a6f4b7e0',
 };
 firebase.initializeApp(firebaseConfig);
-const db = firebase.firestore();
 const auth = firebase.auth();
+const db = firebase.firestore();
 
-// ============= CONSTANTS =============
-const API_BASE = 'https://gumax-backend-production.up.railway.app';
-const COMMISSION_RATE = 0.02;
-
-// Admins têm acesso automático ao painel de revendedor também
-const ADMIN_EMAILS = [
-  'gumaxskins@gmail.com',
-  'cauehorde@gmail.com'
-];
-
-// ============= STATE =============
-let currentUser = null;
-let mySkins = [];
-let mySales = [];
-
-// ============= AUTH =============
-async function loginWithGoogle() {
-  const provider = new firebase.auth.GoogleAuthProvider();
-  provider.setCustomParameters({ prompt: 'select_account' });
-
-  try {
-    const result = await auth.signInWithPopup(provider);
-    const user = result.user;
-    currentUser = {
-      uid: user.uid,
-      email: (user.email || '').toLowerCase(),
-      name: user.displayName || 'Revendedor',
-      avatar: user.photoURL || '',
-      loginTime: Date.now()
-    };
-    await registerReseller();
-    showDashboard();
-  } catch (e) {
-    console.error('Login error:', e);
-    showToast('Erro ao fazer login: ' + e.message, 'error');
-  }
+function showToast(msg, type = 'info') {
+  const t = document.getElementById('toast');
+  t.textContent = msg;
+  t.className = 'toast show ' + type;
+  setTimeout(() => t.className = 'toast', 3500);
 }
 
-function checkAuth() {
-  auth.onAuthStateChanged(async user => {
-    if (user) {
-      const email = (user.email || '').toLowerCase();
-      // IMPORTANTE: Firebase Auth compartilha sessão entre abas. Se o user
-      // logou via Steam (no vender.html/analise.html) em outra aba, vai cair
-      // aqui SEM email — e não queremos auto-registrar ele como revendedor
-      // nem mostrar o dashboard. Só processa users com email (login Google).
-      if (!email) {
-        document.getElementById('loginScreen').style.display = 'flex';
-        return;
-      }
-      currentUser = {
-        uid: user.uid,
-        email,
-        name: user.displayName || 'Revendedor',
-        avatar: user.photoURL || '',
-        loginTime: Date.now()
-      };
-      await registerReseller();
-      showDashboard();
-    } else {
-      document.getElementById('loginScreen').style.display = 'flex';
-    }
-  });
-}
+function fmtR(v) { return 'R$ ' + Number(v || 0).toFixed(2).replace('.', ','); }
 
-async function registerReseller() {
-  if (!currentUser) return;
-  try {
-    const docRef = db.collection('resellers').doc(currentUser.uid);
-    const doc = await docRef.get();
-
-    // Admins ficam auto-aprovados; outros ficam pendentes
-    const isAdmin = ADMIN_EMAILS.includes(currentUser.email);
-
-    if (!doc.exists) {
-      await docRef.set({
-        uid: currentUser.uid,
-        email: currentUser.email,
-        name: currentUser.name,
-        avatar: currentUser.avatar,
-        status: isAdmin ? 'active' : 'pending',
-        balance: 0,
-        totalSales: 0,
-        salesCount: 0,
-        skinsCount: 0,
-        isAdmin: isAdmin,
-        createdAt: new Date().toISOString()
-      });
-      if (!isAdmin) {
-        showToast('Cadastro enviado! Aguarde aprovação do administrador.');
-      }
-    }
-  } catch (e) {
-    console.error('Register error:', e);
-  }
-}
-
-function showDashboard() {
-  document.getElementById('loginScreen').style.display = 'none';
-  document.getElementById('dashboard').style.display = 'block';
-
-  if (currentUser) {
-    document.getElementById('userName').textContent = currentUser.name;
-    if (currentUser.avatar) {
-      document.getElementById('userAvatar').src = currentUser.avatar;
-    }
-  }
-
-  loadAllData();
-}
-
-async function logout() {
+document.getElementById('logoutBtn').addEventListener('click', async (e) => {
+  e.preventDefault();
   await auth.signOut();
-  currentUser = null;
-  location.reload();
-}
+  location.href = 'index.html';
+});
 
-// ============= NAVIGATION =============
-function switchTab(name) {
-  document.querySelectorAll('.section').forEach(s => s.classList.remove('active'));
-  document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
-  document.getElementById('section-' + name).classList.add('active');
+document.getElementById('goLoginBtn').addEventListener('click', () => {
+  location.href = 'index.html';
+});
 
-  const tabs = document.querySelectorAll('.tab');
-  const names = ['skins', 'add', 'sales', 'earnings'];
-  const index = names.indexOf(name);
-  if (index >= 0 && tabs[index]) tabs[index].classList.add('active');
-}
+document.getElementById('applyBtn').addEventListener('click', async () => {
+  const u = auth.currentUser;
+  if (!u) return showToast('Faça login primeiro', 'error');
+  try {
+    const userDoc = await db.collection('users').doc(u.uid).get();
+    const userData = userDoc.data() || {};
+    await db.collection('resellers').doc(u.uid).set({
+      uid: u.uid,
+      name: userData.steamName || userData.fullName || u.displayName || 'Reseller',
+      email: userData.email || u.email || '',
+      whatsapp: userData.whatsapp || '',
+      steamId: userData.steamId || '',
+      status: 'pending',
+      balance: 0,
+      totalSales: 0,
+      isAdmin: false,
+      createdAt: new Date().toISOString(),
+    }, { merge: true });
+    showToast('Solicitação enviada! Aguarde aprovação.', 'success');
+    setTimeout(() => location.reload(), 1200);
+  } catch (e) {
+    console.error(e);
+    showToast('Erro ao solicitar: ' + e.message, 'error');
+  }
+});
 
-// ============= DATA LOADING =============
-async function loadAllData() {
-  if (!currentUser) return;
-  await Promise.all([
-    loadMySkins(),
-    loadMySales(),
-    loadMyBalance()
-  ]);
-}
+document.getElementById('saveSkinBtn').addEventListener('click', async () => {
+  const u = auth.currentUser;
+  if (!u) return showToast('Faça login', 'error');
+  const name    = document.getElementById('skinName').value.trim();
+  const wear    = document.getElementById('skinWear').value;
+  const flt     = parseFloat(document.getElementById('skinFloat').value);
+  const pattern = parseInt(document.getElementById('skinPattern').value, 10);
+  const price   = parseFloat(document.getElementById('skinPrice').value);
+  const inspect = document.getElementById('skinInspect').value.trim();
+  const notes   = document.getElementById('skinNotes').value.trim();
+
+  if (!name || name.length < 5)   return showToast('Nome inválido', 'error');
+  if (!Number.isFinite(price) || price <= 0) return showToast('Preço inválido', 'error');
+  if (!Number.isFinite(flt) || flt < 0 || flt > 1) return showToast('Float entre 0 e 1', 'error');
+
+  try {
+    const reseller = (await db.collection('resellers').doc(u.uid).get()).data() || {};
+    await db.collection('skins').add({
+      sellerId: u.uid,
+      sellerName: reseller.name || 'Revendedor',
+      name,
+      wear,
+      float: flt,
+      pattern: Number.isFinite(pattern) ? pattern : null,
+      price,
+      inspectLink: inspect || null,
+      notes: notes || null,
+      status: 'pending',
+      active: false,
+      source: 'reseller',
+      createdAt: new Date().toISOString(),
+    });
+    showToast('Skin cadastrada — aguardando aprovação', 'success');
+    document.getElementById('skinName').value = '';
+    document.getElementById('skinFloat').value = '';
+    document.getElementById('skinPattern').value = '';
+    document.getElementById('skinPrice').value = '';
+    document.getElementById('skinInspect').value = '';
+    document.getElementById('skinNotes').value = '';
+    loadMySkins();
+  } catch (e) {
+    console.error(e);
+    showToast('Erro: ' + (e.message || 'falhou'), 'error');
+  }
+});
 
 async function loadMySkins() {
+  const u = auth.currentUser;
+  if (!u) return;
+  const grid = document.getElementById('mySkinsGrid');
+  const empty = document.getElementById('mySkinsEmpty');
   try {
-    const snapshot = await db.collection('skins')
-      .where('sellerId', '==', currentUser.uid)
-      .orderBy('createdAt', 'desc')
-      .get();
-    mySkins = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
-    renderMySkins();
-  } catch (e) {
-    console.error('Error loading skins:', e);
-  }
-}
-
-async function loadMySales() {
-  try {
-    const snapshot = await db.collection('orders')
-      .where('sellerId', '==', currentUser.uid)
-      .orderBy('createdAt', 'desc')
-      .get();
-    mySales = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
-    renderSales();
-    updateStats();
-  } catch (e) {
-    console.error('Error loading sales:', e);
-  }
-}
-
-async function loadMyBalance() {
-  try {
-    const doc = await db.collection('resellers').doc(currentUser.uid).get();
-    if (doc.exists) {
-      const data = doc.data();
-      document.getElementById('userBalance').textContent = fmtR(data.balance || 0);
+    const snap = await db.collection('skins').where('sellerId', '==', u.uid).get();
+    document.getElementById('statSkinsCount').textContent = snap.size;
+    if (snap.empty) {
+      grid.innerHTML = ''; empty.style.display = 'block';
+      return;
     }
-  } catch (e) {
-    console.error('Error loading balance:', e);
-  }
-}
-
-// ============= ADD SKIN (Formulário Manual) =============
-function attachAddFormListeners() {
-  const priceInput = document.getElementById('addSkinPrice');
-  if (priceInput && !priceInput.dataset.attached) {
-    priceInput.addEventListener('input', updateAddPreview);
-    priceInput.dataset.attached = 'true';
-  }
-}
-
-function updateAddPreview() {
-  const price = parseFloat(document.getElementById('addSkinPrice').value) || 0;
-  const commission = price * COMMISSION_RATE;
-  const net = price - commission;
-  document.getElementById('addSkinCommissionPreview').textContent = fmtR(commission);
-  document.getElementById('addSkinNetPreview').textContent = fmtR(net);
-}
-
-function clearAddForm() {
-  document.getElementById('addSkinName').value = '';
-  document.getElementById('addSkinImage').value = '';
-  document.getElementById('addSkinPrice').value = '';
-  document.getElementById('addSkinDiscount').value = '0';
-  document.getElementById('addSkinFloat').value = '';
-  document.getElementById('addSkinWear').value = 'FT';
-  document.getElementById('addSkinRarity').value = 'Covert';
-  document.getElementById('addSkinSteamUrl').value = '';
-  updateAddPreview();
-}
-
-async function submitNewSkin() {
-  if (!currentUser) return;
-
-  const name = document.getElementById('addSkinName').value.trim();
-  const price = parseFloat(document.getElementById('addSkinPrice').value);
-
-  if (!name) {
-    showToast('Informe o nome da skin', 'error');
-    return;
-  }
-  if (!price || price <= 0) {
-    showToast('Informe um preço válido', 'error');
-    return;
-  }
-
-  const skinData = {
-    name: name,
-    price: price,
-    discount: parseInt(document.getElementById('addSkinDiscount').value) || 0,
-    float: parseFloat(document.getElementById('addSkinFloat').value) || 0,
-    wear: document.getElementById('addSkinWear').value,
-    rarity: document.getElementById('addSkinRarity').value,
-    image: document.getElementById('addSkinImage').value.trim(),
-    steamInventoryUrl: document.getElementById('addSkinSteamUrl').value.trim(),
-    delivery: 'full',
-    seller: 'reseller',
-    sellerId: currentUser.uid,
-    sellerEmail: currentUser.email,
-    sellerName: currentUser.name,
-    active: true,
-    inStock: true,
-    createdAt: new Date().toISOString()
-  };
-
-  try {
-    await db.collection('skins').add(skinData);
-    await db.collection('resellers').doc(currentUser.uid).update({
-      skinsCount: firebase.firestore.FieldValue.increment(1)
+    empty.style.display = 'none';
+    grid.innerHTML = snap.docs.map(d => {
+      const s = d.data();
+      const statusBadge = s.active ? '<span class="badge badge-active">ATIVA</span>' :
+                          s.status === 'pending' ? '<span class="badge badge-pending">PENDENTE</span>' :
+                          '<span class="badge badge-blocked">INATIVA</span>';
+      return `<div class="skin-card">
+        <div class="name">${escHtml(s.name || '?')}</div>
+        <div style="font-size:11px;color:var(--text-muted);">${escHtml(s.wear || '')} · float ${(s.float || 0).toFixed(3)}</div>
+        <div class="price">${fmtR(s.price)}</div>
+        <div>${statusBadge}</div>
+        <button class="btn btn-danger" data-skinid="${d.id}" style="font-size:11px;padding:6px 10px;margin-top:6px;">Remover</button>
+      </div>`;
+    }).join('');
+    grid.querySelectorAll('button[data-skinid]').forEach(btn => {
+      btn.addEventListener('click', async () => {
+        if (!confirm('Remover esta skin?')) return;
+        try {
+          await db.collection('skins').doc(btn.dataset.skinid).delete();
+          showToast('Removida', 'success');
+          loadMySkins();
+        } catch (e) {
+          showToast('Erro: ' + e.message, 'error');
+        }
+      });
     });
-
-    showToast('Skin publicada com sucesso!');
-    clearAddForm();
-    await loadMySkins();
-    switchTab('skins');
   } catch (e) {
-    showToast('Erro ao publicar: ' + e.message, 'error');
+    console.error('[loadMySkins]', e);
+    showToast('Erro ao listar skins: ' + e.message, 'error');
   }
 }
 
-// ============= MY SKINS TABLE =============
-function renderMySkins() {
-  const tbody = document.getElementById('mySkinsTable');
-  document.getElementById('statListed').textContent = mySkins.filter(s => s.active).length;
+function escHtml(s) {
+  return String(s || '').replace(/[&<>"']/g, c => ({
+    '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;'
+  }[c]));
+}
 
-  if (mySkins.length === 0) {
-    tbody.innerHTML = '<tr><td colspan="6" class="empty-state"><p>Nenhuma skin listada. Clique em "+ Adicionar Skin" para listar uma nova.</p></td></tr>';
+auth.onAuthStateChanged(async (user) => {
+  const loginPanel = document.getElementById('loginPanel');
+  const statusPanel = document.getElementById('statusPanel');
+  const applyPanel = document.getElementById('applyPanel');
+  const addSkinPanel = document.getElementById('addSkinPanel');
+  const mySkinsPanel = document.getElementById('mySkinsPanel');
+
+  if (!user) {
+    loginPanel.style.display = 'block';
+    statusPanel.style.display = 'none';
+    applyPanel.style.display = 'none';
+    addSkinPanel.style.display = 'none';
+    mySkinsPanel.style.display = 'none';
     return;
   }
 
-  tbody.innerHTML = mySkins.map(skin => {
-    const commission = skin.price * COMMISSION_RATE;
-    const net = skin.price - commission;
-    return `
-      <tr>
-        <td>
-          <strong>${skin.name}</strong>
-          <div style="font-size: 11px; color: var(--text-muted);">${skin.wear || ''} ${skin.float ? '• FV ' + skin.float.toFixed(3) : ''}</div>
-        </td>
-        <td style="color: var(--accent-yellow); font-weight: 600;">${fmtR(skin.price)}</td>
-        <td style="color: var(--danger); font-size: 13px;">-${fmtR(commission)}</td>
-        <td style="color: var(--success); font-weight: 600;">${fmtR(net)}</td>
-        <td><span class="badge ${skin.active ? 'badge-active' : 'badge-sold'}">${skin.active ? 'Ativo' : skin.sold ? 'Vendida' : 'Inativo'}</span></td>
-        <td>
-          ${skin.active ? `
-            <button class="btn btn-secondary btn-small" onclick="editMyPrice('${skin.id}', ${skin.price})">Editar Preço</button>
-            <button class="btn btn-danger btn-small" onclick="removeMyListing('${skin.id}')">Remover</button>
-          ` : ''}
-        </td>
-      </tr>
-    `;
-  }).join('');
-}
+  loginPanel.style.display = 'none';
 
-async function editMyPrice(id, currentPrice) {
-  const newPrice = prompt('Novo preço (R$):', currentPrice);
-  if (!newPrice || isNaN(newPrice) || parseFloat(newPrice) <= 0) return;
-
+  let resellerDoc;
   try {
-    await db.collection('skins').doc(id).update({ price: parseFloat(newPrice), updatedAt: new Date().toISOString() });
-    showToast('Preço atualizado');
-    await loadMySkins();
+    resellerDoc = await db.collection('resellers').doc(user.uid).get();
   } catch (e) {
-    showToast('Erro: ' + e.message, 'error');
-  }
-}
-
-async function removeMyListing(id) {
-  if (!confirm('Remover esta skin do marketplace?')) return;
-  try {
-    await db.collection('skins').doc(id).update({ active: false });
-    await db.collection('resellers').doc(currentUser.uid).update({
-      skinsCount: firebase.firestore.FieldValue.increment(-1)
-    });
-    showToast('Skin removida do marketplace');
-    await loadMySkins();
-  } catch (e) {
-    showToast('Erro: ' + e.message, 'error');
-  }
-}
-
-// ============= SALES =============
-function renderSales() {
-  const tbody = document.getElementById('salesTable');
-  if (mySales.length === 0) {
-    tbody.innerHTML = '<tr><td colspan="7" class="empty-state"><p>Nenhuma venda realizada ainda</p></td></tr>';
+    console.error('[reseller fetch]', e);
+    showToast('Erro ao carregar dados: ' + e.message, 'error');
     return;
   }
 
-  tbody.innerHTML = mySales.map(sale => {
-    const commission = (sale.total || 0) * COMMISSION_RATE;
-    const net = (sale.total || 0) - commission;
-    return `
-      <tr>
-        <td>${formatDate(sale.createdAt)}</td>
-        <td><strong>${sale.skinName || '-'}</strong></td>
-        <td>${sale.buyerName || 'Anônimo'}</td>
-        <td style="color: var(--accent-yellow);">${fmtR(sale.total || 0)}</td>
-        <td style="color: var(--danger);">-${fmtR(commission)}</td>
-        <td style="color: var(--success); font-weight: 600;">${fmtR(net)}</td>
-        <td><span class="badge badge-${sale.status === 'delivered' ? 'active' : 'pending'}">${sale.status === 'delivered' ? 'Entregue' : 'Processando'}</span></td>
-      </tr>
-    `;
-  }).join('');
-}
-
-function updateStats() {
-  const totalRevenue = mySales.reduce((s, o) => s + (o.total || 0), 0);
-  const totalCommission = totalRevenue * COMMISSION_RATE;
-  const netEarnings = totalRevenue - totalCommission;
-
-  document.getElementById('statSold').textContent = mySales.length;
-  document.getElementById('statRevenue').textContent = fmtR(totalRevenue);
-  document.getElementById('statNet').textContent = fmtR(netEarnings);
-
-  document.getElementById('earningsGross').textContent = fmtR(totalRevenue);
-  document.getElementById('earningsCommission').textContent = fmtR(totalCommission);
-  document.getElementById('earningsNet').textContent = fmtR(netEarnings);
-}
-
-// ============= WITHDRAW =============
-function requestWithdraw() {
-  document.getElementById('withdrawModal').classList.add('show');
-}
-
-function closeWithdrawModal() {
-  document.getElementById('withdrawModal').classList.remove('show');
-}
-
-async function submitWithdraw() {
-  const amount = parseFloat(document.getElementById('withdrawAmount').value);
-  const pixKey = document.getElementById('withdrawPix').value.trim();
-
-  if (!amount || amount <= 0) {
-    showToast('Informe um valor válido', 'error');
-    return;
-  }
-  if (!pixKey) {
-    showToast('Informe sua chave PIX', 'error');
+  if (!resellerDoc.exists) {
+    applyPanel.style.display = 'block';
     return;
   }
 
-  try {
-    await db.collection('withdrawals').add({
-      resellerId: currentUser.uid,
-      resellerName: currentUser.name,
-      amount: amount,
-      pixKey: pixKey,
-      status: 'pending',
-      createdAt: new Date().toISOString()
-    });
-
-    showToast('Saque solicitado! O Gu processará em breve.');
-    closeWithdrawModal();
-    document.getElementById('withdrawAmount').value = '';
-    document.getElementById('withdrawPix').value = '';
-  } catch (e) {
-    showToast('Erro: ' + e.message, 'error');
+  const reseller = resellerDoc.data();
+  statusPanel.style.display = 'block';
+  document.getElementById('statBalance').textContent = fmtR(reseller.balance || 0);
+  document.getElementById('statSalesCount').textContent = reseller.totalSales || 0;
+  const desc = document.getElementById('statusDescription');
+  if (reseller.status === 'pending') {
+    desc.innerHTML = '<span class="badge badge-pending">PENDENTE</span> — Sua conta ainda não foi aprovada. Avise o admin Gumax pra revisar seu cadastro.';
+  } else if (reseller.status === 'active') {
+    desc.innerHTML = '<span class="badge badge-active">ATIVA</span> — Você pode cadastrar skins abaixo. Cada item entra em revisão antes de aparecer no marketplace.';
+    addSkinPanel.style.display = 'block';
+    mySkinsPanel.style.display = 'block';
+    loadMySkins();
+  } else {
+    desc.innerHTML = '<span class="badge badge-blocked">BLOQUEADA</span> — Sua conta está bloqueada. Entre em contato com o suporte.';
   }
-}
-
-// ============= UTILITIES =============
-function fmtR(n) {
-  return 'R$ ' + (n || 0).toFixed(2).replace('.', ',').replace(/\B(?=(\d{3})+(?!\d))/g, '.');
-}
-
-function formatDate(d) {
-  if (!d) return '-';
-  const date = new Date(d);
-  return date.toLocaleDateString('pt-BR') + ' ' + date.toLocaleTimeString('pt-BR', {hour:'2-digit',minute:'2-digit'});
-}
-
-function showToast(msg, type = 'success') {
-  const toast = document.getElementById('toast');
-  toast.textContent = msg;
-  toast.className = `toast show ${type}`;
-  setTimeout(() => toast.classList.remove('show'), 3000);
-}
-
-// ============= INIT =============
-checkAuth();
-document.addEventListener('DOMContentLoaded', attachAddFormListeners);
-// Attach after a short delay in case DOM already loaded
-setTimeout(attachAddFormListeners, 500);
+});
 </script>
-
 </body>
 </html>
