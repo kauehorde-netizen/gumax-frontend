@@ -2152,7 +2152,7 @@ footer {
 <!-- SEARCH & FILTERS -->
 <section class="search-section" id="marketplace">
   <!-- Marca visível pra confirmar versão deployada. -->
-  <div style="font-size: 10px; color: rgba(139,92,246,0.5); text-align: right; margin-bottom: 4px;">search v68-iconurl-permissive</div>
+  <div style="font-size: 10px; color: rgba(139,92,246,0.5); text-align: right; margin-bottom: 4px;">search v69-stattrak-img-fallback</div>
 
   <!-- BUFF-style category picker com SVG icons (Faca, Luvas, Rifle, ...).
        Clicar num modelo (ex: AK-47) filtra a grid e rola pra seção. -->
@@ -3413,6 +3413,41 @@ async function loadYoupinTopSellers(limit = 40) {
           sellerName: 'Youpin Top',
         };
       });
+    // ── Fallback de imagem pra StatTrak/Souvenir ───────────────────────────
+    // Skins StatTrak™ e Souvenir usam a MESMA imagem da versão Normal (só muda
+    // o contador). Se o backend não conseguiu resolver a img da StatTrak (ByMykel
+    // cataloga sem prefixo), procura na lista um item com a mesma "skin base"
+    // que tenha imagem e copia. Funciona pra cross-list inclusive.
+    function baseSkinKey(name) {
+      if (!name) return '';
+      // Remove StatTrak™, Souvenir e wear (suffix entre parênteses)
+      // mantém ★ pra distinguir facas/luvas — porque a "base" da faca StatTrak
+      // É a mesma faca sem StatTrak (que TAMBÉM tem ★).
+      return name
+        .replace(/^Souvenir\s+/, '')
+        .replace(/^★\s*StatTrak™\s*/, '★ ')
+        .replace(/^StatTrak™\s*/, '')
+        .replace(/\s*\([^)]+\)\s*$/, '')
+        .trim();
+    }
+
+    // Build map nome-base → primeiro item com imagem disponível.
+    // Inclui itens do estoque Full do Gu pra ter mais cobertura.
+    const allSourceItems = [...(typeof allStockSkins !== 'undefined' && Array.isArray(allStockSkins) ? allStockSkins : []), ...topSkins];
+    const baseImageMap = {};
+    for (const s of allSourceItems) {
+      if (!s.image) continue;
+      const k = baseSkinKey(s.name);
+      if (k && !baseImageMap[k]) baseImageMap[k] = s.image;
+    }
+
+    // Aplica fallback nos top-sellers que estão sem imagem
+    for (const s of topSkins) {
+      if (s.image) continue;
+      const k = baseSkinKey(s.name);
+      if (k && baseImageMap[k]) s.image = baseImageMap[k];
+    }
+
     // Ordena por preço desc (mais caras primeiro) — usado como "filler" da home
     // quando o estoque Full do Gu tem menos que 40 items.
     topSkins.sort((a, b) => (b.price || 0) - (a.price || 0));
