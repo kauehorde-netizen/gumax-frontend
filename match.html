@@ -352,6 +352,15 @@ function render() {
   const inB = (m.teamB || []).find(p => p.uid === _user.uid);
   _myTeam = inA ? 'A' : inB ? 'B' : null;
 
+  // v38-fix: encerra o timer de confirmação se já saímos de 'confirming'.
+  // Antes o setInterval continuava rodando após mappick→starting, e quando
+  // batia em 0:00 disparava handleConfirmTimeoutClientSide() → redirect pra
+  // lobbies.html (e voltava em loop). Bug do flicker durante pick/ban.
+  if (m.status !== 'confirming' && _countdownTimer) {
+    clearInterval(_countdownTimer);
+    _countdownTimer = null;
+  }
+
   renderTeams();
   renderStage(m);
   if (m.status === 'mappick' || m.status === 'starting' || m.status === 'in_progress') {
@@ -560,6 +569,12 @@ function startCountdown(targetMs) {
 let _timeoutHandled = false;
 async function handleConfirmTimeoutClientSide() {
   if (_timeoutHandled) return;
+  // v38-fix: NÃO redirecionar se a partida já saiu de 'confirming'.
+  // Antes o timer ficava rodando após mudança de status e disparava esse
+  // redirect de forma indevida no meio do pick/ban (bug do flicker).
+  if (_matchData && _matchData.status && _matchData.status !== 'confirming') {
+    return;
+  }
   _timeoutHandled = true;
   try {
     // Hit /confirm pra backend detectar expired e deletar lobbies
@@ -797,25 +812,4 @@ async function doVeto(map, btnEl) {
     const r = await fetch(`${API_BASE}/api/match/${MATCH_ID}/veto`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + _idToken },
-      body: JSON.stringify({ map })
-    });
-    const data = await r.json();
-    if (data.error) {
-      toast(data.error, 'error');
-      if (btnEl) { btnEl.style.opacity=''; btnEl.style.pointerEvents=''; btnEl.style.transform=''; }
-      return;
-    }
-    if (data.finalMap) toast(`🎯 Mapa: ${MAP_LABELS[data.finalMap]?.name || data.finalMap}!`, 'success');
-    else toast(`Banido!`, 'success');
-    loadMatch();
-  } catch (e) {
-    toast('Erro: ' + e.message, 'error');
-    if (btnEl) { btnEl.style.opacity=''; btnEl.style.pointerEvents=''; btnEl.style.transform=''; }
-  }
-}
-
-function escHtml(s) { return String(s || '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'})[c]); }
-</script>
-
-</body>
-</html>
+    
