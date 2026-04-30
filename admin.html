@@ -1040,7 +1040,7 @@ select.form-control {
             </div>
             <div style="display:flex; gap:8px; margin-top:18px;">
               <button class="btn btn-yellow" id="rafflesDrawBtn" onclick="drawRaffleNow()">🎲 Sortear agora</button>
-              <button class="btn btn-ghost" onclick="cancelActiveRaffle()" style="color:var(--accent-red);">✕ Cancelar rifa</button>
+              <button onclick="cancelActiveRaffle()" style="padding:10px 16px; background:transparent; border:1px solid var(--accent-red, #ef4444); color:var(--accent-red, #ef4444); border-radius:8px; font-weight:600; cursor:pointer; transition:background .15s;" onmouseover="this.style.background='rgba(239,68,68,.12)'" onmouseout="this.style.background='transparent'">✕ Cancelar rifa</button>
             </div>
           </div>
         </div>
@@ -1293,6 +1293,23 @@ select.form-control {
           <button class="btn btn-primary" onclick="savePricing()">Salvar precificação</button>
           <button class="btn btn-secondary" onclick="loadPricing(true)" style="margin-left: 6px;">Recarregar do servidor</button>
         </div>
+
+        <!-- Buyback: % do valor pago em compras de inventário do cliente -->
+        <hr style="margin:24px 0; border:none; border-top:1px solid var(--border);">
+        <h4 style="margin: 0 0 8px 0;">🛒 Compra de inventário do cliente (Buyback)</h4>
+        <div style="color: var(--text-muted); font-size: 13px; margin-bottom: 14px;">
+          Quando o cliente vende skins pra Gumax na página <code>/vender</code>, paga-se uma <strong>% do preço de mercado</strong>. Quanto menor o %, maior a margem da Gumax na revenda. Padrão: <strong>70%</strong>.
+        </div>
+        <div class="form-group" style="max-width:280px;">
+          <label class="form-label">% pago ao cliente (0-100)</label>
+          <input type="number" class="form-control" id="buybackPct" step="1" min="0" max="100" placeholder="70" value="70">
+          <div style="color: var(--text-muted); font-size: 12px; margin-top: 6px;">
+            Ex: skin avaliada em R$ 100 → cliente recebe R$ <span id="buybackExample" style="color:var(--accent-yellow);font-weight:700;">70,00</span>.
+          </div>
+        </div>
+        <div style="margin-top: 12px;">
+          <button class="btn btn-primary" onclick="saveBuybackPct()">Salvar % buyback</button>
+        </div>
       </div>
 
       <div class="data-table-wrapper" style="padding: 24px;">
@@ -1534,7 +1551,7 @@ function switchSection(name) {
 
   if (name === 'appearance') loadAppearance();
   if (name === 'inventory')  { loadInventoryPage(); loadStockPricing(); }
-  if (name === 'settings')   loadPricing();
+  if (name === 'settings')   { loadPricing(); loadBuybackPct(); }
   if (name === 'clientes')   loadClientes();
   if (name === 'raffles')    loadRafflesAdmin();
 }
@@ -2421,6 +2438,46 @@ async function loadPricing(forcePrompt = false) {
     console.log('[pricing] load silent error:', e.message);
   }
 }
+
+// ═══ Buyback % — quanto a Gumax paga ao cliente quando ele vende skin ═══
+// Salva direto no Firestore: settings/buyback.percent (0-100)
+async function loadBuybackPct() {
+  try {
+    const doc = await firebase.firestore().collection('settings').doc('buyback').get();
+    const pct = (doc.exists && doc.data().percent != null) ? doc.data().percent : 70;
+    const input = document.getElementById('buybackPct');
+    if (input) input.value = pct;
+    updateBuybackExample();
+  } catch (e) { console.warn('[buyback] load:', e.message); }
+}
+
+async function saveBuybackPct() {
+  const pct = parseInt(document.getElementById('buybackPct').value, 10);
+  if (!Number.isFinite(pct) || pct < 0 || pct > 100) {
+    alert('Porcentagem precisa estar entre 0 e 100');
+    return;
+  }
+  try {
+    await firebase.firestore().collection('settings').doc('buyback').set({
+      percent: pct,
+      updatedAt: firebase.firestore.FieldValue.serverTimestamp(),
+    }, { merge: true });
+    alert('% buyback salva! Vai aplicar nas próximas avaliações da página /vender.');
+  } catch (e) {
+    alert('Erro ao salvar: ' + e.message);
+  }
+}
+
+function updateBuybackExample() {
+  const pct = parseInt(document.getElementById('buybackPct')?.value, 10) || 70;
+  const ex = document.getElementById('buybackExample');
+  if (ex) ex.textContent = (pct).toFixed(0) + ',00';
+}
+
+document.addEventListener('DOMContentLoaded', () => {
+  const input = document.getElementById('buybackPct');
+  if (input) input.addEventListener('input', updateBuybackExample);
+});
 
 async function savePricing() {
   const key = await getAdminKey();

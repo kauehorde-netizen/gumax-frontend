@@ -643,9 +643,9 @@ function updateCheckoutBar() {
   const total = qty * (_activeRaffle?.pricePerTicket || 0);
   document.getElementById('ckTotal').textContent = `R$ ${total.toFixed(2).replace('.', ',')}`;
   const btn = document.getElementById('buyBtn');
-  if (qty < 2) {
+  if (qty < 1) {
     btn.disabled = true;
-    btn.textContent = `Selecione mais ${2 - qty} bilhete(s)`;
+    btn.textContent = `Selecione pelo menos 1 bilhete`;
   } else {
     btn.disabled = false;
     btn.textContent = `Pagar R$ ${total.toFixed(2)} via PIX`;

@@ -2440,6 +2440,16 @@ footer {
         <option value="gold">🟡 Dourado</option>
       </select>
     </div>
+    <!-- Variante: Normal × StatTrak™ × Souvenir -->
+    <div class="wfb-select-wrap">
+      <label>Variante:</label>
+      <select id="wfbVariantFilter" onchange="onVariantFilterChange(this.value)">
+        <option value="">Todas</option>
+        <option value="normal">Normal</option>
+        <option value="stattrak">StatTrak™</option>
+        <option value="souvenir">Souvenir</option>
+      </select>
+    </div>
     <div class="wfb-search">
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" style="width:14px;height:14px;opacity:.6;"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>
       <input type="text" id="wfbNameFilter" placeholder="Busca por nome (ex: Fade, Redline)" oninput="onWfbNameFilterChange(this.value)">
@@ -2591,9 +2601,20 @@ footer {
       <div class="footer-column">
         <div class="footer-title">Suporte</div>
         <a class="footer-link" href="revendedor.html">Seja Revendedor</a>
+        <a class="footer-link" href="#" onclick="openSAC();return false;">💬 SAC / Atendimento</a>
         <a class="footer-link">Termos de Uso</a>
         <a class="footer-link">Privacidade</a>
         <a class="footer-link">Contato</a>
+      </div>
+      <div class="footer-column">
+        <div class="footer-title">Horário de Atendimento</div>
+        <p style="font-size:13px; color:var(--text-secondary); line-height:1.6;">
+          🕐 Todos os dias<br>
+          <strong style="color:var(--accent-yellow);">07:00 – 22:00</strong>
+        </p>
+        <p style="font-size:11px; color:var(--text-muted); margin-top:8px;" id="businessHoursStatus">
+          <!-- Preenchido dinamicamente -->
+        </p>
       </div>
       <div class="footer-column">
         <div class="footer-title">Redes Sociais</div>
@@ -2838,6 +2859,8 @@ let weaponFilterName = '';
 let weaponFilterTier = '';
 // Filtro de COR — single-select (mesma UX do Exterior/Tier). Vazio = todas.
 let weaponFilterColor = '';
+// Filtro Normal × StatTrak™ × Souvenir
+let weaponFilterVariant = '';
 
 // ── Mapa nome → cor(es). Skins podem ter múltiplas cores (Hyper Beast, etc).
 // Match por substring case-insensitive — pega o "finish name" da skin.
@@ -2875,6 +2898,47 @@ function onColorFilterChange(value) {
   weaponFilterColor = value || '';
   if (typeof renderUnifiedGrid === 'function') renderUnifiedGrid();
 }
+
+// Handler Normal × StatTrak × Souvenir
+function onVariantFilterChange(value) {
+  weaponFilterVariant = value || '';
+  if (typeof renderUnifiedGrid === 'function') renderUnifiedGrid();
+}
+
+// ═══ SAC — direciona pro WhatsApp da Gumax ═══
+// Número configurado nas settings do Firestore (settings/business.whatsapp).
+// Fallback hardcoded enquanto não tem doc no DB.
+function openSAC() {
+  const fallbackPhone = '5521967298333';   // fallback (mesmo do Glibhost por enquanto, trocar quando Gu der o oficial)
+  const phone = window._GUMAX_SAC_PHONE || fallbackPhone;
+  const msg = encodeURIComponent('Olá! Vim pelo site da Gumax Skins, preciso de atendimento.');
+  window.open(`https://wa.me/${phone}?text=${msg}`, '_blank');
+}
+
+// ═══ Banner status horário comercial (Gumax: 7h-22h todos os dias) ═══
+// Mostra "🟢 Aberto agora — fecha em Xh" ou "🔴 Fechado, abre em Xh às 7h".
+// Atualiza a cada minuto pra ficar preciso quando passa do horário.
+function updateBusinessHoursStatus() {
+  const el = document.getElementById('businessHoursStatus');
+  if (!el) return;
+  const now = new Date();
+  const h = now.getHours();
+  const m = now.getMinutes();
+  const isOpen = (h >= 7 && h < 22);
+  if (isOpen) {
+    const minutesLeft = (22 - h) * 60 - m;
+    const hoursLeft = Math.floor(minutesLeft / 60);
+    const minsLeft = minutesLeft % 60;
+    el.innerHTML = `🟢 <strong style="color:var(--accent-green);">Aberto agora</strong> · fecha em ${hoursLeft}h${minsLeft > 0 ? ' ' + minsLeft + 'min' : ''}`;
+  } else {
+    let hoursUntilOpen;
+    if (h < 7) hoursUntilOpen = 7 - h;
+    else hoursUntilOpen = (24 - h) + 7;
+    el.innerHTML = `🔴 <strong style="color:var(--accent-red);">Fechado</strong> · abre em ${hoursUntilOpen}h às 7:00`;
+  }
+}
+updateBusinessHoursStatus();
+setInterval(updateBusinessHoursStatus, 60000);
 
 // Lista de "group names" que aparecem no FINAL de nomes de agentes CS2.
 // Usada pra detectar: "Prof. Shahmat | Elite Crew" → agent.
@@ -3110,7 +3174,7 @@ function onSortFilterChange(value) {
 
 // Aplica o filtro ativo (weapon específico, category, ou class).
 function weaponFilterMatches(skin) {
-  if (!weaponFilter && !weaponFilterColor) return true;
+  if (!weaponFilter && !weaponFilterColor && !weaponFilterVariant) return true;
   const name = skin.name || '';
   const lower = name.toLowerCase();
 
@@ -3120,7 +3184,16 @@ function weaponFilterMatches(skin) {
     if (!skinColors.includes(weaponFilterColor)) return false;
   }
 
-  if (!weaponFilter) return true;  // só filtro de cor ativo, passa
+  // Filtro Normal × StatTrak™ × Souvenir — checa prefixo do nome
+  if (weaponFilterVariant) {
+    const isStatTrak = /StatTrak™|StatTrak/i.test(name);
+    const isSouvenir = /Souvenir/i.test(name);
+    if (weaponFilterVariant === 'stattrak' && !isStatTrak) return false;
+    if (weaponFilterVariant === 'souvenir' && !isSouvenir) return false;
+    if (weaponFilterVariant === 'normal' && (isStatTrak || isSouvenir)) return false;
+  }
+
+  if (!weaponFilter) return true;  // só filtro de cor/variant ativo, passa
   // Busca livre por nome (comum a todos os tipos)
   if (weaponFilterName && !lower.includes(weaponFilterName)) return false;
 
