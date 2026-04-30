@@ -635,10 +635,19 @@ header { background: rgba(8,6,14,0.92); backdrop-filter: blur(10px); border-bott
   border:none; font-size:11px; padding:8px 6px; font-weight:800; letter-spacing:.3px;
 }
 .btn-accept-inline:hover:not(:disabled) { filter:brightness(1.12); }
-.btn-decline-inline {
-  flex:0 0 auto; min-width:36px; padding:0 10px;
-  background:rgba(239,68,68,.18); color:var(--accent-red);
-  border:1px solid rgba(239,68,68,.4); font-size:14px;
+/* v38-fix: especificidade combinada (.lobby-action.btn-decline-inline) pra
+   evitar que o .lobby-action genérico (border:none, padding:8px) sobrescreva.
+   Antes: botão Recusar ficava com X flutuando sem fundo visível. */
+.btn-decline-inline,
+.lobby-action.btn-decline-inline {
+  flex:0 0 auto; min-width:40px; padding:8px 12px;
+  background:rgba(239,68,68,.22); color:#ef4444;
+  border:1px solid rgba(239,68,68,.55);
+  font-size:15px; font-weight:800; line-height:1;
+}
+.btn-decline-inline:hover:not(:disabled),
+.lobby-action.btn-decline-inline:hover:not(:disabled) {
+  background:rgba(239,68,68,.32); border-color:rgba(239,68,68,.8);
 }
 @media (prefers-reduced-motion: reduce) {
   .lobby-card::before, .lobby-card::after, .my-lobby-card::before, .my-lobby-card::after,
@@ -2020,16 +2029,4 @@ async function handleSteamCallback() {
   history.replaceState({}, '', url.toString());
 }
 
-// ═══ Bootstrap (rodando no fim, depois que TODOS os `let` estão inicializados)
-// Antes eu chamava startPolling() lá em cima e dava TDZ porque _pollTimer
-// (declarado mais abaixo) ainda estava em zona morta. Agora roda depois de tudo. ═══
-if (_firebaseReady) {
-  // 1. Processa callback Steam (se URL tem ?steam_callback=1)
-  handleSteamCallback().catch(e => console.error('[steam callback]', e));
-}
-// 2. Inicia polling público de lobbies (independente de auth)
-startPolling();
-</script>
-
-</body>
-</html>
+// ═══ Bootstrap (rodando no fim, depois que TODOS os `let` est
