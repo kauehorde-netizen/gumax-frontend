@@ -2152,7 +2152,7 @@ footer {
 <!-- SEARCH & FILTERS -->
 <section class="search-section" id="marketplace">
   <!-- Marca visível pra confirmar versão deployada. -->
-  <div style="font-size: 10px; color: rgba(139,92,246,0.5); text-align: right; margin-bottom: 4px;">search v66-color-dropdown</div>
+  <div style="font-size: 10px; color: rgba(139,92,246,0.5); text-align: right; margin-bottom: 4px;">search v67-filter-fix</div>
 
   <!-- BUFF-style category picker com SVG icons (Faca, Luvas, Rifle, ...).
        Clicar num modelo (ex: AK-47) filtra a grid e rola pra seção. -->
@@ -2894,15 +2894,16 @@ function getSkinColors(name) {
 }
 
 // Handler do dropdown — single-select (mesma UX do Exterior/Tier)
+// IMPORTANTE: chama renderSkins() (não renderUnifiedGrid — essa não existe).
 function onColorFilterChange(value) {
   weaponFilterColor = value || '';
-  if (typeof renderUnifiedGrid === 'function') renderUnifiedGrid();
+  renderSkins();
 }
 
 // Handler Normal × StatTrak × Souvenir
 function onVariantFilterChange(value) {
   weaponFilterVariant = value || '';
-  if (typeof renderUnifiedGrid === 'function') renderUnifiedGrid();
+  renderSkins();
 }
 
 // ═══ SAC — direciona pro WhatsApp da Gumax ═══
@@ -3370,17 +3371,40 @@ async function loadYoupinTopSellers(limit = 40) {
           ? Math.round((1 - sale / original) * 100)
           : 0;
 
+        // Raridade: backend (Pricempire/CSPriceAPI) manda rarity real ('Covert',
+        // 'Classified', 'Restricted', 'Mil-Spec'…). Se vier vazio, infere pelo
+        // nome (★ = knife/glove → Covert; chama isKnife/isGloves se disponíveis).
+        let rarity = (it.rarity && typeof it.rarity === 'string') ? it.rarity : '';
+        if (!rarity) {
+          const n = it.name || '';
+          if (/^★/.test(n) || /Knife|Karambit|Bayonet|Daggers|Talon|Stiletto|Ursus|Navaja|Nomad|Skeleton|Survival|Paracord|Bowie|Butterfly|Huntsman|Falchion|Gut|Flip|Shadow|Classic/i.test(n)) {
+            rarity = 'Covert';
+          } else if (/Sticker|Charm|Sealed Graffiti|Souvenir Package|Music Kit|Patch/i.test(n)) {
+            rarity = 'High Grade';
+          } else {
+            rarity = 'Classified';  // fallback razoável pra tops do Youpin (são caros)
+          }
+        }
+
+        // iconUrl válido = hash longo da Steam (sem '/' nem 'http'). Se vier vazio
+        // ou parece URL completa, deixa imagem em branco (placeholder no card).
+        const iconHash = (it.iconUrl || '').trim();
+        const looksValid = iconHash.length > 20 && !iconHash.includes('/') && !iconHash.startsWith('http');
+        const imageUrl = looksValid
+          ? `https://community.cloudflare.steamstatic.com/economy/image/${iconHash}/256fx256f`
+          : '';
+
         return {
           id: 10000 + i,
           name: it.name,
           wear: inferWearFromName(it.name) || 'FT',
           price: sale,
           originalPrice: original,       // strikethrough no card
-          rarity: 'Common',
+          rarity,
           inStock: false,                // Youpin = entrega normal
           float: 0,
           discount,
-          image: it.iconUrl ? `https://community.cloudflare.steamstatic.com/economy/image/${it.iconUrl}/256fx256f` : '',
+          image: imageUrl,
           source: 'youpin_top',
           sellerName: 'Youpin Top',
         };
