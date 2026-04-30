@@ -62,14 +62,32 @@ body { font-family: 'Inter', sans-serif; background: var(--bg-primary); color: v
   .match-layout { grid-template-columns: 1fr; }
   .match-side { position:static; }
 }
-.player-row { display:flex; align-items:center; gap:8px; padding:5px 0; border-bottom:1px solid rgba(255,255,255,.04); }
+.player-row { display:flex; align-items:center; gap:8px; padding:5px 0; border-bottom:1px solid rgba(255,255,255,.04); transition:opacity .35s ease, filter .35s ease; }
 .player-row:last-child { border-bottom:none; }
-.player-avatar { width:24px; height:24px; border-radius:50%; background:rgba(139,92,246,.2); flex-shrink:0; display:flex; align-items:center; justify-content:center; font-size:11px; }
-.player-avatar img { width:100%; height:100%; border-radius:50%; object-fit:cover; }
-.player-name { flex:1; font-size:11px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
-.player-confirm { font-size:13px; }
+.player-avatar { width:24px; height:24px; border-radius:50%; background:rgba(139,92,246,.2); flex-shrink:0; display:flex; align-items:center; justify-content:center; font-size:11px; transition:filter .35s ease, opacity .35s ease, box-shadow .35s ease; }
+.player-avatar img { width:100%; height:100%; border-radius:50%; object-fit:cover; transition:filter .35s ease; }
+.player-name { flex:1; font-size:11px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; transition:color .35s ease, opacity .35s ease; }
+.player-confirm { font-size:13px; transition:transform .25s ease; }
 .confirm-yes { color:var(--accent-green); }
 .confirm-no  { color:var(--text-muted); }
+
+/* v38-confirm-ux: estilo GamersClub. Durante 'confirming', avatar/nome
+   ficam apagados (cinza, opacidade reduzida) até o player clicar 'Estou
+   no PC'. Quando confirma, anima de volta pra full color + glow verde. */
+.player-row.pending { opacity:.55; }
+.player-row.pending .player-avatar { filter:grayscale(1) brightness(.6); }
+.player-row.pending .player-avatar img { filter:grayscale(1) brightness(.6); }
+.player-row.pending .player-name { color:var(--text-muted); }
+.player-row.confirmed { opacity:1; }
+.player-row.confirmed .player-avatar { box-shadow:0 0 0 2px rgba(16,185,129,.45), 0 0 12px rgba(16,185,129,.25); }
+.player-row.confirmed .player-name { color:var(--accent-green); font-weight:600; }
+.player-row.confirmed .player-confirm { transform:scale(1.15); }
+@keyframes confirmPulse {
+  0%   { transform:scale(1); }
+  35%  { transform:scale(1.35); }
+  100% { transform:scale(1.15); }
+}
+.player-row.confirmed.just-confirmed .player-confirm { animation:confirmPulse .55s ease-out; }
 
 .vs-divider { display:flex; align-items:center; justify-content:center; font-size:18px; font-weight:700; color:var(--primary-light); padding:0 4px; }
 
@@ -375,20 +393,50 @@ function render() {
   }
 }
 
+// v38-confirm-ux: rastreia quem ESTAVA confirmado no render anterior pra
+// aplicar animação .just-confirmed (pulse) só na transição pending → confirmed.
+const _prevConfirmed = new Set();
+
 function renderTeams() {
   const m = _matchData;
-  document.getElementById('teamAList').innerHTML = (m.teamA || []).map(p => playerRow(p, m.confirmations)).join('');
-  document.getElementById('teamBList').innerHTML = (m.teamB || []).map(p => playerRow(p, m.confirmations)).join('');
+  const stage = m.status; // 'confirming', 'mappick', 'starting', 'in_progress', etc.
+  document.getElementById('teamAList').innerHTML = (m.teamA || []).map(p => playerRow(p, m.confirmations, stage)).join('');
+  document.getElementById('teamBList').innerHTML = (m.teamB || []).map(p => playerRow(p, m.confirmations, stage)).join('');
+
+  // Atualiza set de confirmados pra próximo render detectar transições novas
+  const allConfirmed = new Set();
+  [...(m.teamA || []), ...(m.teamB || [])].forEach(p => {
+    if (m.confirmations && m.confirmations[p.uid] === true) allConfirmed.add(p.uid);
+  });
+  _prevConfirmed.clear();
+  allConfirmed.forEach(uid => _prevConfirmed.add(uid));
 }
 
-function playerRow(p, confirmations) {
+function playerRow(p, confirmations, stage) {
   const confirmed = confirmations && confirmations[p.uid] === true;
   const profileLink = p.steamId ? `jogador.html?id=${encodeURIComponent(p.steamId)}` : '#';
+
+  // v38-confirm-ux: classes só são aplicadas durante 'confirming'. Em outras
+  // fases (mappick, starting, in_progress, finished) o roster aparece neutro.
+  let rowClass = 'player-row';
+  let confirmIcon = '';
+  if (stage === 'confirming') {
+    if (confirmed) {
+      rowClass += ' confirmed';
+      // Detecta transição pending → confirmed pra disparar pulse
+      if (!_prevConfirmed.has(p.uid)) rowClass += ' just-confirmed';
+      confirmIcon = '<div class="player-confirm confirm-yes">✅</div>';
+    } else {
+      rowClass += ' pending';
+      confirmIcon = '<div class="player-confirm confirm-no">⏳</div>';
+    }
+  }
+
   return `
-    <div class="player-row">
+    <div class="${rowClass}">
       <a href="${profileLink}" class="player-avatar" title="Ver perfil" style="text-decoration:none;cursor:pointer;">${p.avatar ? `<img src="${p.avatar}" onerror="this.style.display='none'">` : (p.name||'?').charAt(0).toUpperCase()}</a>
-      <a href="${profileLink}" class="player-name" style="color:inherit;text-decoration:none;cursor:pointer;" title="Ver perfil">${escHtml(p.name || '—')}</a>
-      <div class="player-confirm ${confirmed ? 'confirm-yes' : 'confirm-no'}">${confirmed ? '✅' : '⏳'}</div>
+      <a href="${profileLink}" class="player-name" style="text-decoration:none;cursor:pointer;" title="Ver perfil">${escHtml(p.name || '—')}</a>
+      ${confirmIcon}
     </div>
   `;
 }
@@ -487,6 +535,7 @@ function renderStage(m) {
       'server_misconfigured': '⚙️ Servidor mal configurado (faltam env vars)',
       'rcon_lib_missing': '📦 Biblioteca RCON não instalada no backend',
       'rcon_failed': '🔌 RCON falhou ao conectar no servidor CS2',
+      'map_change_failed': '🗺️ Servidor não conseguiu trocar pro mapa escolhido',
     };
     stageTitle.textContent = reasonMap[m.cancelReason] || ('Match cancelado: ' + (m.cancelReason || 'desconhecido'));
     countdown.style.display = 'none';
@@ -749,67 +798,4 @@ function startAbortCountdown(m) {
   // Idempotente — se já iniciou pra esse match, mantém
   if (_abortTimer && _abortStartedAt && _abortStartedAt.matchId === MATCH_ID) return;
   if (_abortTimer) clearInterval(_abortTimer);
-  // Usa startedAt do doc se disponível, senão Date.now()
-  const startedMs = m.startedAt?._seconds ? m.startedAt._seconds * 1000
-    : (m.startedAt?.toMillis ? m.startedAt.toMillis() : Date.now());
-  _abortStartedAt = { matchId: MATCH_ID, startedMs };
-  const tick = () => {
-    const remaining = startedMs + 180_000 - Date.now();
-    const el = document.getElementById('abortCountdown');
-    if (!el) { clearInterval(_abortTimer); return; }
-    if (remaining <= 0) {
-      clearInterval(_abortTimer);
-      el.textContent = 'Cancelando...';
-      // Auto-abort
-      abortMatch(null, true);
-      return;
-    }
-    const sec = Math.floor(remaining / 1000);
-    el.textContent = Math.floor(sec/60) + ':' + String(sec%60).padStart(2,'0');
-  };
-  tick();
-  _abortTimer = setInterval(tick, 1000);
-}
-async function abortMatch(btnEl, isAuto) {
-  if (!isAuto && !confirm('Cancelar partida e liberar sua sala? Todos os jogadores voltam pras lobbies.')) return;
-  const btn = btnEl ? _press(btnEl, 'Cancelando…') : null;
-  try {
-    const r = await fetch(`${API_BASE}/api/match/${MATCH_ID}/abort`, {
-      method: 'POST', headers: { 'Authorization': 'Bearer ' + _idToken }
-    });
-    const data = await r.json();
-    if (data.error && data.error !== 'match_already_ended') {
-      toast(data.error, 'error'); _release(btn); return;
-    }
-    if (_abortTimer) clearInterval(_abortTimer);
-    location.href = 'lobbies.html?nomatchredirect=1';
-  } catch (e) { toast('Erro: ' + e.message, 'error'); _release(btn); }
-}
-
-async function doConfirm(btnEl) {
-  const btn = _press(btnEl, 'Confirmando…');
-  try {
-    stopMatchFoundSound(); // user clicou — para o som de match found
-    const r = await fetch(`${API_BASE}/api/match/${MATCH_ID}/confirm`, {
-      method: 'POST', headers: { 'Authorization': 'Bearer ' + _idToken }
-    });
-    const data = await r.json();
-    if (data.error) { toast(data.error, 'error'); _release(btn); return; }
-    toast('Confirmado! ✅', 'success');
-    loadMatch();
-  } catch (e) { toast('Erro: ' + e.message, 'error'); _release(btn); }
-}
-
-async function doVeto(map, btnEl) {
-  // Feedback visual instantâneo — banimos no MESMO frame do click
-  if (btnEl) {
-    btnEl.style.opacity = '0.5';
-    btnEl.style.pointerEvents = 'none';
-    btnEl.style.transform = 'scale(.92)';
-    btnEl.style.transition = 'all .12s';
-  }
-  try {
-    const r = await fetch(`${API_BASE}/api/match/${MATCH_ID}/veto`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + _idToken },
-    
+  // Usa startedAt do doc se disponível, senão Dat
