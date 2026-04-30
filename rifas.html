@@ -659,7 +659,7 @@ async function buyTickets() {
     setTimeout(() => window.location.href = 'index.html', 1500);
     return;
   }
-  if (_selected.size < 2) { showToast('Selecione pelo menos 2 bilhetes', 'error'); return; }
+  if (_selected.size < 1) { showToast('Selecione pelo menos 1 bilhete', 'error'); return; }
 
   // Bloqueia compra de bilhetes se perfil incompleto. Sem WhatsApp/tradeLink
   // a equipe Gu não consegue avisar/entregar a skin se ele ganhar.
