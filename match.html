@@ -338,13 +338,35 @@ if (_firebaseReady) auth.onAuthStateChanged(async user => {
   startPolling();
 });
 
-// ─── Polling 2s pra pegar transições rápido ───
+// ─── Polling adaptativo ───
+// v38-quota: 2s só durante fases críticas (confirming/mappick onde cada
+// segundo importa pra UX). Fora delas, 6s. Pausa quando aba em background.
 let _pollTimer = null;
+let _pollIntervalMs = 2000;
 function startPolling() {
   if (_pollTimer) clearInterval(_pollTimer);
   loadMatch();
-  _pollTimer = setInterval(loadMatch, 2000);
+  scheduleNextTick();
 }
+function scheduleNextTick() {
+  if (_pollTimer) clearInterval(_pollTimer);
+  _pollTimer = setInterval(() => {
+    if (document.hidden) return; // skip tick em background
+    loadMatch();
+    // Reagenda se a fase mudou (rápido↔lento)
+    const stage = _matchData?.status;
+    const wantFast = stage === 'confirming' || stage === 'mappick';
+    const desired = wantFast ? 2000 : 6000;
+    if (desired !== _pollIntervalMs) {
+      _pollIntervalMs = desired;
+      scheduleNextTick();
+    }
+  }, _pollIntervalMs);
+}
+// Tick imediato quando aba volta a ficar visível
+document.addEventListener('visibilitychange', () => {
+  if (!document.hidden && _pollTimer) loadMatch();
+});
 
 async function loadMatch() {
   try {
