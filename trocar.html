@@ -3,190 +3,220 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Trocar Skin (Upgrade/Downgrade) — Gumax Skins</title>
+<title>Trocar Skin — Gumax Skins</title>
 <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
 <style>
   :root {
-    --bg-primary: #0d0d11;
-    --bg-card: rgba(20,20,28,.6);
-    --border: rgba(139,92,246,.18);
-    --primary: #8b5cf6;
-    --primary-light: #a78bfa;
-    --accent-yellow: #fbbf24;
+    --bg-primary: #08060e;
+    --bg-card: #110e1a;
+    --bg-elevated: #1a1528;
+    --bg-input: #13101e;
+    --border: #241e35;
+    --primary: #8B5CF6;
+    --primary-light: #A78BFA;
+    --primary-deeper: #6D28D9;
+    --accent-yellow: #FACC15;
     --accent-green: #10b981;
     --accent-red: #ef4444;
     --accent-cyan: #22d3ee;
-    --text-primary: #f8fafc;
-    --text-secondary: #94a3b8;
-    --text-muted: #64748b;
+    --text-primary: #ece8f4;
+    --text-secondary: #9890a8;
+    --text-muted: #5e5670;
   }
   * { box-sizing: border-box; }
   body {
     margin: 0;
     background: var(--bg-primary);
     color: var(--text-primary);
-    font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+    font-family: 'Outfit', 'Inter', -apple-system, sans-serif;
     min-height: 100vh;
   }
-  /* HEADER — copiado do index.html pra manter visual consistente */
+
+  /* HEADER (igual index) */
   header {
     position: sticky; top: 0; z-index: 100;
-    background: rgba(8, 6, 14, 0.95);
-    backdrop-filter: blur(20px);
+    background: rgba(8, 6, 14, 0.95); backdrop-filter: blur(20px);
     border-bottom: 1px solid var(--border);
     padding: 0 max(24px, calc((100% - 1280px) / 2 + 24px));
   }
-  .header-content {
-    display: flex; align-items: center; justify-content: space-between; height: 72px;
-  }
-  .logo { height: 44px; object-fit: contain; cursor: pointer; }
+  .header-content { display: flex; align-items: center; justify-content: space-between; height: 72px; }
+  .logo { height: 44px; cursor: pointer; }
   nav { display: flex; gap: 32px; flex: 1; margin-left: 48px; }
   .nav-link {
     font-size: 14px; font-weight: 500; color: var(--text-secondary);
-    cursor: pointer; transition: color 0.2s; white-space: nowrap;
-    text-decoration: none;
+    cursor: pointer; transition: color 0.2s; text-decoration: none; white-space: nowrap;
   }
   .nav-link:hover { color: var(--accent-yellow); }
   .nav-link.active { color: var(--text-primary); font-weight: 600; }
-  .rifas-link {
-    background: linear-gradient(135deg, var(--primary), var(--accent-yellow));
-    -webkit-background-clip: text; -webkit-text-fill-color: transparent;
-    font-weight: 600;
-  }
+  .rifas-link { background: linear-gradient(135deg, var(--primary), var(--accent-yellow)); -webkit-background-clip: text; -webkit-text-fill-color: transparent; font-weight: 600; }
   .rifas-link:hover { -webkit-text-fill-color: var(--accent-yellow); }
   .analise-link { color: var(--primary-light); font-weight: 600; }
   .analise-link:hover { color: var(--accent-yellow); }
-  .trocar-link {
-    background: linear-gradient(135deg, #22d3ee, var(--primary-light));
-    -webkit-background-clip: text; -webkit-text-fill-color: transparent;
-    font-weight: 600;
-  }
+  .trocar-link { background: linear-gradient(135deg, #22d3ee, var(--primary-light)); -webkit-background-clip: text; -webkit-text-fill-color: transparent; font-weight: 600; }
   .trocar-link:hover { -webkit-text-fill-color: var(--accent-yellow); }
   .header-actions { display: flex; align-items: center; gap: 16px; }
   .btn-league {
     padding: 8px 16px; background: #1e293b; color: #e0e7ff;
-    border: 1px solid rgba(148, 163, 184, .2); border-radius: 10px;
-    font-weight: 700; cursor: pointer; font-size: 13px; text-decoration: none;
-    display: inline-flex; align-items: center; gap: 6px; white-space: nowrap;
-    transition: background .15s, border-color .15s;
+    border: 1px solid rgba(148,163,184,.2); border-radius: 10px;
+    font-weight: 700; font-size: 13px; text-decoration: none;
+    display: inline-flex; align-items: center; gap: 6px;
   }
-  .btn-league:hover { background: #2a3a52; border-color: var(--primary-light); }
+  .btn-league:hover { background: #2a3a52; }
   .header-profile-link {
     display: inline-flex; align-items: center; gap: 10px;
     padding: 5px 12px 5px 5px; border-radius: 24px;
     background: var(--bg-card); border: 1px solid var(--border);
-    text-decoration: none; color: var(--text-primary); transition: border-color .15s;
+    text-decoration: none; color: var(--text-primary);
   }
-  .header-profile-link:hover { border-color: var(--primary-light); }
-  .header-profile-link img { width: 32px; height: 32px; border-radius: 50%; object-fit: cover; }
+  .header-profile-link img { width: 32px; height: 32px; border-radius: 50%; }
   .header-profile-link span { font-size: 14px; font-weight: 600; }
   .logout-btn { background: transparent; border: none; color: var(--text-muted); font-size: 12px; cursor: pointer; padding: 6px 10px; }
-  .container { max-width: 1180px; margin: 30px auto; padding: 0 24px; }
-  .hero { text-align: center; margin-bottom: 24px; }
-  .hero h1 { font-size: 30px; margin: 0 0 8px; }
-  .hero p { color: var(--text-secondary); font-size: 14px; max-width: 640px; margin: 0 auto; line-height: 1.5; }
-  .panel {
-    background: var(--bg-card); border: 1px solid var(--border);
-    border-radius: 14px; padding: 20px; margin-bottom: 18px;
-    backdrop-filter: blur(8px);
-  }
-  h2 { font-size: 17px; margin: 0 0 12px; display: flex; align-items: center; gap: 10px; }
-  .step-num {
-    display: inline-flex; align-items: center; justify-content: center;
-    width: 26px; height: 26px; border-radius: 50%; background: var(--primary);
-    color: #fff; font-weight: 800; font-size: 13px;
-  }
-  .btn {
-    padding: 9px 16px; border-radius: 8px; cursor: pointer;
-    border: 1px solid var(--border); background: var(--bg-card); color: var(--text-primary);
-    font-weight: 600; font-size: 13px; transition: all .15s;
-  }
-  .btn:hover { transform: translateY(-1px); }
-  .btn-primary { background: linear-gradient(135deg, var(--primary), var(--primary-light)); border: none; color: #fff; }
-  .btn-success { background: linear-gradient(135deg, var(--accent-green), var(--accent-cyan)); border: none; color: #fff; padding: 12px 22px; font-size: 14px; }
-  .btn-warning { background: linear-gradient(135deg, var(--accent-yellow), #f59e0b); border: none; color: #000; padding: 12px 22px; font-size: 14px; font-weight: 700; }
-  .btn-link { background: transparent; border: none; color: var(--primary-light); padding: 4px 8px; font-size: 12px; cursor: pointer; text-decoration: underline; }
 
-  /* Inventário grid */
-  .inv-grid {
-    display: grid; grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
-    gap: 10px; margin-top: 14px;
-    max-height: 480px; overflow-y: auto; padding: 4px;
+  /* PAGE */
+  .container { max-width: 1400px; margin: 16px auto 100px; padding: 0 16px; }
+  .page-title { display: flex; justify-content: center; gap: 12px; align-items: center; margin: 8px 0 14px; font-size: 22px; font-weight: 800; }
+  .subtitle { text-align: center; font-size: 13px; color: var(--text-secondary); max-width: 720px; margin: 0 auto 18px; line-height: 1.5; }
+
+  /* TWO PANELS */
+  .panels-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 16px;
   }
-  .inv-item {
-    background: rgba(0,0,0,.35); border: 2px solid transparent;
-    border-radius: 10px; padding: 8px; cursor: pointer; transition: all .15s;
-    display: flex; flex-direction: column; gap: 4px;
-    position: relative;
+  @media (max-width: 900px) {
+    .panels-grid { grid-template-columns: 1fr; }
   }
-  .inv-item:hover { transform: translateY(-2px); border-color: rgba(139,92,246,.3); }
-  .inv-item.selected {
+  .panel {
+    background: var(--bg-card); border: 1px solid var(--border); border-radius: 14px;
+    padding: 14px; min-height: 540px;
+    display: flex; flex-direction: column;
+  }
+  .panel-header {
+    display: flex; align-items: center; justify-content: space-between; margin-bottom: 10px;
+    flex-wrap: wrap; gap: 8px;
+  }
+  .panel-title { font-size: 15px; font-weight: 700; display: flex; align-items: center; gap: 8px; }
+  .panel-total {
+    color: var(--accent-yellow); font-weight: 800; font-size: 14px;
+    background: rgba(250,204,21,.08); padding: 4px 10px; border-radius: 8px;
+    border: 1px solid rgba(250,204,21,.2);
+  }
+  .panel-toolbar {
+    display: flex; gap: 8px; margin-bottom: 10px; flex-wrap: wrap;
+  }
+  .panel-toolbar input, .panel-toolbar select {
+    flex: 1; min-width: 140px;
+    padding: 8px 10px; font-size: 13px;
+    background: var(--bg-input); border: 1px solid var(--border);
+    color: var(--text-primary); border-radius: 8px;
+  }
+  .panel-toolbar input:focus, .panel-toolbar select:focus { outline: none; border-color: var(--primary); }
+
+  /* GRID */
+  .skin-grid {
+    display: grid; grid-template-columns: repeat(auto-fill, minmax(120px, 1fr));
+    gap: 8px; flex: 1;
+    max-height: 560px; overflow-y: auto;
+    padding: 4px; padding-right: 8px;
+  }
+  .skin-grid::-webkit-scrollbar { width: 8px; }
+  .skin-grid::-webkit-scrollbar-track { background: rgba(0,0,0,.2); border-radius: 4px; }
+  .skin-grid::-webkit-scrollbar-thumb { background: var(--primary-deeper); border-radius: 4px; }
+
+  .skin-card {
+    background: var(--bg-elevated); border: 2px solid transparent; border-radius: 8px;
+    padding: 6px; cursor: pointer; transition: all .15s; position: relative;
+    display: flex; flex-direction: column; gap: 3px;
+  }
+  .skin-card:hover { transform: translateY(-2px); border-color: rgba(139,92,246,.3); }
+  .skin-card.selected {
     border-color: var(--primary);
-    background: linear-gradient(180deg, rgba(139,92,246,.18), rgba(0,0,0,.35));
+    background: linear-gradient(180deg, rgba(139,92,246,.18), var(--bg-elevated));
     box-shadow: 0 0 0 1px var(--primary), 0 6px 16px rgba(139,92,246,.3);
   }
-  .inv-item.selected::after {
+  .skin-card.selected::after {
     content: '✓'; position: absolute; top: 4px; right: 4px;
-    background: var(--primary); color: #fff; width: 20px; height: 20px;
+    background: var(--primary); color: #fff; width: 18px; height: 18px;
     border-radius: 50%; display: flex; align-items: center; justify-content: center;
-    font-size: 12px; font-weight: 800;
+    font-size: 11px; font-weight: 800;
   }
-  .inv-item img { width: 100%; height: 90px; object-fit: contain; background: rgba(0,0,0,.25); border-radius: 6px; }
-  .inv-item .nm { font-size: 11px; font-weight: 600; line-height: 1.25; height: 28px; overflow: hidden; }
-  .inv-item .px { color: var(--accent-yellow); font-weight: 800; font-size: 13px; }
-  .inv-item .wear { font-size: 10px; color: var(--text-muted); }
+  .skin-card img { width: 100%; height: 80px; object-fit: contain; background: rgba(0,0,0,.2); border-radius: 4px; }
+  .skin-card .nm { font-size: 10px; font-weight: 600; line-height: 1.2; height: 24px; overflow: hidden; }
+  .skin-card .wear-tag { font-size: 9px; color: var(--text-muted); }
+  .skin-card .px { color: var(--accent-yellow); font-weight: 800; font-size: 12px; }
+  .skin-card .full-badge {
+    position: absolute; top: 4px; left: 4px;
+    background: rgba(250,204,21,.9); color: #000; font-size: 8px; font-weight: 800;
+    padding: 1px 5px; border-radius: 3px; letter-spacing: .3px;
+  }
 
-  /* Autocomplete */
-  .autocomplete-wrap { position: relative; }
-  .ac-input {
-    width: 100%; padding: 12px 14px; background: rgba(0,0,0,.35);
-    border: 1px solid var(--border); color: var(--text-primary); border-radius: 10px;
-    font-size: 14px;
+  .empty-state {
+    grid-column: 1 / -1; padding: 30px 14px; text-align: center; color: var(--text-secondary);
+    border: 1px dashed var(--border); border-radius: 8px; font-size: 13px;
   }
-  .ac-input:focus { outline: none; border-color: var(--primary); }
-  .ac-list {
-    position: absolute; top: calc(100% + 4px); left: 0; right: 0;
-    background: #15121f; border: 1px solid var(--border); border-radius: 10px;
-    max-height: 320px; overflow-y: auto; z-index: 30; box-shadow: 0 10px 40px rgba(0,0,0,.5);
+  .spinner-wrap { padding: 30px; text-align: center; grid-column: 1/-1; }
+  .spinner {
+    display: inline-block; width: 20px; height: 20px;
+    border: 3px solid rgba(139,92,246,.2); border-top-color: var(--primary);
+    border-radius: 50%; animation: spin 0.7s linear infinite;
   }
-  .ac-item { padding: 10px 14px; cursor: pointer; font-size: 13px; border-bottom: 1px solid rgba(139,92,246,.06); }
-  .ac-item:hover, .ac-item.hl { background: rgba(139,92,246,.12); }
-  .ac-item:last-child { border-bottom: none; }
+  @keyframes spin { to { transform: rotate(360deg); } }
 
-  /* Resumo / saldo */
-  .balance-panel {
-    background: linear-gradient(135deg, rgba(139,92,246,.06), rgba(167,139,250,.04));
-    border: 1px solid var(--border); border-radius: 12px; padding: 18px;
+  /* CATEGORIES BAR */
+  .categories-bar {
+    display: flex; gap: 6px; margin: 10px 0 14px; padding: 6px;
+    background: rgba(20,18,30,.6); border: 1px solid var(--border); border-radius: 12px;
+    overflow-x: auto;
   }
-  .balance-row {
-    display: flex; justify-content: space-between; padding: 8px 0;
-    border-bottom: 1px dashed var(--border); font-size: 14px;
+  .categories-bar::-webkit-scrollbar { height: 4px; }
+  .cat-btn {
+    padding: 6px 12px; font-size: 12px; font-weight: 600;
+    background: transparent; border: 1px solid transparent; color: var(--text-secondary);
+    border-radius: 8px; cursor: pointer; white-space: nowrap;
+    transition: all .15s;
   }
-  .balance-row:last-child { border-bottom: none; }
-  .balance-final {
-    margin-top: 10px; padding: 14px; border-radius: 10px;
-    text-align: center; font-weight: 800; font-size: 18px;
+  .cat-btn:hover { color: var(--text-primary); border-color: var(--border); }
+  .cat-btn.active {
+    background: rgba(139,92,246,.18); color: var(--primary-light); border-color: var(--primary);
   }
-  .balance-final.positive { background: rgba(16,185,129,.12); border: 1px solid rgba(16,185,129,.4); color: var(--accent-green); }
-  .balance-final.negative { background: rgba(251,191,36,.12); border: 1px solid rgba(251,191,36,.4); color: var(--accent-yellow); }
-  .balance-final.zero { background: rgba(148,163,184,.12); border: 1px solid rgba(148,163,184,.3); color: var(--text-secondary); }
 
-  .target-card {
-    display: flex; gap: 14px; align-items: center; padding: 12px;
-    background: rgba(0,0,0,.25); border: 1px solid var(--border); border-radius: 10px;
-    margin-top: 12px;
+  /* BOTTOM SUMMARY (sticky) */
+  .summary-bar {
+    position: fixed; bottom: 0; left: 0; right: 0;
+    background: rgba(8,6,14,.97); backdrop-filter: blur(14px);
+    border-top: 1px solid var(--border);
+    padding: 14px max(16px, calc((100% - 1400px) / 2 + 16px));
+    z-index: 80;
+    display: grid; grid-template-columns: 1fr 1fr 1fr auto; gap: 14px;
+    align-items: center;
   }
-  .target-card img { width: 80px; height: 80px; object-fit: contain; background: rgba(0,0,0,.2); border-radius: 8px; }
-  .target-card .info { flex: 1; }
-  .target-card .info h3 { margin: 0 0 4px; font-size: 14px; }
-  .target-card .price-tag { color: var(--accent-yellow); font-weight: 800; font-size: 18px; }
+  @media (max-width: 800px) {
+    .summary-bar { grid-template-columns: 1fr 1fr; gap: 8px; }
+    .summary-bar .summary-cell.cta { grid-column: 1/-1; }
+  }
+  .summary-cell {
+    background: rgba(20,18,30,.5); padding: 8px 12px; border-radius: 8px;
+    border: 1px solid var(--border);
+  }
+  .summary-cell .lbl { font-size: 10px; color: var(--text-muted); text-transform: uppercase; letter-spacing: .5px; }
+  .summary-cell .val { font-size: 17px; font-weight: 800; }
+  .summary-cell.balance.positive .val { color: var(--accent-green); }
+  .summary-cell.balance.negative .val { color: var(--accent-yellow); }
+  .summary-cell.balance.zero .val { color: var(--text-secondary); }
+  .summary-cta {
+    padding: 14px 22px; border: none; border-radius: 10px;
+    font-weight: 800; font-size: 14px; cursor: pointer;
+    transition: transform .12s;
+  }
+  .summary-cta:disabled { opacity: .4; cursor: not-allowed; }
+  .summary-cta:not(:disabled):hover { transform: translateY(-1px); }
+  .summary-cta.upgrade { background: linear-gradient(135deg, var(--accent-yellow), #f59e0b); color: #000; }
+  .summary-cta.downgrade { background: linear-gradient(135deg, var(--accent-green), var(--accent-cyan)); color: #fff; }
+  .summary-cta.equal { background: linear-gradient(135deg, var(--primary), var(--primary-light)); color: #fff; }
 
-  .empty {
-    padding: 40px 24px; text-align: center; color: var(--text-secondary);
-    border: 1px dashed var(--border); border-radius: 12px;
-  }
+  /* TOAST + MODAL */
   .toast {
-    position: fixed; top: 16px; right: 16px; z-index: 9999;
+    position: fixed; top: 86px; right: 16px; z-index: 9999;
     background: var(--bg-card); border: 1px solid var(--border); padding: 12px 16px;
     border-radius: 10px; backdrop-filter: blur(12px); font-size: 13px;
     opacity: 0; transform: translateY(-10px); transition: all .25s;
@@ -194,33 +224,37 @@
   .toast.show { opacity: 1; transform: translateY(0); }
   .toast.error { border-color: rgba(239,68,68,.4); }
   .toast.success { border-color: rgba(16,185,129,.4); }
-  .spinner {
-    display: inline-block; width: 18px; height: 18px;
-    border: 3px solid rgba(139,92,246,.2);
-    border-top-color: var(--primary);
-    border-radius: 50%; animation: spin 0.7s linear infinite;
-  }
-  @keyframes spin { to { transform: rotate(360deg); } }
-  .info-box {
-    background: rgba(34,211,238,.06); border-left: 3px solid var(--accent-cyan);
-    padding: 10px 14px; border-radius: 6px; margin-top: 10px; font-size: 12px;
-    color: var(--text-secondary); line-height: 1.5;
-  }
   .pix-modal {
     position: fixed; inset: 0; background: rgba(0,0,0,.85);
-    display: flex; align-items: center; justify-content: center; z-index: 100;
+    display: flex; align-items: center; justify-content: center; z-index: 200;
     backdrop-filter: blur(4px);
   }
   .pix-modal-box {
-    background: #15121f; border: 1px solid var(--border); border-radius: 14px;
+    background: var(--bg-card); border: 1px solid var(--border); border-radius: 14px;
     padding: 24px; max-width: 380px; width: 92%; text-align: center;
   }
   .pix-modal-box img { width: 220px; height: 220px; border-radius: 10px; background: #fff; padding: 6px; }
-  .pix-copy-box {
-    display: flex; gap: 6px; margin-top: 14px;
-  }
+  .pix-copy-box { display: flex; gap: 6px; margin-top: 14px; }
   .pix-copy-box input { flex: 1; padding: 8px; background: rgba(0,0,0,.5); border: 1px solid var(--border); color: var(--text-primary); border-radius: 6px; font-size: 11px; font-family: monospace; }
-  .pix-copy-box button { padding: 8px 12px; background: var(--primary); color: #fff; border: none; border-radius: 6px; font-size: 12px; cursor: pointer; }
+  .pix-copy-box button { padding: 8px 12px; background: var(--primary); color: #fff; border: none; border-radius: 6px; cursor: pointer; }
+
+  /* PIX KEY input pra downgrade */
+  .pix-key-row {
+    display: flex; gap: 8px; margin-top: 10px; align-items: center; flex-wrap: wrap;
+  }
+  .pix-key-row label { font-size: 12px; color: var(--text-secondary); }
+  .pix-key-row input { flex: 1; min-width: 200px; padding: 8px 10px; background: var(--bg-input); border: 1px solid var(--border); color: var(--text-primary); border-radius: 8px; font-size: 13px; }
+
+  /* LOGIN/INCOMPLETE PANELS */
+  .gate-panel {
+    background: var(--bg-card); border: 1px solid var(--border); border-radius: 14px;
+    padding: 32px; text-align: center; max-width: 480px; margin: 40px auto;
+  }
+  .gate-panel .btn {
+    padding: 10px 22px; border: none; border-radius: 8px; cursor: pointer;
+    background: linear-gradient(135deg, var(--primary), var(--primary-light));
+    color: #fff; font-weight: 700; margin-top: 14px;
+  }
 </style>
 </head>
 <body>
@@ -238,7 +272,7 @@
       <a class="nav-link trocar-link active" href="trocar.html">🔄 Trocar</a>
     </nav>
     <div class="header-actions">
-      <a class="btn-league" href="lobbies.html" title="Plataforma de campeonatos CS2">🏆 GMAX LEAGUE</a>
+      <a class="btn-league" href="lobbies.html">🏆 GMAX LEAGUE</a>
       <a class="header-profile-link" href="perfil.html" id="headerProfileLink" style="display:none;">
         <img id="headerUserAvatar" src="https://www.gravatar.com/avatar?d=mp" alt="">
         <span id="headerUserName">user</span>
@@ -249,66 +283,96 @@
 </header>
 
 <div class="container">
-  <div class="hero">
-    <h1>🔄 Trocar Skin</h1>
-    <p>Mande uma skin que você tem e receba outra de volta. Se a nova for <b>mais cara</b>, você paga a diferença via PIX. Se for <b>mais barata</b>, a Gumax devolve a diferença em PIX.</p>
-  </div>
-
-  <!-- Login required -->
-  <div class="panel" id="loginPanel">
+  <div id="gateLogin" class="gate-panel" style="display:none;">
     <h2>🔒 Login necessário</h2>
     <p style="color: var(--text-secondary);">Faça login com Steam pra carregar seu inventário.</p>
-    <button class="btn btn-primary" onclick="location.href='index.html'">Fazer login</button>
+    <button class="btn" onclick="location.href='index.html'">Fazer login</button>
   </div>
 
-  <!-- Profile incomplete -->
-  <div class="panel" id="incompletePanel" style="display:none;">
+  <div id="gateIncomplete" class="gate-panel" style="display:none;">
     <h2>📝 Perfil incompleto</h2>
-    <p style="color: var(--text-secondary);">Pra fazer trocas você precisa completar seu perfil — Trade Link da Steam + WhatsApp.</p>
-    <button class="btn btn-primary" onclick="location.href='perfil.html?return=trocar.html'">Completar perfil</button>
+    <p style="color: var(--text-secondary);">Pra fazer trocas você precisa completar seu perfil — Trade Link Steam + WhatsApp.</p>
+    <button class="btn" onclick="location.href='perfil.html?return=trocar.html'">Completar perfil</button>
   </div>
 
-  <!-- Main flow -->
   <div id="flowPanel" style="display:none;">
+    <div class="page-title">🔄 Trocar Skin</div>
+    <p class="subtitle">Selecione skins do seu inventário (esquerda) e do estoque Gumax (direita). Se a sua oferta valer menos, você paga a diferença em PIX. Se valer mais, a Gumax devolve em PIX.</p>
 
-    <!-- STEP 1: Inventário -->
-    <div class="panel">
-      <h2><span class="step-num">1</span> Suas skins (clique pra selecionar)</h2>
-      <div id="invStatus" style="font-size: 12px; color: var(--text-secondary); margin-top: 6px;"></div>
-      <div id="invGrid" class="inv-grid"></div>
-      <div id="invEmpty" class="empty" style="display:none;">
-        Nenhuma skin trocavel encontrada no seu inventário.
-        <br><small>Verifica se o trade link salvo no perfil tá correto e se o inventário tá público.</small>
+    <div class="categories-bar" id="categoriesBar">
+      <button class="cat-btn active" data-cat="all">Tudo</button>
+      <button class="cat-btn" data-cat="knife">Faca</button>
+      <button class="cat-btn" data-cat="gloves">Luva</button>
+      <button class="cat-btn" data-cat="rifle">Rifle</button>
+      <button class="cat-btn" data-cat="pistol">Pistola</button>
+      <button class="cat-btn" data-cat="smg">SMG</button>
+      <button class="cat-btn" data-cat="shotgun">Escopeta</button>
+      <button class="cat-btn" data-cat="mg">Metralhadora</button>
+    </div>
+
+    <div class="panels-grid">
+      <!-- LADO ESQUERDO: SUA OFERTA -->
+      <div class="panel">
+        <div class="panel-header">
+          <div class="panel-title">📦 Sua oferta <small style="color: var(--text-muted); font-weight: 400; font-size: 12px;" id="myInvCounter"></small></div>
+          <div class="panel-total" id="myTotal">R$ 0,00</div>
+        </div>
+        <div class="panel-toolbar">
+          <input id="myFilter" placeholder="Buscar no seu inventário…">
+          <select id="mySort">
+            <option value="price_desc">Mais caras primeiro</option>
+            <option value="price_asc">Mais baratas primeiro</option>
+            <option value="name">Nome A-Z</option>
+          </select>
+          <button class="cat-btn" id="myReload" title="Recarregar inventário Steam">↻</button>
+        </div>
+        <div class="skin-grid" id="myGrid">
+          <div class="spinner-wrap"><span class="spinner"></span><div style="margin-top:10px; color: var(--text-secondary); font-size: 13px;">Carregando seu inventário…</div></div>
+        </div>
       </div>
-      <div style="display:flex; justify-content:space-between; align-items:center; margin-top:12px;">
-        <button class="btn-link" id="reloadInvBtn">↻ Recarregar inventário</button>
-        <div id="offeredTotal" style="font-weight: 800; color: var(--accent-yellow);"></div>
+
+      <!-- LADO DIREITO: ESTOQUE GUMAX -->
+      <div class="panel">
+        <div class="panel-header">
+          <div class="panel-title">🏪 Estoque Gumax <small style="color: var(--text-muted); font-weight: 400; font-size: 12px;" id="storeCounter"></small></div>
+          <div class="panel-total" id="storeTotal">R$ 0,00</div>
+        </div>
+        <div class="panel-toolbar">
+          <input id="storeFilter" placeholder="Buscar no estoque…">
+          <select id="storeSort">
+            <option value="price_desc">Mais caras primeiro</option>
+            <option value="price_asc">Mais baratas primeiro</option>
+          </select>
+        </div>
+        <div class="skin-grid" id="storeGrid">
+          <div class="spinner-wrap"><span class="spinner"></span><div style="margin-top:10px; color: var(--text-secondary); font-size: 13px;">Carregando estoque…</div></div>
+        </div>
       </div>
     </div>
 
-    <!-- STEP 2: Skin desejada (autocomplete) -->
-    <div class="panel" id="targetPanel" style="display:none;">
-      <h2><span class="step-num">2</span> Skin que você quer receber</h2>
-      <p style="color: var(--text-secondary); font-size: 13px; margin: 4px 0 12px;">Digite e a gente sugere skins do catálogo.</p>
-      <div class="autocomplete-wrap">
-        <input id="targetSearch" class="ac-input" placeholder="ex: AK-47 Redline Field-Tested" autocomplete="off">
-        <div id="targetSuggest" class="ac-list" style="display:none;"></div>
-      </div>
-      <div id="targetList"></div>
-      <div id="targetTotal" style="margin-top: 10px; font-weight: 800; color: var(--accent-yellow); text-align: right;"></div>
+    <!-- PIX KEY (só aparece em downgrade) -->
+    <div class="pix-key-row" id="pixKeyRow" style="display:none; margin-top: 14px;">
+      <label>Sua chave PIX (Gumax devolve aqui):</label>
+      <input id="pixKey" placeholder="CPF, e-mail ou chave aleatória">
     </div>
-
-    <!-- STEP 3: Saldo / pagamento -->
-    <div class="panel" id="balancePanel" style="display:none;">
-      <h2><span class="step-num">3</span> Resumo da troca</h2>
-      <div class="balance-panel" id="balanceBox"></div>
-      <div id="actionBox" style="margin-top: 14px;"></div>
-      <div class="info-box">
-        <b>Como funciona:</b> ao confirmar, a Gumax cria a transação. Você manda sua(s) skin(s) via Trade Link, paga (ou recebe) a diferença via PIX, e te enviamos a nova skin no Steam. Acompanhe tudo em <a href="perfil.html" style="color: var(--primary-light);">Meu perfil</a>.
-      </div>
-    </div>
-
   </div>
+</div>
+
+<!-- BOTTOM SUMMARY -->
+<div class="summary-bar" id="summaryBar" style="display:none;">
+  <div class="summary-cell">
+    <div class="lbl">Você dá</div>
+    <div class="val" id="sumOffered">R$ 0,00</div>
+  </div>
+  <div class="summary-cell">
+    <div class="lbl">Você recebe</div>
+    <div class="val" id="sumTarget">R$ 0,00</div>
+  </div>
+  <div class="summary-cell balance" id="sumBalanceCell">
+    <div class="lbl" id="sumBalanceLabel">Saldo</div>
+    <div class="val" id="sumBalance">R$ 0,00</div>
+  </div>
+  <button class="summary-cta" id="confirmBtn" disabled>Confirmar troca</button>
 </div>
 
 <div id="toast" class="toast"></div>
@@ -332,11 +396,17 @@ const auth = firebase.auth();
 const db = firebase.firestore();
 
 // State
-let _userData = null;            // doc users/{uid}
-let _inventory = [];             // [{name, image, price?, wear, tradable}]
-let _selectedOffered = new Map(); // assetId -> item (com offerBRL cotado)
-let _targetItems = [];           // array de {name, saleBRL, iconUrl} — múltiplos
-let _suggestTimer = null;
+let _userData = null;
+let _myInventory = [];        // skins do user (cotadas) — TODAS
+let _storeInventory = [];     // skins do Gu (Full + Youpin) — TODAS
+let _myFilter = '';
+let _myCategory = 'all';
+let _mySort = 'price_desc';
+let _storeFilter = '';
+let _storeCategory = 'all';
+let _storeSort = 'price_desc';
+let _selectedMy = new Map();      // assetId/key -> item
+let _selectedStore = new Map();   // name -> item
 
 function showToast(msg, type = 'info') {
   const t = document.getElementById('toast');
@@ -344,42 +414,46 @@ function showToast(msg, type = 'info') {
   t.className = 'toast show ' + type;
   setTimeout(() => t.className = 'toast', 3500);
 }
-
 function fmtR(v) { return 'R$ ' + Number(v || 0).toFixed(2).replace('.', ','); }
-function escHtml(s) {
-  return String(s || '').replace(/[&<>"']/g, c => ({
-    '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;'
-  }[c]));
-}
-
-// Extrai SteamID64 do tradeLink "https://steamcommunity.com/tradeoffer/new/?partner=XXXX&token=YYY"
-// partner é o accountID (32 bits). SteamID64 = 76561197960265728 + partner.
+function escHtml(s) { return String(s||'').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c])); }
+function inferWear(name) { const m = String(name||'').match(/\((Factory New|Minimal Wear|Field-Tested|Well-Worn|Battle-Scarred)\)\s*$/); return m ? m[1] : ''; }
 function steamIdFromTradeLink(tl) {
   if (!tl) return null;
   const m = String(tl).match(/[?&]partner=(\d+)/);
   if (!m) return null;
-  const partner = BigInt(m[1]);
-  const id64 = (76561197960265728n + partner).toString();
-  return id64;
+  return (76561197960265728n + BigInt(m[1])).toString();
 }
 
-// ── STEP 1: Inventário ────────────────────────────────────────────
-async function loadInventory() {
-  const grid = document.getElementById('invGrid');
-  const empty = document.getElementById('invEmpty');
-  const status = document.getElementById('invStatus');
-  grid.innerHTML = '<div style="grid-column: 1/-1; padding: 30px; text-align: center;"><span class="spinner"></span> <span style="margin-left: 10px;">Buscando seu inventário Steam…</span></div>';
-  empty.style.display = 'none';
-
-  // 1) precisa do steamId — preferimos o salvo no users/{uid}; senão extrai do tradeLink
-  let steamId = _userData?.steamId || '';
-  if (!steamId && _userData?.tradeLink) {
-    steamId = steamIdFromTradeLink(_userData.tradeLink) || '';
+// Categoriza pelo nome — usado pelos filtros
+function categoryOf(name) {
+  if (!name) return 'other';
+  const stripped = name.replace(/^Souvenir\s+/, '').replace(/^★\s*StatTrak™\s*/, '').replace(/^StatTrak™\s*/, '');
+  if (stripped.startsWith('★')) {
+    if (/Gloves|Hand Wraps/i.test(stripped)) return 'gloves';
+    return 'knife';
   }
+  const RIFLE = ['AK-47','M4A4','M4A1-S','AUG','SG 553','FAMAS','Galil AR','AWP','SSG 08','SCAR-20','G3SG1'];
+  const PISTOL = ['Desert Eagle','USP-S','Glock-18','P2000','P250','Five-SeveN','R8 Revolver','Dual Berettas','Tec-9','CZ75-Auto','Zeus x27'];
+  const SMG = ['MAC-10','MP9','MP7','MP5-SD','UMP-45','P90','PP-Bizon'];
+  const SHOTGUN = ['Nova','XM1014','Sawed-Off','MAG-7'];
+  const MG = ['M249','Negev'];
+  for (const p of RIFLE) if (stripped.startsWith(p+' |')) return 'rifle';
+  for (const p of PISTOL) if (stripped.startsWith(p+' |')) return 'pistol';
+  for (const p of SMG) if (stripped.startsWith(p+' |')) return 'smg';
+  for (const p of SHOTGUN) if (stripped.startsWith(p+' |')) return 'shotgun';
+  for (const p of MG) if (stripped.startsWith(p+' |')) return 'mg';
+  return 'other';
+}
+
+// ── Inventário do user ────────────────────────────────────────────
+async function loadMyInventory() {
+  const grid = document.getElementById('myGrid');
+  grid.innerHTML = '<div class="spinner-wrap"><span class="spinner"></span><div style="margin-top:10px; color: var(--text-secondary); font-size: 13px;">Buscando seu inventário Steam…</div></div>';
+
+  let steamId = _userData?.steamId || '';
+  if (!steamId && _userData?.tradeLink) steamId = steamIdFromTradeLink(_userData.tradeLink) || '';
   if (!steamId || !/^\d{17}$/.test(steamId)) {
-    grid.innerHTML = '';
-    empty.style.display = 'block';
-    empty.innerHTML = 'Não consegui descobrir seu Steam ID. Verifica seu Trade Link em <a href="perfil.html?return=trocar.html" style="color: var(--primary-light);">Meu perfil</a>.';
+    grid.innerHTML = '<div class="empty-state">Não consegui descobrir seu Steam ID. Verifica seu Trade Link em <a href="perfil.html?return=trocar.html" style="color: var(--primary-light);">Meu perfil</a>.</div>';
     return;
   }
 
@@ -388,24 +462,20 @@ async function loadInventory() {
     const r = await fetch(`${API_BASE}/api/steam-inventory?steamId=${steamId}`);
     const data = await r.json();
     if (!r.ok) throw new Error(data.hint || data.error || `HTTP ${r.status}`);
-    invItems = Array.isArray(data.items) ? data.items.filter(it => it.tradable && it.marketable) : [];
+    invItems = (data.items || []).filter(it => it.tradable && it.marketable);
   } catch (e) {
-    grid.innerHTML = '';
-    empty.style.display = 'block';
-    empty.innerHTML = `Erro ao carregar inventário: ${escHtml(e.message)}.<br><small>Confirma que seu inventário Steam tá público.</small>`;
+    grid.innerHTML = `<div class="empty-state">Erro: ${escHtml(e.message)}<br><small>Confirma que seu inventário Steam tá público.</small></div>`;
     return;
   }
-
   if (invItems.length === 0) {
-    grid.innerHTML = '';
-    empty.style.display = 'block';
+    grid.innerHTML = '<div class="empty-state">Nenhuma skin trocavel no inventário.</div>';
     return;
   }
 
-  // 2) Cota TODOS os items do inventário em paralelo (batchados por 20)
-  status.innerHTML = `Cotando ${invItems.length} skins…`;
+  // Cota em batches de 20
   const uniqueNames = [...new Set(invItems.map(i => i.market_hash_name).filter(Boolean))];
-  const quoteMap = new Map(); // name -> offerBRL
+  const quoteMap = new Map();
+  document.getElementById('myInvCounter').textContent = ` · cotando ${uniqueNames.length}…`;
   for (let i = 0; i < uniqueNames.length; i += 20) {
     const chunk = uniqueNames.slice(i, i + 20);
     try {
@@ -416,281 +486,260 @@ async function loadInventory() {
       });
       if (r.ok) {
         const data = await r.json();
-        // Backend retorna em data.items (não data.quotes — bug que tinha aqui antes).
-        const quotes = data.items || data.quotes || [];
-        for (const q of quotes) {
+        for (const q of (data.items || [])) {
           if (q.offerBRL > 0) quoteMap.set(q.name, q.offerBRL);
         }
       }
     } catch {}
   }
-  status.innerHTML = `${invItems.length} skins · ${quoteMap.size} cotadas`;
 
-  // 3) Render — só mostra items cotados (sem cotação não tem como trocar)
-  _inventory = invItems
-    .map(it => ({
-      assetId: it.assetId || it.assetid || `${it.market_hash_name}-${Math.random()}`,
+  _myInventory = invItems
+    .map((it, i) => ({
+      key: it.assetid || it.assetId || `${it.market_hash_name}-${i}`,
       name: it.market_hash_name,
       wear: inferWear(it.market_hash_name),
       image: it.iconUrl || it.icon || '',
       offerBRL: quoteMap.get(it.market_hash_name) || 0,
-      tradable: it.tradable,
+      category: categoryOf(it.market_hash_name),
     }))
-    .filter(it => it.offerBRL > 0)
-    .sort((a, b) => b.offerBRL - a.offerBRL);
+    .filter(it => it.offerBRL > 0);
 
-  if (_inventory.length === 0) {
-    grid.innerHTML = '';
-    empty.style.display = 'block';
+  document.getElementById('myInvCounter').textContent = ` · ${_myInventory.length} skins cotadas`;
+  renderMyGrid();
+}
+
+function renderMyGrid() {
+  const grid = document.getElementById('myGrid');
+  let items = _myInventory.slice();
+  if (_myCategory !== 'all') items = items.filter(it => it.category === _myCategory);
+  if (_myFilter) items = items.filter(it => it.name.toLowerCase().includes(_myFilter.toLowerCase()));
+  if (_mySort === 'price_desc') items.sort((a,b) => b.offerBRL - a.offerBRL);
+  else if (_mySort === 'price_asc') items.sort((a,b) => a.offerBRL - b.offerBRL);
+  else if (_mySort === 'name') items.sort((a,b) => a.name.localeCompare(b.name));
+
+  if (items.length === 0) {
+    grid.innerHTML = '<div class="empty-state">Nenhuma skin nesse filtro.</div>';
     return;
   }
-
-  grid.innerHTML = _inventory.map(it => `
-    <div class="inv-item" data-asset="${escHtml(it.assetId)}" data-name="${escHtml(it.name)}" data-price="${it.offerBRL}">
+  grid.innerHTML = items.map(it => `
+    <div class="skin-card ${_selectedMy.has(it.key) ? 'selected' : ''}" data-side="my" data-key="${escHtml(it.key)}">
       <img src="${escHtml(it.image)}" alt="" onerror="this.style.opacity=0.2">
       <div class="nm">${escHtml(it.name)}</div>
-      <div class="wear">${escHtml(it.wear || '')}</div>
+      <div class="wear-tag">${escHtml(it.wear)}</div>
       <div class="px">${fmtR(it.offerBRL)}</div>
     </div>
   `).join('');
-
-  grid.querySelectorAll('.inv-item').forEach(el => {
-    el.addEventListener('click', () => toggleInvItem(el));
-  });
 }
 
-function inferWear(name) {
-  const m = String(name || '').match(/\((Factory New|Minimal Wear|Field-Tested|Well-Worn|Battle-Scarred)\)\s*$/);
-  return m ? m[1] : '';
-}
+// ── Estoque Gumax (Full + Youpin top) ─────────────────────────────
+async function loadStoreInventory() {
+  const grid = document.getElementById('storeGrid');
+  grid.innerHTML = '<div class="spinner-wrap"><span class="spinner"></span><div style="margin-top:10px; color: var(--text-secondary); font-size: 13px;">Carregando estoque Gumax…</div></div>';
 
-function toggleInvItem(el) {
-  const aid = el.dataset.asset;
-  if (_selectedOffered.has(aid)) {
-    _selectedOffered.delete(aid);
-    el.classList.remove('selected');
-  } else {
-    _selectedOffered.set(aid, {
-      assetId: aid,
-      name: el.dataset.name,
-      offerBRL: parseFloat(el.dataset.price) || 0,
-    });
-    el.classList.add('selected');
-  }
-  updateOfferedSummary();
-}
-
-function updateOfferedSummary() {
-  const total = [..._selectedOffered.values()].reduce((s, x) => s + (x.offerBRL || 0), 0);
-  document.getElementById('offeredTotal').textContent = total > 0
-    ? `Total ofertado: ${fmtR(total)} (${_selectedOffered.size} skin${_selectedOffered.size > 1 ? 's' : ''})`
-    : '';
-  document.getElementById('targetPanel').style.display = total > 0 ? 'block' : 'none';
-  if (total > 0 && _targetItems.length > 0) recalcBalance();
-  else document.getElementById('balancePanel').style.display = 'none';
-}
-
-document.getElementById('reloadInvBtn').addEventListener('click', loadInventory);
-
-// ── STEP 2: Autocomplete ──────────────────────────────────────────
-const targetInput = document.getElementById('targetSearch');
-const suggestList = document.getElementById('targetSuggest');
-
-targetInput.addEventListener('input', () => {
-  clearTimeout(_suggestTimer);
-  const q = targetInput.value.trim();
-  if (q.length < 3) { suggestList.style.display = 'none'; return; }
-  _suggestTimer = setTimeout(() => fetchSuggestions(q), 220);
-});
-
-document.addEventListener('click', (e) => {
-  if (!e.target.closest('.autocomplete-wrap')) suggestList.style.display = 'none';
-});
-
-async function fetchSuggestions(q) {
+  // 1) Full do Gu (Firestore stocks/skins active)
+  let full = [];
   try {
-    const r = await fetch(`${API_BASE}/api/pricempire/suggest?q=${encodeURIComponent(q)}&limit=12`);
-    if (!r.ok) return;
-    const data = await r.json();
-    const items = Array.isArray(data.suggestions) ? data.suggestions : [];
-    if (items.length === 0) {
-      suggestList.innerHTML = '<div class="ac-item" style="opacity:.6;">Nada encontrado</div>';
-      suggestList.style.display = 'block';
-      return;
+    const snap = await db.collection('skins').where('active', '==', true).limit(200).get();
+    full = snap.docs.map(d => {
+      const s = d.data();
+      return {
+        name: s.name,
+        priceBRL: parseFloat(s.price) || 0,
+        wear: s.wear || inferWear(s.name) || '',
+        image: s.image || '',
+        category: categoryOf(s.name),
+        isFull: true,
+      };
+    }).filter(s => s.name && s.priceBRL > 0);
+  } catch (e) { console.warn('[stocks]', e.message); }
+
+  // 2) Top Youpin (preenche o que faltar)
+  let youpin = [];
+  try {
+    const r = await fetch(`${API_BASE}/api/youpin/top-sellers?limit=200`);
+    if (r.ok) {
+      const data = await r.json();
+      const fullNames = new Set(full.map(s => s.name));
+      youpin = (data.items || [])
+        .filter(it => it.name && it.saleBRL > 0 && !fullNames.has(it.name))
+        .map(it => ({
+          name: it.name,
+          priceBRL: parseFloat(it.saleBRL) || 0,
+          wear: inferWear(it.name),
+          image: it.iconUrl || '',
+          category: categoryOf(it.name),
+          isFull: false,
+        }));
     }
-    suggestList.innerHTML = items.map(name => `<div class="ac-item" data-name="${escHtml(name)}">${escHtml(name)}</div>`).join('');
-    suggestList.style.display = 'block';
-    suggestList.querySelectorAll('.ac-item[data-name]').forEach(el => {
-      el.addEventListener('click', () => pickTarget(el.dataset.name));
-    });
-  } catch (e) {
-    console.warn('[suggest]', e.message);
-  }
+  } catch (e) { console.warn('[top-sellers]', e.message); }
+
+  _storeInventory = [...full, ...youpin];
+  document.getElementById('storeCounter').textContent = ` · ${_storeInventory.length} skins (${full.length} Full)`;
+  renderStoreGrid();
 }
 
-async function pickTarget(name) {
-  suggestList.style.display = 'none';
-  targetInput.value = '';
+function renderStoreGrid() {
+  const grid = document.getElementById('storeGrid');
+  let items = _storeInventory.slice();
+  if (_storeCategory !== 'all') items = items.filter(it => it.category === _storeCategory);
+  if (_storeFilter) items = items.filter(it => it.name.toLowerCase().includes(_storeFilter.toLowerCase()));
+  if (_storeSort === 'price_desc') items.sort((a,b) => b.priceBRL - a.priceBRL);
+  else items.sort((a,b) => a.priceBRL - b.priceBRL);
 
-  // Evita duplicatas (mesma skin add 2x)
-  if (_targetItems.some(t => t.name === name)) {
-    showToast('Essa skin já tá na lista', 'error');
+  // Full sempre primeiro dentro do mesmo sort
+  items.sort((a, b) => (a.isFull === b.isFull) ? 0 : (a.isFull ? -1 : 1));
+
+  if (items.length === 0) {
+    grid.innerHTML = '<div class="empty-state">Nenhuma skin nesse filtro.</div>';
     return;
   }
-
-  // Render placeholder enquanto cota
-  const placeholderId = `t-${Date.now()}`;
-  _targetItems.push({ name, saleBRL: 0, iconUrl: '', _id: placeholderId, _loading: true });
-  renderTargets();
-
-  // Usa /api/pricempire/search?q=NAME — esse endpoint JÁ retorna iconUrl resolvido +
-  // saleBRL calculado com a config de pricing (margem da loja). Mais simples e robusto
-  // que /api/pricempire/item (que só retorna preços crus, sem imagem).
-  try {
-    const r = await fetch(`${API_BASE}/api/pricempire/search?q=${encodeURIComponent(name)}&limit=20`);
-    if (!r.ok) throw new Error('busca falhou');
-    const data = await r.json();
-    const items = Array.isArray(data.items) ? data.items : [];
-    // Match exato pelo nome (case-sensitive — Steam é canônico)
-    const exact = items.find(it => it.name === name) || items[0];
-    if (!exact) throw new Error('skin não encontrada no catálogo');
-    const saleBRL = parseFloat(exact.saleBRL) || 0;
-    if (saleBRL <= 0) throw new Error('sem preço pra essa skin');
-    // Atualiza item no array
-    const idx = _targetItems.findIndex(t => t._id === placeholderId);
-    if (idx >= 0) {
-      _targetItems[idx] = {
-        name: exact.name,
-        saleBRL,
-        iconUrl: exact.iconUrl || '',
-        _id: placeholderId,
-      };
-    }
-  } catch (e) {
-    // Remove placeholder se falhou
-    _targetItems = _targetItems.filter(t => t._id !== placeholderId);
-    showToast('Erro: ' + e.message, 'error');
-  }
-
-  renderTargets();
-  recalcBalance();
-}
-
-function renderTargets() {
-  const list = document.getElementById('targetList');
-  if (!list) return;
-  if (_targetItems.length === 0) { list.innerHTML = ''; document.getElementById('targetTotal').textContent = ''; return; }
-
-  list.innerHTML = _targetItems.map(t => `
-    <div class="target-card" data-id="${escHtml(t._id || '')}">
-      ${t._loading
-        ? '<div style="width:80px;height:80px;display:flex;align-items:center;justify-content:center;background:rgba(0,0,0,.2);border-radius:8px;"><span class="spinner"></span></div>'
-        : `<img src="${escHtml(t.iconUrl)}" alt="" onerror="this.style.opacity=0.2;this.src='data:image/gif;base64,R0lGODlhAQABAAAAACw='">`}
-      <div class="info">
-        <h3>${escHtml(t.name)}</h3>
-        <div class="price-tag">${t._loading ? '…' : fmtR(t.saleBRL)}</div>
-      </div>
-      <button class="btn btn-link" onclick="removeTarget('${escHtml(t._id || '')}')" title="Remover" style="font-size:18px;color:var(--accent-red);text-decoration:none;">×</button>
+  grid.innerHTML = items.slice(0, 240).map(it => `
+    <div class="skin-card ${_selectedStore.has(it.name) ? 'selected' : ''}" data-side="store" data-name="${escHtml(it.name)}">
+      ${it.isFull ? '<div class="full-badge">⚡ FULL</div>' : ''}
+      <img src="${escHtml(it.image)}" alt="" onerror="this.style.opacity=0.2">
+      <div class="nm">${escHtml(it.name)}</div>
+      <div class="wear-tag">${escHtml(it.wear)}</div>
+      <div class="px">${fmtR(it.priceBRL)}</div>
     </div>
   `).join('');
-
-  const total = _targetItems.filter(t => !t._loading).reduce((s, t) => s + (t.saleBRL || 0), 0);
-  document.getElementById('targetTotal').textContent = total > 0
-    ? `Total skins desejadas: ${fmtR(total)} (${_targetItems.length} skin${_targetItems.length > 1 ? 's' : ''})`
-    : '';
 }
 
-function removeTarget(id) {
-  _targetItems = _targetItems.filter(t => t._id !== id);
-  renderTargets();
-  recalcBalance();
-}
-window.removeTarget = removeTarget;
+// ── Click handlers (delegation) ──────────────────────────────────
+document.addEventListener('click', (e) => {
+  const card = e.target.closest('.skin-card');
+  if (!card) return;
+  const side = card.dataset.side;
+  if (side === 'my') {
+    const key = card.dataset.key;
+    const item = _myInventory.find(it => it.key === key);
+    if (!item) return;
+    if (_selectedMy.has(key)) _selectedMy.delete(key);
+    else _selectedMy.set(key, item);
+    renderMyGrid(); recalcSummary();
+  } else if (side === 'store') {
+    const name = card.dataset.name;
+    const item = _storeInventory.find(it => it.name === name);
+    if (!item) return;
+    if (_selectedStore.has(name)) _selectedStore.delete(name);
+    else _selectedStore.set(name, item);
+    renderStoreGrid(); recalcSummary();
+  }
+});
 
-// ── STEP 3: Saldo + pagamento ─────────────────────────────────────
-function recalcBalance() {
-  const validTargets = _targetItems.filter(t => !t._loading && t.saleBRL > 0);
-  if (_selectedOffered.size === 0 || validTargets.length === 0) {
-    document.getElementById('balancePanel').style.display = 'none';
+// Search inputs
+document.getElementById('myFilter').addEventListener('input', e => { _myFilter = e.target.value.trim(); renderMyGrid(); });
+document.getElementById('storeFilter').addEventListener('input', e => { _storeFilter = e.target.value.trim(); renderStoreGrid(); });
+document.getElementById('mySort').addEventListener('change', e => { _mySort = e.target.value; renderMyGrid(); });
+document.getElementById('storeSort').addEventListener('change', e => { _storeSort = e.target.value; renderStoreGrid(); });
+document.getElementById('myReload').addEventListener('click', loadMyInventory);
+
+// Categorias bar
+document.getElementById('categoriesBar').addEventListener('click', e => {
+  const btn = e.target.closest('.cat-btn');
+  if (!btn) return;
+  document.querySelectorAll('.cat-btn').forEach(b => b.classList.remove('active'));
+  btn.classList.add('active');
+  _myCategory = btn.dataset.cat;
+  _storeCategory = btn.dataset.cat;
+  renderMyGrid(); renderStoreGrid();
+});
+
+// ── Resumo / saldo + ação ────────────────────────────────────────
+function recalcSummary() {
+  const offered = [..._selectedMy.values()].reduce((s, x) => s + x.offerBRL, 0);
+  const target = [..._selectedStore.values()].reduce((s, x) => s + x.priceBRL, 0);
+  document.getElementById('myTotal').textContent = fmtR(offered);
+  document.getElementById('storeTotal').textContent = fmtR(target);
+  document.getElementById('sumOffered').textContent = fmtR(offered);
+  document.getElementById('sumTarget').textContent = fmtR(target);
+
+  const bar = document.getElementById('summaryBar');
+  const cell = document.getElementById('sumBalanceCell');
+  const lbl = document.getElementById('sumBalanceLabel');
+  const valEl = document.getElementById('sumBalance');
+  const btn = document.getElementById('confirmBtn');
+  const pixRow = document.getElementById('pixKeyRow');
+
+  if (offered === 0 && target === 0) {
+    bar.style.display = 'none';
+    pixRow.style.display = 'none';
     return;
   }
-  const offeredTotal = [..._selectedOffered.values()].reduce((s, x) => s + x.offerBRL, 0);
-  const targetTotal = validTargets.reduce((s, t) => s + t.saleBRL, 0);
-  const diff = targetTotal - offeredTotal;
-  // diff > 0  => user PAGA   (skin nova mais cara — upgrade)
-  // diff < 0  => user RECEBE (skin nova mais barata — downgrade)
-  // diff = 0  => par
+  bar.style.display = 'grid';
 
-  const box = document.getElementById('balanceBox');
-  box.innerHTML = `
-    <div class="balance-row"><span>Suas skins (${_selectedOffered.size})</span><span>${fmtR(offeredTotal)}</span></div>
-    <div class="balance-row"><span>Skin${validTargets.length > 1 ? 's' : ''} desejada${validTargets.length > 1 ? 's' : ''} (${validTargets.length})</span><span>${fmtR(targetTotal)}</span></div>
-    <div class="balance-final ${diff > 0 ? 'negative' : (diff < 0 ? 'positive' : 'zero')}">
-      ${diff > 0
-        ? `⬆️ Falta R$ ${Math.abs(diff).toFixed(2).replace('.', ',')} — você paga via PIX`
-        : diff < 0
-          ? `⬇️ Sobra R$ ${Math.abs(diff).toFixed(2).replace('.', ',')} — Gumax devolve via PIX`
-          : 'Saldo zerado — troca direta'}
-    </div>
-  `;
+  const diff = target - offered;
+  cell.classList.remove('positive','negative','zero');
 
-  const action = document.getElementById('actionBox');
-  if (diff > 0) {
-    // upgrade — user paga
-    action.innerHTML = `
-      <button class="btn btn-warning" id="confirmUpgradeBtn" style="width: 100%;">
-        💳 Gerar PIX de ${fmtR(diff)} pra completar a troca
-      </button>
-    `;
-    document.getElementById('confirmUpgradeBtn').addEventListener('click', () => confirmTrade('upgrade', diff));
-  } else if (diff < 0) {
-    // downgrade — Gumax paga
-    action.innerHTML = `
-      <div style="margin-bottom: 10px;">
-        <label style="font-size: 12px; color: var(--text-secondary);">Sua chave PIX (pra Gumax te enviar)</label>
-        <input id="pixKey" class="ac-input" placeholder="CPF, e-mail ou chave aleatória" style="margin-top: 4px;">
-      </div>
-      <button class="btn btn-success" id="confirmDowngradeBtn" style="width: 100%;">
-        ✅ Confirmar troca — vou receber ${fmtR(Math.abs(diff))}
-      </button>
-    `;
-    document.getElementById('confirmDowngradeBtn').addEventListener('click', () => confirmTrade('downgrade', diff));
-  } else {
-    action.innerHTML = `
-      <button class="btn btn-success" id="confirmEqualBtn" style="width: 100%;">
-        ✅ Confirmar troca direta
-      </button>
-    `;
-    document.getElementById('confirmEqualBtn').addEventListener('click', () => confirmTrade('upgrade', 0));
+  if (offered === 0 || target === 0) {
+    btn.disabled = true;
+    btn.className = 'summary-cta equal';
+    btn.textContent = 'Selecione skins dos 2 lados';
+    cell.classList.add('zero');
+    lbl.textContent = 'Saldo';
+    valEl.textContent = '—';
+    pixRow.style.display = 'none';
+    return;
   }
 
-  document.getElementById('balancePanel').style.display = 'block';
+  btn.disabled = false;
+
+  if (diff > 0) {
+    // Upgrade — user paga
+    cell.classList.add('negative');
+    lbl.textContent = 'Falta — você paga PIX';
+    valEl.textContent = fmtR(diff);
+    btn.className = 'summary-cta upgrade';
+    btn.textContent = `💳 Gerar PIX de ${fmtR(diff)}`;
+    pixRow.style.display = 'none';
+  } else if (diff < 0) {
+    // Downgrade — Gumax paga
+    cell.classList.add('positive');
+    lbl.textContent = 'Sobra — Gumax devolve PIX';
+    valEl.textContent = fmtR(Math.abs(diff));
+    btn.className = 'summary-cta downgrade';
+    btn.textContent = `✅ Confirmar — você recebe ${fmtR(Math.abs(diff))}`;
+    pixRow.style.display = 'flex';
+  } else {
+    cell.classList.add('zero');
+    lbl.textContent = 'Saldo';
+    valEl.textContent = 'R$ 0,00';
+    btn.className = 'summary-cta equal';
+    btn.textContent = '✅ Confirmar troca direta';
+    pixRow.style.display = 'none';
+  }
 }
 
-async function confirmTrade(type, diff) {
+document.getElementById('confirmBtn').addEventListener('click', confirmTrade);
+
+async function confirmTrade() {
   const u = auth.currentUser;
   if (!u) return showToast('Sessão expirada', 'error');
   const tradeLink = _userData?.tradeLink || '';
   if (!tradeLink) return showToast('Trade Link ausente — completa o perfil', 'error');
-  const pixKey = type === 'downgrade' ? document.getElementById('pixKey')?.value.trim() : null;
+
+  const offered = [..._selectedMy.values()].map(x => ({ name: x.name }));
+  const target = [..._selectedStore.values()].map(x => ({ name: x.name }));
+  if (!offered.length || !target.length) return showToast('Seleciona skins dos 2 lados', 'error');
+
+  const offeredTotal = [..._selectedMy.values()].reduce((s,x) => s + x.offerBRL, 0);
+  const targetTotal = [..._selectedStore.values()].reduce((s,x) => s + x.priceBRL, 0);
+  const diff = targetTotal - offeredTotal;
+  const type = diff > 0 ? 'upgrade' : (diff < 0 ? 'downgrade' : 'upgrade');
+  const pixKey = type === 'downgrade' ? document.getElementById('pixKey').value.trim() : null;
   if (type === 'downgrade' && !pixKey) return showToast('Informe sua chave PIX', 'error');
 
-  let token;
-  try { token = await u.getIdToken(); } catch { return showToast('Erro de auth', 'error'); }
+  let token; try { token = await u.getIdToken(); } catch { return showToast('Erro de auth', 'error'); }
 
-  const offered = [..._selectedOffered.values()].map(x => ({ name: x.name }));
-  const target = _targetItems.filter(t => !t._loading && t.saleBRL > 0).map(t => ({ name: t.name }));
+  const btn = document.getElementById('confirmBtn');
+  btn.disabled = true;
+  btn.textContent = 'Criando troca…';
 
   try {
     const r = await fetch(`${API_BASE}/api/buyback/create`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
       body: JSON.stringify({
-        type,
-        offered,
-        target,
-        tradeLink,
-        pixKey,
+        type, offered, target, tradeLink, pixKey,
         steamId: _userData?.steamId || u.uid,
         userName: _userData?.fullName || _userData?.steamName || u.displayName || 'Cliente',
       }),
@@ -698,29 +747,29 @@ async function confirmTrade(type, diff) {
     const data = await r.json();
     if (!r.ok) throw new Error(data.error || `HTTP ${r.status}`);
 
-    // Pra upgrade, geramos PIX agora pra ele pagar a diferença
     if (type === 'upgrade' && diff > 0) {
-      const targetLabel = _targetItems.length === 1 ? _targetItems[0].name : `${_targetItems.length} skins`;
-      await openPixForUpgrade(data.id, diff, targetLabel);
+      await openPixForUpgrade(data.id, diff);
     } else {
       showToast('Troca criada! Acompanhe em "Meu perfil".', 'success');
       setTimeout(() => location.href = 'perfil.html', 1500);
     }
   } catch (e) {
-    console.error('[confirmTrade]', e);
+    console.error(e);
     showToast('Erro: ' + e.message, 'error');
+    btn.disabled = false;
+    recalcSummary();
   }
 }
 
-// Cria payment PIX via /api/create-order (mesmo flow de venda) — usuário paga a diferença
-async function openPixForUpgrade(txId, amount, itemName) {
+async function openPixForUpgrade(txId, amount) {
   const u = auth.currentUser;
+  const targetLabel = _selectedStore.size === 1 ? [..._selectedStore.values()][0].name : `${_selectedStore.size} skins`;
   try {
     const r = await fetch(`${API_BASE}/api/create-order`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
-        items: [{ name: `Diferença troca: ${itemName}`, price: amount, qty: 1 }],
+        items: [{ name: `Diferença troca: ${targetLabel}`, price: amount, qty: 1 }],
         user: {
           uid: u.uid,
           steamId: _userData?.steamId || u.uid,
@@ -734,20 +783,14 @@ async function openPixForUpgrade(txId, amount, itemName) {
     });
     const order = await r.json();
     if (!r.ok) throw new Error(order.error || `HTTP ${r.status}`);
-
-    // Linka o orderId à transação (best-effort, não bloqueia)
-    db.collection('transactions').doc(txId).update({
-      upgradePixOrderId: order.orderId,
-    }).catch(() => {});
-
-    showPixModal(order, txId);
+    db.collection('transactions').doc(txId).update({ upgradePixOrderId: order.orderId }).catch(() => {});
+    showPixModal(order);
   } catch (e) {
-    console.error('[openPixForUpgrade]', e);
     showToast('Erro gerando PIX: ' + e.message, 'error');
   }
 }
 
-function showPixModal(order, txId) {
+function showPixModal(order) {
   const m = document.createElement('div');
   m.className = 'pix-modal';
   m.innerHTML = `
@@ -755,32 +798,26 @@ function showPixModal(order, txId) {
       <h3 style="margin: 0 0 8px;">Pague o PIX pra liberar a troca</h3>
       <p style="font-size: 13px; color: var(--text-secondary); margin: 0 0 14px;">${fmtR(order.total)} via PIX</p>
       ${order.pixQrCodeBase64
-        ? `<img src="data:image/png;base64,${order.pixQrCodeBase64}" alt="QR PIX">`
+        ? `<img src="data:image/png;base64,${order.pixQrCodeBase64}">`
         : '<div style="background:#fff;color:#000;padding:60px 20px;border-radius:10px;">QR indisponível — use o código abaixo</div>'}
       <div class="pix-copy-box">
         <input value="${escHtml(order.pixCopyPaste || '')}" readonly id="pixCpInp">
         <button onclick="navigator.clipboard.writeText(document.getElementById('pixCpInp').value); this.textContent='Copiado!'">Copiar</button>
       </div>
-      <p style="font-size: 11px; color: var(--text-muted); margin-top: 14px;">Após confirmação do pagamento, sua troca entra na fila de processamento.</p>
-      <button class="btn btn-primary" onclick="location.href='perfil.html'" style="margin-top: 14px; width: 100%;">Ir pra Meu perfil</button>
+      <p style="font-size: 11px; color: var(--text-muted); margin-top: 14px;">Após confirmação do pagamento, sua troca entra na fila.</p>
+      <button class="btn" style="background: linear-gradient(135deg, var(--primary), var(--primary-light)); color: #fff; border: none; padding: 10px 20px; border-radius: 8px; margin-top: 14px; width: 100%; cursor: pointer; font-weight: 700;" onclick="location.href='perfil.html'">Ir pra Meu perfil</button>
     </div>
   `;
   document.body.appendChild(m);
 }
 
-// ── Bootstrap ─────────────────────────────────────────────────────
+// ── Bootstrap ────────────────────────────────────────────────────
 auth.onAuthStateChanged(async (user) => {
-  const loginPanel = document.getElementById('loginPanel');
-  const incompletePanel = document.getElementById('incompletePanel');
+  const gateLogin = document.getElementById('gateLogin');
+  const gateIncomplete = document.getElementById('gateIncomplete');
   const flowPanel = document.getElementById('flowPanel');
-
-  if (!user) {
-    loginPanel.style.display = 'block';
-    incompletePanel.style.display = 'none';
-    flowPanel.style.display = 'none';
-    return;
-  }
-  loginPanel.style.display = 'none';
+  if (!user) { gateLogin.style.display = 'block'; gateIncomplete.style.display = 'none'; flowPanel.style.display = 'none'; return; }
+  gateLogin.style.display = 'none';
 
   try {
     const doc = await db.collection('users').doc(user.uid).get();
@@ -788,25 +825,22 @@ auth.onAuthStateChanged(async (user) => {
   } catch { _userData = {}; }
 
   if (!_userData.profileComplete || !_userData.tradeLink) {
-    incompletePanel.style.display = 'block';
-    flowPanel.style.display = 'none';
-    return;
+    gateIncomplete.style.display = 'block'; flowPanel.style.display = 'none'; return;
   }
 
-  // Mostra avatar + nome no header
+  // Header profile
   const profLink = document.getElementById('headerProfileLink');
   const logoutBtn = document.getElementById('headerLogoutBtn');
   if (profLink) {
     document.getElementById('headerUserName').textContent = _userData.steamName || _userData.fullName || user.displayName || 'Conta';
-    if (_userData.avatar || user.photoURL) {
-      document.getElementById('headerUserAvatar').src = _userData.avatar || user.photoURL;
-    }
+    if (_userData.avatar || user.photoURL) document.getElementById('headerUserAvatar').src = _userData.avatar || user.photoURL;
     profLink.style.display = 'inline-flex';
   }
   if (logoutBtn) logoutBtn.style.display = 'inline-block';
 
   flowPanel.style.display = 'block';
-  loadInventory();
+  loadMyInventory();
+  loadStoreInventory();
 });
 </script>
 </body>
