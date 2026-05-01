@@ -1329,10 +1329,19 @@ function renderLobbyCard(lobby) {
     ? `<div style="position:absolute;top:-8px;right:10px;padding:3px 10px;background:linear-gradient(135deg,#facc15,#f97316);color:#0a0612;border-radius:12px;font-size:9px;font-weight:800;letter-spacing:.5px;">SUA SALA</div>`
     : (isChallengingMe ? `<div style="position:absolute;top:-8px;right:10px;padding:3px 10px;background:linear-gradient(135deg,#ef4444,#f97316);color:#fff;border-radius:12px;font-size:9px;font-weight:800;letter-spacing:.5px;">⚔️ TE DESAFIOU</div>` : '');
 
+  // v38-rating: tier do owner (slot 0)
+  const ownerSlot = (lobby.slots || [])[0];
+  const ownerSteamId = ownerSlot?.steamId;
+  const ownerStats = ownerSteamId ? _playerStatsCache.get(ownerSteamId) : null;
+  const ownerTierHtml = ownerStats
+    ? `<div style="margin-bottom:6px;">${tinyTierBadge(ownerStats.tier, ownerStats.csRating)}</div>`
+    : '';
+
   return `
     <div class="lobby-card ${cls}" style="position:relative;">
       ${badge}
       <div class="lobby-name">${escHtml(lobby.name)}</div>
+      ${ownerTierHtml}
       <div class="lobby-slots">${slots}</div>
       ${actionHtml}
     </div>
@@ -1356,6 +1365,25 @@ let _myLobbyStatus = null; // v33-noredirect: 'open' | 'full' | 'challenged' | '
 // Múltiplos desafios simultâneos: futuramente isso vira um Set, por ora é o último.
 let _myChallengedBy = null;
 let _myChallengeExpiresAt = null;
+
+// v38-rating: tier badges Premier-style (compartilhado entre todas as views)
+const TIER_INFO = {
+  'gray':        { name: 'Bronze',     color: '#9ca3af', emoji: '⚪' },
+  'silver':      { name: 'Prata',      color: '#7dd3fc', emoji: '🩵' },
+  'gold':        { name: 'Ouro',       color: '#3b82f6', emoji: '🟦' },
+  'plat':        { name: 'Platina',    color: '#a855f7', emoji: '🟣' },
+  'diamond':     { name: 'Diamante',   color: '#ec4899', emoji: '🩷' },
+  'master':      { name: 'Mestre',     color: '#ef4444', emoji: '🔴' },
+  'top':         { name: 'Top Global', color: '#facc15', emoji: '🟡' },
+  'calibrating': { name: 'Calibrando', color: '#6b7280', emoji: '🎯' },
+};
+function tinyTierBadge(tier, csRating) {
+  const info = TIER_INFO[tier || 'calibrating'] || TIER_INFO['calibrating'];
+  const ratingTxt = csRating != null
+    ? `<span style="font-family:'JetBrains Mono',monospace;font-weight:800;">${csRating.toLocaleString('pt-BR')}</span>`
+    : '<span style="font-size:9px;">CALIB</span>';
+  return `<span style="display:inline-flex;align-items:center;gap:3px;padding:2px 6px;background:${info.color}25;border:1px solid ${info.color}80;border-radius:5px;font-size:9px;font-weight:700;color:${info.color};letter-spacing:.3px;line-height:1;" title="${info.name}">${info.emoji} ${ratingTxt}</span>`;
+}
 
 // Cache de stats dos jogadores (level/KDR/streak) — evita refetch em cada poll.
 // Key = steamId, value = { level, kdrRecent10, winStreak, matches, fetchedAt }.
