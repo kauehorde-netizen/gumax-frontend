@@ -294,7 +294,8 @@
         <input id="targetSearch" class="ac-input" placeholder="ex: AK-47 Redline Field-Tested" autocomplete="off">
         <div id="targetSuggest" class="ac-list" style="display:none;"></div>
       </div>
-      <div id="targetCard" style="display:none;"></div>
+      <div id="targetList"></div>
+      <div id="targetTotal" style="margin-top: 10px; font-weight: 800; color: var(--accent-yellow); text-align: right;"></div>
     </div>
 
     <!-- STEP 3: Saldo / pagamento -->
@@ -331,10 +332,10 @@ const auth = firebase.auth();
 const db = firebase.firestore();
 
 // State
-let _userData = null;          // doc users/{uid}
-let _inventory = [];           // [{name, image, price?, wear, tradable}]
+let _userData = null;            // doc users/{uid}
+let _inventory = [];             // [{name, image, price?, wear, tradable}]
 let _selectedOffered = new Map(); // assetId -> item (com offerBRL cotado)
-let _targetItem = null;        // {name, saleBRL, iconUrl}
+let _targetItems = [];           // array de {name, saleBRL, iconUrl} — múltiplos
 let _suggestTimer = null;
 
 function showToast(msg, type = 'info') {
@@ -485,7 +486,7 @@ function updateOfferedSummary() {
     ? `Total ofertado: ${fmtR(total)} (${_selectedOffered.size} skin${_selectedOffered.size > 1 ? 's' : ''})`
     : '';
   document.getElementById('targetPanel').style.display = total > 0 ? 'block' : 'none';
-  if (total > 0 && _targetItem) recalcBalance();
+  if (total > 0 && _targetItems.length > 0) recalcBalance();
   else document.getElementById('balancePanel').style.display = 'none';
 }
 
@@ -529,63 +530,92 @@ async function fetchSuggestions(q) {
 
 async function pickTarget(name) {
   suggestList.style.display = 'none';
-  targetInput.value = name;
-  // Cota a target — saleBRL (preço de VENDA, com margem da loja, é o que ele paga)
-  const card = document.getElementById('targetCard');
-  card.style.display = 'block';
-  card.innerHTML = '<div style="padding: 14px;"><span class="spinner"></span> <span style="margin-left:10px;">Cotando…</span></div>';
+  targetInput.value = '';
 
-  try {
-    const r = await fetch(`${API_BASE}/api/pricempire/item`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ name }),
-    });
-    if (!r.ok) throw new Error('item não encontrado');
-    const item = await r.json();
-    const cny = parseFloat(item.youpin) || parseFloat(item.buff) || parseFloat(item.c5game) || 0;
-    if (cny <= 0) throw new Error('sem preço pra essa skin');
-
-    // Pega fator atual da loja
-    let factor = 0.78;
-    try {
-      const f = await fetch(`${API_BASE}/api/exchange-rate`);
-      if (f.ok) {
-        const j = await f.json();
-        if (j.factor) factor = j.factor;
-      }
-    } catch {}
-
-    const saleBRL = Math.round(cny * factor * 100) / 100;
-    const iconHash = item.icon || '';
-    const iconUrl = iconHash.startsWith('http') ? iconHash : (iconHash ? `https://community.cloudflare.steamstatic.com/economy/image/${iconHash}/256fx256f` : '');
-
-    _targetItem = { name: item.market_hash_name || name, saleBRL, iconUrl };
-    card.innerHTML = `
-      <div class="target-card">
-        <img src="${escHtml(iconUrl)}" alt="" onerror="this.style.opacity=0.2">
-        <div class="info">
-          <h3>${escHtml(_targetItem.name)}</h3>
-          <div class="price-tag">${fmtR(saleBRL)}</div>
-        </div>
-      </div>
-    `;
-    recalcBalance();
-  } catch (e) {
-    _targetItem = null;
-    card.innerHTML = `<div style="padding: 14px; color: var(--accent-red);">Erro: ${escHtml(e.message)}</div>`;
-    document.getElementById('balancePanel').style.display = 'none';
+  // Evita duplicatas (mesma skin add 2x)
+  if (_targetItems.some(t => t.name === name)) {
+    showToast('Essa skin já tá na lista', 'error');
+    return;
   }
+
+  // Render placeholder enquanto cota
+  const placeholderId = `t-${Date.now()}`;
+  _targetItems.push({ name, saleBRL: 0, iconUrl: '', _id: placeholderId, _loading: true });
+  renderTargets();
+
+  // Usa /api/pricempire/search?q=NAME — esse endpoint JÁ retorna iconUrl resolvido +
+  // saleBRL calculado com a config de pricing (margem da loja). Mais simples e robusto
+  // que /api/pricempire/item (que só retorna preços crus, sem imagem).
+  try {
+    const r = await fetch(`${API_BASE}/api/pricempire/search?q=${encodeURIComponent(name)}&limit=20`);
+    if (!r.ok) throw new Error('busca falhou');
+    const data = await r.json();
+    const items = Array.isArray(data.items) ? data.items : [];
+    // Match exato pelo nome (case-sensitive — Steam é canônico)
+    const exact = items.find(it => it.name === name) || items[0];
+    if (!exact) throw new Error('skin não encontrada no catálogo');
+    const saleBRL = parseFloat(exact.saleBRL) || 0;
+    if (saleBRL <= 0) throw new Error('sem preço pra essa skin');
+    // Atualiza item no array
+    const idx = _targetItems.findIndex(t => t._id === placeholderId);
+    if (idx >= 0) {
+      _targetItems[idx] = {
+        name: exact.name,
+        saleBRL,
+        iconUrl: exact.iconUrl || '',
+        _id: placeholderId,
+      };
+    }
+  } catch (e) {
+    // Remove placeholder se falhou
+    _targetItems = _targetItems.filter(t => t._id !== placeholderId);
+    showToast('Erro: ' + e.message, 'error');
+  }
+
+  renderTargets();
+  recalcBalance();
 }
+
+function renderTargets() {
+  const list = document.getElementById('targetList');
+  if (!list) return;
+  if (_targetItems.length === 0) { list.innerHTML = ''; document.getElementById('targetTotal').textContent = ''; return; }
+
+  list.innerHTML = _targetItems.map(t => `
+    <div class="target-card" data-id="${escHtml(t._id || '')}">
+      ${t._loading
+        ? '<div style="width:80px;height:80px;display:flex;align-items:center;justify-content:center;background:rgba(0,0,0,.2);border-radius:8px;"><span class="spinner"></span></div>'
+        : `<img src="${escHtml(t.iconUrl)}" alt="" onerror="this.style.opacity=0.2;this.src='data:image/gif;base64,R0lGODlhAQABAAAAACw='">`}
+      <div class="info">
+        <h3>${escHtml(t.name)}</h3>
+        <div class="price-tag">${t._loading ? '…' : fmtR(t.saleBRL)}</div>
+      </div>
+      <button class="btn btn-link" onclick="removeTarget('${escHtml(t._id || '')}')" title="Remover" style="font-size:18px;color:var(--accent-red);text-decoration:none;">×</button>
+    </div>
+  `).join('');
+
+  const total = _targetItems.filter(t => !t._loading).reduce((s, t) => s + (t.saleBRL || 0), 0);
+  document.getElementById('targetTotal').textContent = total > 0
+    ? `Total skins desejadas: ${fmtR(total)} (${_targetItems.length} skin${_targetItems.length > 1 ? 's' : ''})`
+    : '';
+}
+
+function removeTarget(id) {
+  _targetItems = _targetItems.filter(t => t._id !== id);
+  renderTargets();
+  recalcBalance();
+}
+window.removeTarget = removeTarget;
 
 // ── STEP 3: Saldo + pagamento ─────────────────────────────────────
 function recalcBalance() {
-  if (_selectedOffered.size === 0 || !_targetItem) {
+  const validTargets = _targetItems.filter(t => !t._loading && t.saleBRL > 0);
+  if (_selectedOffered.size === 0 || validTargets.length === 0) {
     document.getElementById('balancePanel').style.display = 'none';
     return;
   }
   const offeredTotal = [..._selectedOffered.values()].reduce((s, x) => s + x.offerBRL, 0);
-  const targetTotal = _targetItem.saleBRL;
+  const targetTotal = validTargets.reduce((s, t) => s + t.saleBRL, 0);
   const diff = targetTotal - offeredTotal;
   // diff > 0  => user PAGA   (skin nova mais cara — upgrade)
   // diff < 0  => user RECEBE (skin nova mais barata — downgrade)
@@ -594,7 +624,7 @@ function recalcBalance() {
   const box = document.getElementById('balanceBox');
   box.innerHTML = `
     <div class="balance-row"><span>Suas skins (${_selectedOffered.size})</span><span>${fmtR(offeredTotal)}</span></div>
-    <div class="balance-row"><span>Skin desejada</span><span>${fmtR(targetTotal)}</span></div>
+    <div class="balance-row"><span>Skin${validTargets.length > 1 ? 's' : ''} desejada${validTargets.length > 1 ? 's' : ''} (${validTargets.length})</span><span>${fmtR(targetTotal)}</span></div>
     <div class="balance-final ${diff > 0 ? 'negative' : (diff < 0 ? 'positive' : 'zero')}">
       ${diff > 0
         ? `⬆️ Falta R$ ${Math.abs(diff).toFixed(2).replace('.', ',')} — você paga via PIX`
@@ -649,7 +679,7 @@ async function confirmTrade(type, diff) {
   try { token = await u.getIdToken(); } catch { return showToast('Erro de auth', 'error'); }
 
   const offered = [..._selectedOffered.values()].map(x => ({ name: x.name }));
-  const target = [{ name: _targetItem.name }];
+  const target = _targetItems.filter(t => !t._loading && t.saleBRL > 0).map(t => ({ name: t.name }));
 
   try {
     const r = await fetch(`${API_BASE}/api/buyback/create`, {
@@ -670,7 +700,8 @@ async function confirmTrade(type, diff) {
 
     // Pra upgrade, geramos PIX agora pra ele pagar a diferença
     if (type === 'upgrade' && diff > 0) {
-      await openPixForUpgrade(data.id, diff, _targetItem.name);
+      const targetLabel = _targetItems.length === 1 ? _targetItems[0].name : `${_targetItems.length} skins`;
+      await openPixForUpgrade(data.id, diff, targetLabel);
     } else {
       showToast('Troca criada! Acompanhe em "Meu perfil".', 'success');
       setTimeout(() => location.href = 'perfil.html', 1500);
