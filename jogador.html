@@ -219,6 +219,19 @@ main { max-width:1100px; margin:0 auto; padding:32px 24px; }
 <script>
 const API_BASE = 'https://gumax-backend-production.up.railway.app';
 
+// v38-rating: tier badges Premier-style
+const TIER_INFO = {
+  'gray':        { name: 'Bronze',     color: '#9ca3af', emoji: '⚪' },
+  'silver':      { name: 'Prata',      color: '#7dd3fc', emoji: '🩵' },
+  'gold':        { name: 'Ouro',       color: '#3b82f6', emoji: '🟦' },
+  'plat':        { name: 'Platina',    color: '#a855f7', emoji: '🟣' },
+  'diamond':     { name: 'Diamante',   color: '#ec4899', emoji: '🩷' },
+  'master':      { name: 'Mestre',     color: '#ef4444', emoji: '🔴' },
+  'top':         { name: 'Top Global', color: '#facc15', emoji: '🟡' },
+  'calibrating': { name: 'Calibrando', color: '#6b7280', emoji: '🎯' },
+};
+function tierInfoFor(t) { return TIER_INFO[t] || TIER_INFO['gray']; }
+
 const MAP_LABELS = {
   de_mirage: 'Mirage', de_inferno: 'Inferno', de_dust2: 'Dust 2',
   de_nuke: 'Nuke', de_anubis: 'Anubis', de_ancient: 'Ancient',
@@ -261,12 +274,39 @@ function renderProfile(p) {
     ? `<div class="hero-pill streak">🔥 <span>${p.winStreak} VITÓRIAS SEGUIDAS</span></div>`
     : '';
 
+  // v38-rating: pill principal com tier + csRating (PROEMINENTE no hero)
+  const tInfo = tierInfoFor(p.tier);
+  let ratingPillHtml = '';
+  if (p.calibrating) {
+    ratingPillHtml = `
+      <div class="hero-pill" style="background:${tInfo.color}25;border:2px solid ${tInfo.color}80;color:${tInfo.color};">
+        <span class="label">🎯 CALIBRAÇÃO</span>
+        <span style="font-weight:900;">${p.calibrationProgress || 0}/3</span>
+      </div>
+    `;
+  } else if (p.csRating != null) {
+    ratingPillHtml = `
+      <div class="hero-pill" style="background:linear-gradient(135deg, ${tInfo.color}30, ${tInfo.color}10);border:2px solid ${tInfo.color};color:${tInfo.color};box-shadow:0 0 16px ${tInfo.color}40;">
+        <span class="label">${tInfo.emoji} ${tInfo.name.toUpperCase()}</span>
+        <span style="font-weight:900;font-family:'JetBrains Mono',monospace;">${p.csRating.toLocaleString('pt-BR')}</span>
+      </div>
+    `;
+  }
+  const lastSeasonHtml = p.lastSeasonTier && !p.calibrating ? '' : (p.lastSeasonTier ? `
+    <div class="hero-pill" style="background:rgba(255,255,255,.05);color:var(--text-muted);font-size:10px;">
+      <span class="label">TEMPORADA ANTERIOR</span>
+      <span>${tierInfoFor(p.lastSeasonTier).emoji} ${tierInfoFor(p.lastSeasonTier).name}</span>
+    </div>
+  ` : '');
+
   const heroHtml = `
     <section class="player-hero">
       ${lvlBadge}
       <div class="hero-info">
         <div class="name">${esc(p.name)}</div>
         <div class="meta">
+          ${ratingPillHtml}
+          ${lastSeasonHtml}
           <div class="hero-pill kdr ${kdrCls}">
             <span class="label">KDR</span>
             <span>${p.kdrRecent10.toFixed(2)}</span>
