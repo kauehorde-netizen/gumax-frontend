@@ -62,6 +62,21 @@
     display: inline-flex; align-items: center; gap: 6px;
   }
   .btn-league:hover { background: #2a3a52; }
+  .btn-flow {
+    display: inline-flex; align-items: center; gap: 8px;
+    padding: 6px 14px;
+    background: linear-gradient(135deg, #0c1a35, #1a2952);
+    color: #e0e7ff;
+    border: 1px solid rgba(99, 102, 241, .35);
+    border-radius: 10px; font-weight: 700; font-size: 12px; text-decoration: none;
+    transition: background .15s, border-color .15s, transform .15s;
+  }
+  .btn-flow img { height: 22px; width: auto; display: block; }
+  .btn-flow:hover {
+    background: linear-gradient(135deg, #14224a, #25346b);
+    border-color: rgba(129, 140, 248, .6);
+    transform: translateY(-1px);
+  }
   .header-profile-link {
     display: inline-flex; align-items: center; gap: 10px;
     padding: 5px 12px 5px 5px; border-radius: 24px;
@@ -272,6 +287,9 @@
       <a class="nav-link trocar-link active" href="trocar.html">🔄 Trocar</a>
     </nav>
     <div class="header-actions">
+      <a class="btn-flow" href="https://flowskins.com.br" target="_blank" rel="noopener" title="FlowZ — plataforma de gestão pra revendedores (parceiro Gumax)">
+        <img src="flowz-logo.png" alt="FlowZ">
+      </a>
       <a class="btn-league" href="lobbies.html">🏆 GMAX LEAGUE</a>
       <a class="header-profile-link" href="perfil.html" id="headerProfileLink" style="display:none;">
         <img id="headerUserAvatar" src="https://www.gravatar.com/avatar?d=mp" alt="">
