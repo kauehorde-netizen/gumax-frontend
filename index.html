@@ -2164,7 +2164,7 @@ footer {
 <!-- SEARCH & FILTERS -->
 <section class="search-section" id="marketplace">
   <!-- Marca visível pra confirmar versão deployada. -->
-  <div style="font-size: 10px; color: rgba(139,92,246,0.5); text-align: right; margin-bottom: 4px;">search v76-trocar-2col</div>
+  <div style="font-size: 10px; color: rgba(139,92,246,0.5); text-align: right; margin-bottom: 4px;">search v77-modal-wear-sync</div>
 
   <!-- BUFF-style category picker com SVG icons (Faca, Luvas, Rifle, ...).
        Clicar num modelo (ex: AK-47) filtra a grid e rola pra seção. -->
@@ -4651,6 +4651,34 @@ function switchWearTab(baseName, wear) {
   if (variant.image) {
     document.getElementById('modalImage').innerHTML =
       `<img src="${variant.image}" alt="${variant.name}" onerror="gumaxImgFallback(this)" style="max-width: 280px; max-height: 200px;">`;
+  }
+  // Atualiza título com o wear correto: troca o sufixo "(...)" pelo wear novo,
+  // ou adiciona se não tinha. Antes ficava preso no wear original do Gu.
+  const titleEl = document.getElementById('modalSkinName');
+  if (titleEl) {
+    const baseTitle = (variant.name || titleEl.textContent || '').replace(/\s*\([^)]+\)\s*$/, '');
+    titleEl.textContent = `${baseTitle} (${wear})`;
+  }
+  // Atualiza Float/Pattern. Quando o variant É a skin original do Gu (tem
+  // float real e paintseed), mostra os números. Quando o user clicou num wear
+  // que o Gu NÃO tem (variant placeholder/construído), mostra só o wear por
+  // extenso e esconde pattern — não temos esses dados.
+  const floatBox = document.getElementById('modalFloatBox');
+  if (floatBox) {
+    const isReal = (variant.float > 0) && variant.paintseed;
+    const parts = [];
+    if (isReal) {
+      parts.push(`Float: <strong style="color:var(--accent-yellow); font-family:'JetBrains Mono',monospace;">${variant.float.toFixed(5)}</strong>`);
+      parts.push(`Pattern: <strong style="color: var(--primary-light); font-family:'JetBrains Mono',monospace;">#${variant.paintseed}</strong>`);
+    } else {
+      // Sem float exato: mostra wear por extenso, sem pattern
+      parts.push(`<strong style="color:var(--text-secondary); font-weight: 500;">${wear}</strong>`);
+    }
+    if (variant.inspectLink) {
+      parts.push(`<a href="${variant.inspectLink}" style="color:#66c0f4; text-decoration:none; font-size:12px;">Ver na Steam ↗</a>`);
+    }
+    floatBox.innerHTML = parts.join(' · ');
+    floatBox.style.display = '';
   }
   // Re-inicializa slider de float pra range da wear nova (FT: 0.15-0.38, etc)
   setupModalFloatSlider(wear, variant);
