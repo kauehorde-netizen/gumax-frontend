@@ -37,68 +37,110 @@
   .topbar a { color: var(--text-secondary); text-decoration: none; font-size: 13px; margin-right: 16px; }
   .topbar a:hover { color: var(--text-primary); }
   .brand { font-weight: 800; font-size: 18px; background: linear-gradient(135deg, var(--primary), #a78bfa); -webkit-background-clip: text; color: transparent; }
-  .container { max-width: 900px; margin: 30px auto; padding: 0 24px; }
-  .hero {
-    text-align: center; margin-bottom: 24px;
-  }
-  .hero h1 { font-size: 32px; margin: 0 0 8px; }
-  .hero p { color: var(--text-secondary); font-size: 14px; max-width: 600px; margin: 0 auto; line-height: 1.5; }
+  .container { max-width: 1180px; margin: 30px auto; padding: 0 24px; }
+  .hero { text-align: center; margin-bottom: 24px; }
+  .hero h1 { font-size: 30px; margin: 0 0 8px; }
+  .hero p { color: var(--text-secondary); font-size: 14px; max-width: 640px; margin: 0 auto; line-height: 1.5; }
   .panel {
     background: var(--bg-card); border: 1px solid var(--border);
-    border-radius: 14px; padding: 22px; margin-bottom: 18px;
+    border-radius: 14px; padding: 20px; margin-bottom: 18px;
     backdrop-filter: blur(8px);
   }
-  h2 { font-size: 18px; margin: 0 0 12px; }
+  h2 { font-size: 17px; margin: 0 0 12px; display: flex; align-items: center; gap: 10px; }
   .step-num {
     display: inline-flex; align-items: center; justify-content: center;
-    width: 28px; height: 28px; border-radius: 50%; background: var(--primary);
-    color: #fff; font-weight: 800; font-size: 14px; margin-right: 10px;
+    width: 26px; height: 26px; border-radius: 50%; background: var(--primary);
+    color: #fff; font-weight: 800; font-size: 13px;
   }
-  .form { display: grid; gap: 12px; }
-  .form input, .form select {
-    width: 100%; padding: 10px 12px; background: rgba(0,0,0,.35);
-    border: 1px solid var(--border); color: var(--text-primary); border-radius: 8px;
-    font-size: 14px;
-  }
-  .form input:focus, .form select:focus { outline: none; border-color: var(--primary); }
-  label { font-size: 12px; color: var(--text-secondary); font-weight: 600; }
   .btn {
-    padding: 10px 18px; border-radius: 8px; cursor: pointer;
+    padding: 9px 16px; border-radius: 8px; cursor: pointer;
     border: 1px solid var(--border); background: var(--bg-card); color: var(--text-primary);
-    font-weight: 600; font-size: 14px; transition: all .15s;
+    font-weight: 600; font-size: 13px; transition: all .15s;
   }
   .btn:hover { transform: translateY(-1px); }
-  .btn-primary {
-    background: linear-gradient(135deg, var(--primary), var(--primary-light));
-    border: none; color: #fff;
+  .btn-primary { background: linear-gradient(135deg, var(--primary), var(--primary-light)); border: none; color: #fff; }
+  .btn-success { background: linear-gradient(135deg, var(--accent-green), var(--accent-cyan)); border: none; color: #fff; padding: 12px 22px; font-size: 14px; }
+  .btn-warning { background: linear-gradient(135deg, var(--accent-yellow), #f59e0b); border: none; color: #000; padding: 12px 22px; font-size: 14px; font-weight: 700; }
+  .btn-link { background: transparent; border: none; color: var(--primary-light); padding: 4px 8px; font-size: 12px; cursor: pointer; text-decoration: underline; }
+
+  /* Inventário grid */
+  .inv-grid {
+    display: grid; grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
+    gap: 10px; margin-top: 14px;
+    max-height: 480px; overflow-y: auto; padding: 4px;
   }
-  .btn-success {
-    background: linear-gradient(135deg, var(--accent-green), #22d3ee);
-    border: none; color: #fff;
+  .inv-item {
+    background: rgba(0,0,0,.35); border: 2px solid transparent;
+    border-radius: 10px; padding: 8px; cursor: pointer; transition: all .15s;
+    display: flex; flex-direction: column; gap: 4px;
+    position: relative;
   }
-  .skin-row {
-    display: flex; gap: 10px; align-items: center; padding: 10px;
-    background: rgba(0,0,0,.25); border: 1px solid var(--border); border-radius: 8px;
-    margin-bottom: 8px;
+  .inv-item:hover { transform: translateY(-2px); border-color: rgba(139,92,246,.3); }
+  .inv-item.selected {
+    border-color: var(--primary);
+    background: linear-gradient(180deg, rgba(139,92,246,.18), rgba(0,0,0,.35));
+    box-shadow: 0 0 0 1px var(--primary), 0 6px 16px rgba(139,92,246,.3);
   }
-  .skin-row input { flex: 1; }
-  .skin-row .price-tag {
-    color: var(--accent-yellow); font-weight: 700; font-size: 14px; min-width: 100px; text-align: right;
+  .inv-item.selected::after {
+    content: '✓'; position: absolute; top: 4px; right: 4px;
+    background: var(--primary); color: #fff; width: 20px; height: 20px;
+    border-radius: 50%; display: flex; align-items: center; justify-content: center;
+    font-size: 12px; font-weight: 800;
   }
-  .summary {
+  .inv-item img { width: 100%; height: 90px; object-fit: contain; background: rgba(0,0,0,.25); border-radius: 6px; }
+  .inv-item .nm { font-size: 11px; font-weight: 600; line-height: 1.25; height: 28px; overflow: hidden; }
+  .inv-item .px { color: var(--accent-yellow); font-weight: 800; font-size: 13px; }
+  .inv-item .wear { font-size: 10px; color: var(--text-muted); }
+
+  /* Autocomplete */
+  .autocomplete-wrap { position: relative; }
+  .ac-input {
+    width: 100%; padding: 12px 14px; background: rgba(0,0,0,.35);
+    border: 1px solid var(--border); color: var(--text-primary); border-radius: 10px;
+    font-size: 14px;
+  }
+  .ac-input:focus { outline: none; border-color: var(--primary); }
+  .ac-list {
+    position: absolute; top: calc(100% + 4px); left: 0; right: 0;
+    background: #15121f; border: 1px solid var(--border); border-radius: 10px;
+    max-height: 320px; overflow-y: auto; z-index: 30; box-shadow: 0 10px 40px rgba(0,0,0,.5);
+  }
+  .ac-item { padding: 10px 14px; cursor: pointer; font-size: 13px; border-bottom: 1px solid rgba(139,92,246,.06); }
+  .ac-item:hover, .ac-item.hl { background: rgba(139,92,246,.12); }
+  .ac-item:last-child { border-bottom: none; }
+
+  /* Resumo / saldo */
+  .balance-panel {
     background: linear-gradient(135deg, rgba(139,92,246,.06), rgba(167,139,250,.04));
-    border: 1px solid var(--border); border-radius: 12px; padding: 16px; margin-top: 14px;
+    border: 1px solid var(--border); border-radius: 12px; padding: 18px;
   }
-  .summary-row {
-    display: flex; justify-content: space-between; padding: 6px 0;
-    border-bottom: 1px dashed var(--border);
+  .balance-row {
+    display: flex; justify-content: space-between; padding: 8px 0;
+    border-bottom: 1px dashed var(--border); font-size: 14px;
   }
-  .summary-row:last-child { border-bottom: none; }
-  .summary-row.diff {
-    font-weight: 800; font-size: 16px; padding-top: 12px;
+  .balance-row:last-child { border-bottom: none; }
+  .balance-final {
+    margin-top: 10px; padding: 14px; border-radius: 10px;
+    text-align: center; font-weight: 800; font-size: 18px;
   }
-  .summary-row.diff.positive { color: var(--accent-yellow); }
-  .summary-row.diff.negative { color: var(--accent-green); }
+  .balance-final.positive { background: rgba(16,185,129,.12); border: 1px solid rgba(16,185,129,.4); color: var(--accent-green); }
+  .balance-final.negative { background: rgba(251,191,36,.12); border: 1px solid rgba(251,191,36,.4); color: var(--accent-yellow); }
+  .balance-final.zero { background: rgba(148,163,184,.12); border: 1px solid rgba(148,163,184,.3); color: var(--text-secondary); }
+
+  .target-card {
+    display: flex; gap: 14px; align-items: center; padding: 12px;
+    background: rgba(0,0,0,.25); border: 1px solid var(--border); border-radius: 10px;
+    margin-top: 12px;
+  }
+  .target-card img { width: 80px; height: 80px; object-fit: contain; background: rgba(0,0,0,.2); border-radius: 8px; }
+  .target-card .info { flex: 1; }
+  .target-card .info h3 { margin: 0 0 4px; font-size: 14px; }
+  .target-card .price-tag { color: var(--accent-yellow); font-weight: 800; font-size: 18px; }
+
+  .empty {
+    padding: 40px 24px; text-align: center; color: var(--text-secondary);
+    border: 1px dashed var(--border); border-radius: 12px;
+  }
   .toast {
     position: fixed; top: 16px; right: 16px; z-index: 9999;
     background: var(--bg-card); border: 1px solid var(--border); padding: 12px 16px;
@@ -108,12 +150,33 @@
   .toast.show { opacity: 1; transform: translateY(0); }
   .toast.error { border-color: rgba(239,68,68,.4); }
   .toast.success { border-color: rgba(16,185,129,.4); }
+  .spinner {
+    display: inline-block; width: 18px; height: 18px;
+    border: 3px solid rgba(139,92,246,.2);
+    border-top-color: var(--primary);
+    border-radius: 50%; animation: spin 0.7s linear infinite;
+  }
+  @keyframes spin { to { transform: rotate(360deg); } }
   .info-box {
     background: rgba(34,211,238,.06); border-left: 3px solid var(--accent-cyan);
-    padding: 12px 14px; border-radius: 6px; margin-top: 12px; font-size: 13px;
+    padding: 10px 14px; border-radius: 6px; margin-top: 10px; font-size: 12px;
     color: var(--text-secondary); line-height: 1.5;
   }
-  code { background: rgba(0,0,0,.4); padding: 2px 6px; border-radius: 4px; font-family: monospace; font-size: 12px; }
+  .pix-modal {
+    position: fixed; inset: 0; background: rgba(0,0,0,.85);
+    display: flex; align-items: center; justify-content: center; z-index: 100;
+    backdrop-filter: blur(4px);
+  }
+  .pix-modal-box {
+    background: #15121f; border: 1px solid var(--border); border-radius: 14px;
+    padding: 24px; max-width: 380px; width: 92%; text-align: center;
+  }
+  .pix-modal-box img { width: 220px; height: 220px; border-radius: 10px; background: #fff; padding: 6px; }
+  .pix-copy-box {
+    display: flex; gap: 6px; margin-top: 14px;
+  }
+  .pix-copy-box input { flex: 1; padding: 8px; background: rgba(0,0,0,.5); border: 1px solid var(--border); color: var(--text-primary); border-radius: 6px; font-size: 11px; font-family: monospace; }
+  .pix-copy-box button { padding: 8px 12px; background: var(--primary); color: #fff; border: none; border-radius: 6px; font-size: 12px; cursor: pointer; }
 </style>
 </head>
 <body>
@@ -133,60 +196,59 @@
 <div class="container">
   <div class="hero">
     <h1>🔄 Trocar Skin</h1>
-    <p>Mande uma skin que você tem e receba outra de volta. Se a skin que quer for <b>mais cara</b>, você paga a diferença via PIX. Se for <b>mais barata</b>, a Gumax devolve a diferença em PIX.</p>
+    <p>Mande uma skin que você tem e receba outra de volta. Se a nova for <b>mais cara</b>, você paga a diferença via PIX. Se for <b>mais barata</b>, a Gumax devolve a diferença em PIX.</p>
   </div>
 
+  <!-- Login required -->
   <div class="panel" id="loginPanel">
     <h2>🔒 Login necessário</h2>
-    <p style="color: var(--text-secondary);">Faça login com Steam pra continuar.</p>
+    <p style="color: var(--text-secondary);">Faça login com Steam pra carregar seu inventário.</p>
     <button class="btn btn-primary" onclick="location.href='index.html'">Fazer login</button>
   </div>
 
+  <!-- Profile incomplete -->
+  <div class="panel" id="incompletePanel" style="display:none;">
+    <h2>📝 Perfil incompleto</h2>
+    <p style="color: var(--text-secondary);">Pra fazer trocas você precisa completar seu perfil — Trade Link da Steam + WhatsApp.</p>
+    <button class="btn btn-primary" onclick="location.href='perfil.html?return=trocar.html'">Completar perfil</button>
+  </div>
+
+  <!-- Main flow -->
   <div id="flowPanel" style="display:none;">
 
+    <!-- STEP 1: Inventário -->
     <div class="panel">
-      <h2><span class="step-num">1</span> Skin que você vai mandar</h2>
-      <p style="color: var(--text-secondary); font-size: 13px;">Cole o nome exato (market_hash_name) da skin que você tem e quer trocar.</p>
-      <div id="offeredList" style="margin-top: 14px;">
-        <div class="skin-row">
-          <input class="offered-name" placeholder="ex: AK-47 | Redline (Field-Tested)" autocomplete="off">
-          <span class="price-tag" data-price="">—</span>
-        </div>
+      <h2><span class="step-num">1</span> Suas skins (clique pra selecionar)</h2>
+      <div id="invStatus" style="font-size: 12px; color: var(--text-secondary); margin-top: 6px;"></div>
+      <div id="invGrid" class="inv-grid"></div>
+      <div id="invEmpty" class="empty" style="display:none;">
+        Nenhuma skin trocavel encontrada no seu inventário.
+        <br><small>Verifica se o trade link salvo no perfil tá correto e se o inventário tá público.</small>
       </div>
-      <button class="btn" id="addOfferedBtn" style="margin-top: 8px; font-size: 12px; padding: 6px 12px;">+ Adicionar outra skin</button>
-      <button class="btn btn-primary" id="quoteOfferedBtn" style="margin-top: 8px;">Cotar minhas skins</button>
-      <div id="offeredTotalDisplay" style="margin-top: 14px; display: none;"></div>
+      <div style="display:flex; justify-content:space-between; align-items:center; margin-top:12px;">
+        <button class="btn-link" id="reloadInvBtn">↻ Recarregar inventário</button>
+        <div id="offeredTotal" style="font-weight: 800; color: var(--accent-yellow);"></div>
+      </div>
     </div>
 
+    <!-- STEP 2: Skin desejada (autocomplete) -->
     <div class="panel" id="targetPanel" style="display:none;">
       <h2><span class="step-num">2</span> Skin que você quer receber</h2>
-      <p style="color: var(--text-secondary); font-size: 13px;">Pode ser uma skin do estoque Full ou qualquer skin do catálogo Youpin.</p>
-      <div id="targetList" style="margin-top: 14px;">
-        <div class="skin-row">
-          <input class="target-name" placeholder="ex: ★ Karambit | Doppler Phase 2 (Factory New)" autocomplete="off">
-          <span class="price-tag" data-price="">—</span>
-        </div>
+      <p style="color: var(--text-secondary); font-size: 13px; margin: 4px 0 12px;">Digite e a gente sugere skins do catálogo.</p>
+      <div class="autocomplete-wrap">
+        <input id="targetSearch" class="ac-input" placeholder="ex: AK-47 Redline Field-Tested" autocomplete="off">
+        <div id="targetSuggest" class="ac-list" style="display:none;"></div>
       </div>
-      <button class="btn" id="addTargetBtn" style="margin-top: 8px; font-size: 12px; padding: 6px 12px;">+ Adicionar outra skin</button>
-      <button class="btn btn-primary" id="quoteTargetBtn" style="margin-top: 8px;">Cotar skins desejadas</button>
+      <div id="targetCard" style="display:none;"></div>
     </div>
 
-    <div class="panel" id="summaryPanel" style="display:none;">
+    <!-- STEP 3: Saldo / pagamento -->
+    <div class="panel" id="balancePanel" style="display:none;">
       <h2><span class="step-num">3</span> Resumo da troca</h2>
-      <div class="summary" id="summaryBox"></div>
-      <div class="form" style="margin-top: 16px;">
-        <div>
-          <label>Trade Link Steam (obrigatório)</label>
-          <input id="tradeLink" placeholder="https://steamcommunity.com/tradeoffer/new/?partner=...&token=...">
-        </div>
-        <div id="pixKeyWrap" style="display:none;">
-          <label>Sua chave PIX (pra você receber)</label>
-          <input id="pixKey" placeholder="CPF, e-mail ou chave aleatória">
-        </div>
-      </div>
-      <button class="btn btn-success" id="confirmBtn" style="margin-top: 16px; width: 100%; padding: 14px;">Confirmar troca</button>
+      <div class="balance-panel" id="balanceBox"></div>
+      <div id="actionBox" style="margin-top: 14px;"></div>
       <div class="info-box">
-        <b>Como funciona:</b> após confirmar, a Gumax cria a transação. Se for upgrade, você paga a diferença via PIX. Quando estivermos com seu pagamento + sua skin no Trade, enviamos a nova skin pra você. Tudo rastreado em <a href="perfil.html" style="color: var(--primary-light);">Meu perfil</a>.
+        <b>Como funciona:</b> ao confirmar, a Gumax cria a transação. Você manda sua(s) skin(s) via Trade Link, paga (ou recebe) a diferença via PIX, e te enviamos a nova skin no Steam. Acompanhe tudo em <a href="perfil.html" style="color: var(--primary-light);">Meu perfil</a>.
       </div>
     </div>
 
@@ -213,9 +275,12 @@ firebase.initializeApp(firebaseConfig);
 const auth = firebase.auth();
 const db = firebase.firestore();
 
-let _offeredQuotes = [];
-let _targetQuotes = [];
-let _txType = null;  // 'upgrade' | 'downgrade'
+// State
+let _userData = null;          // doc users/{uid}
+let _inventory = [];           // [{name, image, price?, wear, tradable}]
+let _selectedOffered = new Map(); // assetId -> item (com offerBRL cotado)
+let _targetItem = null;        // {name, saleBRL, iconUrl}
+let _suggestTimer = null;
 
 function showToast(msg, type = 'info') {
   const t = document.getElementById('toast');
@@ -225,167 +290,423 @@ function showToast(msg, type = 'info') {
 }
 
 function fmtR(v) { return 'R$ ' + Number(v || 0).toFixed(2).replace('.', ','); }
-
 function escHtml(s) {
   return String(s || '').replace(/[&<>"']/g, c => ({
     '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;'
   }[c]));
 }
 
-// ── Adicionar / remover linhas ────────────────────────────────────
-document.getElementById('addOfferedBtn').addEventListener('click', () => {
-  const list = document.getElementById('offeredList');
-  list.insertAdjacentHTML('beforeend', `
-    <div class="skin-row">
-      <input class="offered-name" placeholder="ex: AWP | Hyper Beast (Minimal Wear)" autocomplete="off">
-      <span class="price-tag" data-price="">—</span>
-    </div>
-  `);
-});
-
-document.getElementById('addTargetBtn').addEventListener('click', () => {
-  const list = document.getElementById('targetList');
-  list.insertAdjacentHTML('beforeend', `
-    <div class="skin-row">
-      <input class="target-name" placeholder="ex: USP-S | Printstream (Factory New)" autocomplete="off">
-      <span class="price-tag" data-price="">—</span>
-    </div>
-  `);
-});
-
-// ── Cotar skins via /api/buyback/quote ─────────────────────────────
-async function quoteNames(selector) {
-  const inputs = document.querySelectorAll(selector);
-  const names = [...inputs].map(i => i.value.trim()).filter(Boolean);
-  if (!names.length) {
-    showToast('Adicione ao menos 1 skin', 'error');
-    return null;
-  }
-  const r = await fetch(`${API_BASE}/api/buyback/quote`, {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ names }),
-  });
-  if (!r.ok) {
-    const err = await r.json().catch(() => ({}));
-    showToast('Erro ao cotar: ' + (err.error || r.status), 'error');
-    return null;
-  }
-  const data = await r.json();
-  return data.quotes || [];
+// Extrai SteamID64 do tradeLink "https://steamcommunity.com/tradeoffer/new/?partner=XXXX&token=YYY"
+// partner é o accountID (32 bits). SteamID64 = 76561197960265728 + partner.
+function steamIdFromTradeLink(tl) {
+  if (!tl) return null;
+  const m = String(tl).match(/[?&]partner=(\d+)/);
+  if (!m) return null;
+  const partner = BigInt(m[1]);
+  const id64 = (76561197960265728n + partner).toString();
+  return id64;
 }
 
-document.getElementById('quoteOfferedBtn').addEventListener('click', async () => {
-  const quotes = await quoteNames('.offered-name');
-  if (!quotes) return;
-  _offeredQuotes = quotes;
-  // Atualiza preços nas linhas
-  const inputs = document.querySelectorAll('.offered-name');
-  inputs.forEach(i => {
-    const q = quotes.find(x => x.name === i.value.trim() || x.market_hash_name === i.value.trim());
-    const tag = i.parentElement.querySelector('.price-tag');
-    if (q && q.offerBRL) {
-      tag.textContent = fmtR(q.offerBRL);
-      tag.dataset.price = q.offerBRL;
-    } else {
-      tag.textContent = '— não encontrado';
-      tag.style.color = 'var(--accent-red)';
-    }
+// ── STEP 1: Inventário ────────────────────────────────────────────
+async function loadInventory() {
+  const grid = document.getElementById('invGrid');
+  const empty = document.getElementById('invEmpty');
+  const status = document.getElementById('invStatus');
+  grid.innerHTML = '<div style="grid-column: 1/-1; padding: 30px; text-align: center;"><span class="spinner"></span> <span style="margin-left: 10px;">Buscando seu inventário Steam…</span></div>';
+  empty.style.display = 'none';
+
+  // 1) precisa do steamId — preferimos o salvo no users/{uid}; senão extrai do tradeLink
+  let steamId = _userData?.steamId || '';
+  if (!steamId && _userData?.tradeLink) {
+    steamId = steamIdFromTradeLink(_userData.tradeLink) || '';
+  }
+  if (!steamId || !/^\d{17}$/.test(steamId)) {
+    grid.innerHTML = '';
+    empty.style.display = 'block';
+    empty.innerHTML = 'Não consegui descobrir seu Steam ID. Verifica seu Trade Link em <a href="perfil.html?return=trocar.html" style="color: var(--primary-light);">Meu perfil</a>.';
+    return;
+  }
+
+  let invItems = [];
+  try {
+    const r = await fetch(`${API_BASE}/api/steam-inventory?steamId=${steamId}`);
+    const data = await r.json();
+    if (!r.ok) throw new Error(data.hint || data.error || `HTTP ${r.status}`);
+    invItems = Array.isArray(data.items) ? data.items.filter(it => it.tradable && it.marketable) : [];
+  } catch (e) {
+    grid.innerHTML = '';
+    empty.style.display = 'block';
+    empty.innerHTML = `Erro ao carregar inventário: ${escHtml(e.message)}.<br><small>Confirma que seu inventário Steam tá público.</small>`;
+    return;
+  }
+
+  if (invItems.length === 0) {
+    grid.innerHTML = '';
+    empty.style.display = 'block';
+    return;
+  }
+
+  // 2) Cota TODOS os items do inventário em paralelo (batchados por 20)
+  status.innerHTML = `Cotando ${invItems.length} skins…`;
+  const uniqueNames = [...new Set(invItems.map(i => i.market_hash_name).filter(Boolean))];
+  const quoteMap = new Map(); // name -> offerBRL
+  for (let i = 0; i < uniqueNames.length; i += 20) {
+    const chunk = uniqueNames.slice(i, i + 20);
+    try {
+      const r = await fetch(`${API_BASE}/api/buyback/quote`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ names: chunk }),
+      });
+      if (r.ok) {
+        const data = await r.json();
+        for (const q of (data.quotes || [])) {
+          if (q.offerBRL > 0) quoteMap.set(q.name, q.offerBRL);
+        }
+      }
+    } catch {}
+  }
+  status.innerHTML = `${invItems.length} skins · ${quoteMap.size} cotadas`;
+
+  // 3) Render — só mostra items cotados (sem cotação não tem como trocar)
+  _inventory = invItems
+    .map(it => ({
+      assetId: it.assetId || it.assetid || `${it.market_hash_name}-${Math.random()}`,
+      name: it.market_hash_name,
+      wear: inferWear(it.market_hash_name),
+      image: it.iconUrl || it.icon || '',
+      offerBRL: quoteMap.get(it.market_hash_name) || 0,
+      tradable: it.tradable,
+    }))
+    .filter(it => it.offerBRL > 0)
+    .sort((a, b) => b.offerBRL - a.offerBRL);
+
+  if (_inventory.length === 0) {
+    grid.innerHTML = '';
+    empty.style.display = 'block';
+    return;
+  }
+
+  grid.innerHTML = _inventory.map(it => `
+    <div class="inv-item" data-asset="${escHtml(it.assetId)}" data-name="${escHtml(it.name)}" data-price="${it.offerBRL}">
+      <img src="${escHtml(it.image)}" alt="" onerror="this.style.opacity=0.2">
+      <div class="nm">${escHtml(it.name)}</div>
+      <div class="wear">${escHtml(it.wear || '')}</div>
+      <div class="px">${fmtR(it.offerBRL)}</div>
+    </div>
+  `).join('');
+
+  grid.querySelectorAll('.inv-item').forEach(el => {
+    el.addEventListener('click', () => toggleInvItem(el));
   });
-  const total = quotes.reduce((s, q) => s + (q.offerBRL || 0), 0);
-  document.getElementById('offeredTotalDisplay').style.display = 'block';
-  document.getElementById('offeredTotalDisplay').innerHTML = `<div style="text-align:right; font-size: 18px; font-weight: 800; color: var(--accent-yellow);">Total ofertado: ${fmtR(total)}</div>`;
-  document.getElementById('targetPanel').style.display = 'block';
+}
+
+function inferWear(name) {
+  const m = String(name || '').match(/\((Factory New|Minimal Wear|Field-Tested|Well-Worn|Battle-Scarred)\)\s*$/);
+  return m ? m[1] : '';
+}
+
+function toggleInvItem(el) {
+  const aid = el.dataset.asset;
+  if (_selectedOffered.has(aid)) {
+    _selectedOffered.delete(aid);
+    el.classList.remove('selected');
+  } else {
+    _selectedOffered.set(aid, {
+      assetId: aid,
+      name: el.dataset.name,
+      offerBRL: parseFloat(el.dataset.price) || 0,
+    });
+    el.classList.add('selected');
+  }
+  updateOfferedSummary();
+}
+
+function updateOfferedSummary() {
+  const total = [..._selectedOffered.values()].reduce((s, x) => s + (x.offerBRL || 0), 0);
+  document.getElementById('offeredTotal').textContent = total > 0
+    ? `Total ofertado: ${fmtR(total)} (${_selectedOffered.size} skin${_selectedOffered.size > 1 ? 's' : ''})`
+    : '';
+  document.getElementById('targetPanel').style.display = total > 0 ? 'block' : 'none';
+  if (total > 0 && _targetItem) recalcBalance();
+  else document.getElementById('balancePanel').style.display = 'none';
+}
+
+document.getElementById('reloadInvBtn').addEventListener('click', loadInventory);
+
+// ── STEP 2: Autocomplete ──────────────────────────────────────────
+const targetInput = document.getElementById('targetSearch');
+const suggestList = document.getElementById('targetSuggest');
+
+targetInput.addEventListener('input', () => {
+  clearTimeout(_suggestTimer);
+  const q = targetInput.value.trim();
+  if (q.length < 3) { suggestList.style.display = 'none'; return; }
+  _suggestTimer = setTimeout(() => fetchSuggestions(q), 220);
 });
 
-document.getElementById('quoteTargetBtn').addEventListener('click', async () => {
-  const quotes = await quoteNames('.target-name');
-  if (!quotes) return;
-  _targetQuotes = quotes;
-  const inputs = document.querySelectorAll('.target-name');
-  inputs.forEach(i => {
-    const q = quotes.find(x => x.name === i.value.trim() || x.market_hash_name === i.value.trim());
-    const tag = i.parentElement.querySelector('.price-tag');
-    if (q && q.saleBRL) {
-      tag.textContent = fmtR(q.saleBRL);
-      tag.dataset.price = q.saleBRL;
-    } else {
-      tag.textContent = '— não encontrado';
-      tag.style.color = 'var(--accent-red)';
-    }
-  });
-  showSummary();
+document.addEventListener('click', (e) => {
+  if (!e.target.closest('.autocomplete-wrap')) suggestList.style.display = 'none';
 });
 
-function showSummary() {
-  const offeredTotal = _offeredQuotes.reduce((s, q) => s + (q.offerBRL || 0), 0);
-  const targetTotal  = _targetQuotes.reduce((s, q) => s + (q.saleBRL || 0), 0);
+async function fetchSuggestions(q) {
+  try {
+    const r = await fetch(`${API_BASE}/api/pricempire/suggest?q=${encodeURIComponent(q)}&limit=12`);
+    if (!r.ok) return;
+    const data = await r.json();
+    const items = Array.isArray(data.suggestions) ? data.suggestions : [];
+    if (items.length === 0) {
+      suggestList.innerHTML = '<div class="ac-item" style="opacity:.6;">Nada encontrado</div>';
+      suggestList.style.display = 'block';
+      return;
+    }
+    suggestList.innerHTML = items.map(name => `<div class="ac-item" data-name="${escHtml(name)}">${escHtml(name)}</div>`).join('');
+    suggestList.style.display = 'block';
+    suggestList.querySelectorAll('.ac-item[data-name]').forEach(el => {
+      el.addEventListener('click', () => pickTarget(el.dataset.name));
+    });
+  } catch (e) {
+    console.warn('[suggest]', e.message);
+  }
+}
+
+async function pickTarget(name) {
+  suggestList.style.display = 'none';
+  targetInput.value = name;
+  // Cota a target — saleBRL (preço de VENDA, com margem da loja, é o que ele paga)
+  const card = document.getElementById('targetCard');
+  card.style.display = 'block';
+  card.innerHTML = '<div style="padding: 14px;"><span class="spinner"></span> <span style="margin-left:10px;">Cotando…</span></div>';
+
+  try {
+    const r = await fetch(`${API_BASE}/api/pricempire/item`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ name }),
+    });
+    if (!r.ok) throw new Error('item não encontrado');
+    const item = await r.json();
+    const cny = parseFloat(item.youpin) || parseFloat(item.buff) || parseFloat(item.c5game) || 0;
+    if (cny <= 0) throw new Error('sem preço pra essa skin');
+
+    // Pega fator atual da loja
+    let factor = 0.78;
+    try {
+      const f = await fetch(`${API_BASE}/api/exchange-rate`);
+      if (f.ok) {
+        const j = await f.json();
+        if (j.factor) factor = j.factor;
+      }
+    } catch {}
+
+    const saleBRL = Math.round(cny * factor * 100) / 100;
+    const iconHash = item.icon || '';
+    const iconUrl = iconHash.startsWith('http') ? iconHash : (iconHash ? `https://community.cloudflare.steamstatic.com/economy/image/${iconHash}/256fx256f` : '');
+
+    _targetItem = { name: item.market_hash_name || name, saleBRL, iconUrl };
+    card.innerHTML = `
+      <div class="target-card">
+        <img src="${escHtml(iconUrl)}" alt="" onerror="this.style.opacity=0.2">
+        <div class="info">
+          <h3>${escHtml(_targetItem.name)}</h3>
+          <div class="price-tag">${fmtR(saleBRL)}</div>
+        </div>
+      </div>
+    `;
+    recalcBalance();
+  } catch (e) {
+    _targetItem = null;
+    card.innerHTML = `<div style="padding: 14px; color: var(--accent-red);">Erro: ${escHtml(e.message)}</div>`;
+    document.getElementById('balancePanel').style.display = 'none';
+  }
+}
+
+// ── STEP 3: Saldo + pagamento ─────────────────────────────────────
+function recalcBalance() {
+  if (_selectedOffered.size === 0 || !_targetItem) {
+    document.getElementById('balancePanel').style.display = 'none';
+    return;
+  }
+  const offeredTotal = [..._selectedOffered.values()].reduce((s, x) => s + x.offerBRL, 0);
+  const targetTotal = _targetItem.saleBRL;
   const diff = targetTotal - offeredTotal;
-  _txType = diff > 0 ? 'upgrade' : 'downgrade';
+  // diff > 0  => user PAGA   (skin nova mais cara — upgrade)
+  // diff < 0  => user RECEBE (skin nova mais barata — downgrade)
+  // diff = 0  => par
 
-  const box = document.getElementById('summaryBox');
+  const box = document.getElementById('balanceBox');
   box.innerHTML = `
-    <div class="summary-row"><span>Total das suas skins (oferecidas)</span><span>${fmtR(offeredTotal)}</span></div>
-    <div class="summary-row"><span>Total das skins desejadas</span><span>${fmtR(targetTotal)}</span></div>
-    <div class="summary-row diff ${diff > 0 ? 'positive' : 'negative'}">
-      <span>${diff > 0 ? '⬆️ Você paga' : '⬇️ Você recebe'}</span>
-      <span>${fmtR(Math.abs(diff))} via PIX</span>
+    <div class="balance-row"><span>Suas skins (${_selectedOffered.size})</span><span>${fmtR(offeredTotal)}</span></div>
+    <div class="balance-row"><span>Skin desejada</span><span>${fmtR(targetTotal)}</span></div>
+    <div class="balance-final ${diff > 0 ? 'negative' : (diff < 0 ? 'positive' : 'zero')}">
+      ${diff > 0
+        ? `⬆️ Falta R$ ${Math.abs(diff).toFixed(2).replace('.', ',')} — você paga via PIX`
+        : diff < 0
+          ? `⬇️ Sobra R$ ${Math.abs(diff).toFixed(2).replace('.', ',')} — Gumax devolve via PIX`
+          : 'Saldo zerado — troca direta'}
     </div>
   `;
-  document.getElementById('summaryPanel').style.display = 'block';
-  // Mostra campo PIX só se downgrade (Gu vai pagar ao user)
-  document.getElementById('pixKeyWrap').style.display = (_txType === 'downgrade') ? 'block' : 'none';
+
+  const action = document.getElementById('actionBox');
+  if (diff > 0) {
+    // upgrade — user paga
+    action.innerHTML = `
+      <button class="btn btn-warning" id="confirmUpgradeBtn" style="width: 100%;">
+        💳 Gerar PIX de ${fmtR(diff)} pra completar a troca
+      </button>
+    `;
+    document.getElementById('confirmUpgradeBtn').addEventListener('click', () => confirmTrade('upgrade', diff));
+  } else if (diff < 0) {
+    // downgrade — Gumax paga
+    action.innerHTML = `
+      <div style="margin-bottom: 10px;">
+        <label style="font-size: 12px; color: var(--text-secondary);">Sua chave PIX (pra Gumax te enviar)</label>
+        <input id="pixKey" class="ac-input" placeholder="CPF, e-mail ou chave aleatória" style="margin-top: 4px;">
+      </div>
+      <button class="btn btn-success" id="confirmDowngradeBtn" style="width: 100%;">
+        ✅ Confirmar troca — vou receber ${fmtR(Math.abs(diff))}
+      </button>
+    `;
+    document.getElementById('confirmDowngradeBtn').addEventListener('click', () => confirmTrade('downgrade', diff));
+  } else {
+    action.innerHTML = `
+      <button class="btn btn-success" id="confirmEqualBtn" style="width: 100%;">
+        ✅ Confirmar troca direta
+      </button>
+    `;
+    document.getElementById('confirmEqualBtn').addEventListener('click', () => confirmTrade('upgrade', 0));
+  }
+
+  document.getElementById('balancePanel').style.display = 'block';
 }
 
-document.getElementById('confirmBtn').addEventListener('click', async () => {
+async function confirmTrade(type, diff) {
   const u = auth.currentUser;
-  if (!u) return showToast('Sessão expirada — faça login', 'error');
-  const tradeLink = document.getElementById('tradeLink').value.trim();
-  const pixKey    = document.getElementById('pixKey').value.trim();
-  if (!tradeLink || !/steamcommunity\.com\/tradeoffer/.test(tradeLink)) {
-    return showToast('Trade Link Steam inválido', 'error');
-  }
-  if (_txType === 'downgrade' && !pixKey) {
-    return showToast('Chave PIX obrigatória pra downgrade', 'error');
-  }
+  if (!u) return showToast('Sessão expirada', 'error');
+  const tradeLink = _userData?.tradeLink || '';
+  if (!tradeLink) return showToast('Trade Link ausente — completa o perfil', 'error');
+  const pixKey = type === 'downgrade' ? document.getElementById('pixKey')?.value.trim() : null;
+  if (type === 'downgrade' && !pixKey) return showToast('Informe sua chave PIX', 'error');
+
   let token;
-  try { token = await u.getIdToken(); } catch (e) {
-    return showToast('Erro de auth', 'error');
-  }
-  const userDoc = await db.collection('users').doc(u.uid).get();
-  const userData = userDoc.data() || {};
+  try { token = await u.getIdToken(); } catch { return showToast('Erro de auth', 'error'); }
+
+  const offered = [..._selectedOffered.values()].map(x => ({ name: x.name }));
+  const target = [{ name: _targetItem.name }];
+
   try {
     const r = await fetch(`${API_BASE}/api/buyback/create`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
       body: JSON.stringify({
-        type: _txType,
-        offered: _offeredQuotes.map(q => ({ name: q.name || q.market_hash_name })),
-        target:  _targetQuotes.map(q => ({ name: q.name || q.market_hash_name })),
+        type,
+        offered,
+        target,
         tradeLink,
-        pixKey: pixKey || null,
-        steamId: userData.steamId || u.uid,
-        userName: userData.fullName || userData.steamName || u.displayName || 'Cliente',
+        pixKey,
+        steamId: _userData?.steamId || u.uid,
+        userName: _userData?.fullName || _userData?.steamName || u.displayName || 'Cliente',
       }),
     });
     const data = await r.json();
     if (!r.ok) throw new Error(data.error || `HTTP ${r.status}`);
-    showToast('Troca criada! Acompanhe em "Meu perfil".', 'success');
-    setTimeout(() => location.href = 'perfil.html', 1500);
+
+    // Pra upgrade, geramos PIX agora pra ele pagar a diferença
+    if (type === 'upgrade' && diff > 0) {
+      await openPixForUpgrade(data.id, diff, _targetItem.name);
+    } else {
+      showToast('Troca criada! Acompanhe em "Meu perfil".', 'success');
+      setTimeout(() => location.href = 'perfil.html', 1500);
+    }
   } catch (e) {
-    console.error(e);
+    console.error('[confirmTrade]', e);
     showToast('Erro: ' + e.message, 'error');
   }
-});
+}
 
-auth.onAuthStateChanged((user) => {
-  if (user) {
-    document.getElementById('loginPanel').style.display = 'none';
-    document.getElementById('flowPanel').style.display = 'block';
-  } else {
-    document.getElementById('loginPanel').style.display = 'block';
-    document.getElementById('flowPanel').style.display = 'none';
+// Cria payment PIX via /api/create-order (mesmo flow de venda) — usuário paga a diferença
+async function openPixForUpgrade(txId, amount, itemName) {
+  const u = auth.currentUser;
+  try {
+    const r = await fetch(`${API_BASE}/api/create-order`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        items: [{ name: `Diferença troca: ${itemName}`, price: amount, qty: 1 }],
+        user: {
+          uid: u.uid,
+          steamId: _userData?.steamId || u.uid,
+          email: _userData?.email || u.email || `${u.uid}@gumax.placeholder`,
+          name: _userData?.fullName || _userData?.steamName || u.displayName || 'Cliente',
+          whatsapp: _userData?.whatsapp || '',
+          tradeLink: _userData?.tradeLink || '',
+        },
+        paymentMethod: 'pix',
+      }),
+    });
+    const order = await r.json();
+    if (!r.ok) throw new Error(order.error || `HTTP ${r.status}`);
+
+    // Linka o orderId à transação (best-effort, não bloqueia)
+    db.collection('transactions').doc(txId).update({
+      upgradePixOrderId: order.orderId,
+    }).catch(() => {});
+
+    showPixModal(order, txId);
+  } catch (e) {
+    console.error('[openPixForUpgrade]', e);
+    showToast('Erro gerando PIX: ' + e.message, 'error');
   }
+}
+
+function showPixModal(order, txId) {
+  const m = document.createElement('div');
+  m.className = 'pix-modal';
+  m.innerHTML = `
+    <div class="pix-modal-box">
+      <h3 style="margin: 0 0 8px;">Pague o PIX pra liberar a troca</h3>
+      <p style="font-size: 13px; color: var(--text-secondary); margin: 0 0 14px;">${fmtR(order.total)} via PIX</p>
+      ${order.pixQrCodeBase64
+        ? `<img src="data:image/png;base64,${order.pixQrCodeBase64}" alt="QR PIX">`
+        : '<div style="background:#fff;color:#000;padding:60px 20px;border-radius:10px;">QR indisponível — use o código abaixo</div>'}
+      <div class="pix-copy-box">
+        <input value="${escHtml(order.pixCopyPaste || '')}" readonly id="pixCpInp">
+        <button onclick="navigator.clipboard.writeText(document.getElementById('pixCpInp').value); this.textContent='Copiado!'">Copiar</button>
+      </div>
+      <p style="font-size: 11px; color: var(--text-muted); margin-top: 14px;">Após confirmação do pagamento, sua troca entra na fila de processamento.</p>
+      <button class="btn btn-primary" onclick="location.href='perfil.html'" style="margin-top: 14px; width: 100%;">Ir pra Meu perfil</button>
+    </div>
+  `;
+  document.body.appendChild(m);
+}
+
+// ── Bootstrap ─────────────────────────────────────────────────────
+auth.onAuthStateChanged(async (user) => {
+  const loginPanel = document.getElementById('loginPanel');
+  const incompletePanel = document.getElementById('incompletePanel');
+  const flowPanel = document.getElementById('flowPanel');
+
+  if (!user) {
+    loginPanel.style.display = 'block';
+    incompletePanel.style.display = 'none';
+    flowPanel.style.display = 'none';
+    return;
+  }
+  loginPanel.style.display = 'none';
+
+  try {
+    const doc = await db.collection('users').doc(user.uid).get();
+    _userData = doc.exists ? doc.data() : {};
+  } catch { _userData = {}; }
+
+  if (!_userData.profileComplete || !_userData.tradeLink) {
+    incompletePanel.style.display = 'block';
+    flowPanel.style.display = 'none';
+    return;
+  }
+
+  flowPanel.style.display = 'block';
+  loadInventory();
 });
 </script>
 </body>
