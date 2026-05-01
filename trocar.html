@@ -28,15 +28,59 @@
     font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
     min-height: 100vh;
   }
-  .topbar {
-    display: flex; align-items: center; justify-content: space-between;
-    padding: 14px 24px; border-bottom: 1px solid var(--border);
-    background: rgba(13,13,17,.85); backdrop-filter: blur(12px);
-    position: sticky; top: 0; z-index: 50;
+  /* HEADER — copiado do index.html pra manter visual consistente */
+  header {
+    position: sticky; top: 0; z-index: 100;
+    background: rgba(8, 6, 14, 0.95);
+    backdrop-filter: blur(20px);
+    border-bottom: 1px solid var(--border);
+    padding: 0 max(24px, calc((100% - 1280px) / 2 + 24px));
   }
-  .topbar a { color: var(--text-secondary); text-decoration: none; font-size: 13px; margin-right: 16px; }
-  .topbar a:hover { color: var(--text-primary); }
-  .brand { font-weight: 800; font-size: 18px; background: linear-gradient(135deg, var(--primary), #a78bfa); -webkit-background-clip: text; color: transparent; }
+  .header-content {
+    display: flex; align-items: center; justify-content: space-between; height: 72px;
+  }
+  .logo { height: 44px; object-fit: contain; cursor: pointer; }
+  nav { display: flex; gap: 32px; flex: 1; margin-left: 48px; }
+  .nav-link {
+    font-size: 14px; font-weight: 500; color: var(--text-secondary);
+    cursor: pointer; transition: color 0.2s; white-space: nowrap;
+    text-decoration: none;
+  }
+  .nav-link:hover { color: var(--accent-yellow); }
+  .nav-link.active { color: var(--text-primary); font-weight: 600; }
+  .rifas-link {
+    background: linear-gradient(135deg, var(--primary), var(--accent-yellow));
+    -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+    font-weight: 600;
+  }
+  .rifas-link:hover { -webkit-text-fill-color: var(--accent-yellow); }
+  .analise-link { color: var(--primary-light); font-weight: 600; }
+  .analise-link:hover { color: var(--accent-yellow); }
+  .trocar-link {
+    background: linear-gradient(135deg, #22d3ee, var(--primary-light));
+    -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+    font-weight: 600;
+  }
+  .trocar-link:hover { -webkit-text-fill-color: var(--accent-yellow); }
+  .header-actions { display: flex; align-items: center; gap: 16px; }
+  .btn-league {
+    padding: 8px 16px; background: #1e293b; color: #e0e7ff;
+    border: 1px solid rgba(148, 163, 184, .2); border-radius: 10px;
+    font-weight: 700; cursor: pointer; font-size: 13px; text-decoration: none;
+    display: inline-flex; align-items: center; gap: 6px; white-space: nowrap;
+    transition: background .15s, border-color .15s;
+  }
+  .btn-league:hover { background: #2a3a52; border-color: var(--primary-light); }
+  .header-profile-link {
+    display: inline-flex; align-items: center; gap: 10px;
+    padding: 5px 12px 5px 5px; border-radius: 24px;
+    background: var(--bg-card); border: 1px solid var(--border);
+    text-decoration: none; color: var(--text-primary); transition: border-color .15s;
+  }
+  .header-profile-link:hover { border-color: var(--primary-light); }
+  .header-profile-link img { width: 32px; height: 32px; border-radius: 50%; object-fit: cover; }
+  .header-profile-link span { font-size: 14px; font-weight: 600; }
+  .logout-btn { background: transparent; border: none; color: var(--text-muted); font-size: 12px; cursor: pointer; padding: 6px 10px; }
   .container { max-width: 1180px; margin: 30px auto; padding: 0 24px; }
   .hero { text-align: center; margin-bottom: 24px; }
   .hero h1 { font-size: 30px; margin: 0 0 8px; }
@@ -181,17 +225,28 @@
 </head>
 <body>
 
-<div class="topbar">
-  <div>
-    <span class="brand">Gumax Skins</span>
-    <span style="margin-left: 18px; color: var(--text-muted); font-size: 13px;">Trocar Skin</span>
+<header>
+  <div class="header-content">
+    <a href="index.html" style="line-height:0;">
+      <img src="https://static.wixstatic.com/media/874864_b598e856481740e7ae752771a661c242~mv2.png/v1/fill/w_600,h_235,al_c,q_85,enc_auto/874864_b598e856481740e7ae752771a661c242~mv2.png" alt="Gumax Skins" class="logo">
+    </a>
+    <nav>
+      <a class="nav-link" href="index.html#marketplace">🛒 Mercado</a>
+      <a class="nav-link" href="vender.html" style="color: var(--accent-yellow); font-weight: 600;">💰 Vender</a>
+      <a class="nav-link analise-link" href="analise.html">📊 Análise</a>
+      <a class="nav-link rifas-link" href="rifas.html">🎰 Rifas</a>
+      <a class="nav-link trocar-link active" href="trocar.html">🔄 Trocar</a>
+    </nav>
+    <div class="header-actions">
+      <a class="btn-league" href="lobbies.html" title="Plataforma de campeonatos CS2">🏆 GMAX LEAGUE</a>
+      <a class="header-profile-link" href="perfil.html" id="headerProfileLink" style="display:none;">
+        <img id="headerUserAvatar" src="https://www.gravatar.com/avatar?d=mp" alt="">
+        <span id="headerUserName">user</span>
+      </a>
+      <button class="logout-btn" id="headerLogoutBtn" onclick="auth.signOut().then(() => location.href='index.html')" style="display:none;">Sair</button>
+    </div>
   </div>
-  <div>
-    <a href="index.html">Marketplace</a>
-    <a href="vender.html">Vender</a>
-    <a href="perfil.html">Meu perfil</a>
-  </div>
-</div>
+</header>
 
 <div class="container">
   <div class="hero">
@@ -704,6 +759,18 @@ auth.onAuthStateChanged(async (user) => {
     flowPanel.style.display = 'none';
     return;
   }
+
+  // Mostra avatar + nome no header
+  const profLink = document.getElementById('headerProfileLink');
+  const logoutBtn = document.getElementById('headerLogoutBtn');
+  if (profLink) {
+    document.getElementById('headerUserName').textContent = _userData.steamName || _userData.fullName || user.displayName || 'Conta';
+    if (_userData.avatar || user.photoURL) {
+      document.getElementById('headerUserAvatar').src = _userData.avatar || user.photoURL;
+    }
+    profLink.style.display = 'inline-flex';
+  }
+  if (logoutBtn) logoutBtn.style.display = 'inline-block';
 
   flowPanel.style.display = 'block';
   loadInventory();
