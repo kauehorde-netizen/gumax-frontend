@@ -415,7 +415,9 @@ async function loadInventory() {
       });
       if (r.ok) {
         const data = await r.json();
-        for (const q of (data.quotes || [])) {
+        // Backend retorna em data.items (não data.quotes — bug que tinha aqui antes).
+        const quotes = data.items || data.quotes || [];
+        for (const q of quotes) {
           if (q.offerBRL > 0) quoteMap.set(q.name, q.offerBRL);
         }
       }
