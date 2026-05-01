@@ -198,12 +198,29 @@ main { max-width:1200px; margin:0 auto; padding:32px 24px; }
 <script>
 const API_BASE = 'https://gumax-backend-production.up.railway.app';
 
+// v38-rating: helper visual dos tiers
+const TIER_INFO = {
+  'gray':        { name: 'Bronze',     color: '#9ca3af', emoji: '⚪' },
+  'silver':      { name: 'Prata',      color: '#7dd3fc', emoji: '🩵' },
+  'gold':        { name: 'Ouro',       color: '#3b82f6', emoji: '🟦' },
+  'plat':        { name: 'Platina',    color: '#a855f7', emoji: '🟣' },
+  'diamond':     { name: 'Diamante',   color: '#ec4899', emoji: '🩷' },
+  'master':      { name: 'Mestre',     color: '#ef4444', emoji: '🔴' },
+  'top':         { name: 'Top Global', color: '#facc15', emoji: '🟡' },
+  'calibrating': { name: 'Calibrando', color: '#6b7280', emoji: '🎯' },
+};
+function tierBadge(p) {
+  const info = TIER_INFO[p.tier || 'gray'] || TIER_INFO['gray'];
+  return `<span style="display:inline-flex;align-items:center;gap:4px;padding:2px 8px;background:${info.color}25;border:1px solid ${info.color}80;border-radius:6px;font-size:10px;font-weight:800;color:${info.color};letter-spacing:.5px;">${info.emoji} ${info.name.toUpperCase()}</span>`;
+}
+
 async function loadRanking() {
   const tbody = document.getElementById('rankingBody');
   const empty = document.getElementById('emptyState');
   const podium = document.getElementById('podium');
   try {
-    const r = await fetch(`${API_BASE}/api/match/ranking`);
+    // v38-rating: novo endpoint (top jogadores por csRating)
+    const r = await fetch(`${API_BASE}/api/rating/leaderboard?limit=30`);
     const data = await r.json();
     const players = data.players || [];
 
@@ -232,17 +249,18 @@ async function loadRanking() {
 
 function renderPodium(spotId, p, pos) {
   const medals = { 1: '🥇', 2: '🥈', 3: '🥉' };
-  const ratingClass = p.rating >= 1.5 ? 'elite' : p.rating >= 1.0 ? 'high' : '';
+  const csRating = p.csRating ?? 0;
   document.getElementById(spotId).innerHTML = `
     <div class="podium-medal">${medals[pos]}</div>
     <div class="podium-position">#${pos}</div>
     <div class="podium-avatar">${p.avatar ? `<img src="${esc(p.avatar)}" onerror="this.style.display='none'">` : esc((p.name || '?').charAt(0).toUpperCase())}</div>
     <div class="podium-name">${esc(p.name)}</div>
-    <div class="podium-rating">${p.rating.toFixed(2)}</div>
+    <div style="margin:6px 0;">${tierBadge(p)}</div>
+    <div class="podium-rating">${csRating.toLocaleString('pt-BR')}</div>
     <div class="podium-stats">
-      <span><strong>${p.matches}</strong> partidas</span>
-      <span><strong>${p.kdr.toFixed(2)}</strong> K/D</span>
-      <span><strong>${p.avgAdr}</strong> ADR</span>
+      <span><strong>${p.matches || 0}</strong> partidas</span>
+      <span><strong>${(p.kdr || 0).toFixed(2)}</strong> K/D</span>
+      <span><strong>${p.wins || 0}/${p.losses || 0}</strong> W/L</span>
     </div>
   `;
 }
@@ -251,25 +269,23 @@ function hidePodium(spotId) { document.getElementById(spotId).style.visibility =
 
 function renderRow(p, pos) {
   const rankClass = pos === 1 ? 'top1' : pos === 2 ? 'top2' : pos === 3 ? 'top3' : '';
-  // Backend agora devolve `kdr` (= kdrRecent10) e `level`. Compatível com versão anterior que tinha `rating`.
-  const display = p.kdr != null ? p.kdr : (p.rating || 0);
-  const ratingClass = display >= 1.5 ? 'elite' : display >= 1.0 ? 'high' : '';
   const profileLink = p.steamId ? `jogador.html?id=${encodeURIComponent(p.steamId)}` : '#';
+  const csRating = p.csRating ?? 0;
   return `
     <tr style="cursor:pointer;" onclick="location.href='${profileLink}'">
       <td class="rank-pos ${rankClass}">${pos}</td>
       <td>
         <div class="player-cell">
           <div class="avatar">${p.avatar ? `<img src="${esc(p.avatar)}" onerror="this.style.display='none'">` : esc((p.name || '?').charAt(0).toUpperCase())}</div>
-          <div class="player-name">${esc(p.name)}${p.level ? ` <span style="display:inline-block;margin-left:6px;padding:1px 8px;background:rgba(139,92,246,.2);border:1px solid rgba(139,92,246,.4);border-radius:6px;font-size:10px;font-family:'JetBrains Mono',monospace;font-weight:800;color:var(--primary-light);">LVL ${p.level}</span>` : ''}</div>
+          <div class="player-name">${esc(p.name)} ${tierBadge(p)}</div>
         </div>
       </td>
-      <td class="numeric"><span class="rating-pill ${ratingClass}">${display.toFixed(2)}</span></td>
-      <td class="numeric hide-mobile">${p.matches}</td>
-      <td class="numeric hide-mobile">${(p.kdrAllTime || p.kdr || 0).toFixed(2)}</td>
+      <td class="numeric"><span class="rating-pill" style="font-size:14px;font-weight:900;">${csRating.toLocaleString('pt-BR')}</span></td>
+      <td class="numeric hide-mobile">${p.matches || 0}</td>
+      <td class="numeric hide-mobile">${(p.kdr || 0).toFixed(2)}</td>
       <td class="numeric hide-mobile">${(p.kda || 0).toFixed(2)}</td>
       <td class="numeric hide-mobile">${p.avgAdr || 0}</td>
-      <td class="numeric hide-mobile">${p.mvps || 0}</td>
+      <td class="numeric hide-mobile">${p.wins || 0}/${p.losses || 0}</td>
     </tr>
   `;
 }
