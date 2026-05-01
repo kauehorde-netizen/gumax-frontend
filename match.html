@@ -319,6 +319,68 @@ let _isCaptainA = false;
 let _isCaptainB = false;
 let _myTeam = null; // 'A' or 'B'
 
+// v38-rating: tier badges + delta pós-partida
+const TIER_INFO = {
+  'gray':        { name: 'Bronze',     color: '#9ca3af', emoji: '⚪' },
+  'silver':      { name: 'Prata',      color: '#7dd3fc', emoji: '🩵' },
+  'gold':        { name: 'Ouro',       color: '#3b82f6', emoji: '🟦' },
+  'plat':        { name: 'Platina',    color: '#a855f7', emoji: '🟣' },
+  'diamond':     { name: 'Diamante',   color: '#ec4899', emoji: '🩷' },
+  'master':      { name: 'Mestre',     color: '#ef4444', emoji: '🔴' },
+  'top':         { name: 'Top Global', color: '#facc15', emoji: '🟡' },
+  'calibrating': { name: 'Calibrando', color: '#6b7280', emoji: '🎯' },
+};
+
+let _postMatchDeltas = null;
+let _postMatchFetching = false;
+
+async function fetchPostMatchDeltas(matchData) {
+  if (_postMatchDeltas || _postMatchFetching) return _postMatchDeltas;
+  _postMatchFetching = true;
+  const allSteamIds = [
+    ...(matchData.teamA || []).map(p => p.steamId),
+    ...(matchData.teamB || []).map(p => p.steamId),
+  ].filter(Boolean);
+  if (!allSteamIds.length) { _postMatchFetching = false; return null; }
+  try {
+    const r = await fetch(`${API_BASE}/api/match/players?ids=${allSteamIds.join(',')}`);
+    const data = await r.json();
+    _postMatchDeltas = data.players || {};
+  } catch (e) { console.error('[postMatch] fetch falhou:', e); }
+  _postMatchFetching = false;
+  // Re-render se já está em finished
+  if (_matchData?.status === 'finished') render();
+  return _postMatchDeltas;
+}
+
+function postMatchPlayerRow(p, deltas) {
+  const stats = deltas?.[p.steamId];
+  const tier = stats?.tier || 'calibrating';
+  const tInfo = TIER_INFO[tier] || TIER_INFO['calibrating'];
+  const csRating = stats?.csRating ?? null;
+  const delta = stats?.lastDelta || 0;
+  const deltaColor = delta > 0 ? '#10b981' : delta < 0 ? '#ef4444' : '#6b7280';
+  const deltaArrow = delta > 0 ? '⬆️' : delta < 0 ? '⬇️' : '➖';
+  const deltaSign = delta > 0 ? '+' : '';
+  const calibTxt = stats?.calibrating
+    ? `<span style="font-size:11px;color:${tInfo.color};">🎯 Calibrando ${stats.calibrationProgress || 0}/3</span>`
+    : `<span style="display:inline-flex;align-items:center;gap:4px;color:${tInfo.color};font-weight:700;">${tInfo.emoji} ${csRating != null ? csRating.toLocaleString('pt-BR') : '?'}</span>`;
+  const deltaPill = stats?.calibrating ? '' : `
+    <span style="display:inline-flex;align-items:center;gap:4px;padding:3px 10px;background:${deltaColor}25;border:1px solid ${deltaColor}80;border-radius:8px;font-family:'JetBrains Mono',monospace;font-weight:800;font-size:13px;color:${deltaColor};">
+      ${deltaArrow} ${deltaSign}${delta}
+    </span>`;
+  return `
+    <div style="display:flex;align-items:center;gap:10px;padding:8px 12px;background:rgba(255,255,255,.03);border-radius:8px;margin-bottom:6px;">
+      <div class="player-avatar" style="width:32px;height:32px;">${p.avatar ? `<img src="${p.avatar}" onerror="this.style.display='none'">` : (p.name||'?').charAt(0).toUpperCase()}</div>
+      <div style="flex:1;min-width:0;">
+        <div style="font-size:13px;font-weight:700;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">${escHtml(p.name||'—')}</div>
+        <div style="font-size:11px;">${calibTxt}</div>
+      </div>
+      ${deltaPill}
+    </div>
+  `;
+}
+
 // v6-icons-mp3: ícones reais (PNG) substituem emojis. Img path → maps/<key>.png
 const MAP_LABELS = {
   de_mirage:   { name: 'Mirage',   icon: '🏛️' },
@@ -546,8 +608,27 @@ function renderStage(m) {
     const winner = m.winner === 'A' ? 'Time A 🟦 venceu!' : m.winner === 'B' ? 'Time B 🟥 venceu!' : 'Empate!';
     stageTitle.textContent = winner;
     countdown.style.display = 'none';
+
+    // v38-rating: dispara fetch dos deltas (1x) e re-renderiza quando chegar
+    if (!_postMatchDeltas && !_postMatchFetching) fetchPostMatchDeltas(m);
+
+    const teamARows = (m.teamA || []).map(p => postMatchPlayerRow(p, _postMatchDeltas)).join('');
+    const teamBRows = (m.teamB || []).map(p => postMatchPlayerRow(p, _postMatchDeltas)).join('');
+    const loadingTxt = !_postMatchDeltas ? '<p style="text-align:center;color:var(--text-muted);font-size:12px;margin:10px 0;">Carregando deltas de rating…</p>' : '';
+
     actionBox.innerHTML = `
-      <p style="font-size:24px;font-weight:800;color:var(--accent-yellow);margin-bottom:14px;">${m.scoreA||0} × ${m.scoreB||0}</p>
+      <p style="font-size:32px;font-weight:900;color:var(--accent-yellow);margin-bottom:18px;">${m.scoreA||0} × ${m.scoreB||0}</p>
+      ${loadingTxt}
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-bottom:18px;text-align:left;">
+        <div>
+          <h3 style="font-size:11px;color:var(--accent-cyan);letter-spacing:1px;margin-bottom:8px;">TIME A</h3>
+          ${teamARows}
+        </div>
+        <div>
+          <h3 style="font-size:11px;color:var(--accent-red);letter-spacing:1px;margin-bottom:8px;">TIME B</h3>
+          ${teamBRows}
+        </div>
+      </div>
       <button class="btn-huge" onclick="location.href='lobbies.html'">Voltar pra Lobbies</button>
     `;
   } else if (m.status === 'cancelled') {
