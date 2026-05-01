@@ -1,0 +1,314 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Leaderboard — GMAX LEAGUE</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&family=JetBrains+Mono:wght@600;800;900&display=swap" rel="stylesheet">
+<style>
+:root {
+  --bg-primary: #0a0612; --bg-secondary: #110a1f; --bg-elevated: #1a0f2e;
+  --primary: #8b5cf6; --primary-light: #a78bfa;
+  --accent-cyan: #22d3ee; --accent-yellow: #facc15; --accent-orange: #f97316;
+  --accent-red: #ef4444; --accent-green: #10b981;
+  --text-primary: #e0e7ff; --text-secondary: #a5a3b8; --text-muted: #6b6885;
+  --border: rgba(139,92,246,.15);
+}
+* { box-sizing: border-box; margin: 0; padding: 0; }
+body {
+  font-family: 'Inter', sans-serif; color: var(--text-primary); min-height: 100vh;
+  background:
+    radial-gradient(ellipse at top, rgba(139,92,246,.10), transparent 60%),
+    radial-gradient(ellipse at bottom, rgba(34,211,238,.06), transparent 60%),
+    var(--bg-primary);
+  overflow-x: hidden; position: relative;
+}
+.bg-orbs { position:fixed; inset:0; pointer-events:none; z-index:0; overflow:hidden; contain:strict; }
+.bg-orbs .orb { position:absolute; border-radius:50%; filter:blur(40px); opacity:.25; will-change:transform; }
+.bg-orbs .orb1 { width:380px; height:380px; background:radial-gradient(circle,rgba(139,92,246,.6),transparent 70%); top:-12%; left:-8%; animation:drift1 50s ease-in-out infinite alternate; }
+.bg-orbs .orb2 { width:340px; height:340px; background:radial-gradient(circle,rgba(34,211,238,.45),transparent 70%); bottom:-10%; right:-8%; animation:drift2 60s ease-in-out infinite alternate; }
+@keyframes drift1 { from { transform:translate3d(0,0,0); } to { transform:translate3d(60px, 40px, 0); } }
+@keyframes drift2 { from { transform:translate3d(0,0,0); } to { transform:translate3d(-50px, 60px, 0); } }
+@media (prefers-reduced-motion: reduce) { .bg-orbs .orb { animation: none; } }
+
+header, main { position: relative; z-index: 1; }
+header { background: rgba(8,6,14,0.92); backdrop-filter: blur(10px); border-bottom: 1px solid var(--border); position: sticky; top: 0; z-index: 100; }
+.header-content { max-width: 1300px; margin: 0 auto; padding: 14px 24px; display: flex; align-items: center; justify-content: space-between; gap: 24px; }
+.brand { font-size: 22px; font-weight: 900; letter-spacing: 1px; background: linear-gradient(135deg, #facc15, #f97316, #ef4444); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
+.nav-back { display: inline-flex; align-items: center; gap: 8px; padding: 8px 14px; background: rgba(139,92,246,.15); border: 1px solid rgba(139,92,246,.3); border-radius: 10px; color: var(--primary-light); text-decoration: none; font-size: 13px; font-weight: 600; }
+
+main { max-width: 1300px; margin: 0 auto; padding: 32px 24px 80px; }
+
+.page-header { text-align: center; margin-bottom: 36px; }
+.page-header h1 { font-size: 38px; font-weight: 900; letter-spacing: .5px; margin-bottom: 8px; background: linear-gradient(135deg, #facc15, #ef4444); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
+.page-header .subtitle { font-size: 14px; color: var(--text-muted); }
+
+/* ─── Filtros ─── */
+.filter-bar { display: flex; gap: 10px; align-items: center; margin-bottom: 24px; flex-wrap: wrap; justify-content: center; }
+.search-input { flex: 1; max-width: 340px; padding: 11px 16px; background: rgba(255,255,255,.04); border: 1px solid var(--border); border-radius: 12px; color: var(--text-primary); font-size: 13px; font-family: inherit; }
+.search-input:focus { outline: none; border-color: var(--primary); background: rgba(255,255,255,.06); }
+.tier-filter { display: inline-flex; align-items: center; gap: 6px; padding: 8px 14px; background: rgba(255,255,255,.04); border: 1px solid var(--border); border-radius: 10px; cursor: pointer; font-size: 12px; font-weight: 700; transition: all .15s; user-select: none; }
+.tier-filter:hover { background: rgba(255,255,255,.08); }
+.tier-filter.active { background: var(--tier-color, var(--primary))20; border-color: var(--tier-color, var(--primary)); color: var(--tier-color, var(--primary-light)); }
+
+/* ─── Pódio top 3 ─── */
+.podium { display: grid; grid-template-columns: 1fr 1.2fr 1fr; gap: 16px; align-items: end; margin-bottom: 40px; }
+@media (max-width: 720px) { .podium { grid-template-columns: 1fr; } }
+
+.podium-spot { padding: 20px 16px; background: linear-gradient(180deg, var(--tier-color, var(--primary))15, rgba(20,16,40,.4)); border: 2px solid var(--tier-color, var(--primary))60; border-radius: 16px; text-align: center; position: relative; overflow: hidden; transition: transform .25s; }
+.podium-spot:hover { transform: translateY(-4px); }
+.podium-spot::before { content: ''; position: absolute; top: -40px; left: 50%; transform: translateX(-50%); width: 200px; height: 200px; background: radial-gradient(circle, var(--tier-color, transparent)40, transparent 70%); pointer-events: none; opacity: .6; }
+.podium-spot.spot-1 { padding: 36px 20px; }
+.podium-medal { font-size: 36px; margin-bottom: 6px; }
+.podium-spot.spot-1 .podium-medal { font-size: 52px; }
+.podium-pos { font-size: 11px; font-weight: 800; color: var(--text-muted); letter-spacing: 2px; margin-bottom: 14px; }
+.podium-avatar { width: 80px; height: 80px; border-radius: 50%; margin: 0 auto 12px; background: rgba(139,92,246,.2); border: 3px solid var(--tier-color, var(--primary)); overflow: hidden; display: flex; align-items: center; justify-content: center; font-size: 32px; font-weight: 900; box-shadow: 0 0 24px var(--tier-color, var(--primary))60; }
+.podium-spot.spot-1 .podium-avatar { width: 96px; height: 96px; }
+.podium-avatar img { width: 100%; height: 100%; object-fit: cover; }
+.podium-name { font-size: 16px; font-weight: 800; margin-bottom: 8px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.podium-tier-badge { display: inline-flex; align-items: center; gap: 4px; padding: 4px 12px; background: var(--tier-color)25; border: 1px solid var(--tier-color)80; border-radius: 8px; font-size: 11px; font-weight: 800; color: var(--tier-color); margin-bottom: 10px; letter-spacing: .5px; }
+.podium-rating { font-family: 'JetBrains Mono', monospace; font-size: 30px; font-weight: 900; color: var(--tier-color, var(--accent-yellow)); margin-bottom: 8px; text-shadow: 0 0 12px var(--tier-color)80; }
+.podium-spot.spot-1 .podium-rating { font-size: 38px; }
+.podium-stats { font-size: 11px; color: var(--text-muted); display: flex; justify-content: center; gap: 12px; }
+.podium-stats strong { color: var(--text-secondary); font-weight: 700; }
+
+/* ─── Lista de jogadores ─── */
+.players-section { background: rgba(20,16,40,.5); border: 1px solid var(--border); border-radius: 14px; padding: 14px; }
+.section-title { font-size: 12px; color: var(--text-muted); letter-spacing: 1.5px; font-weight: 700; padding: 4px 8px 14px; }
+
+.player-row {
+  display: grid;
+  grid-template-columns: 50px 1fr 110px 90px 80px 80px;
+  gap: 12px;
+  align-items: center;
+  padding: 12px 14px;
+  border-radius: 10px;
+  margin-bottom: 4px;
+  background: rgba(255,255,255,.02);
+  border: 1px solid transparent;
+  cursor: pointer;
+  transition: all .15s;
+}
+.player-row:hover { background: rgba(255,255,255,.06); border-color: var(--tier-color, var(--primary))40; transform: translateX(2px); }
+.player-row[data-tier="top"] { border-left: 3px solid #facc15; }
+.player-row[data-tier="master"] { border-left: 3px solid #ef4444; }
+.player-row[data-tier="diamond"] { border-left: 3px solid #ec4899; }
+.player-row[data-tier="plat"] { border-left: 3px solid #a855f7; }
+.player-row[data-tier="gold"] { border-left: 3px solid #3b82f6; }
+
+.row-pos { font-family: 'JetBrains Mono', monospace; font-size: 16px; font-weight: 900; color: var(--text-muted); text-align: center; }
+.row-pos.top1 { color: #facc15; font-size: 19px; }
+.row-pos.top2 { color: #d1d5db; font-size: 18px; }
+.row-pos.top3 { color: #f97316; font-size: 17px; }
+
+.row-player { display: flex; align-items: center; gap: 10px; min-width: 0; }
+.row-avatar { width: 36px; height: 36px; border-radius: 50%; background: rgba(139,92,246,.2); overflow: hidden; flex-shrink: 0; display: flex; align-items: center; justify-content: center; font-weight: 800; font-size: 14px; border: 2px solid var(--tier-color, transparent); }
+.row-avatar img { width: 100%; height: 100%; object-fit: cover; }
+.row-info { min-width: 0; }
+.row-name { font-size: 14px; font-weight: 700; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.row-tier { display: inline-flex; align-items: center; gap: 4px; padding: 2px 8px; background: var(--tier-color)25; border: 1px solid var(--tier-color)60; border-radius: 5px; font-size: 9px; font-weight: 800; color: var(--tier-color); margin-top: 3px; letter-spacing: .3px; }
+
+.row-rating { font-family: 'JetBrains Mono', monospace; font-size: 18px; font-weight: 900; color: var(--tier-color, var(--text-primary)); text-align: right; }
+
+.row-stat { text-align: center; font-size: 12px; }
+.row-stat .label { font-size: 9px; color: var(--text-muted); text-transform: uppercase; letter-spacing: .5px; }
+.row-stat .val { font-weight: 700; color: var(--text-primary); }
+
+.row-wl { text-align: center; font-family: 'JetBrains Mono', monospace; font-size: 13px; font-weight: 700; }
+.row-wl .wins { color: var(--accent-green); }
+.row-wl .losses { color: var(--accent-red); }
+
+@media (max-width: 720px) {
+  .player-row { grid-template-columns: 40px 1fr 90px; }
+  .row-stat, .row-wl { display: none; }
+}
+
+.empty-state { text-align: center; padding: 60px 20px; color: var(--text-muted); }
+.empty-state .icon { font-size: 48px; margin-bottom: 12px; opacity: .5; }
+.empty-state h3 { font-size: 18px; margin-bottom: 8px; color: var(--text-secondary); }
+
+.loading { text-align: center; padding: 40px; color: var(--text-muted); }
+</style>
+</head>
+<body>
+
+<div class="bg-orbs">
+  <div class="orb orb1"></div>
+  <div class="orb orb2"></div>
+</div>
+
+<header>
+  <div class="header-content">
+    <a href="index.html" class="nav-back">← Mercado</a>
+    <div class="brand">GMAX LEAGUE</div>
+    <a href="lobbies.html" class="nav-back" style="background: rgba(34,211,238,.15); border-color: rgba(34,211,238,.3); color: var(--accent-cyan);">⚔️ Jogar</a>
+  </div>
+</header>
+
+<main>
+  <div class="page-header">
+    <h1>🏆 LEADERBOARD</h1>
+    <p class="subtitle">Top jogadores da temporada — atualizado em tempo real</p>
+  </div>
+
+  <div class="filter-bar">
+    <input type="text" class="search-input" id="searchInput" placeholder="🔍 Buscar jogador...">
+    <div class="tier-filter active" data-tier="all">Todos</div>
+    <div class="tier-filter" data-tier="top" style="--tier-color:#facc15;">🟡 Top</div>
+    <div class="tier-filter" data-tier="master" style="--tier-color:#ef4444;">🔴 Mestre</div>
+    <div class="tier-filter" data-tier="diamond" style="--tier-color:#ec4899;">🩷 Diamante</div>
+    <div class="tier-filter" data-tier="plat" style="--tier-color:#a855f7;">🟣 Platina</div>
+    <div class="tier-filter" data-tier="gold" style="--tier-color:#3b82f6;">🟦 Ouro</div>
+    <div class="tier-filter" data-tier="silver" style="--tier-color:#7dd3fc;">🩵 Prata</div>
+    <div class="tier-filter" data-tier="gray" style="--tier-color:#9ca3af;">⚪ Bronze</div>
+  </div>
+
+  <div id="podium" class="podium"></div>
+
+  <section class="players-section">
+    <div class="section-title">RANKING COMPLETO</div>
+    <div id="playersGrid"></div>
+  </section>
+</main>
+
+<script>
+const API_BASE = 'https://gumax-backend-production.up.railway.app';
+
+const TIER_INFO = {
+  'gray':        { name: 'Bronze',     color: '#9ca3af', emoji: '⚪' },
+  'silver':      { name: 'Prata',      color: '#7dd3fc', emoji: '🩵' },
+  'gold':        { name: 'Ouro',       color: '#3b82f6', emoji: '🟦' },
+  'plat':        { name: 'Platina',    color: '#a855f7', emoji: '🟣' },
+  'diamond':     { name: 'Diamante',   color: '#ec4899', emoji: '🩷' },
+  'master':      { name: 'Mestre',     color: '#ef4444', emoji: '🔴' },
+  'top':         { name: 'Top Global', color: '#facc15', emoji: '🟡' },
+  'calibrating': { name: 'Calibrando', color: '#6b7280', emoji: '🎯' },
+};
+
+let _allPlayers = [];
+let _activeTierFilter = 'all';
+let _searchTerm = '';
+
+async function loadLeaderboard() {
+  try {
+    const r = await fetch(`${API_BASE}/api/rating/leaderboard?limit=50`);
+    const data = await r.json();
+    _allPlayers = data.players || [];
+    render();
+  } catch (e) {
+    console.error('[leaderboard]', e);
+    document.getElementById('playersGrid').innerHTML = `<div class="empty-state"><div class="icon">⚠️</div><h3>Erro ao carregar</h3><p>${esc(e.message)}</p></div>`;
+  }
+}
+
+function filteredPlayers() {
+  return _allPlayers.filter(p => {
+    if (_activeTierFilter !== 'all' && p.tier !== _activeTierFilter) return false;
+    if (_searchTerm && !(p.name || '').toLowerCase().includes(_searchTerm.toLowerCase())) return false;
+    return true;
+  });
+}
+
+function render() {
+  const players = filteredPlayers();
+
+  // Pódio top 3 (ignora filtros pra sempre mostrar topo)
+  const top3 = _allPlayers.slice(0, 3);
+  if (top3.length === 0) {
+    document.getElementById('podium').innerHTML = `
+      <div></div>
+      <div class="empty-state" style="grid-column:1/-1;">
+        <div class="icon">🎯</div>
+        <h3>Ninguém calibrado ainda</h3>
+        <p>Ranking aparece aqui quando os primeiros jogadores completarem 3 partidas de calibração.</p>
+      </div>
+      <div></div>
+    `;
+  } else {
+    // Ordem visual: 2º (esquerda), 1º (centro), 3º (direita)
+    const ordered = [top3[1], top3[0], top3[2]].filter(Boolean);
+    const positions = top3.length === 3 ? [2, 1, 3] : top3.length === 2 ? [2, 1] : [1];
+    document.getElementById('podium').innerHTML = ordered.map((p, i) => renderPodium(p, positions[i])).join('');
+  }
+
+  // Lista
+  const grid = document.getElementById('playersGrid');
+  if (players.length === 0) {
+    grid.innerHTML = `<div class="empty-state"><div class="icon">🔎</div><h3>Nenhum jogador encontrado</h3><p>Ajuste filtros ou busca.</p></div>`;
+    return;
+  }
+  grid.innerHTML = players.map((p, i) => renderRow(p, i + 1)).join('');
+}
+
+function renderPodium(p, pos) {
+  const medal = pos === 1 ? '🥇' : pos === 2 ? '🥈' : '🥉';
+  const tInfo = TIER_INFO[p.tier] || TIER_INFO['gray'];
+  return `
+    <div class="podium-spot spot-${pos}" style="--tier-color: ${tInfo.color};" onclick="goToPlayer('${p.steamId}')">
+      <div class="podium-medal">${medal}</div>
+      <div class="podium-pos">#${pos}</div>
+      <div class="podium-avatar">${p.avatar ? `<img src="${esc(p.avatar)}" onerror="this.style.display=\'none\'">` : esc((p.name || '?').charAt(0).toUpperCase())}</div>
+      <div class="podium-name">${esc(p.name || 'Player')}</div>
+      <div class="podium-tier-badge">${tInfo.emoji} ${tInfo.name.toUpperCase()}</div>
+      <div class="podium-rating">${(p.csRating ?? 0).toLocaleString('pt-BR')}</div>
+      <div class="podium-stats">
+        <span><strong>${p.matches || 0}</strong> jogos</span>
+        <span><strong>${(p.kdr || 0).toFixed(2)}</strong> K/D</span>
+      </div>
+    </div>
+  `;
+}
+
+function renderRow(p, pos) {
+  const tInfo = TIER_INFO[p.tier] || TIER_INFO['gray'];
+  const posCls = pos === 1 ? 'top1' : pos === 2 ? 'top2' : pos === 3 ? 'top3' : '';
+  return `
+    <div class="player-row" data-tier="${p.tier || 'gray'}" style="--tier-color: ${tInfo.color};" onclick="goToPlayer('${p.steamId}')">
+      <div class="row-pos ${posCls}">${pos}</div>
+      <div class="row-player">
+        <div class="row-avatar">${p.avatar ? `<img src="${esc(p.avatar)}" onerror="this.style.display=\'none\'">` : esc((p.name || '?').charAt(0).toUpperCase())}</div>
+        <div class="row-info">
+          <div class="row-name">${esc(p.name || 'Player')}</div>
+          <span class="row-tier">${tInfo.emoji} ${tInfo.name.toUpperCase()}</span>
+        </div>
+      </div>
+      <div class="row-rating">${(p.csRating ?? 0).toLocaleString('pt-BR')}</div>
+      <div class="row-stat">
+        <div class="val">${(p.kdr || 0).toFixed(2)}</div>
+        <div class="label">K/D</div>
+      </div>
+      <div class="row-stat">
+        <div class="val">${p.matches || 0}</div>
+        <div class="label">Jogos</div>
+      </div>
+      <div class="row-wl">
+        <span class="wins">${p.wins || 0}</span> /
+        <span class="losses">${p.losses || 0}</span>
+      </div>
+    </div>
+  `;
+}
+
+function goToPlayer(steamId) { if (steamId) location.href = `jogador.html?id=${encodeURIComponent(steamId)}`; }
+function esc(s) { return String(s || '').replace(/[&<>"\\']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"\'":'&#39;'})[c]); }
+
+// Filtros
+document.querySelectorAll('.tier-filter').forEach(el => {
+  el.addEventListener('click', () => {
+    document.querySelectorAll('.tier-filter').forEach(x => x.classList.remove('active'));
+    el.classList.add('active');
+    _activeTierFilter = el.dataset.tier;
+    render();
+  });
+});
+document.getElementById('searchInput').addEventListener('input', (e) => {
+  _searchTerm = e.target.value;
+  render();
+});
+
+loadLeaderboard();
+setInterval(loadLeaderboard, 60000);
+</script>
+
+</body>
+</html>
