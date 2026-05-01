@@ -472,38 +472,58 @@ async function loadMyInventory() {
     return;
   }
 
-  // Cota em batches de 20
+  // Renderiza grid IMEDIATAMENTE com placeholder de preço — UX progressiva.
+  // Items com offerBRL=0 ficam no grid mas com label "cotando…" e não-clicáveis.
+  _myInventory = invItems.map((it, i) => ({
+    key: it.assetid || it.assetId || `${it.market_hash_name}-${i}`,
+    name: it.market_hash_name,
+    wear: inferWear(it.market_hash_name),
+    image: it.iconUrl || it.icon || '',
+    offerBRL: 0,
+    _quoting: true,
+    category: categoryOf(it.market_hash_name),
+  }));
+  document.getElementById('myInvCounter').textContent = ` · ${_myInventory.length} skins · cotando…`;
+  renderMyGrid();
+
+  // Cota TODOS os batches em PARALELO (Promise.all), atualiza grid conforme retorna.
   const uniqueNames = [...new Set(invItems.map(i => i.market_hash_name).filter(Boolean))];
-  const quoteMap = new Map();
-  document.getElementById('myInvCounter').textContent = ` · cotando ${uniqueNames.length}…`;
-  for (let i = 0; i < uniqueNames.length; i += 20) {
-    const chunk = uniqueNames.slice(i, i + 20);
+  const BATCH = 20;
+  const chunks = [];
+  for (let i = 0; i < uniqueNames.length; i += BATCH) chunks.push(uniqueNames.slice(i, i + BATCH));
+
+  let resolvedCount = 0;
+  await Promise.all(chunks.map(async (chunk) => {
     try {
       const r = await fetch(`${API_BASE}/api/buyback/quote`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ names: chunk }),
       });
-      if (r.ok) {
-        const data = await r.json();
-        for (const q of (data.items || [])) {
-          if (q.offerBRL > 0) quoteMap.set(q.name, q.offerBRL);
+      if (!r.ok) return;
+      const data = await r.json();
+      for (const q of (data.items || [])) {
+        if (q.offerBRL > 0) {
+          // Atualiza TODOS os items com esse nome (user pode ter duplicatas)
+          for (const inv of _myInventory) {
+            if (inv.name === q.name) {
+              inv.offerBRL = q.offerBRL;
+              inv._quoting = false;
+              resolvedCount++;
+            }
+          }
         }
       }
     } catch {}
-  }
+    // Re-render parcial conforme cada batch volta — user vê preços aparecendo
+    document.getElementById('myInvCounter').textContent = ` · ${resolvedCount}/${_myInventory.length} cotadas`;
+    renderMyGrid();
+  }));
 
-  _myInventory = invItems
-    .map((it, i) => ({
-      key: it.assetid || it.assetId || `${it.market_hash_name}-${i}`,
-      name: it.market_hash_name,
-      wear: inferWear(it.market_hash_name),
-      image: it.iconUrl || it.icon || '',
-      offerBRL: quoteMap.get(it.market_hash_name) || 0,
-      category: categoryOf(it.market_hash_name),
-    }))
-    .filter(it => it.offerBRL > 0);
-
+  // Final pass: marca os que continuaram quoting (sem cotação) como uncotaveis
+  for (const inv of _myInventory) if (inv._quoting) inv._quoting = false;
+  // Filtra os que ficaram sem preço — não dá pra trocar
+  _myInventory = _myInventory.filter(it => it.offerBRL > 0);
   document.getElementById('myInvCounter').textContent = ` · ${_myInventory.length} skins cotadas`;
   renderMyGrid();
 }
@@ -521,14 +541,18 @@ function renderMyGrid() {
     grid.innerHTML = '<div class="empty-state">Nenhuma skin nesse filtro.</div>';
     return;
   }
-  grid.innerHTML = items.map(it => `
-    <div class="skin-card ${_selectedMy.has(it.key) ? 'selected' : ''}" data-side="my" data-key="${escHtml(it.key)}">
+  grid.innerHTML = items.map(it => {
+    const quoting = it._quoting;
+    return `
+    <div class="skin-card ${_selectedMy.has(it.key) ? 'selected' : ''}${quoting ? ' card-quoting' : ''}"
+         data-side="my" data-key="${escHtml(it.key)}"
+         ${quoting ? 'style="opacity:.55;cursor:wait;"' : ''}>
       <img src="${escHtml(it.image)}" alt="" onerror="this.style.opacity=0.2">
       <div class="nm">${escHtml(it.name)}</div>
       <div class="wear-tag">${escHtml(it.wear)}</div>
-      <div class="px">${fmtR(it.offerBRL)}</div>
+      <div class="px">${quoting ? '<span style="color:var(--text-muted);">cotando…</span>' : fmtR(it.offerBRL)}</div>
     </div>
-  `).join('');
+  `;}).join('');
 }
 
 // ── Estoque Gumax (Full + Youpin top) ─────────────────────────────
@@ -612,7 +636,7 @@ document.addEventListener('click', (e) => {
   if (side === 'my') {
     const key = card.dataset.key;
     const item = _myInventory.find(it => it.key === key);
-    if (!item) return;
+    if (!item || item._quoting || item.offerBRL <= 0) return;
     if (_selectedMy.has(key)) _selectedMy.delete(key);
     else _selectedMy.set(key, item);
     renderMyGrid(); recalcSummary();
@@ -828,12 +852,13 @@ auth.onAuthStateChanged(async (user) => {
     gateIncomplete.style.display = 'block'; flowPanel.style.display = 'none'; return;
   }
 
-  // Header profile
+  // Header profile — usa os mesmos campos do users/{uid} do index.html
   const profLink = document.getElementById('headerProfileLink');
   const logoutBtn = document.getElementById('headerLogoutBtn');
   if (profLink) {
     document.getElementById('headerUserName').textContent = _userData.steamName || _userData.fullName || user.displayName || 'Conta';
-    if (_userData.avatar || user.photoURL) document.getElementById('headerUserAvatar').src = _userData.avatar || user.photoURL;
+    const photo = _userData.steamAvatar || _userData.photoURL || user.photoURL || '';
+    if (photo) document.getElementById('headerUserAvatar').src = photo;
     profLink.style.display = 'inline-flex';
   }
   if (logoutBtn) logoutBtn.style.display = 'inline-block';
