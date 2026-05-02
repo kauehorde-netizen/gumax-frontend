@@ -104,7 +104,7 @@ main { max-width:1100px; margin:0 auto; padding:32px 24px; }
 .hero-pill.streak { background:linear-gradient(135deg,rgba(249,115,22,.2),rgba(239,68,68,.15)); border-color:rgba(249,115,22,.4); color:var(--accent-orange); }
 .hero-pill.winrate { background:rgba(16,185,129,.1); border-color:rgba(16,185,129,.4); color:var(--accent-green); }
 
-.hero-avatar { width:120px; height:120px; border-radius:50%; background:rgba(139,92,246,.2); overflow:hidden; flex-shrink:0; border:3px solid var(--lvl-color, var(--primary)); }
+.hero-avatar { width:120px; height:120px; border-radius:50%; background:rgba(139,92,246,.2); overflow:hidden; flex-shrink:0; border:3px solid var(--tier-avatar-color, var(--primary)); box-shadow: 0 0 16px var(--tier-avatar-color, transparent)40; }
 .hero-avatar img { width:100%; height:100%; object-fit:cover; }
 
 @media (max-width:760px) {
@@ -267,9 +267,27 @@ function renderProfile(p) {
   document.title = `${p.name} — GMAX LEAGUE`;
 
   const kdrCls = p.kdrRecent10 >= 1.5 ? 'elite' : p.kdrRecent10 >= 1.0 ? 'high' : '';
-  const lvlBadge = p.level
-    ? `<div class="hero-level" data-lvl="${p.level}">${p.level}<div class="hero-level-label">LEVEL</div></div>`
-    : `<div class="hero-level no-level">Joga ${Math.max(0, 3 - p.matches)}<br>partidas</div>`;
+  // v38-rating: hexágono agora mostra TIER + csRating (substitui o level KDR antigo).
+  // Cor do hexágono é a do tier. Pra players em calibração mostra "🎯 X/3".
+  const tInfoHex = tierInfoFor(p.tier);
+  let lvlBadge;
+  if (p.calibrating) {
+    lvlBadge = `<div class="hero-level no-level">🎯<br><span style="font-size:18px;font-weight:900;color:var(--text-secondary);">${p.calibrationProgress || 0}/3</span><br><span style="font-size:9px;color:var(--text-muted);letter-spacing:1px;">CALIBRANDO</span></div>`;
+  } else if (p.csRating != null) {
+    // Compacta o rating (25,000 → "25K", 12,345 → "12.3K")
+    const ratingShort = p.csRating >= 10000
+      ? (p.csRating / 1000).toFixed(p.csRating >= 100000 ? 0 : 1).replace(/\.0$/, '') + 'K'
+      : p.csRating.toLocaleString('pt-BR');
+    lvlBadge = `<div class="hero-level" style="--lvl-color:${tInfoHex.color};--lvl-color-dark:${tInfoHex.color}88;">
+      <div style="text-align:center;line-height:1.1;">
+        <div style="font-size:34px;">${tInfoHex.emoji}</div>
+        <div style="font-size:18px;font-weight:900;font-family:'JetBrains Mono',monospace;margin-top:2px;">${ratingShort}</div>
+      </div>
+      <div class="hero-level-label" style="color:${tInfoHex.color};border-color:${tInfoHex.color}80;">RANK ${tInfoHex.name.toUpperCase()}</div>
+    </div>`;
+  } else {
+    lvlBadge = `<div class="hero-level no-level">Joga ${Math.max(0, 3 - p.matches)}<br>partidas pra<br>calibrar</div>`;
+  }
   const streakHtml = p.winStreak >= 2
     ? `<div class="hero-pill streak">🔥 <span>${p.winStreak} VITÓRIAS SEGUIDAS</span></div>`
     : '';
@@ -318,7 +336,7 @@ function renderProfile(p) {
           ${streakHtml}
         </div>
       </div>
-      <div class="hero-avatar" data-lvl-color>
+      <div class="hero-avatar" style="--tier-avatar-color:${tInfoHex.color};">
         ${p.avatar ? `<img src="${esc(p.avatar)}" onerror="this.parentNode.textContent='${esc((p.name||'?').charAt(0).toUpperCase())}';">` : esc((p.name||'?').charAt(0).toUpperCase())}
       </div>
     </section>
