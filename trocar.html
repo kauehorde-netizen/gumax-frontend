@@ -55,27 +55,17 @@
   .trocar-link { background: linear-gradient(135deg, #22d3ee, var(--primary-light)); -webkit-background-clip: text; -webkit-text-fill-color: transparent; font-weight: 600; }
   .trocar-link:hover { -webkit-text-fill-color: var(--accent-yellow); }
   .header-actions { display: flex; align-items: center; gap: 16px; }
-  .btn-league {
-    padding: 8px 16px; background: #1e293b; color: #e0e7ff;
-    border: 1px solid rgba(148,163,184,.2); border-radius: 10px;
-    font-weight: 700; font-size: 13px; text-decoration: none;
-    display: inline-flex; align-items: center; gap: 6px;
+  /* Brand logos limpas no header — sem fundo de botão. */
+  .brand-logo {
+    display: inline-flex; align-items: center;
+    text-decoration: none; background: transparent; border: none; padding: 0;
+    opacity: .92; transition: opacity .15s, transform .15s, filter .15s;
   }
-  .btn-league:hover { background: #2a3a52; }
-  .btn-flow {
-    display: inline-flex; align-items: center; gap: 8px;
-    padding: 6px 14px;
-    background: linear-gradient(135deg, #0c1a35, #1a2952);
-    color: #e0e7ff;
-    border: 1px solid rgba(99, 102, 241, .35);
-    border-radius: 10px; font-weight: 700; font-size: 12px; text-decoration: none;
-    transition: background .15s, border-color .15s, transform .15s;
-  }
-  .btn-flow img { height: 22px; width: auto; display: block; }
-  .btn-flow:hover {
-    background: linear-gradient(135deg, #14224a, #25346b);
-    border-color: rgba(129, 140, 248, .6);
-    transform: translateY(-1px);
+  .brand-logo img { height: 32px; width: auto; display: block; }
+  .brand-logo.brand-logo-lg img { height: 38px; }
+  .brand-logo:hover {
+    opacity: 1; transform: translateY(-1px);
+    filter: drop-shadow(0 4px 10px rgba(99, 102, 241, .35));
   }
   .header-profile-link {
     display: inline-flex; align-items: center; gap: 10px;
@@ -287,10 +277,12 @@
       <a class="nav-link trocar-link active" href="trocar.html">🔄 Trocar</a>
     </nav>
     <div class="header-actions">
-      <a class="btn-flow" href="https://flowskins.com.br" target="_blank" rel="noopener" title="FlowZ — plataforma de gestão pra revendedores (parceiro Gumax)">
+      <a class="brand-logo" href="https://flowskins.com.br" target="_blank" rel="noopener" title="FlowZ — plataforma de gestão pra revendedores (parceiro Gumax)">
         <img src="flowz-logo.png" alt="FlowZ">
       </a>
-      <a class="btn-league" href="lobbies.html">🏆 GMAX LEAGUE</a>
+      <a class="brand-logo brand-logo-lg" href="lobbies.html" title="GMAX LEAGUE — plataforma de campeonatos CS2">
+        <img src="gmax-guard-logo.png" alt="GMAX LEAGUE">
+      </a>
       <a class="header-profile-link" href="perfil.html" id="headerProfileLink" style="display:none;">
         <img id="headerUserAvatar" src="https://www.gravatar.com/avatar?d=mp" alt="">
         <span id="headerUserName">user</span>
@@ -888,3 +880,4 @@ auth.onAuthStateChanged(async (user) => {
 </script>
 </body>
 </html>
+                                                                                                                                                                                                                                                                    

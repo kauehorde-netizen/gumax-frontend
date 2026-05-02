@@ -234,43 +234,24 @@ nav {
   gap: 16px;
 }
 
-/* GMAX LEAGUE button — discreto, fundo azul escuro (não compete com a logo da loja) */
-.btn-league {
-  padding: 8px 16px;
-  background: #1e293b;
-  color: #e0e7ff;
-  border: 1px solid rgba(148, 163, 184, .2);
-  border-radius: 10px;
-  font-weight: 700;
-  cursor: pointer;
-  font-size: 13px;
-  text-decoration: none;
+/* Brand logos no header — sem fundo de botão, só a logo limpa.
+   Hover sutil (opacity + scale) sem caixa em volta. */
+.brand-logo {
   display: inline-flex;
   align-items: center;
-  gap: 6px;
-  transition: background .15s, border-color .15s;
-  white-space: nowrap;
+  text-decoration: none;
+  background: transparent;
+  border: none;
+  padding: 0;
+  opacity: .92;
+  transition: opacity .15s, transform .15s, filter .15s;
 }
-.btn-league:hover { background: #2a3a52; border-color: var(--primary-light); }
-
-/* FlowZ partner button — Gu é parceiro da plataforma de gestão FlowSkins/FlowZ.
-   Visual em tom escuro pra não competir com a logo principal. */
-.btn-flow {
-  display: inline-flex; align-items: center; gap: 8px;
-  padding: 6px 14px;
-  background: linear-gradient(135deg, #0c1a35, #1a2952);
-  color: #e0e7ff;
-  border: 1px solid rgba(99, 102, 241, .35);
-  border-radius: 10px;
-  font-weight: 700; font-size: 12px; text-decoration: none;
-  white-space: nowrap;
-  transition: background .15s, border-color .15s, transform .15s;
-}
-.btn-flow img { height: 22px; width: auto; display: block; }
-.btn-flow:hover {
-  background: linear-gradient(135deg, #14224a, #25346b);
-  border-color: rgba(129, 140, 248, .6);
+.brand-logo img { height: 32px; width: auto; display: block; }
+.brand-logo.brand-logo-lg img { height: 38px; }
+.brand-logo:hover {
+  opacity: 1;
   transform: translateY(-1px);
+  filter: drop-shadow(0 4px 10px rgba(99, 102, 241, .35));
 }
 
 .cart-icon {
@@ -2143,11 +2124,13 @@ footer {
     </nav>
     <div class="header-actions">
       <!-- FlowZ — parceria oficial: plataforma de gestão pra revendedores de skins -->
-      <a class="btn-flow" href="https://flowskins.com.br" target="_blank" rel="noopener" title="FlowZ — plataforma de gestão pra revendedores (parceiro Gumax)">
+      <a class="brand-logo" href="https://flowskins.com.br" target="_blank" rel="noopener" title="FlowZ — plataforma de gestão pra revendedores (parceiro Gumax)">
         <img src="flowz-logo.png" alt="FlowZ">
       </a>
       <!-- 🏆 GMAX LEAGUE - plataforma de campeonatos CS2 (não faz parte da loja, ID visual próprio) -->
-      <a class="btn-league" href="lobbies.html" title="Plataforma de campeonatos CS2">🏆 GMAX LEAGUE</a>
+      <a class="brand-logo brand-logo-lg" href="lobbies.html" title="GMAX LEAGUE — plataforma de campeonatos CS2">
+        <img src="gmax-guard-logo.png" alt="GMAX LEAGUE">
+      </a>
       <div class="cart-icon" onclick="toggleCart()">
         <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="9" cy="21" r="1"/><circle cx="20" cy="21" r="1"/><path d="M1 1h4l2.68 13.39a2 2 0 002 1.61h9.72a2 2 0 002-1.61L23 6H6"/></svg>
         <div class="cart-badge" id="cartBadge" style="display: none;">0</div>
@@ -5540,3 +5523,4 @@ function showToast(msg, type = 'success') {
 
 </body>
 </html>
+                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                        
