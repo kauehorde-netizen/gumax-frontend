@@ -171,6 +171,21 @@ main { max-width:1100px; margin:0 auto; padding:32px 24px; }
   .history-table th.hide-mobile, .history-table td.hide-mobile { display:none; }
   .stats-grid { grid-template-columns:repeat(2,1fr); }
 }
+
+/* v41-bg-league: imagem de fundo fixa do GMAX LEAGUE em 50% opacity.
+   Pseudo-elemento no body pra nao afetar layout/scroll do conteudo. */
+body::before {
+  content: '';
+  position: fixed;
+  inset: 0;
+  background-image: url('bg-gmax-league.png');
+  background-size: cover;
+  background-position: center;
+  background-repeat: no-repeat;
+  opacity: 0.5;
+  z-index: -10;
+  pointer-events: none;
+}
 </style>
 </head>
 <body>

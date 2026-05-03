@@ -245,6 +245,21 @@ body { font-family: 'Inter', sans-serif; background: var(--bg-primary); color: v
   animation: reportIn 0.25s cubic-bezier(.34,1.56,.64,1);
 }
 @keyframes reportIn { from { opacity: 0; transform: translateY(-20px); } to { opacity: 1; transform: translateY(0); } }
+
+/* v41-bg-league: imagem de fundo fixa do GMAX LEAGUE em 50% opacity.
+   Pseudo-elemento no body pra nao afetar layout/scroll do conteudo. */
+body::before {
+  content: '';
+  position: fixed;
+  inset: 0;
+  background-image: url('bg-gmax-league.png');
+  background-size: cover;
+  background-position: center;
+  background-repeat: no-repeat;
+  opacity: 0.5;
+  z-index: -10;
+  pointer-events: none;
+}
 </style>
 </head>
 <body>
