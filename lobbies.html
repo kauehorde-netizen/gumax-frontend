@@ -117,7 +117,7 @@ header { background: rgba(8,6,14,0.55); backdrop-filter: blur(14px); border-bott
    1. Background base super sutil com gradient diagonal escuro
 
 /* ── Seção "Como Funciona" — 4 cards com ícones animados + energy borders ── */
-.how-it-works { max-width:1400px; margin:32px auto 0; padding:0 28px; }
+.how-it-works { max-width:1400px; margin:8px auto 0; padding:0 28px; }
 .how-it-works .section-title { font-size:13px; color:var(--text-muted); text-transform:uppercase; letter-spacing:1.5px; margin-bottom:14px; text-align:center; display:flex; align-items:center; justify-content:center; gap:14px; }
 .how-it-works .section-title::before, .how-it-works .section-title::after { content:''; flex:1; max-width:120px; height:1px; background:linear-gradient(90deg, transparent, var(--border), transparent); }
 .steps-grid { display:grid; grid-template-columns:repeat(4, 1fr); gap:14px; }
@@ -987,9 +987,10 @@ header { background: rgba(8,6,14,0.55); backdrop-filter: blur(14px); border-bott
 
 /* v41-compact-howitworks: card unico com 4 passos em fileira */
 .step-card-combined {
-  max-width: 1100px;
+  width: fit-content;
+  max-width: 100%;
   margin: 0 auto;
-  padding: 16px 24px !important;
+  padding: 14px 28px !important;
 }
 .combined-steps {
   display: flex; align-items: center; justify-content: center; gap: 14px;
