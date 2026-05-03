@@ -197,46 +197,49 @@ header { background: rgba(8,6,14,0.55); backdrop-filter: blur(14px); border-bott
 .step-card { text-align:center; min-height:auto; padding-top:8px; padding-bottom:8px; display:flex; flex-direction:column; align-items:center; }
 .step-card .step-num { display:none; }
 
-/* v41-guard-img: banner GMAX GUARD com sombra VERMELHA piscando fade in/out */
+/* v41-guard-img: banner GMAX GUARD com sombra VERMELHA piscando.
+   ESTRATEGIA: box-shadow direto no <a> em vez de pseudo-elemento — mais robusto,
+   funciona mesmo em desktops onde stacking context do pai bloqueava o ::before. */
 .ac-banner {
   display: block;
   max-width: 540px;
-  margin: 22px auto 0;
+  margin: 22px auto 28px;
   position: relative;
   border-radius: 14px;
   text-decoration: none;
   transition: transform .2s, filter .2s;
   overflow: visible;
-  isolation: isolate;  /* cria stacking context proprio pra ::before nao escapar */
+  /* Estado inicial baixo + animacao loop infinito independente do user pref. */
+  animation: guardRedFlash 1.6s ease-in-out infinite alternate;
+  will-change: box-shadow, transform;
 }
-.ac-banner:hover { transform: translateY(-3px); filter: brightness(1.1); }
+.ac-banner:hover { transform: translateY(-3px) scale(1.02); filter: brightness(1.1); }
 .ac-banner-img img {
   display: block; width: 100%; height: auto; border-radius: 14px;
-  position: relative; z-index: 2;
 }
-/* Sombra VERMELHA piscando agressivo (fade in/out completo) */
-.ac-banner::before {
-  content: ''; position: absolute;
-  inset: -32px;
-  border-radius: 32px;
-  background: radial-gradient(ellipse at center,
-    rgba(239,68,68,.95),
-    rgba(220,38,38,.7) 30%,
-    rgba(185,28,28,.35) 55%,
-    transparent 80%);
-  filter: blur(30px);
-  z-index: 1;
-  pointer-events: none;
-  will-change: opacity, transform;
-  animation: guardRedFlash 1.8s ease-in-out infinite;
-}
+/* Pulso vermelho — usa box-shadow (renderiza em TODOS browsers/desktops/mobiles)
+   3 layers: 2 sombras vermelhas com diferentes spreads + 1 leve borda interna */
 @keyframes guardRedFlash {
-  0%   { opacity: 0.15; transform: scale(0.96); }
-  50%  { opacity: 1;    transform: scale(1.08); }
-  100% { opacity: 0.15; transform: scale(0.96); }
+  0% {
+    box-shadow:
+      0 0 0 0 rgba(239,68,68, 0.0),
+      0 0 0 0 rgba(220,38,38, 0.0),
+      0 0 16px 2px rgba(239,68,68, 0.35);
+    transform: scale(1);
+  }
+  100% {
+    box-shadow:
+      0 0 32px 8px rgba(239,68,68, 0.85),
+      0 0 70px 24px rgba(220,38,38, 0.6),
+      0 0 110px 50px rgba(185,28,28, 0.3);
+    transform: scale(1.015);
+  }
 }
 @media (prefers-reduced-motion: reduce) {
-  .ac-banner::before { animation: none; opacity: 0.5; }
+  .ac-banner {
+    animation: none;
+    box-shadow: 0 0 32px 6px rgba(239,68,68,.55);
+  }
 }
 }
 
