@@ -1188,9 +1188,10 @@ body::before {
     </div>
   </div>
 
-  <!-- v41-guard-img: banner como imagem PNG, com glow roxo breathing -->
-  <a href="download.html" class="ac-banner ac-banner-img" title="Baixar GMAX GUARD anti-cheat">
-    <img src="banner-gmax-guard.png" alt="Faça o download do anti-cheat GMAX GUARD">
+  <!-- v41-guard-img: banner como imagem PNG, com pulse vermelho via inline-style -->
+  <a href="download.html" class="ac-banner ac-banner-img" title="Baixar GMAX GUARD anti-cheat"
+     style="display:block;max-width:540px;margin:22px auto 28px;position:relative;border-radius:14px;text-decoration:none;overflow:visible;animation:guardRedFlash 1.6s ease-in-out infinite alternate;will-change:box-shadow,transform;">
+    <img src="banner-gmax-guard.png" alt="Faça o download do anti-cheat GMAX GUARD" style="display:block;width:100%;height:auto;border-radius:14px;">
   </a>
 </section>
 
@@ -1254,12 +1255,12 @@ body::before {
 </div>
 
 <!-- v37: footer com logo GMAX GUARD linkando pra página de download -->
-<footer class="guard-footer">
-  <a href="download.html" class="guard-footer-logo" title="Saiba mais sobre o GMAX GUARD">
-    <img src="gmax-guard-logo.png" alt="GMAX GUARD">
+<footer class="guard-footer" style="display:flex !important;align-items:center !important;justify-content:center !important;gap:14px;width:100% !important;max-width:none !important;margin:48px auto 24px !important;padding:18px 24px !important;border-top:1px solid var(--border);text-align:center;box-sizing:border-box;position:relative;z-index:1;">
+  <a href="download.html" class="guard-footer-logo" title="Saiba mais sobre o GMAX GUARD" style="display:inline-flex;align-items:center;gap:10px;">
+    <img src="gmax-guard-logo.png" alt="GMAX GUARD" style="height:28px;width:auto;">
   </a>
-  <span class="guard-footer-text">
-    Protegido por <a href="download.html">GMAX GUARD</a> · Anti-cheat oficial
+  <span class="guard-footer-text" style="font-size:11px;color:var(--text-muted);">
+    Protegido por <a href="download.html" style="color:var(--accent-cyan);text-decoration:none;">GMAX GUARD</a> · Anti-cheat oficial
   </span>
 </footer>
 
@@ -1530,6 +1531,23 @@ function renderList(lobbies) {
   // Mostra TODAS as salas (incluindo a do user) — sala dele ganha destaque "SUA SALA".
   grid.innerHTML = lobbies.map(l => renderLobbyCard(l)).join('');
   updateStats(lobbies);
+
+  // v48-tier-grid-fix: popula cache de stats pros OWNERS de TODOS os lobbies,
+  // nao so da minha sala. Antes o tier badge so aparecia se o owner por acaso
+  // tava na minha sala. Re-renderiza quando os stats chegam.
+  const ownerSteamIds = lobbies
+    .map(l => (l.slots || [])[0]?.steamId)
+    .filter(Boolean)
+    .filter(sid => !_playerStatsCache.has(sid));
+  if (ownerSteamIds.length) {
+    fetchPlayerStats(ownerSteamIds).then(() => {
+      // Force re-render via signature reset so o proximo poll re-pinta com tier
+      _lastListSignature = '';
+      // Re-render imediato do grid pra nao precisar esperar proximo poll
+      const list = document.getElementById('lobbiesGrid');
+      if (list) list.innerHTML = lobbies.map(l => renderLobbyCard(l)).join('');
+    }).catch(() => {});
+  }
 }
 
 function renderLobbyCard(lobby) {
