@@ -811,6 +811,29 @@ header { background: rgba(8,6,14,0.92); backdrop-filter: blur(10px); border-bott
 }
 .season-banner-close:hover { background: rgba(239,68,68,.25); color: #fca5a5; }
 @media (prefers-reduced-motion: reduce) { #seasonBanner { animation: none; } }
+
+/* v41-invite: botao de copiar link de convite */
+.btn-invite {
+  width: 100%; padding: 10px; margin-top: 8px;
+  background: linear-gradient(135deg, rgba(34,211,238,.15), rgba(139,92,246,.15));
+  border: 1px solid rgba(34,211,238,.4);
+  border-radius: 10px;
+  color: var(--accent-cyan);
+  font-size: 12px; font-weight: 700; letter-spacing: .3px;
+  cursor: pointer; transition: background .15s, transform .15s;
+}
+.btn-invite:hover { background: linear-gradient(135deg, rgba(34,211,238,.25), rgba(139,92,246,.25)); transform: translateY(-1px); }
+.btn-invite.copied { background: rgba(34,197,94,.2); border-color: rgba(34,197,94,.5); color: #4ade80; }
+/* Toast inline pra feedback de auto-join via ?join=lobbyId */
+.invite-toast {
+  position: fixed; top: 80px; left: 50%; transform: translateX(-50%);
+  z-index: 9000; padding: 12px 20px;
+  background: linear-gradient(135deg, var(--primary), var(--primary-light));
+  color: #fff; border-radius: 10px; font-weight: 700; font-size: 13px;
+  box-shadow: 0 8px 24px rgba(99,102,241,.4);
+  animation: inviteToastIn 0.3s ease-out;
+}
+@keyframes inviteToastIn { from { opacity:0; transform:translate(-50%,-10px); } to { opacity:1; transform:translate(-50%,0); } }
 </style>
 </head>
 <body>
@@ -1636,10 +1659,19 @@ function renderMyLobby(lobby) {
     `;
   }
 
+  // v41-invite: botao de convidar amigo só faz sentido se ainda tem slot vazio e
+  // a sala ainda nao foi desafiada / nao tah em match.
+  const hasEmptySlot = (lobby.slots || []).some(s => s == null);
+  const canInvite = hasEmptySlot && lobby.status !== 'in_match' && lobby.status !== 'challenged';
+  const inviteBtn = canInvite
+    ? `<button class="btn-invite" onclick="copyInviteLink('${lobby.id}', this)" title="Copia link pra mandar pro amigo entrar direto na sala">🔗 Copiar link de convite</button>`
+    : '';
+
   container.innerHTML = `
     <div style="font-weight:700;margin-bottom:8px;">${escHtml(lobby.name)}</div>
     ${slotsHtml}
     ${challengingBanner}
+    ${inviteBtn}
     <button class="btn-leave" onclick="leaveMyLobby(this)">${_myLobbyOwner ? '🏁 Encerrar Sala' : '🚪 Sair'}</button>
   `;
 
@@ -2190,6 +2222,101 @@ startPolling();
     renderSeasonBanner();
   }
 })();
+
+
+// v41-invite: copia link de convite pro clipboard
+async function copyInviteLink(lobbyId, btn) {
+  const url = `${location.origin}${location.pathname}?join=${encodeURIComponent(lobbyId)}`;
+  try {
+    if (navigator.clipboard?.writeText) {
+      await navigator.clipboard.writeText(url);
+    } else {
+      // Fallback: textarea + execCommand (Safari antigo / contextos sem clipboard API)
+      const ta = document.createElement('textarea');
+      ta.value = url; ta.style.position = 'fixed'; ta.style.opacity = '0';
+      document.body.appendChild(ta); ta.select(); document.execCommand('copy'); ta.remove();
+    }
+    if (btn) {
+      const orig = btn.innerHTML;
+      btn.innerHTML = '✅ Link copiado!'; btn.classList.add('copied');
+      setTimeout(() => { btn.innerHTML = orig; btn.classList.remove('copied'); }, 2200);
+    }
+  } catch (e) {
+    console.error('[invite] copy falhou:', e);
+    alert('Não foi possível copiar o link automaticamente. Copie manualmente:\n\n' + url);
+  }
+}
+
+// v41-invite: handler de auto-join quando a URL tem ?join=lobbyId
+function showInviteToast(msg) {
+  const t = document.createElement('div');
+  t.className = 'invite-toast';
+  t.textContent = msg;
+  document.body.appendChild(t);
+  setTimeout(() => t.remove(), 3500);
+}
+
+async function tryAutoJoinFromUrl() {
+  const params = new URLSearchParams(location.search);
+  const targetLobbyId = params.get('join');
+  if (!targetLobbyId) return;
+  // Espera _user (firebase auth) estar pronto
+  if (!_user) {
+    // Salva intent pra retomar depois do login
+    try { sessionStorage.setItem('gmaxPendingJoin', targetLobbyId); } catch {}
+    showInviteToast('Faça login com Steam pra entrar na sala');
+    return;
+  }
+  // Limpa o ?join= da URL pra não re-disparar em re-render
+  try {
+    const cleanUrl = location.pathname + (params.toString().split('&').filter(p => !p.startsWith('join=')).join('&') ? '?' + params.toString().split('&').filter(p => !p.startsWith('join=')).join('&') : '');
+    history.replaceState(null, '', cleanUrl);
+  } catch {}
+  if (_myLobbyId === targetLobbyId) { showInviteToast('Você já está nessa sala'); return; }
+  if (_myLobbyId) { showInviteToast('Saia da sua sala atual primeiro'); return; }
+  showInviteToast('Entrando na sala...');
+  try {
+    const r = await fetch(`${API_BASE}/api/lobby/${encodeURIComponent(targetLobbyId)}/join`, {
+      method: 'POST',
+      headers: await authHeaders(),
+    });
+    const d = await r.json().catch(() => ({}));
+    if (!r.ok) {
+      const reason = d.error === 'lobby_full' ? 'Sala cheia'
+        : d.error === 'lobby_not_found' ? 'Sala não existe mais'
+        : d.error === 'already_in_lobby' ? 'Você já está em outra sala'
+        : d.error === 'lobby_in_match' ? 'Sala já em partida'
+        : 'Não foi possível entrar';
+      showInviteToast(reason); return;
+    }
+    showInviteToast('Entrou! Atualizando...');
+    setTimeout(() => location.reload(), 800);
+  } catch (e) {
+    console.error('[invite] auto-join falhou:', e);
+    showInviteToast('Erro ao entrar na sala');
+  }
+}
+
+// Tenta retomar pending join apos login
+function checkPendingJoin() {
+  try {
+    const pending = sessionStorage.getItem('gmaxPendingJoin');
+    if (pending && _user) {
+      sessionStorage.removeItem('gmaxPendingJoin');
+      const u = new URL(location.href);
+      u.searchParams.set('join', pending);
+      history.replaceState(null, '', u.toString());
+      tryAutoJoinFromUrl();
+    }
+  } catch {}
+}
+
+// Dispara auto-join apos auth pronto (re-checa em onAuthStateChanged tambem)
+if (document.readyState === 'loading') {
+  document.addEventListener('DOMContentLoaded', () => setTimeout(tryAutoJoinFromUrl, 1500));
+} else {
+  setTimeout(tryAutoJoinFromUrl, 1500);
+}
 
 </script>
 
