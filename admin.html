@@ -2605,17 +2605,20 @@ function updateOverviewStats() {
   const totalRevenue = allOrders.filter(o => o.status === 'paid' || o.status === 'delivered').reduce((sum, o) => sum + (o.total || 0), 0);
   document.getElementById('statRevenue').textContent = fmtR(totalRevenue);
 
-  // Recent orders in overview
-  const recentHtml = allOrders.slice(0, 5).map(o => `
-    <tr>
-      <td style="font-family: 'JetBrains Mono', monospace; font-size: 12px;">#${o.id?.substring(0, 8) || '---'}</td>
-      <td>${o.buyerName || 'Anônimo'}</td>
-      <td>${o.skinName || '-'}</td>
+  // Recent orders in overview — clicáveis pra abrir detalhes (mesma função da
+  // tabela completa). Lê nome do comprador via helper que sabe do schema correto.
+  const recentHtml = allOrders.slice(0, 5).map(o => {
+    const skin = (Array.isArray(o.items) && o.items[0]?.name) || o.skinName || '-';
+    return `
+    <tr style="cursor:pointer;" onclick="openOrderDetails('${o.id}')" title="Clique pra ver detalhes — ID: ${o.id}">
+      <td style="font-family: 'JetBrains Mono', monospace; font-size: 12px;">#${(o.id || '').slice(-8) || '---'}</td>
+      <td>${(typeof _orderBuyerName === 'function') ? _orderBuyerName(o) : (o.user?.name || o.buyerName || 'Anônimo')}</td>
+      <td>${skin}</td>
       <td style="color: var(--accent-yellow);">${fmtR(o.total || 0)}</td>
       <td><span class="badge ${o.delivery === 'full' ? 'badge-full' : 'badge-normal'}">${o.delivery === 'full' ? '⚡ Full' : 'Normal'}</span></td>
       <td><span class="badge badge-${o.status || 'pending'}">${statusLabel(o.status)}</span></td>
     </tr>
-  `).join('');
+  `;}).join('');
   document.getElementById('recentOrdersTable').innerHTML = recentHtml || '<tr><td colspan="6" class="empty-state"><p>Nenhum pedido ainda</p></td></tr>';
 }
 
@@ -2835,54 +2838,133 @@ async function blockReseller(id) {
 }
 
 // ============= ORDERS TABLE =============
+// Helpers (DRY) — buyerName lê de user.name (onde o create-order de fato salva),
+// com fallback pra buyerName legado e Anônimo. Click na linha abre detalhes.
+function _orderBuyerName(o) { return (o.user && o.user.name) || o.buyerName || 'Anônimo'; }
+function _orderRowHTML(o) {
+  const buyer = _orderBuyerName(o);
+  return `
+    <tr style="cursor:pointer;" onclick="openOrderDetails('${o.id}')" title="Clique pra ver detalhes — ID completo: ${o.id}">
+      <td style="font-family: 'JetBrains Mono', monospace; font-size: 12px;">#${(o.id || '').slice(-8)}</td>
+      <td>${formatDate(o.createdAt)}</td>
+      <td>${buyer}</td>
+      <td>${o.items?.length || 1} item(ns)</td>
+      <td style="color: var(--accent-yellow); font-weight: 600;">${fmtR(o.total || 0)}</td>
+      <td><span class="badge ${o.delivery === 'full' ? 'badge-full' : 'badge-normal'}">${o.delivery === 'full' ? '⚡ Full' : 'Normal'}</span></td>
+      <td><span class="badge badge-${o.status || 'pending'}">${statusLabel(o.status)}</span></td>
+      <td onclick="event.stopPropagation()">
+        <button class="btn btn-success btn-small" onclick="markDelivered('${o.id}')" ${o.status === 'delivered' ? 'disabled style="opacity:.5"' : ''}>Entregue</button>
+      </td>
+    </tr>
+  `;
+}
+
 function renderOrdersTable() {
   const tbody = document.getElementById('ordersTable');
   if (allOrders.length === 0) {
     tbody.innerHTML = '<tr><td colspan="8" class="empty-state"><p>Nenhum pedido encontrado</p></td></tr>';
     return;
   }
-
-  tbody.innerHTML = allOrders.map(o => `
-    <tr>
-      <td style="font-family: 'JetBrains Mono', monospace; font-size: 12px;">#${o.id?.substring(0, 8)}</td>
-      <td>${formatDate(o.createdAt)}</td>
-      <td>${o.buyerName || 'Anônimo'}</td>
-      <td>${o.items?.length || 1} item(ns)</td>
-      <td style="color: var(--accent-yellow); font-weight: 600;">${fmtR(o.total || 0)}</td>
-      <td><span class="badge ${o.delivery === 'full' ? 'badge-full' : 'badge-normal'}">${o.delivery === 'full' ? '⚡ Full' : 'Normal'}</span></td>
-      <td><span class="badge badge-${o.status || 'pending'}">${statusLabel(o.status)}</span></td>
-      <td>
-        <button class="btn btn-success btn-small" onclick="markDelivered('${o.id}')" ${o.status === 'delivered' ? 'disabled style="opacity:.5"' : ''}>Entregue</button>
-      </td>
-    </tr>
-  `).join('');
+  tbody.innerHTML = allOrders.map(_orderRowHTML).join('');
 }
 
 function filterOrders() {
   const search = document.getElementById('orderSearchInput').value.toLowerCase();
   const status = document.getElementById('orderStatusFilter').value;
-
   const filtered = allOrders.filter(o => {
-    if (search && !(o.id || '').toLowerCase().includes(search) && !(o.buyerName || '').toLowerCase().includes(search)) return false;
+    const buyer = _orderBuyerName(o).toLowerCase();
+    if (search && !(o.id || '').toLowerCase().includes(search) && !buyer.includes(search)) return false;
     if (status !== 'all' && o.status !== status) return false;
     return true;
   });
-
   const tbody = document.getElementById('ordersTable');
-  tbody.innerHTML = filtered.map(o => `
-    <tr>
-      <td style="font-family: 'JetBrains Mono', monospace; font-size: 12px;">#${o.id?.substring(0, 8)}</td>
-      <td>${formatDate(o.createdAt)}</td>
-      <td>${o.buyerName || 'Anônimo'}</td>
-      <td>${o.items?.length || 1} item(ns)</td>
-      <td style="color: var(--accent-yellow); font-weight: 600;">${fmtR(o.total || 0)}</td>
-      <td><span class="badge ${o.delivery === 'full' ? 'badge-full' : 'badge-normal'}">${o.delivery === 'full' ? '⚡ Full' : 'Normal'}</span></td>
-      <td><span class="badge badge-${o.status || 'pending'}">${statusLabel(o.status)}</span></td>
-      <td>
-        <button class="btn btn-success btn-small" onclick="markDelivered('${o.id}')" ${o.status === 'delivered' ? 'disabled style="opacity:.5"' : ''}>Entregue</button>
-      </td>
-    </tr>
-  `).join('');
+  tbody.innerHTML = filtered.map(_orderRowHTML).join('');
+}
+
+// ── Modal de detalhes do pedido ────────────────────────────────────────────
+// Abre overlay com tudo que existe sobre o pedido — items, comprador completo,
+// IDs de pagamento (PIX/MP/crypto), status, timestamps. É a única forma do Gu
+// ver pedidos pendentes pra entrar em contato com o cliente.
+function openOrderDetails(orderId) {
+  const o = allOrders.find(x => x.id === orderId);
+  if (!o) return;
+  const u = o.user || {};
+  const items = Array.isArray(o.items) ? o.items : [];
+  const itemsHtml = items.length
+    ? items.map(it => `
+        <div style="display:flex; justify-content:space-between; padding:8px 0; border-bottom:1px solid rgba(255,255,255,.06); font-size:13px;">
+          <span>${escapeHtml(it.name || 'Skin')} ${it.qty > 1 ? `<span style="color:var(--text-muted);">×${it.qty}</span>` : ''}</span>
+          <span style="color:var(--accent-yellow); font-weight:700;">${fmtR((it.price || 0) * (it.qty || 1))}</span>
+        </div>
+      `).join('')
+    : '<div style="color:var(--text-muted); font-size:13px;">Nenhum item registrado</div>';
+
+  const wa = u.whatsapp ? String(u.whatsapp).replace(/\D/g, '') : '';
+  const waLink = wa ? `https://wa.me/${wa.startsWith('55') ? wa : '55' + wa}?text=${encodeURIComponent('Olá! Sobre seu pedido #' + (o.id || '').slice(-8) + ' na Gumax Skins...')}` : '';
+
+  const payMethod = o.paymentMethod || 'pix';
+  const payIds = [];
+  if (o.pixPaymentId)     payIds.push(`<div><b>PIX ID:</b> <code>${escapeHtml(o.pixPaymentId)}</code></div>`);
+  if (o.preferenceId)     payIds.push(`<div><b>MP Preference:</b> <code>${escapeHtml(o.preferenceId)}</code></div>`);
+  if (o.cryptoInvoiceId)  payIds.push(`<div><b>Crypto Invoice:</b> <code>${escapeHtml(o.cryptoInvoiceId)}</code></div>`);
+  if (o.cryptoPayCurrency) payIds.push(`<div><b>Cripto:</b> ${escapeHtml(o.cryptoPayCurrency)} — pago ${o.cryptoActuallyPaid || '?'}</div>`);
+
+  const html = `
+    <div id="orderDetailsOverlay" style="position:fixed; inset:0; background:rgba(0,0,0,.85); z-index:200; display:flex; align-items:center; justify-content:center; padding:20px; backdrop-filter:blur(4px);" onclick="if(event.target===this) closeOrderDetails()">
+      <div style="background:var(--bg-card); border:1px solid var(--border); border-radius:14px; max-width:640px; width:100%; max-height:85vh; overflow-y:auto;">
+        <div style="display:flex; justify-content:space-between; align-items:center; padding:18px 22px; border-bottom:1px solid var(--border);">
+          <div>
+            <div style="font-size:12px; color:var(--text-muted); font-family:'JetBrains Mono',monospace;">#${escapeHtml(o.id || '')}</div>
+            <div style="font-size:18px; font-weight:800; margin-top:4px;">Pedido — ${fmtR(o.total || 0)}</div>
+            <div style="margin-top:6px;">
+              <span class="badge badge-${o.status || 'pending'}">${statusLabel(o.status)}</span>
+              <span style="font-size:12px; color:var(--text-muted); margin-left:8px;">${formatDate(o.createdAt)}</span>
+            </div>
+          </div>
+          <button onclick="closeOrderDetails()" style="background:transparent; border:none; color:var(--text-secondary); font-size:24px; cursor:pointer; padding:4px 12px;">×</button>
+        </div>
+
+        <div style="padding:18px 22px;">
+          <div style="font-size:11px; color:var(--text-muted); text-transform:uppercase; letter-spacing:.5px; margin-bottom:8px;">Itens</div>
+          ${itemsHtml}
+
+          <div style="font-size:11px; color:var(--text-muted); text-transform:uppercase; letter-spacing:.5px; margin:18px 0 8px;">Comprador</div>
+          <div style="background:rgba(0,0,0,.25); border:1px solid var(--border); border-radius:10px; padding:12px; font-size:13px; line-height:1.7;">
+            <div><b>Nome:</b> ${escapeHtml(u.name || u.steamName || 'Anônimo')}</div>
+            ${u.email ? `<div><b>Email:</b> <a href="mailto:${escapeHtml(u.email)}" style="color:var(--primary-light);">${escapeHtml(u.email)}</a></div>` : ''}
+            ${u.whatsapp ? `<div><b>WhatsApp:</b> ${escapeHtml(u.whatsapp)} ${waLink ? `<a href="${waLink}" target="_blank" style="color:var(--accent-green); margin-left:8px;">💬 Abrir conversa</a>` : ''}</div>` : '<div style="color:var(--accent-red);"><b>WhatsApp:</b> não informado</div>'}
+            ${u.steamId ? `<div><b>Steam ID:</b> <code>${escapeHtml(u.steamId)}</code> <a href="https://steamcommunity.com/profiles/${escapeHtml(u.steamId)}" target="_blank" style="color:var(--primary-light); margin-left:8px;">👤 Perfil</a></div>` : ''}
+            ${u.tradeLink ? `<div style="margin-top:6px; word-break:break-all;"><b>Trade Link:</b> <a href="${escapeHtml(u.tradeLink)}" target="_blank" style="color:var(--primary-light); font-size:12px;">${escapeHtml(u.tradeLink)}</a></div>` : '<div style="color:var(--accent-red);"><b>Trade Link:</b> não informado</div>'}
+          </div>
+
+          <div style="font-size:11px; color:var(--text-muted); text-transform:uppercase; letter-spacing:.5px; margin:18px 0 8px;">Pagamento (${payMethod.toUpperCase()})</div>
+          <div style="background:rgba(0,0,0,.25); border:1px solid var(--border); border-radius:10px; padding:12px; font-size:12px; line-height:1.7; font-family:'JetBrains Mono',monospace;">
+            ${payIds.length ? payIds.join('') : '<div style="color:var(--text-muted);">Sem dados de pagamento ainda</div>'}
+            ${o.paidAt ? `<div style="margin-top:6px;"><b>Pago em:</b> ${formatDate(o.paidAt)}</div>` : ''}
+            ${o.deliveredAt ? `<div><b>Entregue em:</b> ${formatDate(o.deliveredAt)}</div>` : ''}
+          </div>
+
+          ${o.notes ? `<div style="margin-top:14px; padding:10px 12px; background:rgba(250,204,21,.08); border-left:3px solid var(--accent-yellow); border-radius:6px; font-size:13px;"><b>Notas:</b> ${escapeHtml(o.notes)}</div>` : ''}
+
+          <div style="display:flex; gap:10px; margin-top:18px;">
+            ${waLink ? `<a href="${waLink}" target="_blank" class="btn btn-success" style="flex:1; text-align:center; text-decoration:none;">💬 Falar com cliente</a>` : ''}
+            ${o.status !== 'delivered' ? `<button class="btn btn-primary" onclick="markDelivered('${o.id}'); closeOrderDetails();" style="flex:1;">✅ Marcar entregue</button>` : ''}
+          </div>
+        </div>
+      </div>
+    </div>
+  `;
+  document.body.insertAdjacentHTML('beforeend', html);
+}
+
+function closeOrderDetails() {
+  const el = document.getElementById('orderDetailsOverlay');
+  if (el) el.remove();
+}
+
+// Helper local — usa escapeHtml se já existir, senão fallback
+function escapeHtml(s) {
+  return String(s == null ? '' : s).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 }
 
 async function markDelivered(id) {
