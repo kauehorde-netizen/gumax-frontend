@@ -2537,6 +2537,71 @@ async function loadAllData() {
     loadCommissions()
   ]);
   updateOverviewStats();
+  // v3-auto-recheck: depois do load inicial, dispara polling silencioso de
+  // pendentes — evita ter que clicar "Verificar pagamento agora" pra tudo.
+  startAutoRecheckPendingOrders();
+}
+
+// ============= AUTO-RECHECK DE PENDENTES =============
+// v3-auto-recheck: a cada 30s, varre orders pending com preferenceId/pixPaymentId
+// e bate no MP API silenciosamente. Quando cai em "approved", o backend já
+// marca paid no Firestore + dispara notifyOrderPaid (WhatsApp pro Gu).
+// O admin nunca mais precisa clicar no botão "Verificar pagamento agora".
+//
+// Limites pra não estourar API do MP:
+//  - Só pedidos com <24h de criação (depois disso vira pedido morto)
+//  - Só pedidos com paymentId/preferenceId (sem isso check-pix retorna 400)
+//  - Máx 10 rechecks por ciclo (em ordem do mais recente pro mais antigo)
+//  - Próximo ciclo só dispara depois do anterior terminar (sem race)
+let _autoRecheckTimer = null;
+let _autoRecheckBusy = false;
+function startAutoRecheckPendingOrders() {
+  if (_autoRecheckTimer) return;
+  // Roda 1x logo de cara, depois a cada 30s
+  setTimeout(autoRecheckPendingOrdersTick, 5000);
+  _autoRecheckTimer = setInterval(autoRecheckPendingOrdersTick, 30000);
+}
+async function autoRecheckPendingOrdersTick() {
+  if (_autoRecheckBusy) return;
+  _autoRecheckBusy = true;
+  try {
+    const now = Date.now();
+    const ONE_DAY = 24 * 60 * 60 * 1000;
+    const candidates = (allOrders || []).filter(o => {
+      if (!o) return false;
+      if (o.status !== 'pending' && o.status !== 'processing') return false;
+      // Pedido sem paymentId nem preferenceId — backend não tem como checar
+      if (!o.pixPaymentId && !o.preferenceId && !o.mpPaymentId) return false;
+      // Idade do pedido — descarta os "esquecidos" pra não queimar API
+      const created = o.createdAt ? new Date(o.createdAt).getTime() : 0;
+      if (created && (now - created > ONE_DAY)) return false;
+      return true;
+    }).slice(0, 10);
+    if (candidates.length === 0) { _autoRecheckBusy = false; return; }
+    let confirmed = 0;
+    for (const o of candidates) {
+      try {
+        const r = await fetch(`${API_BASE_ADMIN}/api/check-pix`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ orderId: o.id }),
+        });
+        if (!r.ok) continue;
+        const data = await r.json();
+        if (data?.status === 'approved') confirmed++;
+      } catch (_e) { /* silencioso */ }
+    }
+    // Se confirmou pelo menos 1, recarrega lista pra UI mostrar paid
+    if (confirmed > 0) {
+      await loadOrders();
+      updateOverviewStats();
+      try { showToast(`✅ ${confirmed} pedido${confirmed > 1 ? 's' : ''} confirmado${confirmed > 1 ? 's' : ''} automaticamente!`, 'success'); } catch {}
+    }
+  } catch (e) {
+    console.warn('[autoRecheck]', e?.message);
+  } finally {
+    _autoRecheckBusy = false;
+  }
 }
 
 let allSkins = [];
@@ -2888,6 +2953,12 @@ function filterOrders() {
 function openOrderDetails(orderId) {
   const o = allOrders.find(x => x.id === orderId);
   if (!o) return;
+  // v3-auto-recheck: ao abrir o modal, dispara recheck silencioso pra trazer
+  // o status mais fresco do MP. Não bloqueia a renderização — se confirmar,
+  // o próximo tick de polling reabre/atualiza a UI.
+  if ((o.status === 'pending' || o.status === 'processing') && (o.preferenceId || o.pixPaymentId || o.mpPaymentId)) {
+    setTimeout(() => { try { autoRecheckPendingOrdersTick(); } catch {} }, 300);
+  }
   const u = o.user || {};
   const items = Array.isArray(o.items) ? o.items : [];
   const itemsHtml = items.length
