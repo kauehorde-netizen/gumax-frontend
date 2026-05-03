@@ -693,9 +693,56 @@ header { background: rgba(8,6,14,0.92); backdrop-filter: blur(10px); border-bott
 }
 .lobby-name { font-size:14px; font-weight:700; margin-bottom:10px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
 .lobby-slots { display:flex; gap:5px; margin-bottom:14px; }
-.lobby-slot { flex:1; aspect-ratio:1; border-radius:50%; background:rgba(139,92,246,.08); border:1.5px dashed rgba(139,92,246,.25); display:flex; align-items:center; justify-content:center; font-size:10px; color:var(--text-muted); }
-.lobby-slot.filled { border:2px solid var(--primary); background:rgba(139,92,246,.15); border-style:solid; }
+/* v41-empty-slot: slot vazio elegante (gradient breathing + + icon) */
+.lobby-slot { flex:1; aspect-ratio:1; border-radius:50%; display:flex; align-items:center; justify-content:center; font-size:10px; color:var(--text-muted); position:relative; }
+.lobby-slot.filled { border:2px solid var(--primary); background:rgba(139,92,246,.15); }
 .lobby-slot.filled img { width:100%; height:100%; border-radius:50%; object-fit:cover; }
+.lobby-slot-empty {
+  background: radial-gradient(circle at center, rgba(139,92,246,.18), rgba(139,92,246,.04) 65%, transparent 100%);
+  position: relative;
+  isolation: isolate;
+  overflow: hidden;
+  animation: emptySlotBreathe 3.2s ease-in-out infinite;
+}
+.lobby-slot-empty::before {
+  /* Borda em gradiente conic animado (aurora) */
+  content: ''; position: absolute; inset: 0; border-radius: 50%; padding: 1.5px;
+  background: conic-gradient(from var(--slot-angle, 0deg),
+    rgba(139,92,246,.55) 0deg,
+    rgba(34,211,238,.65) 90deg,
+    rgba(168,85,247,.55) 180deg,
+    rgba(34,211,238,.45) 270deg,
+    rgba(139,92,246,.55) 360deg);
+  -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+  -webkit-mask-composite: xor; mask-composite: exclude;
+  animation: emptySlotRotate 4s linear infinite;
+  pointer-events: none;
+}
+.lobby-slot-empty::after {
+  /* Glow interno difuso */
+  content: ''; position: absolute; inset: 4px; border-radius: 50%;
+  background: radial-gradient(circle at 30% 30%, rgba(255,255,255,.08), transparent 60%);
+  pointer-events: none;
+}
+.lobby-slot-empty svg {
+  width: 14px; height: 14px;
+  color: rgba(167,139,250,.7);
+  filter: drop-shadow(0 0 6px rgba(139,92,246,.5));
+  animation: emptySlotPlusPulse 2.6s ease-in-out infinite;
+  position: relative; z-index: 1;
+}
+@keyframes emptySlotRotate { to { transform: rotate(360deg); } }
+@keyframes emptySlotBreathe {
+  0%,100% { transform: scale(1); }
+  50% { transform: scale(1.06); box-shadow: 0 0 12px rgba(139,92,246,.25); }
+}
+@keyframes emptySlotPlusPulse {
+  0%,100% { opacity: .7; transform: scale(1); }
+  50% { opacity: 1; transform: scale(1.15); color: rgba(196,181,253,1); }
+}
+@media (prefers-reduced-motion: reduce) {
+  .lobby-slot-empty, .lobby-slot-empty::before, .lobby-slot-empty svg { animation: none; }
+}
 /* v34-snappy: transition rápida + active state visível instantaneamente — feedback de press sem esperar fetch */
 .lobby-action { width:100%; padding:8px; border:none; border-radius:8px; font-weight:700; font-size:12px; cursor:pointer; transition:background .12s, filter .12s, transform .08s, opacity .12s; will-change:transform; }
 .lobby-action:active:not(:disabled) { transform:scale(.96); filter:brightness(.85); }
@@ -1415,7 +1462,7 @@ function renderList(lobbies) {
 function renderLobbyCard(lobby) {
   const slots = (lobby.slots || []).map(s => s
     ? `<div class="lobby-slot filled" title="${escHtml(s.name)}">${s.avatar ? `<img src="${s.avatar}" onerror="this.style.display='none'">` : ''}</div>`
-    : `<div class="lobby-slot">·</div>`
+    : `<div class="lobby-slot lobby-slot-empty"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M12 5v14M5 12h14"/></svg></div>`
   ).join('');
   const isFull = lobby.status === 'full' || lobby.status === 'challenged' || lobby.filled === 5;
   const isMine = !!_user && lobby.id === _myLobbyId;
