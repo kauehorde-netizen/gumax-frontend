@@ -1114,7 +1114,7 @@ body::before {
       <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M19 12H5M12 19l-7-7 7-7"/></svg>
       Voltar ao Mercado
     </a>
-    <div class="league-brand" title="lobby v44-sidebar-only">
+    <div class="league-brand" title="lobby v45-cancel-expired">
       <!-- Logo em vídeo (fundo preto fica transparente via mix-blend-mode:screen).
            muted+playsinline são obrigatórios pra autoplay funcionar nos browsers. -->
       <video class="league-logo-video" src="logogu.mp4" autoplay loop muted playsinline preload="auto"></video>
@@ -1292,7 +1292,7 @@ body::before {
 <div class="toast" id="toast"></div>
 
 <!-- Marker discreto persistente (canto inferior direito) — pra dev/debug -->
-<div style="position:fixed;bottom:8px;right:12px;font-size:10px;color:rgba(250,204,21,.5);font-family:monospace;pointer-events:none;z-index:1;background:rgba(0,0,0,.4);padding:3px 8px;border-radius:4px;">lobby v44-sidebar-only</div>
+<div style="position:fixed;bottom:8px;right:12px;font-size:10px;color:rgba(250,204,21,.5);font-family:monospace;pointer-events:none;z-index:1;background:rgba(0,0,0,.4);padding:3px 8px;border-radius:4px;">lobby v45-cancel-expired</div>
 
 <script>
 // =================================================================
@@ -1817,16 +1817,34 @@ function renderMyLobby(lobby) {
     </div>`;
   }).join('');
 
-  // Banner "DESAFIANDO TIME B" quando MINHA sala é o challenger.
-  // Backend marca a minha como status='challenged' e seta `challengeTo` apontando pra sala desafiada.
+  // Banner "DESAFIO ENVIADO — Aguardando resposta" quando MINHA sala é o challenger.
+  // Backend marca a minha como status='challenged' e seta `challengeTo` + challengeExpiresAt.
+  // Defensivo: se já expirou (30s passaram sem o backend limpar), esconde o banner
+  // e dispara cancel-challenge pro backend pra zerar o estado server-side.
   let challengingBanner = '';
   if (lobby.status === 'challenged' && lobby.challengeTo && !lobby.challengedBy) {
-    challengingBanner = `
-      <div class="challenging-banner">
-        <div class="label">⚔️ Desafio enviado</div>
-        <div class="text">Aguardando resposta<span class="dots"></span></div>
-      </div>
-    `;
+    const expMs = lobby.challengeExpiresAt?._seconds
+      ? lobby.challengeExpiresAt._seconds * 1000
+      : (lobby.challengeExpiresAt?.toMillis ? lobby.challengeExpiresAt.toMillis() : null);
+    const expired = expMs && Date.now() > expMs;
+    if (expired) {
+      // Limpa server-side em background — não bloqueia render. Próximo poll já vem limpo.
+      fetch(`${API_BASE}/api/lobby/${lobby.id}/cancel-challenge`, {
+        method: 'POST',
+        headers: { 'Authorization': 'Bearer ' + _idToken }
+      }).catch(() => {});
+    } else {
+      const remaining = expMs ? Math.max(0, Math.ceil((expMs - Date.now()) / 1000)) : null;
+      const cdHtml = remaining != null
+        ? `<span style="font-family:'JetBrains Mono',monospace;color:var(--accent-yellow);font-weight:800;margin-left:6px;">${remaining}s</span>`
+        : '';
+      challengingBanner = `
+        <div class="challenging-banner">
+          <div class="label">⚔️ Desafio enviado ${cdHtml}</div>
+          <div class="text">Aguardando resposta<span class="dots"></span></div>
+        </div>
+      `;
+    }
   }
 
   // v41-invite: botao de convidar amigo só faz sentido se ainda tem slot vazio e
