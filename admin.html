@@ -2903,6 +2903,39 @@ function openOrderDetails(orderId) {
   const waLink = wa ? `https://wa.me/${wa.startsWith('55') ? wa : '55' + wa}?text=${encodeURIComponent('Olá! Sobre seu pedido #' + (o.id || '').slice(-8) + ' na Gumax Skins...')}` : '';
 
   const payMethod = o.paymentMethod || 'pix';
+  // Status de pagamento (separado da entrega) — fonte mais confiável depende do método.
+  // PIX:   o.status==='paid' || pixStatus === 'approved'  → pago
+  // Card:  o.status==='paid' (vem do webhook MP)          → pago
+  // Crypto: o.cryptoStatus==='finished'                   → pago
+  let isPaid = false;
+  let payStatusLabel = '🟡 Aguardando pagamento';
+  let payStatusColor = 'rgba(250,204,21,.15)';
+  let payStatusBorder = 'rgba(250,204,21,.4)';
+  let payStatusText = 'var(--accent-yellow)';
+  if (o.status === 'paid' || o.status === 'delivered' || o.pixStatus === 'approved' || o.cryptoStatus === 'finished' || o.cryptoStatus === 'confirmed') {
+    isPaid = true;
+    payStatusLabel = '🟢 PAGAMENTO CONFIRMADO';
+    payStatusColor = 'rgba(16,185,129,.15)';
+    payStatusBorder = 'rgba(16,185,129,.5)';
+    payStatusText = 'var(--accent-green)';
+  } else if (o.cryptoStatus === 'failed' || o.cryptoStatus === 'expired') {
+    payStatusLabel = '🔴 PAGAMENTO ' + (o.cryptoStatus === 'expired' ? 'EXPIROU' : 'FALHOU');
+    payStatusColor = 'rgba(239,68,68,.15)';
+    payStatusBorder = 'rgba(239,68,68,.5)';
+    payStatusText = 'var(--accent-red)';
+  } else if (o.cryptoStatus === 'partially_paid') {
+    payStatusLabel = '⚠️ Pago parcial — verificar manualmente';
+    payStatusColor = 'rgba(251,146,60,.15)';
+    payStatusBorder = 'rgba(251,146,60,.5)';
+    payStatusText = '#fb923c';
+  }
+  // Pra cartão (Checkout Pro MP) o status só vira 'paid' via webhook MP.
+  // Adicionamos um link direto pro painel pra Gu conferir manualmente se ele
+  // suspeitar que o cliente pagou mas o webhook não chegou.
+  const mpDashLink = (payMethod === 'card' && o.preferenceId)
+    ? `https://www.mercadopago.com.br/activities/1/orders?type=preference&value=${encodeURIComponent(o.preferenceId)}`
+    : '';
+
   const payIds = [];
   if (o.pixPaymentId)     payIds.push(`<div><b>PIX ID:</b> <code>${escapeHtml(o.pixPaymentId)}</code></div>`);
   if (o.preferenceId)     payIds.push(`<div><b>MP Preference:</b> <code>${escapeHtml(o.preferenceId)}</code></div>`);
@@ -2925,6 +2958,13 @@ function openOrderDetails(orderId) {
         </div>
 
         <div style="padding:18px 22px;">
+          <!-- Banner GRANDE de status do PAGAMENTO (separado da entrega) — primeira coisa que o admin vê -->
+          <div style="background:${payStatusColor}; border:1px solid ${payStatusBorder}; color:${payStatusText}; padding:14px 16px; border-radius:10px; margin-bottom:16px; font-weight:800; font-size:15px; display:flex; justify-content:space-between; align-items:center; gap:12px; flex-wrap:wrap;">
+            <span>${payStatusLabel}</span>
+            ${mpDashLink ? `<a href="${mpDashLink}" target="_blank" style="font-size:11px; color:${payStatusText}; opacity:.9; text-decoration:underline; font-weight:600;">↗ Conferir no Mercado Pago</a>` : ''}
+          </div>
+          ${!isPaid && payMethod === 'card' ? `<div style="margin: -8px 0 16px; padding: 8px 12px; background: rgba(34,211,238,.06); border-left: 3px solid var(--accent-cyan); border-radius: 6px; font-size: 12px; color: var(--text-secondary);">⚠️ Pagamento por cartão é confirmado via webhook do Mercado Pago. Se você sabe que o cliente já pagou, clique em "Conferir no Mercado Pago" pra checar manualmente.</div>` : ''}
+
           <div style="font-size:11px; color:var(--text-muted); text-transform:uppercase; letter-spacing:.5px; margin-bottom:8px;">Itens</div>
           ${itemsHtml}
 
@@ -2946,10 +2986,12 @@ function openOrderDetails(orderId) {
 
           ${o.notes ? `<div style="margin-top:14px; padding:10px 12px; background:rgba(250,204,21,.08); border-left:3px solid var(--accent-yellow); border-radius:6px; font-size:13px;"><b>Notas:</b> ${escapeHtml(o.notes)}</div>` : ''}
 
-          <div style="display:flex; gap:10px; margin-top:18px;">
-            ${waLink ? `<a href="${waLink}" target="_blank" class="btn btn-success" style="flex:1; text-align:center; text-decoration:none;">💬 Falar com cliente</a>` : ''}
-            ${o.status !== 'delivered' ? `<button class="btn btn-primary" onclick="markDelivered('${o.id}'); closeOrderDetails();" style="flex:1;">✅ Marcar entregue</button>` : ''}
+          <div style="display:flex; gap:10px; margin-top:18px; flex-wrap: wrap;">
+            ${!isPaid ? `<button class="btn" onclick="recheckPayment('${o.id}')" style="flex:1; min-width: 180px; background: linear-gradient(135deg, var(--accent-cyan), #0ea5e9); border: none; color: #fff; font-weight: 700;">🔄 Verificar pagamento agora</button>` : ''}
+            ${waLink ? `<a href="${waLink}" target="_blank" class="btn btn-success" style="flex:1; min-width: 160px; text-align:center; text-decoration:none;">💬 Falar com cliente</a>` : ''}
+            ${o.status !== 'delivered' && isPaid ? `<button class="btn btn-primary" onclick="markDelivered('${o.id}'); closeOrderDetails();" style="flex:1; min-width: 160px;">✅ Marcar entregue</button>` : ''}
           </div>
+          ${!isPaid ? '<p style="font-size: 11px; color: var(--text-muted); margin-top: 10px; text-align: center;">⚠️ Marcar como entregue só fica disponível depois que o pagamento for confirmado. Clique em "Verificar pagamento agora" pra checar no Mercado Pago em tempo real.</p>' : ''}
         </div>
       </div>
     </div>
@@ -2960,6 +3002,37 @@ function openOrderDetails(orderId) {
 function closeOrderDetails() {
   const el = document.getElementById('orderDetailsOverlay');
   if (el) el.remove();
+}
+
+// Re-checa o pagamento no Mercado Pago em tempo real (PIX e Cartão).
+// Backend chama merchant_orders pra Checkout Pro Card e atualiza Firestore se aprovado.
+async function recheckPayment(orderId) {
+  const o = allOrders.find(x => x.id === orderId);
+  if (!o) return showToast('Pedido não encontrado', 'error');
+  showToast('Consultando Mercado Pago…');
+  try {
+    const r = await fetch(`${API_BASE || 'https://gumax-backend-production.up.railway.app'}/api/check-pix`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ orderId }),
+    });
+    const data = await r.json();
+    if (!r.ok) throw new Error(data.error || `HTTP ${r.status}`);
+    // Backend já atualizou Firestore se virou paid — recarrega lista e reabre modal
+    await loadOrders();
+    closeOrderDetails();
+    if (data.status === 'approved') {
+      showToast('✅ Pagamento CONFIRMADO! Pode entregar a skin.', 'success');
+      // Reabre modal pra mostrar status atualizado
+      setTimeout(() => openOrderDetails(orderId), 500);
+    } else {
+      showToast(`Status no MP: ${data.status || 'pendente'} — cliente ainda não pagou`, 'info');
+      setTimeout(() => openOrderDetails(orderId), 500);
+    }
+  } catch (e) {
+    console.error('[recheckPayment]', e);
+    showToast('Erro: ' + e.message, 'error');
+  }
 }
 
 // Helper local — usa escapeHtml se já existir, senão fallback
