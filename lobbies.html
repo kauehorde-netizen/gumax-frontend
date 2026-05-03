@@ -1114,7 +1114,7 @@ body::before {
       <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M19 12H5M12 19l-7-7 7-7"/></svg>
       Voltar ao Mercado
     </a>
-    <div class="league-brand" title="lobby v46-desafio-mp3">
+    <div class="league-brand" title="lobby v47-banner-permanent">
       <!-- Logo em vídeo (fundo preto fica transparente via mix-blend-mode:screen).
            muted+playsinline são obrigatórios pra autoplay funcionar nos browsers. -->
       <video class="league-logo-video" src="logogu.mp4" autoplay loop muted playsinline preload="auto"></video>
@@ -1292,7 +1292,7 @@ body::before {
 <div class="toast" id="toast"></div>
 
 <!-- Marker discreto persistente (canto inferior direito) — pra dev/debug -->
-<div style="position:fixed;bottom:8px;right:12px;font-size:10px;color:rgba(250,204,21,.5);font-family:monospace;pointer-events:none;z-index:1;background:rgba(0,0,0,.4);padding:3px 8px;border-radius:4px;">lobby v46-desafio-mp3</div>
+<div style="position:fixed;bottom:8px;right:12px;font-size:10px;color:rgba(250,204,21,.5);font-family:monospace;pointer-events:none;z-index:1;background:rgba(0,0,0,.4);padding:3px 8px;border-radius:4px;">lobby v47-banner-permanent</div>
 
 <script>
 // =================================================================
@@ -2498,18 +2498,16 @@ startPolling();
   // Se o arquivo nao existir (HEAD 404), cai no fallback de texto via onerror.
   const MONTH_FILE_NAMES = ['janeiro','fevereiro','marco','abril','maio','junho','julho','agosto','setembro','outubro','novembro','dezembro'];
   function renderSeasonBanner() {
+    // v47-banner-permanent: mantemos o banner durante todo o mes (era so 3 dias)
+    // e removemos o botao de fechar — Gu pediu pq deixa o site mais bonito.
+    // Tambem ignoramos qualquer dismiss antigo no localStorage pra quem ja
+    // tinha fechado ver o banner de novo.
     const now = new Date();
-    const day = now.getDate();
-    if (day > 3) return;  // so primeiros 3 dias
-    const yearMonth = getYearMonth();
-    const dismissKey = `gmaxSeasonBannerDismissed:${yearMonth}`;
-    try { if (localStorage.getItem(dismissKey)) return; } catch {}
     const monthName = MONTH_NAMES_PT[now.getMonth()];
     const monthFile = MONTH_FILE_NAMES[now.getMonth()];
     const bannerImg = `banner-${monthFile}.png`;
     const el = document.getElementById('seasonBanner');
     if (!el) return;
-    const closeBtn = `<button class="season-banner-close" title="Dispensar" onclick="(function(){try{localStorage.setItem('${dismissKey}','1');}catch{};document.getElementById('seasonBanner').style.display='none';})()">×</button>`;
     // Tenta carregar a imagem; se 404, troca pelo fallback de texto.
     const fallbackHtml = `
       <span class="season-banner-icon">🏆</span>
@@ -2517,10 +2515,9 @@ startPolling();
         <strong>Temporada ${monthName} começou</strong>
         <span>Joga 3 partidas pra recalibrar teu rating · ranking foi resetado</span>
       </div>
-      ${closeBtn}
     `;
     el.classList.add('has-image');
-    el.innerHTML = `<img class="season-banner-img" src="${bannerImg}" alt="Temporada ${monthName}" onerror="this.parentElement.classList.remove('has-image');this.parentElement.innerHTML=this.dataset.fallback;" data-fallback="${fallbackHtml.replace(/&/g, '&amp;').replace(/"/g, '&quot;')}">${closeBtn}`;
+    el.innerHTML = `<img class="season-banner-img" src="${bannerImg}" alt="Temporada ${monthName}" onerror="this.parentElement.classList.remove('has-image');this.parentElement.innerHTML=this.dataset.fallback;" data-fallback="${fallbackHtml.replace(/&/g, '&amp;').replace(/"/g, '&quot;')}">`;
     el.style.display = 'flex';
   }
   if (document.readyState === 'loading') {
