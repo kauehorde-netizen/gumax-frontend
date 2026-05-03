@@ -115,70 +115,6 @@ header { background: rgba(8,6,14,0.92); backdrop-filter: blur(10px); border-bott
 /* ── Hero topo SLIM com efeito sutil moderno ── */
 /* Em vez de orbs saturados (que ficavam degradê chapado em hero fino), uso:
    1. Background base super sutil com gradient diagonal escuro
-   2. Linha de glow animada deslizando horizontalmente (efeito "shine")
-   3. Border-bottom com gradient pulsando (acent visual sem peso) */
-.league-hero {
-  position:relative; max-width:1400px; margin:18px auto 0; padding:12px 24px;
-  background:linear-gradient(135deg, rgba(20,16,40,.6), rgba(26,15,46,.4));
-  border:1px solid var(--border);
-  border-radius:14px;
-  display:flex; align-items:center; justify-content:space-between; gap:18px; flex-wrap:wrap;
-  overflow:hidden;
-  box-shadow: 0 0 20px rgba(139,92,246,.08), inset 0 1px 0 rgba(255,255,255,.03);
-}
-
-/* Linha de "shine" deslizando horizontalmente — bem sutil
-   v33-noredirect: 8s → 24s (3x menos repaint). Background-position animation
-   pinta toda área do hero a cada frame; period maior alivia. */
-.league-hero::before {
-  content:''; position:absolute; inset:0; pointer-events:none; z-index:0;
-  background: linear-gradient(110deg,
-    transparent 30%,
-    rgba(250,204,21,.04) 45%,
-    rgba(250,204,21,.08) 50%,
-    rgba(139,92,246,.06) 55%,
-    transparent 70%);
-  background-size: 250% 100%;
-  animation: heroShine 24s linear infinite;
-}
-
-/* Border bottom com gradient pulsando — 4s → 6s, ainda perceptível */
-.league-hero::after {
-  content:''; position:absolute; left:10%; right:10%; bottom:0; height:1px;
-  background: linear-gradient(90deg,
-    transparent,
-    rgba(250,204,21,.4),
-    rgba(139,92,246,.4),
-    transparent);
-  animation: heroBorderPulse 6s ease-in-out infinite alternate;
-  z-index:0;
-}
-@media (prefers-reduced-motion: reduce) {
-  .league-hero::before, .league-hero::after { animation: none; }
-}
-
-.league-hero > * { position:relative; z-index:1; }
-
-@keyframes heroShine {
-  0%   { background-position: -50% 0; }
-  100% { background-position: 150% 0; }
-}
-@keyframes heroBorderPulse {
-  from { opacity:.4; }
-  to   { opacity:1; }
-}
-
-.league-hero-text { display:flex; align-items:center; gap:12px; flex:1; min-width:0; }
-.league-hero-text .tagline { font-size:13px; color:var(--text-secondary); }
-
-.league-hero-cta { display:flex; gap:10px; }
-.league-hero-link { font-size:11px; color:var(--text-muted); text-decoration:none; padding:6px 10px; border-radius:8px; transition:all .15s; }
-.league-hero-link:hover { background:rgba(255,255,255,.05); color:var(--primary-light); }
-
-@media (max-width: 720px) {
-  .league-hero { padding:10px 14px; }
-  .league-hero-text .tagline { font-size:11px; }
-}
 
 /* ── Seção "Como Funciona" — 4 cards com ícones animados + energy borders ── */
 .how-it-works { max-width:1400px; margin:32px auto 0; padding:0 28px; }
@@ -457,7 +393,7 @@ header { background: rgba(8,6,14,0.92); backdrop-filter: blur(10px); border-bott
 
 /* ── Layout principal — sidebar esquerda + grid à direita, mais pra baixo ── */
 .lobby-shell { display:grid; grid-template-columns: 320px 1fr; gap:28px; padding:36px 28px; max-width:1400px; margin:0 auto; }
-@media (max-width: 880px) { .lobby-shell { grid-template-columns: 1fr; padding:20px 16px; } .league-hero { margin:16px; padding:20px; } .league-hero h1 { font-size:22px; } }
+@media (max-width: 880px) { .lobby-shell { grid-template-columns: 1fr; padding:20px 16px; } }
 
 /* Sidebar "Minha Sala" — laser duplo igual aos outros cards */
 .my-lobby-card {
@@ -1014,18 +950,6 @@ header { background: rgba(8,6,14,0.92); backdrop-filter: blur(10px); border-bott
 <div id="seasonBanner" style="display:none;"></div>
 
 <main>
-
-<!-- Hero slim com fundo animado (orbs flutuando). Título principal já está
-     no topbar acima — aqui só descrição rápida + links pra futuras seções. -->
-<section class="league-hero">
-  <div class="league-hero-text">
-    <span class="tagline">Matchmaker 5v5 entre amigos · <strong style="color:var(--text-primary);">Premiação mensal em skin</strong></span>
-  </div>
-  <div class="league-hero-cta">
-    <a class="league-hero-link" href="ranking.html">📊 Ranking</a>
-    <a class="league-hero-link" href="#howItWorks">❓ Como funciona</a>
-  </div>
-</section>
 
 <!-- ═══ COMO FUNCIONA ═══
      4 passos animados: criar sala → convidar amigos → desafiar outra sala → jogar.
