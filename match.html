@@ -160,6 +160,74 @@ body { font-family: 'Inter', sans-serif; background: var(--bg-primary); color: v
 .toast.show { opacity:1; }
 .toast.error { border-color:rgba(239,68,68,.4); color:var(--accent-red); }
 .toast.success { border-color:rgba(16,185,129,.4); color:var(--accent-green); }
+
+/* v41-tier-up: overlay quando user sobe de tier */
+#tierUpOverlay {
+  position: fixed; inset: 0; z-index: 9999;
+  display: flex; align-items: center; justify-content: center;
+  animation: tierUpFadeIn 0.3s ease-out;
+}
+.tier-up-backdrop {
+  position: absolute; inset: 0;
+  background: radial-gradient(circle at center, rgba(20,16,40,.85), rgba(0,0,0,.95));
+  backdrop-filter: blur(8px);
+}
+.tier-up-content {
+  position: relative; z-index: 1;
+  text-align: center;
+  padding: 40px 60px;
+  animation: tierUpScale 0.5s cubic-bezier(.34,1.56,.64,1);
+}
+.tier-up-old { font-size: 18px; color: #94a3b8; margin-bottom: 4px; opacity: 0.7; }
+.tier-up-arrow {
+  font-size: 36px; color: #facc15; margin: 8px 0;
+  animation: tierUpArrowBounce 1s ease-in-out infinite;
+}
+.tier-up-emoji { font-size: 140px; line-height: 1; margin: 16px 0;
+  animation: tierUpEmojiPulse 1.2s ease-in-out infinite;
+}
+.tier-up-label {
+  font-size: 14px; letter-spacing: 4px; color: #cbd5e1; font-weight: 700;
+  margin-top: 18px;
+}
+.tier-up-name {
+  font-size: 64px; font-weight: 900; letter-spacing: 2px; margin-top: 8px;
+  font-family: 'Inter',sans-serif;
+}
+.tier-up-rating {
+  font-size: 22px; color: #fde047; font-family: 'JetBrains Mono',monospace; font-weight: 700;
+  margin-top: 12px;
+}
+.tier-up-close {
+  margin-top: 32px; padding: 14px 40px;
+  background: linear-gradient(135deg, var(--primary), var(--primary-light));
+  color: #fff; border: none; border-radius: 12px;
+  font-size: 15px; font-weight: 800; letter-spacing: 1px; cursor: pointer;
+  transition: transform .15s, box-shadow .15s;
+  box-shadow: 0 8px 24px rgba(99,102,241,.4);
+}
+.tier-up-close:hover { transform: translateY(-2px); box-shadow: 0 12px 32px rgba(99,102,241,.6); }
+@keyframes tierUpFadeIn { from { opacity: 0; } to { opacity: 1; } }
+@keyframes tierUpScale {
+  from { transform: scale(0.5); opacity: 0; }
+  to { transform: scale(1); opacity: 1; }
+}
+@keyframes tierUpEmojiPulse {
+  0%,100% { transform: scale(1); }
+  50% { transform: scale(1.08); }
+}
+@keyframes tierUpArrowBounce {
+  0%,100% { transform: translateY(0); }
+  50% { transform: translateY(-8px); }
+}
+@media (max-width: 600px) {
+  .tier-up-emoji { font-size: 100px; }
+  .tier-up-name { font-size: 40px; }
+  .tier-up-content { padding: 24px; }
+}
+@media (prefers-reduced-motion: reduce) {
+  #tierUpOverlay, .tier-up-content, .tier-up-emoji, .tier-up-arrow { animation: none; }
+}
 </style>
 </head>
 <body>
@@ -331,6 +399,98 @@ const TIER_INFO = {
   'calibrating': { name: 'Calibrando', color: '#6b7280', emoji: '🎯' },
 };
 
+// v41-tier-up: tabela de thresholds (espelha rating.js do backend)
+// Usado pra calcular tier do rating ANTES do delta da partida.
+const TIER_THRESHOLDS = [
+  { min: 0,     max: 4999,  key: 'gray' },
+  { min: 5000,  max: 9999,  key: 'silver' },
+  { min: 10000, max: 14999, key: 'gold' },
+  { min: 15000, max: 19999, key: 'plat' },
+  { min: 20000, max: 24999, key: 'diamond' },
+  { min: 25000, max: 29999, key: 'master' },
+  { min: 30000, max: 9e9,   key: 'top' },
+];
+const TIER_ORDER = ['gray','silver','gold','plat','diamond','master','top'];
+
+function getTierForRating(rating) {
+  if (rating == null || rating < 0) return 'calibrating';
+  for (const t of TIER_THRESHOLDS) {
+    if (rating >= t.min && rating <= t.max) return t.key;
+  }
+  return 'top';
+}
+
+// Detecta se o user atual subiu de tier nessa partida e dispara overlay.
+// Só dispara UMA vez por matchId (guarda flag em localStorage).
+function checkTierUpForCurrentUser(deltas, matchId) {
+  if (!deltas || !matchId || typeof _user === 'undefined' || !_user?.uid) return;
+  // Pega steamId do user logado a partir do matchData (teamA ou teamB)
+  const m = _matchData;
+  if (!m) return;
+  const me = (m.teamA || []).find(p => p.uid === _user.uid)
+          || (m.teamB || []).find(p => p.uid === _user.uid);
+  const sid = me?.steamId;
+  if (!sid) return;
+  const stats = deltas[sid];
+  if (!stats || stats.calibrating || stats.csRating == null) return;
+  const delta = stats.lastDelta || 0;
+  if (delta <= 0) return;  // só celebra subida (delta positivo)
+  const newRating = stats.csRating;
+  const oldRating = newRating - delta;
+  const newTier = getTierForRating(newRating);
+  const oldTier = getTierForRating(oldRating);
+  if (newTier === oldTier) return;
+  // Tier-up de verdade. Verifica se subiu (não desceu)
+  const oldIdx = TIER_ORDER.indexOf(oldTier);
+  const newIdx = TIER_ORDER.indexOf(newTier);
+  if (newIdx <= oldIdx) return;
+  // Já mostrou pra essa partida?
+  const seenKey = `gmaxTierUpShown:${matchId}`;
+  try { if (localStorage.getItem(seenKey)) return; } catch {}
+  try { localStorage.setItem(seenKey, '1'); } catch {}
+  showTierUpOverlay(oldTier, newTier, newRating);
+}
+
+function showTierUpOverlay(oldTierKey, newTierKey, newRating) {
+  const newTier = TIER_INFO[newTierKey] || TIER_INFO['gray'];
+  const oldTier = TIER_INFO[oldTierKey] || TIER_INFO['gray'];
+  // Remove qualquer overlay anterior
+  const existing = document.getElementById('tierUpOverlay');
+  if (existing) existing.remove();
+  const overlay = document.createElement('div');
+  overlay.id = 'tierUpOverlay';
+  overlay.innerHTML = `
+    <div class="tier-up-backdrop"></div>
+    <div class="tier-up-content">
+      <div class="tier-up-old">de ${oldTier.emoji} ${oldTier.name}</div>
+      <div class="tier-up-arrow">↑</div>
+      <div class="tier-up-emoji" style="color:${newTier.color};text-shadow:0 0 60px ${newTier.color}99,0 0 120px ${newTier.color}66;">${newTier.emoji}</div>
+      <div class="tier-up-label">VOCÊ SUBIU PARA</div>
+      <div class="tier-up-name" style="color:${newTier.color};text-shadow:0 0 30px ${newTier.color}cc;">${newTier.name.toUpperCase()}</div>
+      <div class="tier-up-rating">${newRating.toLocaleString('pt-BR')} pontos</div>
+      <button class="tier-up-close" onclick="document.getElementById('tierUpOverlay').remove()">Continuar →</button>
+    </div>
+  `;
+  document.body.appendChild(overlay);
+  // Auto-fecha em 12s caso o user não clique
+  setTimeout(() => { document.getElementById('tierUpOverlay')?.remove(); }, 12000);
+  // Som curto (sintetizado, sem precisar de asset)
+  try {
+    const ctx = new (window.AudioContext || window.webkitAudioContext)();
+    const now = ctx.currentTime;
+    [0, 0.15, 0.3].forEach((delay, i) => {
+      const o = ctx.createOscillator(), g = ctx.createGain();
+      o.connect(g); g.connect(ctx.destination);
+      o.frequency.value = 523.25 * Math.pow(1.26, i);  // C5, E5, G5
+      o.type = 'sine';
+      g.gain.setValueAtTime(0, now + delay);
+      g.gain.linearRampToValueAtTime(0.18, now + delay + 0.02);
+      g.gain.exponentialRampToValueAtTime(0.001, now + delay + 0.5);
+      o.start(now + delay); o.stop(now + delay + 0.55);
+    });
+  } catch {}
+}
+
 let _postMatchDeltas = null;
 let _postMatchFetching = false;
 
@@ -346,6 +506,8 @@ async function fetchPostMatchDeltas(matchData) {
     const r = await fetch(`${API_BASE}/api/match/players?ids=${allSteamIds.join(',')}`);
     const data = await r.json();
     _postMatchDeltas = data.players || {};
+    // v41-tier-up: checa se user atual subiu de tier
+    try { checkTierUpForCurrentUser(_postMatchDeltas, _matchData?.id || _matchId); } catch (e) { console.error('[tier-up] erro:', e); }
   } catch (e) { console.error('[postMatch] fetch falhou:', e); }
   _postMatchFetching = false;
   // Re-render se já está em finished
