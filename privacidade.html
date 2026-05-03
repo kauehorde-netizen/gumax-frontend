@@ -1,0 +1,349 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Política de Privacidade — Gumax Skins</title>
+<meta name="description" content="Política de Privacidade da Gumax Skins — como tratamos seus dados pessoais (LGPD).">
+<meta name="robots" content="index, follow">
+<link rel="icon" href="https://static.wixstatic.com/media/874864_b598e856481740e7ae752771a661c242~mv2.png">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<style>
+:root {
+  --bg-primary: #0a0613;
+  --bg-card: #14101f;
+  --text-primary: #ece8f4;
+  --text-secondary: #b3aac4;
+  --text-muted: #7c7392;
+  --accent-yellow: #FACC15;
+  --accent-cyan: #22d3ee;
+  --accent-green: #10b981;
+  --border: rgba(255,255,255,.08);
+}
+* { margin: 0; padding: 0; box-sizing: border-box; }
+body {
+  font-family: 'Inter', sans-serif;
+  background: var(--bg-primary);
+  color: var(--text-primary);
+  line-height: 1.7;
+  font-size: 15px;
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+}
+.legal-topbar {
+  border-bottom: 1px solid var(--border);
+  padding: 18px 24px;
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  background: rgba(10,6,19,.85);
+  backdrop-filter: blur(12px);
+  position: sticky;
+  top: 0;
+  z-index: 10;
+}
+.legal-topbar img { height: 32px; }
+.legal-topbar a {
+  color: var(--text-secondary);
+  text-decoration: none;
+  font-size: 13px;
+  transition: color .15s;
+}
+.legal-topbar a:hover { color: var(--accent-yellow); }
+.legal-topbar .spacer { flex: 1; }
+
+main {
+  max-width: 880px;
+  margin: 0 auto;
+  padding: 56px 24px 80px;
+  flex: 1;
+}
+h1 {
+  font-size: 36px;
+  font-weight: 800;
+  margin-bottom: 8px;
+  background: linear-gradient(135deg, var(--accent-cyan), #0ea5e9);
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+  -webkit-text-fill-color: transparent;
+}
+.subtitle { color: var(--text-muted); margin-bottom: 12px; }
+.updated {
+  display: inline-block;
+  font-size: 12px;
+  color: var(--text-muted);
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  padding: 6px 12px;
+  border-radius: 999px;
+  margin-bottom: 36px;
+}
+h2 {
+  font-size: 22px;
+  font-weight: 700;
+  color: var(--accent-cyan);
+  margin-top: 36px;
+  margin-bottom: 14px;
+  padding-bottom: 8px;
+  border-bottom: 1px solid var(--border);
+}
+h3 {
+  font-size: 16px;
+  font-weight: 700;
+  color: var(--text-primary);
+  margin-top: 22px;
+  margin-bottom: 8px;
+}
+p { color: var(--text-secondary); margin-bottom: 14px; }
+ul, ol { color: var(--text-secondary); padding-left: 22px; margin-bottom: 14px; }
+li { margin-bottom: 6px; }
+a.inline { color: var(--accent-cyan); text-decoration: underline; text-underline-offset: 3px; }
+a.inline:hover { color: var(--accent-yellow); }
+.tldr {
+  background: rgba(34,211,238,.06);
+  border: 1px solid rgba(34,211,238,.25);
+  border-radius: 12px;
+  padding: 16px 20px;
+  margin: 24px 0 32px;
+  font-size: 14px;
+}
+.tldr strong { color: var(--accent-cyan); }
+.note {
+  background: rgba(250,204,21,.06);
+  border-left: 3px solid var(--accent-yellow);
+  padding: 12px 16px;
+  margin: 16px 0;
+  border-radius: 4px;
+  font-size: 14px;
+}
+.contact-box {
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  padding: 22px 26px;
+  margin-top: 32px;
+}
+.contact-box strong { color: var(--accent-yellow); }
+table.data-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 14px;
+  margin: 16px 0;
+}
+table.data-table th, table.data-table td {
+  text-align: left;
+  padding: 10px 12px;
+  border: 1px solid var(--border);
+  color: var(--text-secondary);
+  vertical-align: top;
+}
+table.data-table th {
+  background: var(--bg-card);
+  color: var(--accent-cyan);
+  font-weight: 700;
+  font-size: 12px;
+  letter-spacing: .5px;
+  text-transform: uppercase;
+}
+footer.legal-footer {
+  border-top: 1px solid var(--border);
+  padding: 26px 24px;
+  text-align: center;
+  color: var(--text-muted);
+  font-size: 12px;
+}
+footer.legal-footer a {
+  color: var(--text-secondary);
+  text-decoration: none;
+  margin: 0 10px;
+  transition: color .15s;
+}
+footer.legal-footer a:hover { color: var(--accent-yellow); }
+@media (max-width: 640px) {
+  h1 { font-size: 28px; }
+  h2 { font-size: 19px; }
+  main { padding: 36px 20px 60px; }
+  table.data-table { font-size: 12px; }
+  table.data-table th, table.data-table td { padding: 6px 8px; }
+}
+</style>
+</head>
+<body>
+
+<header class="legal-topbar">
+  <a href="index.html"><img src="https://static.wixstatic.com/media/874864_b598e856481740e7ae752771a661c242~mv2.png" alt="Gumax"></a>
+  <span class="spacer"></span>
+  <a href="index.html">← Voltar pra loja</a>
+</header>
+
+<main>
+  <h1>Política de Privacidade</h1>
+  <p class="subtitle">Como tratamos seus dados pessoais — em conformidade com a LGPD.</p>
+  <div class="updated">Última atualização: 03 de Maio de 2026</div>
+
+  <div class="tldr">
+    <strong>Resumo rápido:</strong> A gente coleta o mínimo de dados pra
+    funcionar — Steam ID público, e-mail, WhatsApp, Trade Link e dados de
+    pagamento processados pelo Mercado Pago/NOWPayments. Não vendemos seus
+    dados pra ninguém. Você pode pedir cópia, correção ou exclusão a qualquer
+    momento via SAC.
+  </div>
+
+  <h2>1. Quem é o controlador dos seus dados</h2>
+  <p>
+    A <strong>Gumax Skins</strong>, operada por Gustavo Maximiliano, é a
+    controladora dos dados pessoais que você fornece ao usar gumaxskins.com.
+    Endereço de contato no fim deste documento.
+  </p>
+
+  <h2>2. Quais dados coletamos</h2>
+  <table class="data-table">
+    <thead>
+      <tr><th>Dado</th><th>Quando</th><th>Pra quê</th></tr>
+    </thead>
+    <tbody>
+      <tr><td>SteamID, nickname Steam, avatar, Trade Link</td><td>Login Steam</td><td>Identificar conta, processar trades</td></tr>
+      <tr><td>Nome completo</td><td>Cadastro de perfil</td><td>Nota fiscal, suporte, prevenção fraude</td></tr>
+      <tr><td>E-mail</td><td>Cadastro de perfil</td><td>Confirmação de pedido, suporte</td></tr>
+      <tr><td>WhatsApp</td><td>Cadastro de perfil</td><td>Notificação de pagamento e entrega</td></tr>
+      <tr><td>Endereço IP, user agent, fingerprint do navegador</td><td>Acesso ao site</td><td>Segurança, prevenção de fraude, analytics agregado</td></tr>
+      <tr><td>Dados do cartão / chave PIX</td><td>Checkout</td><td>Processado direto pelo Mercado Pago — a Gumax não vê nem armazena dados de cartão</td></tr>
+      <tr><td>Wallet de cripto</td><td>Checkout cripto</td><td>Processado pela NOWPayments — só vemos o transaction ID</td></tr>
+      <tr><td>Histórico de pedidos, skins compradas, valores</td><td>Compra</td><td>Suporte, contabilidade, programa de fidelidade</td></tr>
+      <tr><td>Stats da GMAX League (KDR, win rate, mapas)</td><td>Jogar partidas</td><td>Ranking, matchmaking</td></tr>
+      <tr><td>Hardware fingerprint (CPU + MB + Disk hash)</td><td>Rodar GMAX Guard</td><td>Anti-cheat — detecta multi-conta abusivo</td></tr>
+    </tbody>
+  </table>
+
+  <h2>3. Pra que usamos esses dados</h2>
+  <ul>
+    <li>Operar o serviço — login, compra, entrega de skins, suporte.</li>
+    <li>Comunicar status de pedidos por WhatsApp, e-mail e push do site.</li>
+    <li>Personalizar experiência — recomendações baseadas em histórico, alertas de skin watchlist.</li>
+    <li>Cumprir obrigações legais — emitir nota fiscal, responder a ordens judiciais, prevenir lavagem de dinheiro.</li>
+    <li>Melhorar o produto — analytics agregado e anônimo (sem identificar pessoa específica).</li>
+    <li>Garantir segurança — detectar fraude, bot, abuso.</li>
+  </ul>
+
+  <h2>4. Bases legais (LGPD Art. 7º)</h2>
+  <ul>
+    <li><strong>Execução de contrato:</strong> processar pedidos, entregar skin, dar suporte.</li>
+    <li><strong>Cumprimento de obrigação legal:</strong> nota fiscal, registros contábeis, atendimento à Receita Federal e órgãos de defesa do consumidor.</li>
+    <li><strong>Legítimo interesse:</strong> prevenção de fraude, segurança da plataforma, analytics agregado.</li>
+    <li><strong>Consentimento:</strong> envio de comunicações de marketing (você pode descadastrar a qualquer momento).</li>
+  </ul>
+
+  <h2>5. Com quem compartilhamos</h2>
+  <p>A gente compartilha o mínimo necessário com terceiros que prestam serviço pra Gumax:</p>
+  <ul>
+    <li><strong>Mercado Pago</strong> (pagamento PIX e cartão) — recebe nome, e-mail e valor da transação.</li>
+    <li><strong>NOWPayments</strong> (pagamento cripto) — recebe valor e wallet do cliente.</li>
+    <li><strong>Steam / Valve</strong> (autenticação OpenID e trades) — recebe seu SteamID público.</li>
+    <li><strong>WhatsApp Business / Z-API</strong> (notificações) — recebe seu número WhatsApp e a mensagem.</li>
+    <li><strong>Firebase / Google Cloud</strong> (banco de dados e auth) — armazena os dados criptografados em data centers no Brasil/EUA.</li>
+    <li><strong>Vercel + Railway</strong> (hospedagem do site/backend) — vê headers HTTP padrão.</li>
+    <li><strong>CSPriceAPI, ByMykel API, Steam Market</strong> (cotação e imagens de skins) — não recebem dados pessoais, só nome de skin pra cotar.</li>
+  </ul>
+  <p>
+    <strong>Não vendemos seus dados</strong> pra nenhum anunciante, broker de
+    dados ou rede de marketing. Não usamos cookies de rastreamento de terceiros
+    além dos estritamente necessários (Firebase Auth).
+  </p>
+
+  <h2>6. Por quanto tempo guardamos</h2>
+  <ul>
+    <li>Dados de cadastro (nome, e-mail, WhatsApp, SteamID): enquanto sua conta estiver ativa + 5 anos após encerramento (obrigação fiscal).</li>
+    <li>Dados de pedido (skins compradas, valores): 5 anos (Código Civil + obrigação contábil).</li>
+    <li>Logs de acesso (IP, user agent): 6 meses (Marco Civil da Internet).</li>
+    <li>Stats de jogo (GMAX League): enquanto a conta estiver ativa.</li>
+    <li>Dados de cartão: <strong>nunca</strong> — não armazenamos.</li>
+  </ul>
+
+  <h2>7. Seus direitos (LGPD Art. 18)</h2>
+  <p>Você pode, a qualquer momento, solicitar:</p>
+  <ul>
+    <li><strong>Confirmação</strong> de que tratamos seus dados.</li>
+    <li><strong>Acesso</strong> aos dados que temos sobre você (cópia em arquivo).</li>
+    <li><strong>Correção</strong> de dados incompletos, inexatos ou desatualizados.</li>
+    <li><strong>Anonimização ou eliminação</strong> de dados desnecessários, excessivos ou tratados em desconformidade.</li>
+    <li><strong>Portabilidade</strong> dos dados pra outro fornecedor (formato JSON ou CSV).</li>
+    <li><strong>Eliminação</strong> dos dados tratados com base em consentimento (exceto quando obrigatórios por lei).</li>
+    <li><strong>Informação</strong> sobre com quem compartilhamos seus dados (lista no item 5).</li>
+    <li><strong>Revogação do consentimento</strong> a qualquer momento (descadastro de marketing, etc).</li>
+  </ul>
+  <p>
+    Pra exercer qualquer direito, abre chamado no SAC ou manda e-mail pra
+    <a class="inline" href="mailto:privacidade@gumaxskins.com">privacidade@gumaxskins.com</a>.
+    Respondemos em até <strong>15 dias</strong>. Pode ser pedido documento de
+    identificação pra confirmar que é você mesmo.
+  </p>
+
+  <h2>8. Cookies e tecnologias similares</h2>
+  <p>Usamos só os cookies estritamente necessários:</p>
+  <ul>
+    <li><strong>Firebase Auth (sessão de login)</strong> — pra você não precisar logar a cada visita.</li>
+    <li><strong>localStorage do navegador</strong> — preferências de filtros, carrinho, último estado.</li>
+  </ul>
+  <p>Não usamos Google Analytics, Facebook Pixel ou qualquer cookie de marketing/rastreamento.</p>
+
+  <h2>9. Segurança</h2>
+  <p>Medidas técnicas e organizacionais:</p>
+  <ul>
+    <li>HTTPS obrigatório em todo o site (TLS 1.2+).</li>
+    <li>Autenticação Steam via OpenID — a gente nunca vê sua senha Steam.</li>
+    <li>Tokens Firebase com rotação automática (1h de validade).</li>
+    <li>Banco Firestore com regras de segurança que bloqueiam acesso direto a docs de outros usuários.</li>
+    <li>Backup automático diário do banco de dados.</li>
+    <li>Logs de admin auditados (quem fez o quê, quando).</li>
+  </ul>
+  <p>
+    Em caso de incidente de segurança que afete seus dados, a gente comunica
+    você e a ANPD (Autoridade Nacional de Proteção de Dados) em até 72h, conforme
+    obrigação legal.
+  </p>
+
+  <h2>10. Crianças e adolescentes</h2>
+  <p>
+    A Gumax Skins não é destinada a menores de 13 anos. Adolescentes entre 13 e
+    18 anos só podem usar com consentimento dos responsáveis legais. Se
+    identificarmos cadastro de menor sem autorização, encerramos a conta e
+    eliminamos os dados.
+  </p>
+
+  <h2>11. Mudanças nesta Política</h2>
+  <p>
+    A gente pode atualizar esta política. Mudanças relevantes são comunicadas
+    no site e por e-mail/WhatsApp. A data no topo indica a versão vigente.
+    Continuar usando o serviço após a mudança = aceite da nova versão.
+  </p>
+
+  <h2>12. Encarregado de Proteção de Dados (DPO)</h2>
+  <p>
+    O encarregado pelo tratamento de dados pessoais (DPO) na Gumax é Gustavo
+    Maximiliano. Contato:
+    <a class="inline" href="mailto:privacidade@gumaxskins.com">privacidade@gumaxskins.com</a>.
+  </p>
+
+  <div class="contact-box">
+    <strong>Não satisfeito com a resposta?</strong>
+    <p style="margin-top:8px; margin-bottom:0;">
+      Você pode reclamar diretamente à <strong>ANPD</strong> (Autoridade Nacional de
+      Proteção de Dados): <a class="inline" href="https://www.gov.br/anpd/" target="_blank" rel="noopener">gov.br/anpd</a>
+    </p>
+  </div>
+</main>
+
+<footer class="legal-footer">
+  <div>
+    <a href="index.html">Início</a> ·
+    <a href="termos.html">Termos</a> ·
+    <a href="privacidade.html">Privacidade</a> ·
+    <a href="faq.html">FAQ</a>
+  </div>
+  <p style="margin-top:8px;">© 2026 Gumax Skins · Não somos afiliados à Valve Corporation.</p>
+</footer>
+
+</body>
+</html>
