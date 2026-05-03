@@ -379,10 +379,89 @@ function renderProfile(p) {
     </section>
   `;
 
+  const advancedHtml = renderAdvanced(p.advancedStats);
   const historyHtml = renderHistory(p.history || []);
 
   document.getElementById('profileContent').style.display = '';
-  document.getElementById('profileContent').innerHTML = heroHtml + statsHtml + historyHtml;
+  document.getElementById('profileContent').innerHTML = heroHtml + statsHtml + advancedHtml + historyHtml;
+}
+
+// v41-stats-adv: cards de stats avancadas (HS%, melhor mapa, melhor dia, mapa stats)
+function renderAdvanced(adv) {
+  if (!adv || !adv.sampleSize) return '';
+  const bestMap = adv.bestMap;
+  const bestDay = adv.bestWeekday;
+  const mapName = (key) => key ? (MAP_LABELS[key] || key.replace('de_', '')) : '—';
+  // Top 3 mapas por jogos
+  const topMaps = (adv.mapStats || []).slice(0, 3);
+  const mapsList = topMaps.length ? topMaps.map(m => {
+    const wrColor = m.winRate >= 60 ? '#22c55e' : m.winRate >= 40 ? '#facc15' : '#ef4444';
+    return `
+      <div style="display:flex;align-items:center;justify-content:space-between;padding:8px 12px;background:rgba(255,255,255,.03);border-radius:8px;margin-bottom:6px;">
+        <div style="font-weight:700;font-size:13px;">${esc(mapName(m.map))}</div>
+        <div style="display:flex;gap:14px;align-items:center;font-family:'JetBrains Mono',monospace;font-size:12px;">
+          <span style="color:var(--text-muted);">${m.played} jogo${m.played > 1 ? 's' : ''}</span>
+          <span style="color:${wrColor};font-weight:800;">${m.winRate}%</span>
+        </div>
+      </div>`;
+  }).join('') : '<p style="color:var(--text-muted);font-size:12px;">Sem dados ainda.</p>';
+
+  // Bar chart simples por dia da semana
+  const maxPlayed = Math.max(...(adv.weekdayStats || []).map(w => w.played), 1);
+  const wdaysHtml = (adv.weekdayStats || []).map(w => {
+    const heightPct = w.played > 0 ? Math.round((w.played / maxPlayed) * 100) : 4;
+    const wrColor = w.played === 0 ? '#1e293b' : w.winRate >= 60 ? '#22c55e' : w.winRate >= 40 ? '#facc15' : '#ef4444';
+    return `
+      <div style="display:flex;flex-direction:column;align-items:center;gap:4px;flex:1;">
+        <div style="height:80px;display:flex;align-items:flex-end;width:100%;justify-content:center;">
+          <div style="width:60%;height:${heightPct}%;background:${wrColor};border-radius:4px 4px 0 0;min-height:4px;transition:height .3s;" title="${w.label}: ${w.played} jogos, ${w.winRate}% WR"></div>
+        </div>
+        <div style="font-size:10px;color:var(--text-muted);font-weight:700;">${w.label}</div>
+        <div style="font-size:10px;color:${w.played > 0 ? wrColor : 'var(--text-muted)'};font-family:'JetBrains Mono',monospace;font-weight:700;">${w.played > 0 ? w.winRate + '%' : '—'}</div>
+      </div>`;
+  }).join('');
+
+  return `
+    <section style="margin-bottom:28px;">
+      <h2 style="font-size:18px;font-weight:800;margin-bottom:12px;display:flex;align-items:center;gap:10px;">
+        📊 Stats Avançadas
+        <span style="font-size:11px;padding:3px 10px;background:rgba(34,211,238,.15);border:1px solid rgba(34,211,238,.3);border-radius:10px;color:var(--accent-cyan);font-weight:600;font-family:'JetBrains Mono',monospace;">últimas ${adv.sampleSize}</span>
+      </h2>
+      <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:14px;">
+        <div class="stat-card" style="padding:18px;">
+          <div class="stat-label">🎯 Headshot %</div>
+          <div class="stat-value" style="color:#facc15;">${adv.hsPct}%</div>
+        </div>
+        ${bestMap ? `
+        <div class="stat-card" style="padding:18px;">
+          <div class="stat-label">🗺️ Melhor Mapa</div>
+          <div class="stat-value" style="font-size:20px;color:#22c55e;">${esc(mapName(bestMap.map))}</div>
+          <div style="font-size:11px;color:var(--text-muted);margin-top:4px;">${bestMap.winRate}% em ${bestMap.played} jogos</div>
+        </div>` : ''}
+        ${bestDay ? `
+        <div class="stat-card" style="padding:18px;">
+          <div class="stat-label">📅 Melhor Dia</div>
+          <div class="stat-value" style="font-size:20px;color:var(--accent-cyan);">${bestDay.label}</div>
+          <div style="font-size:11px;color:var(--text-muted);margin-top:4px;">${bestDay.winRate}% em ${bestDay.played} jogos</div>
+        </div>` : ''}
+        <div class="stat-card" style="padding:18px;">
+          <div class="stat-label">⚡ ADR Recente</div>
+          <div class="stat-value" style="color:var(--primary-light);">${adv.avgAdrRecent}</div>
+        </div>
+      </div>
+
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-top:14px;">
+        <div style="background:linear-gradient(135deg, rgba(20,16,40,.85), rgba(15,10,30,.92));border:1px solid var(--border);border-radius:16px;padding:18px;">
+          <h3 style="font-size:12px;color:var(--text-muted);letter-spacing:1px;text-transform:uppercase;margin-bottom:12px;">Top Mapas</h3>
+          ${mapsList}
+        </div>
+        <div style="background:linear-gradient(135deg, rgba(20,16,40,.85), rgba(15,10,30,.92));border:1px solid var(--border);border-radius:16px;padding:18px;">
+          <h3 style="font-size:12px;color:var(--text-muted);letter-spacing:1px;text-transform:uppercase;margin-bottom:12px;">WR por dia da semana</h3>
+          <div style="display:flex;gap:6px;align-items:flex-end;">${wdaysHtml}</div>
+        </div>
+      </div>
+    </section>
+  `;
 }
 
 function renderHistory(history) {
