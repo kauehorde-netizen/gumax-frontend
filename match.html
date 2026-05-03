@@ -398,6 +398,8 @@ try {
 let _user = null;
 let _soundPlayed = false;
 let _matchSoundEl = null;
+let _lastMatchStatus = null;
+let _serverSoundPlayed = false;
 function playMatchFoundSound() {
   if (_soundPlayed) return;
   _soundPlayed = true;
@@ -412,6 +414,17 @@ function stopMatchFoundSound() {
     try { _matchSoundEl.pause(); _matchSoundEl.currentTime = 0; } catch {}
     _matchSoundEl = null;
   }
+}
+// v8-server-sound: dispara abrir-gmaxguard.mp3 só na transição p/ 'starting'
+// (mapa escolhido, servidor sendo criado). Toca uma vez por partida.
+function playServerStartingSound() {
+  if (_serverSoundPlayed) return;
+  _serverSoundPlayed = true;
+  try {
+    const a = new Audio('sounds/abrir-gmaxguard.mp3');
+    a.volume = 0.7;
+    a.play().catch(e => console.log('[sound] autoplay blocked:', e.message));
+  } catch (e) { /* tolera */ }
 }
 let _idToken = null;
 let _matchData = null;
@@ -818,6 +831,11 @@ function renderStage(m) {
     countdown.style.display = 'none';
     actionBox.innerHTML = '';
   } else if (m.status === 'starting') {
+    stopMatchFoundSound();
+    // v8-server-sound: toca som SÓ na transição (mappick → starting / qualquer → starting)
+    if (_lastMatchStatus !== 'starting') {
+      playServerStartingSound();
+    }
     stageLabel.textContent = 'Etapa 3 de 3';
     stageTitle.textContent = 'Preparando servidor…';
     countdown.style.display = 'none';
@@ -922,6 +940,8 @@ function renderStage(m) {
       : '';
     actionBox.innerHTML = detailHtml + `<button class="btn-huge" onclick="location.href='lobbies.html'">Voltar pra Lobbies</button>`;
   }
+  // v8-server-sound: rastreia transição entre status p/ disparar sons só uma vez
+  _lastMatchStatus = m.status;
 }
 
 function renderVeto() {

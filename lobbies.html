@@ -1114,7 +1114,7 @@ body::before {
       <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M19 12H5M12 19l-7-7 7-7"/></svg>
       Voltar ao Mercado
     </a>
-    <div class="league-brand" title="lobby v45-cancel-expired">
+    <div class="league-brand" title="lobby v46-desafio-mp3">
       <!-- Logo em vídeo (fundo preto fica transparente via mix-blend-mode:screen).
            muted+playsinline são obrigatórios pra autoplay funcionar nos browsers. -->
       <video class="league-logo-video" src="logogu.mp4" autoplay loop muted playsinline preload="auto"></video>
@@ -1292,7 +1292,7 @@ body::before {
 <div class="toast" id="toast"></div>
 
 <!-- Marker discreto persistente (canto inferior direito) — pra dev/debug -->
-<div style="position:fixed;bottom:8px;right:12px;font-size:10px;color:rgba(250,204,21,.5);font-family:monospace;pointer-events:none;z-index:1;background:rgba(0,0,0,.4);padding:3px 8px;border-radius:4px;">lobby v45-cancel-expired</div>
+<div style="position:fixed;bottom:8px;right:12px;font-size:10px;color:rgba(250,204,21,.5);font-family:monospace;pointer-events:none;z-index:1;background:rgba(0,0,0,.4);padding:3px 8px;border-radius:4px;">lobby v46-desafio-mp3</div>
 
 <script>
 // =================================================================
@@ -2012,7 +2012,7 @@ async function addChallengeCard(challengerLobbyId, expiresAt) {
 
   // Som tipo FACEIT/GC — defensivo (autoplay pode ser bloqueado)
   try {
-    const audio = new Audio('sounds/match-found.mp3');
+    const audio = new Audio('sounds/desafio.mp3');
     audio.volume = 0.6;
     audio.play().catch(() => {});
   } catch {}
