@@ -1114,7 +1114,7 @@ body::before {
       <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M19 12H5M12 19l-7-7 7-7"/></svg>
       Voltar ao Mercado
     </a>
-    <div class="league-brand" title="lobby v43-rating-clean">
+    <div class="league-brand" title="lobby v44-sidebar-only">
       <!-- Logo em vídeo (fundo preto fica transparente via mix-blend-mode:screen).
            muted+playsinline são obrigatórios pra autoplay funcionar nos browsers. -->
       <video class="league-logo-video" src="logogu.mp4" autoplay loop muted playsinline preload="auto"></video>
@@ -1292,7 +1292,7 @@ body::before {
 <div class="toast" id="toast"></div>
 
 <!-- Marker discreto persistente (canto inferior direito) — pra dev/debug -->
-<div style="position:fixed;bottom:8px;right:12px;font-size:10px;color:rgba(250,204,21,.5);font-family:monospace;pointer-events:none;z-index:1;background:rgba(0,0,0,.4);padding:3px 8px;border-radius:4px;">lobby v43-rating-clean</div>
+<div style="position:fixed;bottom:8px;right:12px;font-size:10px;color:rgba(250,204,21,.5);font-family:monospace;pointer-events:none;z-index:1;background:rgba(0,0,0,.4);padding:3px 8px;border-radius:4px;">lobby v44-sidebar-only</div>
 
 <script>
 // =================================================================
@@ -1561,24 +1561,11 @@ function renderLobbyCard(lobby) {
   if (isMine) cls += ' mine';
   if (isChallengingMe) cls += ' challenging-me';
 
-  // v35-inline: card que tá me desafiando ganha PRIORIDADE no botão (Aceitar/Recusar
-  // inline). Suporta múltiplos desafios simultâneos — cada card mostra o seu.
+  // v43+: o card NÃO mostra mais aceitar/recusar inline. Toda interação de
+  // desafio rolou pra sidebar lateral. O card mostra estado normal (Entrar/Cheia)
+  // mesmo pra lobby que tá te desafiando — evita redundância e clutter no grid.
   let actionHtml;
-  if (isChallengingMe) {
-    // Countdown ID único pra esse card (atualizado pelo tickInlineCountdowns)
-    const cdId = `cd-${lobby.id}`;
-    const expiresMs = _myChallengeExpiresAt?._seconds
-      ? _myChallengeExpiresAt._seconds * 1000
-      : (_myChallengeExpiresAt?.toMillis ? _myChallengeExpiresAt.toMillis() : Date.now() + 30000);
-    const sec = Math.max(0, Math.ceil((expiresMs - Date.now()) / 1000));
-    actionHtml = `
-      <div class="challenge-pulse-bar"><span id="${cdId}" data-expires="${expiresMs}">${sec}</span>s</div>
-      <div style="display:flex;gap:6px;align-items:stretch;margin-top:6px;">
-        <button class="lobby-action btn-accept-inline" style="flex:1;" onclick="acceptChallengeInline(this)">⚔️ ACEITAR</button>
-        <button class="lobby-action btn-decline-inline" onclick="declineChallengeInline(this)" title="Recusar">✕</button>
-      </div>
-    `;
-  } else if (!isLoggedIn) {
+  if (!isLoggedIn) {
     actionHtml = `<button class="lobby-action btn-login" onclick="doLogin()" title="Faça login Steam pra entrar">🔐 Login pra entrar</button>`;
   } else if (isMine) {
     actionHtml = `<button class="lobby-action btn-disabled" disabled>✓ Sua sala (${lobby.filled}/5)</button>`;
@@ -1598,7 +1585,8 @@ function renderLobbyCard(lobby) {
 
   const badge = isMine
     ? `<div style="position:absolute;top:8px;right:8px;padding:3px 10px;background:linear-gradient(135deg,#facc15,#f97316);color:#0a0612;border-radius:8px;font-size:9px;font-weight:800;letter-spacing:.5px;z-index:2;box-shadow:0 2px 6px rgba(0,0,0,.35);">SUA SALA</div>`
-    : (isChallengingMe ? `<div style="position:absolute;top:-8px;right:10px;padding:3px 10px;background:linear-gradient(135deg,#ef4444,#f97316);color:#fff;border-radius:12px;font-size:9px;font-weight:800;letter-spacing:.5px;">⚔️ TE DESAFIOU</div>` : '');
+    : '';
+  // Badge "TE DESAFIOU" inline removido — sinalização de desafio agora é só pela sidebar lateral.
 
   // v38-rating: tier do owner (slot 0)
   const ownerSlot = (lobby.slots || [])[0];
@@ -1769,13 +1757,21 @@ function renderMyLobby(lobby) {
   _myLobbyOwner = lobby.ownerId === (_user && _user.uid);
   _myLobbyStatus = lobby.status; // v33-noredirect: backend define status (open/full/challenged)
 
-  // v35-inline: trackear quem tá me desafiando — UI INLINE no card do grid
-  // (sala desafiante pulsa vermelho c/ botão "Aceitar" dentro). Suporta múltiplos
-  // desafios simultâneos. Sem som (user pediu) — só o pulse visual chama atenção.
+  // v43+: desafios agora são EXCLUSIVAMENTE na sidebar lateral. Quando
+  // newChallengedBy aparece, dispara addChallengeCard pra sidebar. Quando
+  // some (null), o card já cai sozinho via timer — não força close global.
   const newChallengedBy = lobby.challengedBy || null;
+  const prevChallengedBy = _myChallengedBy;
   _myChallengedBy = newChallengedBy;
   _myChallengeExpiresAt = lobby.challengeExpiresAt || null;
-  closeChallengeModal();
+  if (newChallengedBy && newChallengedBy !== prevChallengedBy) {
+    // Novo desafiante chegou — adiciona card à sidebar (idempotente se já tem)
+    addChallengeCard(newChallengedBy, _myChallengeExpiresAt);
+  }
+  if (!newChallengedBy && prevChallengedBy) {
+    // Desafio sumiu (aceito/expirado/cancelado) — remove card específico
+    removeChallengeCard(prevChallengedBy);
+  }
   // v35-inline: redirect pra match.html quando lobby tá in_match.
   // ?nomatchredirect=1 só pula o PRIMEIRO poll (escape de match cancelado stale).
   // Marcamos _firstPollDone IMEDIATAMENTE — qualquer poll seguinte redireciona normal.
