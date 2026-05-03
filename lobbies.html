@@ -2302,8 +2302,10 @@ startPolling();
     const d = new Date();
     return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}`;
   }
-  // v41-banner-img: mes -> imagem do banner. Sem entrada -> fallback pro texto.
-  const BANNER_IMAGES = { 5: 'banner-maio.png' };
+  // v41-banner-img-auto: convencao de nome — banner-{mes-sem-acento}.png na pasta marketplace/
+  // Ex: banner-janeiro.png, banner-maio.png, banner-marco.png (sem ç), banner-junho.png
+  // Se o arquivo nao existir (HEAD 404), cai no fallback de texto via onerror.
+  const MONTH_FILE_NAMES = ['janeiro','fevereiro','marco','abril','maio','junho','julho','agosto','setembro','outubro','novembro','dezembro'];
   function renderSeasonBanner() {
     const now = new Date();
     const day = now.getDate();
@@ -2312,25 +2314,22 @@ startPolling();
     const dismissKey = `gmaxSeasonBannerDismissed:${yearMonth}`;
     try { if (localStorage.getItem(dismissKey)) return; } catch {}
     const monthName = MONTH_NAMES_PT[now.getMonth()];
-    const monthIdx1 = now.getMonth() + 1;  // 1=Jan ... 12=Dez
-    const bannerImg = BANNER_IMAGES[monthIdx1];
+    const monthFile = MONTH_FILE_NAMES[now.getMonth()];
+    const bannerImg = `banner-${monthFile}.png`;
     const el = document.getElementById('seasonBanner');
     if (!el) return;
     const closeBtn = `<button class="season-banner-close" title="Dispensar" onclick="(function(){try{localStorage.setItem('${dismissKey}','1');}catch{};document.getElementById('seasonBanner').style.display='none';})()">×</button>`;
-    if (bannerImg) {
-      el.classList.add('has-image');
-      el.innerHTML = `<img class="season-banner-img" src="${bannerImg}" alt="Temporada ${monthName}">${closeBtn}`;
-    } else {
-      el.classList.remove('has-image');
-      el.innerHTML = `
-        <span class="season-banner-icon">🏆</span>
-        <div class="season-banner-text">
-          <strong>Temporada ${monthName} começou</strong>
-          <span>Joga 3 partidas pra recalibrar teu rating · ranking foi resetado</span>
-        </div>
-        ${closeBtn}
-      `;
-    }
+    // Tenta carregar a imagem; se 404, troca pelo fallback de texto.
+    const fallbackHtml = `
+      <span class="season-banner-icon">🏆</span>
+      <div class="season-banner-text">
+        <strong>Temporada ${monthName} começou</strong>
+        <span>Joga 3 partidas pra recalibrar teu rating · ranking foi resetado</span>
+      </div>
+      ${closeBtn}
+    `;
+    el.classList.add('has-image');
+    el.innerHTML = `<img class="season-banner-img" src="${bannerImg}" alt="Temporada ${monthName}" onerror="this.parentElement.classList.remove('has-image');this.parentElement.innerHTML=this.dataset.fallback;" data-fallback="${fallbackHtml.replace(/&/g, '&amp;').replace(/"/g, '&quot;')}">${closeBtn}`;
     el.style.display = 'flex';
   }
   if (document.readyState === 'loading') {
