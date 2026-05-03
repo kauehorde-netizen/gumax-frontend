@@ -197,36 +197,47 @@ header { background: rgba(8,6,14,0.55); backdrop-filter: blur(14px); border-bott
 .step-card { text-align:center; min-height:auto; padding-top:8px; padding-bottom:8px; display:flex; flex-direction:column; align-items:center; }
 .step-card .step-num { display:none; }
 
-/* v41-guard-img: banner GMAX GUARD como imagem com glow roxo breathing */
+/* v41-guard-img: banner GMAX GUARD com glow roxo MAIS forte respirando */
 .ac-banner {
   display: block;
-  max-width: 1080px; margin: 22px auto 0;
+  max-width: 540px;  /* -50% (era 1080px) */
+  margin: 22px auto 0;
   position: relative;
   border-radius: 14px;
   text-decoration: none;
   transition: transform .2s, filter .2s;
   animation: guardBreath 2.6s ease-in-out infinite;
+  /* overflow:visible pra o glow ::before nao ser cortado */
+  overflow: visible;
 }
-.ac-banner:hover { transform: translateY(-2px); filter: brightness(1.08); }
+.ac-banner:hover { transform: translateY(-3px); filter: brightness(1.1); }
 .ac-banner-img img {
   display: block; width: 100%; height: auto; border-radius: 14px;
   position: relative; z-index: 1;
 }
-/* Glow roxo respirando atras do banner */
+/* Glow roxo respirando — agora MAIS expandido e visivel */
 .ac-banner::before {
-  content: ''; position: absolute; inset: -8px; border-radius: 18px;
-  background: radial-gradient(ellipse at center, rgba(139,92,246,.7), rgba(139,92,246,.2) 40%, transparent 70%);
-  filter: blur(22px); z-index: 0;
+  content: ''; position: absolute;
+  inset: -28px;  /* era -8: agora vaza bem mais pra fora */
+  border-radius: 28px;
+  background: radial-gradient(ellipse at center,
+    rgba(168,85,247,.85),
+    rgba(139,92,246,.55) 35%,
+    rgba(99,102,241,.25) 60%,
+    transparent 80%);
+  filter: blur(28px);
+  z-index: 0;
   animation: guardBreathGlow 2.6s ease-in-out infinite;
   pointer-events: none;
+  will-change: opacity, filter, transform;
 }
 @keyframes guardBreath {
   0%, 100% { transform: scale(1); }
-  50% { transform: scale(1.012); }
+  50% { transform: scale(1.018); }
 }
 @keyframes guardBreathGlow {
-  0%, 100% { opacity: 0.55; filter: blur(18px); }
-  50% { opacity: 1; filter: blur(28px); }
+  0%, 100% { opacity: 0.7;  filter: blur(22px); transform: scale(1); }
+  50%      { opacity: 1;    filter: blur(36px); transform: scale(1.06); }
 }
 @media (prefers-reduced-motion: reduce) {
   .ac-banner, .ac-banner::before { animation: none; }
@@ -2619,6 +2630,19 @@ if (document.readyState === 'loading') {
 }
 
 </script>
+
+
+<!-- v1-legal-footer (auto-injetado): links Termos | Privacidade | FAQ | Contato -->
+<footer id="legalFooter" style="border-top:1px solid rgba(255,255,255,.08); padding:20px 24px; text-align:center; color:#7c7392; font-size:12px; font-family:'Inter',sans-serif; margin-top:48px; background:transparent;">
+  <div>
+    <a href="index.html" style="color:#b3aac4; text-decoration:none; margin:0 8px;">Início</a>·
+    <a href="termos.html" style="color:#b3aac4; text-decoration:none; margin:0 8px;">Termos</a>·
+    <a href="privacidade.html" style="color:#b3aac4; text-decoration:none; margin:0 8px;">Privacidade</a>·
+    <a href="faq.html" style="color:#b3aac4; text-decoration:none; margin:0 8px;">FAQ</a>·
+    <a href="https://wa.me/553191694482" target="_blank" rel="noopener" style="color:#b3aac4; text-decoration:none; margin:0 8px;">Contato</a>
+  </div>
+  <p style="margin-top:6px;">© 2026 Gumax Skins · Não somos afiliados à Valve Corporation.</p>
+</footer>
 
 </body>
 </html>
