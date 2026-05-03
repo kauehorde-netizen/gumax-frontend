@@ -777,6 +777,40 @@ header { background: rgba(8,6,14,0.92); backdrop-filter: blur(10px); border-bott
 /* Banner de "MATCH AO VIVO" no card de lobby */
 .lobby-card.in-match { border-color: rgba(16,185,129,.5); background:linear-gradient(135deg, var(--bg-elevated) 0%, rgba(16,185,129,.06) 100%); }
 .lobby-card .live-badge { display:inline-block; padding:2px 8px; background:rgba(16,185,129,.2); color:var(--accent-green); border-radius:4px; font-size:10px; font-weight:700; letter-spacing:.5px; margin-bottom:8px; }
+
+/* v41-season-banner: notificacao de nova temporada */
+#seasonBanner {
+  position: relative;
+  margin: 0 auto 12px;
+  max-width: 920px;
+  padding: 14px 50px 14px 22px;
+  background: linear-gradient(135deg, rgba(168,85,247,.18), rgba(34,211,238,.16));
+  border: 1px solid rgba(168,85,247,.5);
+  border-radius: 12px;
+  display: flex; align-items: center; gap: 14px;
+  box-shadow: 0 4px 20px rgba(168,85,247,.18);
+  animation: seasonGlow 2.5s ease-in-out infinite;
+}
+@keyframes seasonGlow {
+  0%,100% { box-shadow: 0 4px 20px rgba(168,85,247,.18); border-color: rgba(168,85,247,.5); }
+  50% { box-shadow: 0 4px 30px rgba(34,211,238,.28); border-color: rgba(34,211,238,.6); }
+}
+.season-banner-icon { font-size: 26px; flex-shrink: 0; filter: drop-shadow(0 0 8px rgba(168,85,247,.6)); }
+.season-banner-text { flex: 1; min-width: 0; }
+.season-banner-text strong {
+  display: block; font-size: 14px; color: #f3e8ff; font-weight: 800;
+  letter-spacing: .5px; margin-bottom: 2px;
+}
+.season-banner-text span { font-size: 12px; color: #cbd5e1; }
+.season-banner-close {
+  position: absolute; right: 12px; top: 50%; transform: translateY(-50%);
+  width: 28px; height: 28px; border-radius: 50%; border: none;
+  background: rgba(255,255,255,.08); color: #cbd5e1; cursor: pointer;
+  font-size: 18px; line-height: 1; display: flex; align-items: center; justify-content: center;
+  transition: background .15s, color .15s;
+}
+.season-banner-close:hover { background: rgba(239,68,68,.25); color: #fca5a5; }
+@media (prefers-reduced-motion: reduce) { #seasonBanner { animation: none; } }
 </style>
 </head>
 <body>
@@ -837,6 +871,9 @@ header { background: rgba(8,6,14,0.92); backdrop-filter: blur(10px); border-bott
     </div>
   </div>
 </header>
+
+<!-- v41-season-banner: aparece dia 01-03 de cada mes, dismissivel por mes -->
+<div id="seasonBanner" style="display:none;"></div>
 
 <main>
 
@@ -2119,6 +2156,41 @@ if (_firebaseReady) {
 }
 // 2. Inicia polling público de lobbies (independente de auth)
 startPolling();
+
+// v41-season-banner: mostra banner de nova temporada nos primeiros 3 dias do mes
+(function setupSeasonBanner() {
+  const MONTH_NAMES_PT = ['Janeiro','Fevereiro','Março','Abril','Maio','Junho','Julho','Agosto','Setembro','Outubro','Novembro','Dezembro'];
+  function getYearMonth() {
+    const d = new Date();
+    return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}`;
+  }
+  function renderSeasonBanner() {
+    const now = new Date();
+    const day = now.getDate();
+    if (day > 3) return;  // so primeiros 3 dias
+    const yearMonth = getYearMonth();
+    const dismissKey = `gmaxSeasonBannerDismissed:${yearMonth}`;
+    try { if (localStorage.getItem(dismissKey)) return; } catch {}
+    const monthName = MONTH_NAMES_PT[now.getMonth()];
+    const el = document.getElementById('seasonBanner');
+    if (!el) return;
+    el.innerHTML = `
+      <span class="season-banner-icon">🏆</span>
+      <div class="season-banner-text">
+        <strong>Temporada ${monthName} começou</strong>
+        <span>Joga 3 partidas pra recalibrar teu rating · ranking foi resetado</span>
+      </div>
+      <button class="season-banner-close" title="Dispensar" onclick="(function(){try{localStorage.setItem('${dismissKey}','1');}catch{};document.getElementById('seasonBanner').style.display='none';})()">×</button>
+    `;
+    el.style.display = 'flex';
+  }
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', renderSeasonBanner);
+  } else {
+    renderSeasonBanner();
+  }
+})();
+
 </script>
 
 </body>
