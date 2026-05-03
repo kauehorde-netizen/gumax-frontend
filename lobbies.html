@@ -922,6 +922,31 @@ body::before {
   z-index: -10;
   pointer-events: none;
 }
+
+/* v41-create-cta: efeito breathing + glow no botao Criar Sala (quando user nao tem lobby) */
+.btn-create.breathing {
+  animation: createBreath 2.2s ease-in-out infinite;
+  position: relative;
+  overflow: visible !important;
+}
+.btn-create.breathing::after {
+  content: ''; position: absolute; inset: -4px; border-radius: 14px;
+  background: linear-gradient(135deg, var(--primary), var(--accent-cyan));
+  opacity: 0.5; z-index: -1; filter: blur(12px);
+  animation: createBreathGlow 2.2s ease-in-out infinite;
+  pointer-events: none;
+}
+@keyframes createBreath {
+  0%, 100% { transform: scale(1); box-shadow: 0 4px 12px rgba(139,92,246,.3), 0 0 0 0 rgba(34,211,238,.5); }
+  50% { transform: scale(1.04); box-shadow: 0 6px 24px rgba(139,92,246,.55), 0 0 0 8px rgba(34,211,238,0); }
+}
+@keyframes createBreathGlow {
+  0%, 100% { opacity: 0.45; filter: blur(10px); }
+  50% { opacity: 0.85; filter: blur(18px); }
+}
+@media (prefers-reduced-motion: reduce) {
+  .btn-create.breathing, .btn-create.breathing::after { animation: none; }
+}
 </style>
 </head>
 <body>
@@ -2435,6 +2460,35 @@ if (document.readyState === 'loading') {
   document.addEventListener('DOMContentLoaded', () => setTimeout(tryAutoJoinFromUrl, 1500));
 } else {
   setTimeout(tryAutoJoinFromUrl, 1500);
+}
+
+
+// v41-create-cta: esconde botao Criar Sala se user ja esta em uma lobby,
+// e adiciona classe .breathing pra chamar atencao quando NAO esta.
+function updateCreateBtnVisibility() {
+  const btn = document.getElementById('btnCreateLobby');
+  if (!btn) return;
+  if (_myLobbyId) {
+    btn.style.display = 'none';
+    btn.classList.remove('breathing');
+  } else {
+    btn.style.display = '';  // volta ao padrao
+    if (_user) btn.classList.add('breathing');
+    else btn.classList.remove('breathing');
+  }
+}
+// Hook: chama a cada poll/render do estado
+const _origRenderMyLobby_v41cta = renderMyLobby;
+renderMyLobby = function(lobby) {
+  const r = _origRenderMyLobby_v41cta.apply(this, arguments);
+  try { updateCreateBtnVisibility(); } catch {}
+  return r;
+};
+// Roda 1x no startup pra estado inicial (caso user esteja deslogado)
+if (document.readyState === 'loading') {
+  document.addEventListener('DOMContentLoaded', updateCreateBtnVisibility);
+} else {
+  setTimeout(updateCreateBtnVisibility, 100);
 }
 
 </script>
