@@ -834,6 +834,43 @@ header { background: rgba(8,6,14,0.92); backdrop-filter: blur(10px); border-bott
   animation: inviteToastIn 0.3s ease-out;
 }
 @keyframes inviteToastIn { from { opacity:0; transform:translate(-50%,-10px); } to { opacity:1; transform:translate(-50%,0); } }
+
+/* v41-chat-plus: estilos pra mention, action, flash */
+.chat-mention {
+  background: rgba(250,204,21,.18); color: #fde047; padding: 1px 5px;
+  border-radius: 4px; font-weight: 700; font-size: 0.97em;
+}
+.chat-msg-action {
+  padding: 6px 10px; font-size: 12px; color: var(--text-muted);
+  display: flex; gap: 8px; align-items: center; justify-content: space-between;
+  background: rgba(139,92,246,.05); border-left: 2px solid var(--primary-light);
+  border-radius: 6px; margin-bottom: 4px;
+}
+.chat-msg-action em { font-style: italic; }
+.chat-msg-mentions-me {
+  background: linear-gradient(90deg, rgba(250,204,21,.12), transparent);
+  border-left: 2px solid #facc15;
+  animation: chatMentionFlash 1.4s ease-out;
+}
+@keyframes chatMentionFlash {
+  0%   { background: rgba(250,204,21,.4); }
+  100% { background: linear-gradient(90deg, rgba(250,204,21,.12), transparent); }
+}
+.chat-typing {
+  font-size: 11px; color: var(--text-muted); font-style: italic;
+  padding: 4px 12px; min-height: 18px;
+}
+.chat-typing-dot {
+  display: inline-block; width: 4px; height: 4px; border-radius: 50%;
+  background: currentColor; margin: 0 1px;
+  animation: chatTypingBlink 1.2s infinite;
+}
+.chat-typing-dot:nth-child(2) { animation-delay: 0.15s; }
+.chat-typing-dot:nth-child(3) { animation-delay: 0.3s; }
+@keyframes chatTypingBlink { 0%,100% { opacity: 0.3; } 50% { opacity: 1; } }
+@media (prefers-reduced-motion: reduce) {
+  .chat-msg-mentions-me, .chat-typing-dot { animation: none; }
+}
 </style>
 </head>
 <body>
@@ -2035,13 +2072,45 @@ function renderChatMessages(msgs) {
   if (!list) return;
   if (!msgs.length) {
     list.innerHTML = '<div class="chat-empty">Sem mensagens ainda. Manda a primeira 👋</div>';
+    _chatLastSeenIds = new Set();
     return;
   }
-  // Detecta se user já tava perto do fim antes de re-renderizar — assim, se
-  // ele rolou pra cima pra ler histórico, não interrompe quando chega msg nova.
   const wasAtBottom = list.scrollHeight - list.scrollTop - list.clientHeight < 40;
+  // v41-chat-plus: detecta msgs novas (de outros) pra tocar pop / mention sound
+  const isFirstSnapshot = _chatLastSeenIds.size === 0;
+  let hadNewFromOther = false, hadMentionToMe = false;
+  for (const m of msgs) {
+    if (!_chatLastSeenIds.has(m.id)) {
+      _chatLastSeenIds.add(m.id);
+      if (!isFirstSnapshot && _user && m.uid !== _user.uid) {
+        hadNewFromOther = true;
+        if (m.type !== 'action') {
+          const { mentionsMe } = _chatProcessText(m.text);
+          if (mentionsMe) hadMentionToMe = true;
+        }
+      }
+    }
+  }
   list.innerHTML = msgs.map(m => renderChatMessage(m)).join('');
   if (wasAtBottom) list.scrollTop = list.scrollHeight;
+  if (hadMentionToMe) _chatPlayMention();
+  else if (hadNewFromOther) _chatPlayPop();
+}
+
+// v41-chat-plus: helpers pra mention e /me
+function _chatProcessText(rawText) {
+  // /me action — texto vira "* {nome} faz isso"
+  // (esse handling acontece no parent — aqui so escapa + processa mentions)
+  let html = escHtml(rawText || '');
+  // Detecta mentions @nome (palavras alfanumericas + acentos, 2+ chars)
+  const myName = (_chatMyProfile?.name || '').toLowerCase();
+  let mentionsMe = false;
+  html = html.replace(/@([\w\u00C0-\u017F]{2,})/g, (full, name) => {
+    const lower = name.toLowerCase();
+    if (myName && (lower === myName.split(' ')[0].toLowerCase() || myName.startsWith(lower))) mentionsMe = true;
+    return `<span class="chat-mention">@${escHtml(name)}</span>`;
+  });
+  return { html, mentionsMe };
 }
 
 function renderChatMessage(m) {
@@ -2050,23 +2119,60 @@ function renderChatMessage(m) {
   const profileLink = m.steamId ? `jogador.html?id=${encodeURIComponent(m.steamId)}` : '#';
   const isMine = !!_user && m.uid === _user.uid;
   const initial = escHtml((m.name || '?').charAt(0).toUpperCase());
-  // Avatar: se URL, tenta img (fallback: img some on error → quadrado vazio);
-  // se não tem URL, mostra a inicial direto. Mesmo padrão de renderMyLobby —
-  // EVITA injetar `initial` num atributo onerror (quebraria com aspas no nome).
   const avatarInner = m.avatar
     ? `<img src="${escHtml(m.avatar)}" alt="" onerror="this.style.display='none'">`
     : initial;
   const titleAttr = ms ? new Date(ms).toLocaleString('pt-BR') : '';
-  return `<div class="chat-msg${isMine ? ' is-mine' : ''}">
+  // /me action message
+  if (m.type === 'action') {
+    return `<div class="chat-msg chat-msg-action${isMine ? ' is-mine' : ''}">
+      <em>* <a href="${profileLink}" style="color:var(--primary-light);text-decoration:none;">${escHtml(m.name || '?')}</a> ${escHtml(m.text || '')}</em>
+      <span class="chat-msg-time" title="${escHtml(titleAttr)}">${time}</span>
+    </div>`;
+  }
+  const { html: textHtml, mentionsMe } = _chatProcessText(m.text);
+  const mentionClass = (mentionsMe && !isMine) ? ' chat-msg-mentions-me' : '';
+  return `<div class="chat-msg${isMine ? ' is-mine' : ''}${mentionClass}" data-msgid="${escHtml(m.id || '')}">
     <a href="${profileLink}" class="chat-msg-avatar" title="Ver perfil">${avatarInner}</a>
     <div class="chat-msg-body">
       <div class="chat-msg-meta">
         <a class="chat-msg-name" href="${profileLink}" title="${escHtml(m.name || '')}">${escHtml(m.name || '?')}</a>
         <span class="chat-msg-time" title="${escHtml(titleAttr)}">${time}</span>
       </div>
-      <div class="chat-msg-text">${escHtml(m.text || '')}</div>
+      <div class="chat-msg-text">${textHtml}</div>
     </div>
   </div>`;
+}
+
+// v41-chat-plus: pop sound em msg nova de outros + flash em mention
+let _chatLastSeenIds = new Set();
+function _chatPlayPop() {
+  try {
+    const ctx = new (window.AudioContext || window.webkitAudioContext)();
+    const o = ctx.createOscillator(), g = ctx.createGain();
+    o.connect(g); g.connect(ctx.destination);
+    o.frequency.value = 880; o.type = 'sine';
+    const now = ctx.currentTime;
+    g.gain.setValueAtTime(0, now);
+    g.gain.linearRampToValueAtTime(0.06, now + 0.01);
+    g.gain.exponentialRampToValueAtTime(0.001, now + 0.18);
+    o.start(now); o.stop(now + 0.2);
+  } catch {}
+}
+function _chatPlayMention() {
+  try {
+    const ctx = new (window.AudioContext || window.webkitAudioContext)();
+    const now = ctx.currentTime;
+    [880, 1320].forEach((freq, i) => {
+      const o = ctx.createOscillator(), g = ctx.createGain();
+      o.connect(g); g.connect(ctx.destination);
+      o.frequency.value = freq; o.type = 'triangle';
+      g.gain.setValueAtTime(0, now + i*0.08);
+      g.gain.linearRampToValueAtTime(0.1, now + i*0.08 + 0.01);
+      g.gain.exponentialRampToValueAtTime(0.001, now + i*0.08 + 0.25);
+      o.start(now + i*0.08); o.stop(now + i*0.08 + 0.3);
+    });
+  } catch {}
 }
 
 function formatChatTime(ms) {
@@ -2111,6 +2217,14 @@ async function sendChatMessage(ev) {
   const sendBtn = document.getElementById('chatSendBtn');
   if (sendBtn) sendBtn.disabled = true;
   input.disabled = true;
+  // v41-chat-plus: detecta /me action
+  let msgType = 'text';
+  let msgText = text;
+  if (/^\/me\s+/i.test(text)) {
+    msgType = 'action';
+    msgText = text.replace(/^\/me\s+/i, '').trim();
+    if (!msgText) { toast('Use /me <ação>', ''); if (sendBtn) sendBtn.disabled = false; input.disabled = false; return; }
+  }
   try {
     await db.collection('lobbies').doc(_chatActiveLobbyId)
       .collection('chat').add({
@@ -2118,7 +2232,8 @@ async function sendChatMessage(ev) {
         steamId: profile.steamId || '',
         name: profile.name.slice(0, 60),
         avatar: profile.avatar || '',
-        text,
+        type: msgType,
+        text: msgText,
         createdAt: firebase.firestore.FieldValue.serverTimestamp(),
       });
     _chatLastSentAt = now;
