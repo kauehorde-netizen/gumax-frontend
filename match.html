@@ -791,6 +791,14 @@ function renderStage(m) {
           ${teamBRows}
         </div>
       </div>
+      ${m.demoUrl ? `
+      <a href="${m.demoUrl}" target="_blank" rel="noopener" download
+         style="display:inline-flex;align-items:center;justify-content:center;gap:8px;width:100%;padding:12px 18px;margin-bottom:10px;background:linear-gradient(135deg,rgba(34,211,238,.15),rgba(139,92,246,.15));border:1px solid rgba(34,211,238,.4);border-radius:10px;color:var(--accent-cyan);font-size:13px;font-weight:700;text-decoration:none;letter-spacing:.3px;transition:transform .15s, background .15s;"
+         onmouseover="this.style.transform='translateY(-1px)';this.style.background='linear-gradient(135deg,rgba(34,211,238,.25),rgba(139,92,246,.25))';"
+         onmouseout="this.style.transform='';this.style.background='linear-gradient(135deg,rgba(34,211,238,.15),rgba(139,92,246,.15))';"
+         title="Baixa o arquivo .dem.gz da partida pra revisar no CS2 (playdemo)">
+        🎬 Baixar Demo da Partida
+      </a>` : ''}
       <button class="btn-huge" onclick="location.href='lobbies.html'">Voltar pra Lobbies</button>
     `;
   } else if (m.status === 'cancelled') {
