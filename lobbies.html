@@ -874,6 +874,39 @@ header { background: rgba(8,6,14,0.92); backdrop-filter: blur(10px); border-bott
   transform: none;
 }
 @media (prefers-reduced-motion: reduce) { #seasonBanner.has-image { animation: none; } }
+
+/* v41-compact-howitworks: card unico com 4 passos em fileira */
+.step-card-combined {
+  max-width: 1100px;
+  margin: 0 auto;
+  padding: 16px 24px !important;
+}
+.combined-steps {
+  display: flex; align-items: center; justify-content: center; gap: 14px;
+  flex-wrap: wrap;
+}
+.combined-step {
+  display: flex; align-items: center; gap: 10px;
+  font-size: 12.5px; font-weight: 700; color: var(--text-secondary);
+  padding: 4px 8px;
+}
+.combined-step svg {
+  width: 32px; height: 32px;
+  color: var(--primary-light);  /* fallback */
+  flex-shrink: 0;
+}
+.combined-step[data-color="purple"] svg { color: var(--primary-light); }
+.combined-step[data-color="cyan"]   svg { color: var(--accent-cyan); }
+.combined-step[data-color="red"]    svg { color: var(--accent-red); }
+.combined-step[data-color="yellow"] svg { color: var(--accent-yellow); }
+.combined-arrow {
+  color: var(--text-muted); font-size: 18px; font-weight: 600; opacity: 0.55;
+}
+@media (max-width: 760px) {
+  .combined-steps { gap: 8px; }
+  .combined-step span { display: none; }  /* mobile: so icones */
+  .combined-arrow { font-size: 14px; }
+}
 </style>
 </head>
 <body>
@@ -945,100 +978,55 @@ header { background: rgba(8,6,14,0.92); backdrop-filter: blur(10px); border-bott
      Cada card tem energy border (gradient conic rotativo) e ícone com animação própria. -->
 <section class="how-it-works" id="howItWorks">
   <div class="section-title">⚡ Como funciona</div>
-  <div class="steps-grid">
-    <!-- ═══ PASSO 1 — CRIE SUA SALA ═══
-         História: caixa vazia → caixa materializa → plus aparece dentro → glow celebra → reseta -->
-    <div class="energy-card step-card" data-color="purple">
-      <div class="step-num">PASSO 1</div>
-      <div class="step-icon">
+  <!-- v41-compact: 4 passos consolidados em 1 card horizontal compacto.
+       Mantem as mesmas animacoes SVG, so reduz o tamanho e empilha em fileira. -->
+  <div class="energy-card step-card-combined" data-color="cyan">
+    <div class="combined-steps">
+      <div class="combined-step" data-color="purple">
         <svg class="story-create" viewBox="0 0 32 32" fill="none" stroke="currentColor" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round">
           <g class="sc-box"><rect x="6" y="6" width="20" height="20" rx="3"/></g>
-          <g class="sc-plus">
-            <line x1="16" y1="12" x2="16" y2="20"/>
-            <line x1="12" y1="16" x2="20" y2="16"/>
-          </g>
+          <g class="sc-plus"><line x1="16" y1="12" x2="16" y2="20"/><line x1="12" y1="16" x2="20" y2="16"/></g>
         </svg>
+        <span>Crie a sala</span>
       </div>
-      <div class="step-title">Crie sua sala</div>
-      <div class="step-desc">Login Steam e crie uma sala 5v5 com o nome do seu time.</div>
-    </div>
-
-    <!-- ═══ PASSO 2 — CONVIDE 4 AMIGOS ═══
-         História: pessoa no centro → ondas de convite emanam (1, 2, 3 em sequência) → repete -->
-    <div class="energy-card step-card" data-color="cyan">
-      <div class="step-num">PASSO 2</div>
-      <div class="step-icon">
+      <div class="combined-arrow">→</div>
+      <div class="combined-step" data-color="cyan">
         <svg class="story-invite" viewBox="0 0 32 32" fill="none" stroke="currentColor" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round">
-          <!-- Pessoa central -->
-          <g class="si-person">
-            <circle cx="16" cy="13" r="3.5"/>
-            <path d="M9 26v-1.5a4 4 0 0 1 4-4h6a4 4 0 0 1 4 4V26"/>
-          </g>
-          <!-- 3 ondas de convite emanando — cada uma com delay -->
+          <g class="si-person"><circle cx="16" cy="13" r="3.5"/><path d="M9 26v-1.5a4 4 0 0 1 4-4h6a4 4 0 0 1 4 4V26"/></g>
           <circle class="si-ripple si-ripple-1" cx="16" cy="16" r="6" stroke-opacity="0"/>
           <circle class="si-ripple si-ripple-2" cx="16" cy="16" r="6" stroke-opacity="0"/>
           <circle class="si-ripple si-ripple-3" cx="16" cy="16" r="6" stroke-opacity="0"/>
         </svg>
+        <span>Convide 4 amigos</span>
       </div>
-      <div class="step-title">Convide 4 amigos</div>
-      <div class="step-desc">Compartilha o link e teu time entra na sala. Quando bate 5/5, tá pronto.</div>
-    </div>
-
-    <!-- ═══ PASSO 3 — DESAFIE OUTRA SALA ═══
-         História: espadas afastadas → vêm em direção ao centro → CLASH com faísca → afastam → repete -->
-    <div class="energy-card step-card" data-color="red">
-      <div class="step-num">PASSO 3</div>
-      <div class="step-icon">
+      <div class="combined-arrow">→</div>
+      <div class="combined-step" data-color="red">
         <svg class="story-duel" viewBox="0 0 32 32" fill="none" stroke="currentColor" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round">
-          <!-- Espada esquerda: pommel inferior-esquerdo, lâmina sobe pra direita -->
           <g class="sd-sword-left">
             <circle cx="6" cy="26" r="1" fill="currentColor" stroke="none"/>
-            <line x1="6" y1="26" x2="9" y2="23"/>
-            <line x1="7" y1="22" x2="11" y2="26"/>
-            <line x1="9" y1="23" x2="22" y2="10"/>
+            <line x1="6" y1="26" x2="9" y2="23"/><line x1="7" y1="22" x2="11" y2="26"/><line x1="9" y1="23" x2="22" y2="10"/>
           </g>
-          <!-- Espada direita: pommel inferior-direito, lâmina sobe pra esquerda -->
           <g class="sd-sword-right">
             <circle cx="26" cy="26" r="1" fill="currentColor" stroke="none"/>
-            <line x1="26" y1="26" x2="23" y2="23"/>
-            <line x1="25" y1="22" x2="21" y2="26"/>
-            <line x1="23" y1="23" x2="10" y2="10"/>
+            <line x1="26" y1="26" x2="23" y2="23"/><line x1="25" y1="22" x2="21" y2="26"/><line x1="23" y1="23" x2="10" y2="10"/>
           </g>
-          <!-- Faísca no centro (oculta por padrão, aparece no clash) -->
-          <g class="sd-spark" opacity="0">
-            <path d="M16 11l1 4 4 1-4 1-1 4-1-4-4-1 4-1z" fill="currentColor" stroke="none"/>
-          </g>
+          <g class="sd-spark" opacity="0"><path d="M16 11l1 4 4 1-4 1-1 4-1-4-4-1 4-1z" fill="currentColor" stroke="none"/></g>
         </svg>
+        <span>Desafie outra sala</span>
       </div>
-      <div class="step-title">Desafie outra sala</div>
-      <div class="step-desc">Veja salas adversárias cheias e mande o desafio. Pick/ban de mapa rolando.</div>
-    </div>
-
-    <!-- ═══ PASSO 4 — JOGUE + RANKING ═══
-         História: mira gira lento → centro pulsa "lock-on" → tiro flash → repete -->
-    <div class="energy-card step-card" data-color="yellow">
-      <div class="step-num">PASSO 4</div>
-      <div class="step-icon">
+      <div class="combined-arrow">→</div>
+      <div class="combined-step" data-color="yellow">
         <svg class="story-aim" viewBox="0 0 32 32" fill="none" stroke="currentColor" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round">
-          <!-- Anel externo gira lento -->
           <g class="sa-outer"><circle cx="16" cy="16" r="12"/></g>
-          <!-- Marquinhas N/S/L/O (parte do anel externo, gira junto) -->
           <g class="sa-ticks">
-            <line x1="16" y1="3" x2="16" y2="6"/>
-            <line x1="16" y1="26" x2="16" y2="29"/>
-            <line x1="3" y1="16" x2="6" y2="16"/>
-            <line x1="26" y1="16" x2="29" y2="16"/>
+            <line x1="16" y1="3" x2="16" y2="6"/><line x1="16" y1="26" x2="16" y2="29"/>
+            <line x1="3" y1="16" x2="6" y2="16"/><line x1="26" y1="16" x2="29" y2="16"/>
           </g>
-          <!-- Centro pulsa fazendo lock-on -->
           <g class="sa-inner"><circle cx="16" cy="16" r="4"/></g>
-          <!-- Tiro/flash no centro (oculto, aparece no momento do shot) -->
-          <g class="sa-shot" opacity="0">
-            <circle cx="16" cy="16" r="2" fill="currentColor" stroke="none"/>
-          </g>
+          <g class="sa-shot" opacity="0"><circle cx="16" cy="16" r="2" fill="currentColor" stroke="none"/></g>
         </svg>
+        <span>Jogue + KDA conta</span>
       </div>
-      <div class="step-title">Jogue + ranking</div>
-      <div class="step-desc">CS2 abre automático no servidor. KDA conta pro ranking e premiação mensal.</div>
     </div>
   </div>
 
