@@ -3011,7 +3011,7 @@ async function recheckPayment(orderId) {
   if (!o) return showToast('Pedido não encontrado', 'error');
   showToast('Consultando Mercado Pago…');
   try {
-    const r = await fetch(`${API_BASE || 'https://gumax-backend-production.up.railway.app'}/api/check-pix`, {
+    const r = await fetch(`${API_BASE_ADMIN}/api/check-pix`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ orderId }),
