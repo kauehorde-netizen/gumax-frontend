@@ -432,6 +432,46 @@ let _isCaptainA = false;
 let _isCaptainB = false;
 let _myTeam = null; // 'A' or 'B'
 
+// v9-guard-retry: refresca idToken Firebase ANTES de cada launch do GUARD.
+// Tokens expiram em 1h — sem refresh, retentativa após esse tempo cai no
+// guard-validate com 401. Também serve pro caso "kickado pelo server, clico
+// de novo e nada acontece": o navegador às vezes suprime invocações repetidas
+// do protocolo gumax://, mas com user activation explícita (clique) + URL
+// nova (token diferente) costuma reabrir.
+async function launchGuard(btn, isRetry) {
+  const status = document.getElementById('guardLaunchStatus');
+  const setStatus = (msg, color) => {
+    if (status) {
+      status.textContent = msg || '';
+      status.style.color = color || 'var(--text-muted)';
+    }
+  };
+  if (!_user) {
+    setStatus('Você precisa estar logado.', 'var(--accent-red)');
+    return;
+  }
+  setStatus(isRetry ? '🔄 Renovando token e reabrindo GUARD…' : '🛡️ Abrindo GMAX GUARD…', 'var(--accent-cyan)');
+  const wasDisabled = btn ? btn.disabled : false;
+  if (btn) btn.disabled = true;
+  try {
+    // forceRefresh=true → força ir no Firebase Auth pegar token novo
+    _idToken = await _user.getIdToken(true);
+  } catch (e) {
+    console.warn('[launchGuard] falhou refresh, usando token atual:', e?.message);
+    // fallback: tenta sem forçar refresh
+    try { _idToken = await _user.getIdToken(); } catch {}
+  }
+  const url = `gumax://launch?matchId=${encodeURIComponent(MATCH_ID)}&idToken=${encodeURIComponent(_idToken || '')}&t=${Date.now()}`;
+  try {
+    window.location.href = url;
+    setStatus('✓ Comando enviado. Se o GUARD não abriu, abra-o manualmente e tente de novo.', 'var(--accent-green)');
+  } catch (e) {
+    setStatus('Falha ao abrir o GUARD: ' + (e?.message || 'erro desconhecido'), 'var(--accent-red)');
+  }
+  // Reabilita o botão depois de 1.5s — evita spam mas permite retry rápido
+  setTimeout(() => { if (btn) btn.disabled = wasDisabled; }, 1500);
+}
+
 // v38-rating: tier badges + delta pós-partida
 const TIER_INFO = {
   'gray':        { name: 'Bronze',     color: '#9ca3af', emoji: '⚪' },
@@ -847,7 +887,9 @@ function renderStage(m) {
     // v37-guard: NÃO mostramos mais IP/porta direto. Player precisa abrir
     // GMAX GUARD (anti-cheat desktop). Cliente faz checks → backend retorna
     // IP/porta secretos → cliente conecta CS2. Evita que cheaters sem AC entrem.
-    const guardLink = `gumax://launch?matchId=${encodeURIComponent(MATCH_ID)}&idToken=${encodeURIComponent(_idToken || '')}`;
+    // v9-guard-retry: launchGuard() refresca idToken Firebase ANTES de cada
+    // launch (tokens expiram em 1h). Botão "Tentar novamente" sempre visível
+    // — soluciona o caso "kickado pelo server, botão não abre mais".
     actionBox.innerHTML = `
       <div style="background:linear-gradient(135deg,rgba(34,211,238,.08),rgba(139,92,246,.08));border:1px solid rgba(34,211,238,.3);border-radius:12px;padding:18px 20px;max-width:520px;margin:0 auto;">
         <div style="display:flex;align-items:center;gap:10px;margin-bottom:12px;">
@@ -857,8 +899,13 @@ function renderStage(m) {
         <p style="font-size:12px;color:var(--text-secondary);margin-bottom:14px;line-height:1.5;">
           A entrada na partida é feita pelo <strong style="color:var(--accent-cyan);">GMAX GUARD</strong>, nosso anti-cheat oficial. Ele verifica seu sistema e libera o acesso ao servidor automaticamente.
         </p>
-        <button class="btn-huge btn-connect" onclick="window.location.href='${guardLink}'">
+        <button class="btn-huge btn-connect" onclick="launchGuard(this)">
           🛡️ ABRIR GMAX GUARD E ENTRAR
+        </button>
+        <div id="guardLaunchStatus" style="margin-top:8px;font-size:11px;color:var(--text-muted);min-height:14px;"></div>
+        <button onclick="launchGuard(this, true)"
+                style="margin-top:6px;padding:6px 14px;background:rgba(34,211,238,.10);border:1px solid rgba(34,211,238,.35);color:var(--accent-cyan);border-radius:8px;font-size:11px;cursor:pointer;font-weight:600;letter-spacing:.3px;">
+          🔄 Tentar novamente (token novo)
         </button>
         <p style="margin-top:12px;font-size:11px;color:var(--text-muted);">
           Mapa: <strong style="color:var(--primary-light);">${m.mapVeto?.finalMap || ''}</strong>
