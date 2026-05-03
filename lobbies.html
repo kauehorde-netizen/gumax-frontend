@@ -57,7 +57,7 @@ body {
   .bg-orbs .orb { animation: none; }
 }
 /* Garante que conteúdo fica acima dos orbs */
-header, main, .modal-backdrop, .toast { position:relative; z-index:1; }
+header, main, footer, .modal-backdrop, .toast { position:relative; z-index:1; }
 header { z-index:100; }
 .modal-backdrop { z-index:200; }
 
@@ -245,11 +245,17 @@ header { background: rgba(8,6,14,0.55); backdrop-filter: blur(14px); border-bott
 
 /* v37: footer com logo do GMAX GUARD */
 .guard-footer {
-  margin:48px 0 24px; padding:18px 24px;
-  display:flex; align-items:center; justify-content:center; gap:14px;
-  border-top:1px solid var(--border);
-  width:100%;
-  text-align:center;
+  margin: 48px auto 24px !important;
+  padding: 18px 24px !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  gap: 14px;
+  border-top: 1px solid var(--border);
+  width: 100% !important;
+  max-width: none !important;
+  text-align: center;
+  box-sizing: border-box;
 }
 .guard-footer-logo {
   display:inline-flex; align-items:center; gap:10px;
