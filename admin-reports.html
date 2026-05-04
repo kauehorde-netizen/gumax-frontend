@@ -1,0 +1,383 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Admin · Reports — GMAX LEAGUE</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@600;800&display=swap" rel="stylesheet">
+<style>
+:root {
+  --bg-primary: #0a0612; --bg-secondary: #110a1f; --bg-elevated: #1a0f2e;
+  --primary: #8b5cf6; --primary-light: #a78bfa;
+  --accent-cyan: #22d3ee; --accent-yellow: #facc15; --accent-orange: #f97316;
+  --accent-red: #ef4444; --accent-green: #10b981;
+  --text-primary: #e0e7ff; --text-secondary: #a5a3b8; --text-muted: #6b6885;
+  --border: rgba(139,92,246,.15);
+}
+* { box-sizing: border-box; margin: 0; padding: 0; }
+body {
+  font-family: 'Inter', sans-serif; color: var(--text-primary); min-height: 100vh;
+  background: radial-gradient(ellipse at top, rgba(239,68,68,.10), transparent 60%), var(--bg-primary);
+  overflow-x: hidden;
+}
+header {
+  background: rgba(8,6,14,0.55); backdrop-filter: blur(14px);
+  border-bottom: 1px solid var(--border); position: sticky; top: 0; z-index: 100;
+}
+.header-content {
+  max-width: 1300px; margin: 0 auto; padding: 14px 24px;
+  display: flex; align-items: center; justify-content: space-between; gap: 24px;
+}
+.brand-title {
+  font-size: 16px; font-weight: 800; letter-spacing: 1px;
+  color: var(--accent-red); display: flex; align-items: center; gap: 10px;
+}
+.nav-back {
+  display: inline-flex; align-items: center; gap: 8px; padding: 8px 14px;
+  background: rgba(139,92,246,.15); border: 1px solid rgba(139,92,246,.3);
+  border-radius: 10px; color: var(--primary-light); text-decoration: none;
+  font-size: 13px; font-weight: 600;
+}
+main { max-width: 1300px; margin: 0 auto; padding: 32px 20px 80px; }
+
+.gate {
+  max-width: 460px; margin: 80px auto;
+  background: linear-gradient(135deg, rgba(20,16,40,.85), rgba(15,10,30,.92));
+  border: 1px solid var(--border); border-radius: 16px; padding: 32px;
+  text-align: center;
+}
+.gate h2 { font-size: 22px; margin-bottom: 8px; color: var(--accent-yellow); }
+.gate p { color: var(--text-muted); font-size: 13px; margin-bottom: 18px; }
+.gate input {
+  width: 100%; padding: 12px 14px; background: rgba(0,0,0,.3);
+  border: 1px solid var(--border); border-radius: 10px;
+  color: var(--text-primary); font-size: 14px; font-family: 'JetBrains Mono',monospace;
+}
+.gate input:focus { outline: none; border-color: var(--primary); }
+.gate button {
+  width: 100%; padding: 12px; margin-top: 14px; cursor: pointer;
+  background: linear-gradient(135deg, var(--primary), var(--accent-cyan));
+  color: #fff; border: none; border-radius: 10px;
+  font-weight: 800; font-size: 14px;
+}
+
+.filters {
+  display: flex; gap: 10px; align-items: center; margin-bottom: 20px;
+  flex-wrap: wrap;
+}
+.tab {
+  padding: 8px 16px; background: rgba(255,255,255,.04);
+  border: 1px solid var(--border); border-radius: 10px;
+  color: var(--text-secondary); font-size: 13px; font-weight: 700;
+  cursor: pointer; user-select: none; transition: all .15s;
+}
+.tab:hover { background: rgba(255,255,255,.08); }
+.tab.active { background: rgba(139,92,246,.25); border-color: var(--primary); color: var(--primary-light); }
+
+.unban-bar {
+  margin-left: auto; display: flex; gap: 8px; align-items: center;
+  background: rgba(255,255,255,.03); border: 1px solid var(--border);
+  border-radius: 10px; padding: 4px 4px 4px 14px;
+}
+.unban-bar input {
+  background: transparent; border: none; color: var(--text-primary);
+  font-family: 'JetBrains Mono',monospace; font-size: 12px;
+  padding: 6px 0; min-width: 200px;
+}
+.unban-bar input:focus { outline: none; }
+.unban-bar button {
+  padding: 6px 14px; background: rgba(34,197,94,.2); color: #4ade80;
+  border: 1px solid rgba(34,197,94,.4); border-radius: 8px;
+  font-size: 12px; font-weight: 700; cursor: pointer;
+}
+
+.report-card {
+  background: linear-gradient(135deg, rgba(20,16,40,.85), rgba(15,10,30,.92));
+  border: 1px solid var(--border); border-radius: 14px;
+  padding: 18px; margin-bottom: 14px;
+  display: grid;
+  grid-template-columns: auto 1fr auto;
+  gap: 16px; align-items: start;
+}
+.report-card.dismissed { opacity: 0.5; }
+.report-card.resolved { border-color: rgba(16,185,129,.3); }
+
+.reason-pill {
+  display: inline-flex; align-items: center; gap: 6px;
+  padding: 6px 14px; border-radius: 10px;
+  font-size: 12px; font-weight: 800; letter-spacing: .5px;
+  white-space: nowrap;
+}
+.reason-pill.cheating { background: rgba(239,68,68,.18); color: var(--accent-red); border: 1px solid rgba(239,68,68,.4); }
+.reason-pill.toxic    { background: rgba(250,204,21,.15); color: var(--accent-yellow); border: 1px solid rgba(250,204,21,.4); }
+.reason-pill.griefing { background: rgba(249,115,22,.15); color: var(--accent-orange); border: 1px solid rgba(249,115,22,.4); }
+.reason-pill.smurf    { background: rgba(168,85,247,.18); color: var(--primary-light); border: 1px solid rgba(168,85,247,.4); }
+.reason-pill.other    { background: rgba(107,104,133,.2); color: var(--text-muted); border: 1px solid var(--border); }
+
+.report-body { min-width: 0; }
+.report-line { font-size: 13px; color: var(--text-secondary); margin-bottom: 4px; }
+.report-line strong { color: var(--text-primary); }
+.report-line a { color: var(--primary-light); text-decoration: none; font-family: 'JetBrains Mono',monospace; }
+.report-line a:hover { text-decoration: underline; }
+.report-details {
+  margin-top: 8px; padding: 10px 12px; background: rgba(0,0,0,.25);
+  border-left: 3px solid var(--primary); border-radius: 6px;
+  font-size: 12px; color: var(--text-secondary); font-style: italic;
+  white-space: pre-wrap; word-break: break-word;
+}
+.report-meta { font-size: 11px; color: var(--text-muted); margin-top: 8px; font-family: 'JetBrains Mono',monospace; }
+
+.report-actions {
+  display: flex; flex-direction: column; gap: 6px; min-width: 140px;
+}
+.report-actions button {
+  padding: 8px 12px; border: none; border-radius: 8px;
+  font-size: 12px; font-weight: 700; cursor: pointer;
+  transition: filter .15s, transform .12s;
+  white-space: nowrap;
+}
+.report-actions button:hover { filter: brightness(1.15); transform: translateY(-1px); }
+.report-actions button:disabled { opacity: 0.5; cursor: wait; }
+.btn-resolve  { background: rgba(16,185,129,.18); color: var(--accent-green); border: 1px solid rgba(16,185,129,.4) !important; }
+.btn-dismiss  { background: rgba(107,104,133,.2); color: var(--text-secondary); border: 1px solid var(--border) !important; }
+.btn-ban      { background: linear-gradient(135deg, #dc2626, #991b1b); color: #fff; }
+
+.ban-menu {
+  display: none;
+  background: rgba(0,0,0,.4); border: 1px solid rgba(239,68,68,.3);
+  border-radius: 8px; padding: 8px; margin-top: 4px;
+  display: flex; flex-direction: column; gap: 4px;
+}
+.ban-menu button {
+  background: rgba(239,68,68,.15); color: #fca5a5;
+  border: 1px solid rgba(239,68,68,.3) !important;
+  padding: 6px 10px; font-size: 11px;
+}
+
+.empty-state { padding: 60px 20px; text-align: center; color: var(--text-muted); }
+.empty-state h2 { font-size: 18px; margin-bottom: 8px; color: var(--text-secondary); }
+.loading { padding: 40px; text-align: center; color: var(--text-muted); }
+
+.toast {
+  position: fixed; top: 80px; left: 50%; transform: translateX(-50%);
+  z-index: 9000; padding: 12px 20px;
+  border-radius: 10px; font-weight: 700; font-size: 13px;
+  animation: toastIn 0.2s ease-out;
+}
+.toast.success { background: linear-gradient(135deg, #16a34a, #15803d); color: #fff; }
+.toast.error   { background: linear-gradient(135deg, #dc2626, #991b1b); color: #fff; }
+@keyframes toastIn { from { opacity:0; transform:translate(-50%,-10px); } to { opacity:1; transform:translate(-50%,0); } }
+
+@media (max-width: 720px) {
+  .report-card { grid-template-columns: 1fr; }
+  .report-actions { flex-direction: row; flex-wrap: wrap; }
+  .unban-bar { width: 100%; margin-left: 0; }
+}
+</style>
+</head>
+<body>
+
+<header>
+  <div class="header-content">
+    <a href="lobbies.html" class="nav-back">← Voltar</a>
+    <div class="brand-title">🛡️ ADMIN · REPORTS</div>
+    <div></div>
+  </div>
+</header>
+
+<main id="mainContent">
+  <div id="gateView" class="gate">
+    <h2>🔒 Acesso restrito</h2>
+    <p>Insira o secret de admin (env <code>ADMIN_SECRET</code> do Railway).</p>
+    <input id="secretInput" type="password" placeholder="ADMIN_SECRET" autocomplete="off">
+    <button onclick="enter()">Entrar</button>
+  </div>
+  <div id="appView" style="display:none;">
+    <div class="filters">
+      <div class="tab active" data-status="pending" onclick="setTab('pending', this)">Pendentes</div>
+      <div class="tab" data-status="resolved" onclick="setTab('resolved', this)">Resolvidos</div>
+      <div class="tab" data-status="dismissed" onclick="setTab('dismissed', this)">Dispensados</div>
+      <div class="unban-bar">
+        <input id="unbanInput" type="text" placeholder="SteamID pra unban (17 digitos)">
+        <button onclick="doUnban()">Unban</button>
+      </div>
+    </div>
+    <div id="reportsList"><div class="loading">Carregando…</div></div>
+  </div>
+</main>
+
+<script>
+const API_BASE = 'https://gumax-backend-production.up.railway.app';
+let _secret = null;
+let _currentStatus = 'pending';
+
+const REASON_LABELS = {
+  cheating: '🎯 Cheating', toxic: '🤬 Tóxico',
+  griefing: '😤 Griefing', smurf: '👻 Smurf', other: '❓ Outro',
+};
+
+function esc(s) { return String(s||'').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'})[c]); }
+function fmtTime(ms) {
+  if (!ms) return '—';
+  const d = new Date(ms);
+  return d.toLocaleString('pt-BR', { day:'2-digit', month:'2-digit', year:'2-digit', hour:'2-digit', minute:'2-digit' });
+}
+function toast(msg, type='success') {
+  const t = document.createElement('div');
+  t.className = 'toast ' + type;
+  t.textContent = msg;
+  document.body.appendChild(t);
+  setTimeout(() => t.remove(), 3000);
+}
+
+function enter() {
+  const v = document.getElementById('secretInput').value.trim();
+  if (!v) { toast('Insira o secret', 'error'); return; }
+  _secret = v;
+  // Persiste em sessionStorage pra refresh não perder
+  try { sessionStorage.setItem('gmaxAdminSecret', v); } catch {}
+  document.getElementById('gateView').style.display = 'none';
+  document.getElementById('appView').style.display = '';
+  loadReports();
+}
+
+function logout() {
+  _secret = null;
+  try { sessionStorage.removeItem('gmaxAdminSecret'); } catch {}
+  location.reload();
+}
+
+function setTab(status, el) {
+  _currentStatus = status;
+  document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+  el.classList.add('active');
+  loadReports();
+}
+
+async function loadReports() {
+  const list = document.getElementById('reportsList');
+  list.innerHTML = '<div class="loading">Carregando…</div>';
+  try {
+    const r = await fetch(`${API_BASE}/api/admin/reports?key=${encodeURIComponent(_secret)}&status=${encodeURIComponent(_currentStatus)}`);
+    if (r.status === 401) {
+      toast('Secret inválido', 'error');
+      logout();
+      return;
+    }
+    if (!r.ok) { list.innerHTML = `<div class="empty-state"><h2>Erro ${r.status}</h2></div>`; return; }
+    const data = await r.json();
+    if (!data.reports.length) {
+      list.innerHTML = `<div class="empty-state"><h2>Nenhum report ${_currentStatus === 'pending' ? 'pendente' : (_currentStatus === 'resolved' ? 'resolvido' : 'dispensado')}</h2></div>`;
+      return;
+    }
+    list.innerHTML = data.reports.map(renderReport).join('');
+  } catch (e) {
+    console.error(e);
+    list.innerHTML = `<div class="empty-state"><h2>Erro de rede</h2><p>${esc(e.message)}</p></div>`;
+  }
+}
+
+function renderReport(r) {
+  const isPending = r.status === 'pending';
+  const matchLink = r.matchId ? `match-detail.html?id=${encodeURIComponent(r.matchId)}` : '#';
+  const targetLink = r.targetSteamId ? `jogador.html?id=${encodeURIComponent(r.targetSteamId)}` : '#';
+  const reporterLink = r.reporterSteamId ? `jogador.html?id=${encodeURIComponent(r.reporterSteamId)}` : '#';
+
+  const actions = isPending ? `
+    <div class="report-actions">
+      <button class="btn-resolve" onclick="actReport('${esc(r.id)}', 'resolve', this)">✓ Resolver</button>
+      <button class="btn-dismiss" onclick="actReport('${esc(r.id)}', 'dismiss', this)">⊘ Dispensar</button>
+      <button class="btn-ban"     onclick="toggleBanMenu('${esc(r.id)}')">🚫 Banir</button>
+      <div class="ban-menu" id="ban-${esc(r.id)}" style="display:none;">
+        <button onclick="actReport('${esc(r.id)}', 'ban', this, 1)">1 hora</button>
+        <button onclick="actReport('${esc(r.id)}', 'ban', this, 24)">24 horas</button>
+        <button onclick="actReport('${esc(r.id)}', 'ban', this, 168)">7 dias</button>
+        <button onclick="actReport('${esc(r.id)}', 'ban', this, 720)">30 dias</button>
+        <button onclick="actReport('${esc(r.id)}', 'ban', this, 87600)">Permanente</button>
+      </div>
+    </div>
+  ` : `
+    <div class="report-actions">
+      <div style="font-size:11px;color:var(--text-muted);text-align:center;font-family:'JetBrains Mono',monospace;">
+        ${r.resolvedAction === 'ban' ? '🚫 BANIDO' : (r.resolvedAction === 'dismiss' ? '⊘ DISPENSADO' : '✓ RESOLVIDO')}<br>
+        ${fmtTime(r.resolvedAt)}
+      </div>
+    </div>
+  `;
+
+  return `
+    <div class="report-card ${r.status}">
+      <span class="reason-pill ${esc(r.reason)}">${REASON_LABELS[r.reason] || r.reason}</span>
+      <div class="report-body">
+        <div class="report-line"><strong>Reportado:</strong> <a href="${targetLink}" target="_blank">${esc(r.targetName || '?')}</a> · steamId: <a href="${targetLink}" target="_blank">${esc(r.targetSteamId)}</a></div>
+        <div class="report-line"><strong>Reporter:</strong> <a href="${reporterLink}" target="_blank">${esc(r.reporterName || '?')}</a></div>
+        <div class="report-line"><strong>Match:</strong> <a href="${matchLink}" target="_blank">${esc(r.matchId || '—')}</a></div>
+        ${r.details ? `<div class="report-details">"${esc(r.details)}"</div>` : ''}
+        <div class="report-meta">criado: ${fmtTime(r.createdAt)} · id: ${esc(r.id)}</div>
+      </div>
+      ${actions}
+    </div>
+  `;
+}
+
+function toggleBanMenu(id) {
+  const el = document.getElementById('ban-' + id);
+  if (!el) return;
+  el.style.display = el.style.display === 'none' ? 'flex' : 'none';
+}
+
+async function actReport(id, action, btn, banDurationHours) {
+  if (btn) { btn.disabled = true; btn.style.opacity = .5; }
+  try {
+    const r = await fetch(`${API_BASE}/api/admin/reports/${encodeURIComponent(id)}/action`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ secret: _secret, action, banDurationHours }),
+    });
+    if (r.status === 401) { toast('Secret inválido', 'error'); logout(); return; }
+    if (!r.ok) { toast(`Erro ${r.status}`, 'error'); if(btn){btn.disabled=false;btn.style.opacity=1;} return; }
+    toast(action === 'ban' ? '🚫 Player banido' : (action === 'dismiss' ? '⊘ Report dispensado' : '✓ Resolvido'));
+    loadReports();
+  } catch (e) {
+    toast('Erro de rede', 'error');
+    if (btn) { btn.disabled = false; btn.style.opacity = 1; }
+  }
+}
+
+async function doUnban() {
+  const sid = document.getElementById('unbanInput').value.trim();
+  if (!sid || !/^\d{17}$/.test(sid)) { toast('SteamID precisa ter 17 dígitos', 'error'); return; }
+  if (!confirm(`Remover ban de ${sid}?`)) return;
+  try {
+    const r = await fetch(`${API_BASE}/api/admin/unban`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ secret: _secret, steamId: sid }),
+    });
+    if (r.status === 401) { toast('Secret inválido', 'error'); logout(); return; }
+    if (!r.ok) { toast(`Erro ${r.status}`, 'error'); return; }
+    toast('✓ Unban aplicado');
+    document.getElementById('unbanInput').value = '';
+  } catch (e) {
+    toast('Erro de rede', 'error');
+  }
+}
+
+// Auto-login se ja tem secret em sessionStorage
+try {
+  const cached = sessionStorage.getItem('gmaxAdminSecret');
+  if (cached) {
+    _secret = cached;
+    document.getElementById('gateView').style.display = 'none';
+    document.getElementById('appView').style.display = '';
+    loadReports();
+  }
+} catch {}
+
+// Enter no input dispara enter()
+document.getElementById('secretInput').addEventListener('keydown', e => {
+  if (e.key === 'Enter') enter();
+});
+</script>
+</body>
+</html>
