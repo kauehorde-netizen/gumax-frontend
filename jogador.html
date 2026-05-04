@@ -186,6 +186,9 @@ body::before {
   z-index: -10;
   pointer-events: none;
 }
+
+.history-table tbody tr.clickable-row { cursor: pointer; }
+.history-table tbody tr.clickable-row:hover { background: rgba(139,92,246,.10); transform: translateX(2px); transition: background .15s, transform .15s; }
 </style>
 </head>
 <body>
@@ -496,8 +499,9 @@ function renderHistory(history) {
     const time = m.playedAt ? new Date(m.playedAt).toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' }) : '';
     const map = m.map ? (MAP_LABELS[m.map] || m.map.replace('de_', '')) : '—';
     const kdrCls = m.kdr >= 1.5 ? 'elite' : m.kdr >= 1.0 ? 'high' : 'low';
+    const matchHref = m.matchId ? `match-detail.html?id=${encodeURIComponent(m.matchId)}` : null;
     return `
-      <tr>
+      <tr ${matchHref ? `class="clickable-row" onclick="location.href='${matchHref}'" title="Ver scoreboard completo"` : ''}>
         <td>
           <div style="display:flex;flex-direction:column;line-height:1.2;">
             <span style="font-weight:700;">${date}</span>
