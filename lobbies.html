@@ -1100,6 +1100,18 @@ body::before {
 }
 .outgoing-cancel:hover { background: rgba(239,68,68,.3); }
 .outgoing-cancel:disabled { opacity: .5; cursor: wait; }
+
+/* v48-push: botao de notificacoes no header */
+.btn-push {
+  background: rgba(139,92,246,.15); border: 1px solid rgba(139,92,246,.35);
+  color: var(--primary-light); cursor: pointer;
+  padding: 8px 14px; border-radius: 10px;
+  font-size: 16px; line-height: 1; transition: background .15s, transform .12s;
+  margin-right: 8px;
+}
+.btn-push:hover:not(:disabled) { background: rgba(139,92,246,.25); transform: scale(1.05); }
+.btn-push.granted { background: rgba(34,197,94,.15); border-color: rgba(34,197,94,.4); color: #4ade80; }
+.btn-push.denied  { background: rgba(239,68,68,.1); border-color: rgba(239,68,68,.3); color: #fca5a5; cursor: not-allowed; opacity: 0.6; }
 </style>
 </head>
 <body>
@@ -1146,6 +1158,8 @@ body::before {
     </div>
     <div class="header-actions">
       <a class="back-to-market" href="leaderboard.html" style="background:rgba(250,204,21,.12);border-color:rgba(250,204,21,.4);color:var(--accent-yellow);margin-right:8px;">🏆 Leaderboard</a>
+      <!-- v48-push: botao de notificacoes (so aparece logado) -->
+      <button class="btn-push" id="btnPush" onclick="togglePush()" style="display:none;" title="Receber alertas de desafios">🔔</button>
       <button class="btn-primary-small" id="headerLoginBtn" onclick="doLogin()">
         <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><path d="M11.979 0C5.678 0 .511 4.86.022 11.037l6.432 2.658c.545-.371 1.203-.59 1.912-.59.063 0 .125.004.188.006l2.861-4.142V8.91c0-2.495 2.028-4.524 4.524-4.524 2.494 0 4.524 2.031 4.524 4.527s-2.03 4.525-4.524 4.525h-.105l-4.076 2.911c0 .052.004.105.004.159 0 1.875-1.515 3.396-3.39 3.396-1.635 0-3.016-1.173-3.331-2.727L.436 15.27C1.862 20.307 6.486 24 11.979 24c6.627 0 11.999-5.373 11.999-12S18.605 0 11.979 0z"/></svg>
         Entrar com Steam
@@ -2737,6 +2751,131 @@ async function cancelOneChallenge(myLobbyId, targetId, btn) {
     if (btn) { btn.disabled = false; btn.textContent = '×'; }
   }
 }
+
+
+// v48-push: gerenciamento de notificacoes
+let _swReg = null;
+let _pushPublicKey = null;
+
+function urlBase64ToUint8Array(base64String) {
+  const padding = '='.repeat((4 - base64String.length % 4) % 4);
+  const base64 = (base64String + padding).replace(/-/g, '+').replace(/_/g, '/');
+  const raw = atob(base64);
+  const arr = new Uint8Array(raw.length);
+  for (let i = 0; i < raw.length; ++i) arr[i] = raw.charCodeAt(i);
+  return arr;
+}
+
+async function _initServiceWorker() {
+  if (!('serviceWorker' in navigator) || !('PushManager' in window)) {
+    console.log('[push] browser sem suporte');
+    return null;
+  }
+  try {
+    _swReg = await navigator.serviceWorker.register('/sw.js', { scope: '/' });
+    return _swReg;
+  } catch (e) {
+    console.warn('[push] SW register falhou:', e);
+    return null;
+  }
+}
+
+async function _fetchPushPublicKey() {
+  if (_pushPublicKey) return _pushPublicKey;
+  try {
+    const r = await fetch(`${API_BASE}/api/push/public-key`);
+    const d = await r.json();
+    if (d.publicKey) { _pushPublicKey = d.publicKey; return d.publicKey; }
+  } catch {}
+  return null;
+}
+
+function _updatePushButton() {
+  const btn = document.getElementById('btnPush');
+  if (!btn) return;
+  if (!('Notification' in window) || !('serviceWorker' in navigator)) {
+    btn.style.display = 'none';
+    return;
+  }
+  if (!_user) { btn.style.display = 'none'; return; }
+  btn.style.display = '';
+  btn.classList.remove('granted', 'denied');
+  if (Notification.permission === 'granted') {
+    btn.classList.add('granted');
+    btn.title = 'Notificações ativas (clique pra desativar)';
+    btn.textContent = '🔔';
+  } else if (Notification.permission === 'denied') {
+    btn.classList.add('denied');
+    btn.title = 'Notificações bloqueadas no browser. Reabilite nas configs do site.';
+    btn.textContent = '🔕';
+  } else {
+    btn.title = 'Receber alertas de desafios';
+    btn.textContent = '🔔';
+  }
+}
+
+async function togglePush() {
+  if (!_user) { toast('Faça login primeiro', 'error'); return; }
+  if (Notification.permission === 'denied') {
+    toast('Notificações bloqueadas. Libera nas configs do navegador.', 'error');
+    return;
+  }
+  if (!_swReg) await _initServiceWorker();
+  if (!_swReg) { toast('Browser não suporta notificações', 'error'); return; }
+  const pubKey = await _fetchPushPublicKey();
+  if (!pubKey) { toast('Push desabilitado no servidor', 'error'); return; }
+
+  // Se ja tem subscription ativa, faz unsubscribe
+  const existing = await _swReg.pushManager.getSubscription();
+  if (existing && Notification.permission === 'granted') {
+    try {
+      await fetch(`${API_BASE}/api/push/unsubscribe`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + _idToken },
+        body: JSON.stringify({ endpoint: existing.endpoint }),
+      });
+      await existing.unsubscribe();
+      toast('Notificações desativadas');
+    } catch (e) { console.warn('[push] unsub falhou:', e); }
+    _updatePushButton();
+    return;
+  }
+
+  // Pede permissao + subscribe
+  let perm = Notification.permission;
+  if (perm === 'default') perm = await Notification.requestPermission();
+  if (perm !== 'granted') {
+    toast('Permissão negada', 'error');
+    _updatePushButton();
+    return;
+  }
+  try {
+    const sub = await _swReg.pushManager.subscribe({
+      userVisibleOnly: true,
+      applicationServerKey: urlBase64ToUint8Array(pubKey),
+    });
+    await fetch(`${API_BASE}/api/push/subscribe`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + _idToken },
+      body: JSON.stringify({ subscription: sub.toJSON() }),
+    });
+    toast('🔔 Notificações ativadas!');
+    // Manda push de teste
+    fetch(`${API_BASE}/api/push/test`, {
+      method: 'POST',
+      headers: { 'Authorization': 'Bearer ' + _idToken },
+    }).catch(() => {});
+  } catch (e) {
+    console.error('[push] subscribe falhou:', e);
+    toast('Erro ao ativar notificações', 'error');
+  }
+  _updatePushButton();
+}
+
+// Boot: registra SW logo no carregamento + atualiza botao quando _user muda
+_initServiceWorker().then(() => _updatePushButton());
+// Hook: chamado tambem pelo onAuthStateChanged via monkey-patch indireto
+setInterval(_updatePushButton, 2000);
 
 </script>
 
