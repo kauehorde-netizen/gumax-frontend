@@ -1067,6 +1067,39 @@ body::before {
 @media (prefers-reduced-motion: reduce) {
   .btn-create.breathing, .btn-create.breathing::after { animation: none; }
 }
+
+/* v48-multi-challenge: lista compacta dos challenges OUTGOING na sidebar Minha Sala */
+.outgoing-list {
+  margin-top: 12px; padding: 10px 12px;
+  background: rgba(139,92,246,.08); border: 1px solid rgba(139,92,246,.25);
+  border-radius: 10px;
+}
+.outgoing-list-title {
+  font-size: 10px; color: var(--text-muted); text-transform: uppercase;
+  letter-spacing: 1px; font-weight: 700; margin-bottom: 8px;
+}
+.outgoing-item {
+  display: flex; align-items: center; gap: 8px;
+  padding: 6px 8px; margin-bottom: 4px;
+  background: rgba(255,255,255,.03); border-radius: 6px;
+  font-size: 12px; font-weight: 600;
+}
+.outgoing-item:last-child { margin-bottom: 0; }
+.outgoing-name {
+  flex: 1; min-width: 0;
+  white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+  color: var(--text-secondary);
+}
+.outgoing-cancel {
+  background: rgba(239,68,68,.15); border: 1px solid rgba(239,68,68,.3);
+  color: #fca5a5; cursor: pointer;
+  width: 22px; height: 22px; border-radius: 6px;
+  font-size: 14px; line-height: 1; padding: 0;
+  display: flex; align-items: center; justify-content: center;
+  transition: background .15s;
+}
+.outgoing-cancel:hover { background: rgba(239,68,68,.3); }
+.outgoing-cancel:disabled { opacity: .5; cursor: wait; }
 </style>
 </head>
 <body>
@@ -1531,6 +1564,7 @@ function renderList(lobbies) {
   empty.style.display = 'none';
 
   // Mostra TODAS as salas (incluindo a do user) — sala dele ganha destaque "SUA SALA".
+  _lastLobbiesList = lobbies;  // v48-multi-challenge: cache pra resolver nome de target
   grid.innerHTML = lobbies.map(l => renderLobbyCard(l)).join('');
   updateStats(lobbies);
 
@@ -1557,34 +1591,36 @@ function renderLobbyCard(lobby) {
     ? `<div class="lobby-slot filled" title="${escHtml(s.name)}">${s.avatar ? `<img src="${s.avatar}" onerror="this.style.display='none'">` : ''}</div>`
     : `<div class="lobby-slot">·</div>`
   ).join('');
-  const isFull = lobby.status === 'full' || lobby.status === 'challenged' || lobby.filled === 5;
+  // v48-multi-challenge: status NAO vira mais 'challenged' — sala continua disponivel
+  const isFull = lobby.status === 'full' || lobby.filled === 5;
   const isMine = !!_user && lobby.id === _myLobbyId;
   const isLoggedIn = !!_user;
-  // v35-inline: ESTA sala tá me desafiando? Renderiza pulsando vermelho c/ Aceitar/Recusar inline.
   const isChallengingMe = !!(_myChallengedBy && lobby.id === _myChallengedBy);
-  let cls = lobby.status === 'challenged' ? 'challenged' : (isFull ? 'full' : '');
+  // Detecta se MINHA sala ja desafiou esta — mostra "Desafiando" em vez de espada
+  const myOutgoingMap = (_myLobbyData?.pendingOutgoing) || (_myLobbyData?.challengeTo ? { [_myLobbyData.challengeTo]: 1 } : {});
+  const alreadyChallenged = !!myOutgoingMap[lobby.id];
+  let cls = isFull ? 'full' : '';
   if (isMine) cls += ' mine';
   if (isChallengingMe) cls += ' challenging-me';
 
-  // v43+: o card NÃO mostra mais aceitar/recusar inline. Toda interação de
-  // desafio rolou pra sidebar lateral. O card mostra estado normal (Entrar/Cheia)
-  // mesmo pra lobby que tá te desafiando — evita redundância e clutter no grid.
   let actionHtml;
   if (!isLoggedIn) {
     actionHtml = `<button class="lobby-action btn-login" onclick="doLogin()" title="Faça login Steam pra entrar">🔐 Login pra entrar</button>`;
   } else if (isMine) {
     actionHtml = `<button class="lobby-action btn-disabled" disabled>✓ Sua sala (${lobby.filled}/5)</button>`;
-  } else if (lobby.status === 'challenged') {
-    actionHtml = `<button class="lobby-action btn-disabled" disabled>Em desafio…</button>`;
+  } else if (lobby.status === 'in_match') {
+    actionHtml = `<button class="lobby-action btn-disabled" disabled>Em partida</button>`;
   } else {
     const hasSlot = lobby.filled < 5;
-    const canChallenge = _myLobbyOwner && _myLobbyId && _myLobbyId !== lobby.id;
+    const canChallenge = _myLobbyOwner && _myLobbyId && _myLobbyId !== lobby.id && !alreadyChallenged;
     const joinBtn = hasSlot
       ? `<button class="lobby-action btn-join" style="flex:1;" onclick="joinLobby(this,'${lobby.id}')">Entrar (${lobby.filled}/5)</button>`
       : `<button class="lobby-action btn-disabled" style="flex:1;" disabled>Cheia 5/5</button>`;
-    const challengeBtn = canChallenge
-      ? `<button class="lobby-action btn-challenge-icon" onclick="challengeLobby(this,'${lobby.id}')" title="Desafiar essa sala">⚔️</button>`
-      : '';
+    const challengeBtn = alreadyChallenged
+      ? `<button class="lobby-action btn-challenge-icon" disabled style="opacity:.6;cursor:not-allowed;" title="Já desafiou esta sala">✓</button>`
+      : (canChallenge
+        ? `<button class="lobby-action btn-challenge-icon" onclick="challengeLobby(this,'${lobby.id}')" title="Desafiar essa sala">⚔️</button>`
+        : '');
     actionHtml = `<div style="display:flex;gap:6px;align-items:stretch;">${joinBtn}${challengeBtn}</div>`;
   }
 
@@ -1628,6 +1664,9 @@ let _myLobbyStatus = null; // v33-noredirect: 'open' | 'full' | 'challenged' | '
 // v35-inline: ID da sala que tá me desafiando (renderiza card pulsando vermelho).
 // Múltiplos desafios simultâneos: futuramente isso vira um Set, por ora é o último.
 let _myChallengedBy = null;
+// v48-multi-challenge: cache do meu lobby completo + ultima lista
+let _myLobbyData = null;
+let _lastLobbiesList = [];
 let _myChallengeExpiresAt = null;
 
 // v38-rating: tier badges Premier-style (compartilhado entre todas as views)
@@ -1758,25 +1797,33 @@ function renderMyLobby(lobby) {
     return;
   }
   _myLobbyId = lobby.id;
+  _myLobbyData = lobby;  // v48-multi-challenge: cache pra renderLobbyCard saber meus outgoing
   _myLobbyFilled = (lobby.slots || []).filter(s => s != null).length;
   _myLobbyOwner = lobby.ownerId === (_user && _user.uid);
-  _myLobbyStatus = lobby.status; // v33-noredirect: backend define status (open/full/challenged)
+  _myLobbyStatus = lobby.status;
 
-  // v43+: desafios agora são EXCLUSIVAMENTE na sidebar lateral. Quando
-  // newChallengedBy aparece, dispara addChallengeCard pra sidebar. Quando
-  // some (null), o card já cai sozinho via timer — não força close global.
-  const newChallengedBy = lobby.challengedBy || null;
-  const prevChallengedBy = _myChallengedBy;
-  _myChallengedBy = newChallengedBy;
-  _myChallengeExpiresAt = lobby.challengeExpiresAt || null;
-  if (newChallengedBy && newChallengedBy !== prevChallengedBy) {
-    // Novo desafiante chegou — adiciona card à sidebar (idempotente se já tem)
-    addChallengeCard(newChallengedBy, _myChallengeExpiresAt);
+  // v48-multi-challenge: itera pendingIncoming map (multi) com fallback pro legacy challengedBy
+  const incomingMap = lobby.pendingIncoming || (lobby.challengedBy
+    ? { [lobby.challengedBy]: { expiresAt: lobby.challengeExpiresAt } }
+    : {});
+  const incomingIds = Object.keys(incomingMap);
+  // Adiciona cards pra novos challengers; remove pra os que sumiram
+  if (!window._myIncomingShown) window._myIncomingShown = new Set();
+  const prevShown = new Set(window._myIncomingShown);
+  const nowShown = new Set();
+  for (const cid of incomingIds) {
+    const exp = incomingMap[cid]?.expiresAt;
+    addChallengeCard(cid, exp);
+    nowShown.add(cid);
+    prevShown.delete(cid);
   }
-  if (!newChallengedBy && prevChallengedBy) {
-    // Desafio sumiu (aceito/expirado/cancelado) — remove card específico
-    removeChallengeCard(prevChallengedBy);
+  for (const cidGone of prevShown) {
+    removeChallengeCard(cidGone);
   }
+  window._myIncomingShown = nowShown;
+  // Mantem campos legacy ainda usados em outros pontos do codigo (retrocompat)
+  _myChallengedBy = incomingIds[0] || null;
+  _myChallengeExpiresAt = incomingIds[0] ? incomingMap[incomingIds[0]]?.expiresAt : null;
   // v35-inline: redirect pra match.html quando lobby tá in_match.
   // ?nomatchredirect=1 só pula o PRIMEIRO poll (escape de match cancelado stale).
   // Marcamos _firstPollDone IMEDIATAMENTE — qualquer poll seguinte redireciona normal.
@@ -1822,34 +1869,44 @@ function renderMyLobby(lobby) {
     </div>`;
   }).join('');
 
-  // Banner "DESAFIO ENVIADO — Aguardando resposta" quando MINHA sala é o challenger.
-  // Backend marca a minha como status='challenged' e seta `challengeTo` + challengeExpiresAt.
-  // Defensivo: se já expirou (30s passaram sem o backend limpar), esconde o banner
-  // e dispara cancel-challenge pro backend pra zerar o estado server-side.
+  // v48-multi-challenge: lista compacta dos challenges OUTGOING (varios simultaneos).
+  // Le pendingOutgoing map; fallback pro legacy challengeTo.
+  const outgoingMap = lobby.pendingOutgoing || (lobby.challengeTo
+    ? { [lobby.challengeTo]: { expiresAt: lobby.challengeExpiresAt } }
+    : {});
+  const outgoingEntries = Object.entries(outgoingMap).filter(([_, e]) => {
+    const expMs = e?.expiresAt?._seconds ? e.expiresAt._seconds * 1000
+                : (e?.expiresAt?.toMillis ? e.expiresAt.toMillis() : null);
+    return !expMs || Date.now() < expMs;
+  });
+  // Resolve nome do target (procura no _lobbiesCache mais recente)
+  function _outgoingTargetName(targetId) {
+    const found = (_lastLobbiesList || []).find(l => l.id === targetId);
+    return found?.name || 'sala';
+  }
   let challengingBanner = '';
-  if (lobby.status === 'challenged' && lobby.challengeTo && !lobby.challengedBy) {
-    const expMs = lobby.challengeExpiresAt?._seconds
-      ? lobby.challengeExpiresAt._seconds * 1000
-      : (lobby.challengeExpiresAt?.toMillis ? lobby.challengeExpiresAt.toMillis() : null);
-    const expired = expMs && Date.now() > expMs;
-    if (expired) {
-      // Limpa server-side em background — não bloqueia render. Próximo poll já vem limpo.
-      fetch(`${API_BASE}/api/lobby/${lobby.id}/cancel-challenge`, {
-        method: 'POST',
-        headers: { 'Authorization': 'Bearer ' + _idToken }
-      }).catch(() => {});
-    } else {
+  if (outgoingEntries.length > 0) {
+    const items = outgoingEntries.map(([targetId, entry]) => {
+      const expMs = entry?.expiresAt?._seconds ? entry.expiresAt._seconds * 1000
+                  : (entry?.expiresAt?.toMillis ? entry.expiresAt.toMillis() : null);
       const remaining = expMs ? Math.max(0, Math.ceil((expMs - Date.now()) / 1000)) : null;
       const cdHtml = remaining != null
-        ? `<span style="font-family:'JetBrains Mono',monospace;color:var(--accent-yellow);font-weight:800;margin-left:6px;">${remaining}s</span>`
+        ? `<span style="font-family:'JetBrains Mono',monospace;color:var(--accent-yellow);font-weight:800;font-size:11px;">${remaining}s</span>`
         : '';
-      challengingBanner = `
-        <div class="challenging-banner">
-          <div class="label">⚔️ Desafio enviado ${cdHtml}</div>
-          <div class="text">Aguardando resposta<span class="dots"></span></div>
+      return `
+        <div class="outgoing-item">
+          <span class="outgoing-name">⚔️ ${escHtml(_outgoingTargetName(targetId))}</span>
+          ${cdHtml}
+          <button class="outgoing-cancel" onclick="cancelOneChallenge('${escHtml(lobby.id)}','${escHtml(targetId)}',this)" title="Cancelar este desafio">×</button>
         </div>
       `;
-    }
+    }).join('');
+    challengingBanner = `
+      <div class="outgoing-list">
+        <div class="outgoing-list-title">Desafiando (${outgoingEntries.length})</div>
+        ${items}
+      </div>
+    `;
   }
 
   // v41-invite: botao de convidar amigo só faz sentido se ainda tem slot vazio e
@@ -2654,6 +2711,31 @@ if (document.readyState === 'loading') {
   document.addEventListener('DOMContentLoaded', updateCreateBtnVisibility);
 } else {
   setTimeout(updateCreateBtnVisibility, 100);
+}
+
+
+// v48-multi-challenge: cancela um challenge especifico do outgoing
+async function cancelOneChallenge(myLobbyId, targetId, btn) {
+  if (btn) { btn.disabled = true; btn.textContent = '…'; }
+  try {
+    const r = await fetch(`${API_BASE}/api/lobby/${encodeURIComponent(myLobbyId)}/cancel-challenge`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': 'Bearer ' + _idToken,
+      },
+      body: JSON.stringify({ targetId }),
+    });
+    if (!r.ok) {
+      console.warn('[cancel-one] falhou:', r.status);
+      if (btn) { btn.disabled = false; btn.textContent = '×'; }
+      return;
+    }
+    // O proximo poll do my-lobby vai re-renderizar sem essa entry
+  } catch (e) {
+    console.error('[cancel-one] erro:', e);
+    if (btn) { btn.disabled = false; btn.textContent = '×'; }
+  }
 }
 
 </script>
