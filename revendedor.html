@@ -98,6 +98,63 @@
   .toast.show { opacity: 1; transform: translateY(0); }
   .toast.error { border-color: rgba(239,68,68,.4); }
   .toast.success { border-color: rgba(16,185,129,.4); }
+
+  /* v1-reseller-onboarding: cards de upload de docs */
+  .doc-card {
+    background: rgba(0,0,0,.25);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 14px;
+    transition: border-color .15s, background .15s;
+  }
+  .doc-card.uploaded { border-color: rgba(16,185,129,.4); background: rgba(16,185,129,.04); }
+  .doc-card.error    { border-color: rgba(239,68,68,.4); background: rgba(239,68,68,.04); }
+  .doc-status {
+    font-size: 11px;
+    font-weight: 700;
+    padding: 4px 10px;
+    border-radius: 999px;
+    background: rgba(251,191,36,.12);
+    color: var(--accent-yellow);
+    border: 1px solid rgba(251,191,36,.3);
+    text-transform: uppercase;
+    letter-spacing: .5px;
+  }
+  .doc-status.uploaded {
+    background: rgba(16,185,129,.12);
+    color: var(--accent-green);
+    border-color: rgba(16,185,129,.3);
+  }
+  .doc-thumb {
+    position: relative;
+    width: 74px; height: 74px;
+    border-radius: 8px;
+    background: rgba(0,0,0,.4);
+    border: 1px solid var(--border);
+    overflow: hidden;
+  }
+  .doc-thumb img { width: 100%; height: 100%; object-fit: cover; }
+  .doc-thumb .pdf-icon {
+    width: 100%; height: 100%; display:flex; align-items:center; justify-content:center;
+    font-size: 28px;
+  }
+  .doc-thumb .remove-btn {
+    position: absolute; top: 2px; right: 2px;
+    width: 20px; height: 20px;
+    background: rgba(0,0,0,.7); color: #fff;
+    border: none; border-radius: 50%;
+    cursor: pointer; font-size: 13px; line-height: 1;
+  }
+  .doc-thumb .filename {
+    position: absolute; bottom: 0; left: 0; right: 0;
+    background: rgba(0,0,0,.75); color: #fff;
+    font-size: 9px; padding: 2px 4px;
+    white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+  }
+  /* Painel de status pós-cadastro com docs já enviados */
+  .docs-summary { margin-top: 14px; padding: 12px 14px; background: rgba(0,0,0,.25); border-radius: 8px; border: 1px solid var(--border); }
+  .docs-summary a { color: var(--primary); font-size: 12px; text-decoration: none; }
+  .docs-summary a:hover { text-decoration: underline; }
 </style>
 </head>
 <body>
@@ -134,8 +191,255 @@
 
   <div class="panel" id="applyPanel" style="display:none;">
     <h2>Quer ser revendedor?</h2>
-    <p class="muted">Cadastre suas skins na Gumax e ganhe comissão em cada venda. A equipe Gumax cuida da entrega e suporte; você só precisa enviar a skin via Trade quando vendermos.</p>
-    <button class="btn btn-primary" id="applyBtn" style="margin-top: 12px;">Solicitar acesso</button>
+    <p class="muted">Cadastre suas skins na Gumax e ganhe comissão em cada venda. A equipe Gumax cuida da entrega e suporte; você só precisa enviar a skin via Trade quando vendermos. Pra aprovar seu cadastro a gente precisa dos seus dados completos + documentos de identificação.</p>
+    <button class="btn btn-primary" id="applyBtn" style="margin-top: 12px;">Iniciar cadastro</button>
+  </div>
+
+  <!-- v1-reseller-onboarding: formulário completo de cadastro com ficha + uploads -->
+  <div class="panel" id="onboardingPanel" style="display:none;">
+    <h2>📋 Cadastro de Revendedor</h2>
+    <p class="muted">Preencha os dados abaixo e envie os documentos. A equipe Gumax revisa tudo e te avisa por WhatsApp em até <strong>48h úteis</strong>. Seus dados são tratados conforme a <a href="privacidade.html" target="_blank" style="color:var(--primary);">Política de Privacidade (LGPD)</a>.</p>
+
+    <!-- ── DADOS PESSOAIS ────────────────────────────────────────────────── -->
+    <h3 style="margin: 22px 0 12px; font-size: 15px; color: var(--accent-yellow); letter-spacing:.4px;">1. Dados Pessoais</h3>
+    <div class="form">
+      <div>
+        <label>Nome completo *</label>
+        <input id="rfNomeCompleto" placeholder="Como aparece no RG/CNH" autocomplete="name">
+      </div>
+      <div class="row2">
+        <div>
+          <label>CPF *</label>
+          <input id="rfCpf" placeholder="000.000.000-00" maxlength="14">
+        </div>
+        <div>
+          <label>Data de nascimento *</label>
+          <input id="rfDataNasc" type="date">
+        </div>
+      </div>
+      <div class="row2">
+        <div>
+          <label>RG / CNH (número) *</label>
+          <input id="rfRg" placeholder="MG-12.345.678">
+        </div>
+        <div>
+          <label>Órgão emissor / UF</label>
+          <input id="rfOrgaoEmissor" placeholder="SSP/MG">
+        </div>
+      </div>
+      <div class="row2">
+        <div>
+          <label>Telefone celular *</label>
+          <input id="rfTelefone" placeholder="(31) 99999-9999" maxlength="15">
+        </div>
+        <div>
+          <label>E-mail *</label>
+          <input id="rfEmail" type="email" placeholder="seu@email.com" autocomplete="email">
+        </div>
+      </div>
+      <div class="row2">
+        <div>
+          <label>Estado civil</label>
+          <select id="rfEstadoCivil">
+            <option value="solteiro">Solteiro(a)</option>
+            <option value="casado">Casado(a)</option>
+            <option value="uniao_estavel">União estável</option>
+            <option value="divorciado">Divorciado(a)</option>
+            <option value="viuvo">Viúvo(a)</option>
+          </select>
+        </div>
+        <div>
+          <label>Profissão *</label>
+          <input id="rfProfissao" placeholder="ex: Designer, Estudante, Autônomo">
+        </div>
+      </div>
+    </div>
+
+    <!-- ── ENDEREÇO ──────────────────────────────────────────────────────── -->
+    <h3 style="margin: 26px 0 12px; font-size: 15px; color: var(--accent-yellow);">2. Endereço Residencial</h3>
+    <div class="form">
+      <div class="row2">
+        <div>
+          <label>CEP *</label>
+          <input id="rfCep" placeholder="30000-000" maxlength="9">
+        </div>
+        <div>
+          <label>UF *</label>
+          <input id="rfUf" placeholder="MG" maxlength="2" style="text-transform: uppercase;">
+        </div>
+      </div>
+      <div>
+        <label>Rua / Logradouro *</label>
+        <input id="rfRua" placeholder="Av. Brasil, Rua das Flores...">
+      </div>
+      <div class="row2">
+        <div>
+          <label>Número *</label>
+          <input id="rfNumero" placeholder="123">
+        </div>
+        <div>
+          <label>Complemento</label>
+          <input id="rfComplemento" placeholder="apto 401, bloco B...">
+        </div>
+      </div>
+      <div class="row2">
+        <div>
+          <label>Bairro *</label>
+          <input id="rfBairro" placeholder="Centro, Savassi...">
+        </div>
+        <div>
+          <label>Cidade *</label>
+          <input id="rfCidade" placeholder="Belo Horizonte">
+        </div>
+      </div>
+    </div>
+
+    <!-- ── PERFIL COMERCIAL ──────────────────────────────────────────────── -->
+    <h3 style="margin: 26px 0 12px; font-size: 15px; color: var(--accent-yellow);">3. Perfil Comercial</h3>
+    <div class="form">
+      <div class="row2">
+        <div>
+          <label>Tempo de experiência com skins CS2 *</label>
+          <select id="rfExperiencia">
+            <option value="">Selecione...</option>
+            <option value="<1">Menos de 1 ano</option>
+            <option value="1-2">1 a 2 anos</option>
+            <option value="3-5">3 a 5 anos</option>
+            <option value="5+">Mais de 5 anos</option>
+          </select>
+        </div>
+        <div>
+          <label>Volume mensal estimado de vendas *</label>
+          <select id="rfVolume">
+            <option value="">Selecione...</option>
+            <option value="ate_2k">Até R$ 2.000</option>
+            <option value="2k_5k">R$ 2.000 a R$ 5.000</option>
+            <option value="5k_10k">R$ 5.000 a R$ 10.000</option>
+            <option value="10k_30k">R$ 10.000 a R$ 30.000</option>
+            <option value="30k+">Mais de R$ 30.000</option>
+          </select>
+        </div>
+      </div>
+      <div class="row2">
+        <div>
+          <label>Origem das skins *</label>
+          <select id="rfOrigem">
+            <option value="">Selecione...</option>
+            <option value="proprio">Gameplay próprio (drops/cases)</option>
+            <option value="compra_revenda">Compra e revenda</option>
+            <option value="mix">Mix dos dois</option>
+            <option value="parceiro">Parceiro de outros revendedores</option>
+          </select>
+        </div>
+        <div>
+          <label>Plataformas onde já revendeu</label>
+          <input id="rfPlataformas" placeholder="ex: BUFF163, Skinport, CSDeals">
+        </div>
+      </div>
+      <div>
+        <label>Por que quer revender pela Gumax? (opcional, ajuda a aprovação)</label>
+        <textarea id="rfMotivo" rows="2" placeholder="ex: já sou cliente, busco audiência maior, quero foco no Brasil..."></textarea>
+      </div>
+    </div>
+
+    <!-- ── DADOS BANCÁRIOS ───────────────────────────────────────────────── -->
+    <h3 style="margin: 26px 0 12px; font-size: 15px; color: var(--accent-yellow);">4. Conta para Repasses (PIX)</h3>
+    <p class="muted" style="margin-top: -6px;">Pagamentos das suas vendas são feitos exclusivamente via PIX. A chave PIX precisa estar no seu CPF ou ter você como titular.</p>
+    <div class="form">
+      <div class="row2">
+        <div>
+          <label>Tipo de chave PIX *</label>
+          <select id="rfPixTipo">
+            <option value="">Selecione...</option>
+            <option value="cpf">CPF</option>
+            <option value="email">E-mail</option>
+            <option value="telefone">Telefone</option>
+            <option value="aleatoria">Chave aleatória</option>
+          </select>
+        </div>
+        <div>
+          <label>Chave PIX *</label>
+          <input id="rfPixChave" placeholder="cole sua chave PIX">
+        </div>
+      </div>
+      <div>
+        <label>Banco (opcional)</label>
+        <input id="rfBanco" placeholder="ex: Nubank, Itaú, Inter">
+      </div>
+    </div>
+
+    <!-- ── DOCUMENTOS ────────────────────────────────────────────────────── -->
+    <h3 style="margin: 26px 0 12px; font-size: 15px; color: var(--accent-yellow);">5. Documentos</h3>
+    <p class="muted" style="margin-top: -6px;">Tira foto bem nítida, sem reflexo. Aceitamos JPG, PNG, HEIC ou PDF. Tamanho máx: 10MB cada.</p>
+
+    <div id="docUploadCards" style="display: grid; gap: 12px; margin-top: 14px;">
+      <!-- RG/CNH -->
+      <div class="doc-card" id="docCard-id">
+        <div style="display:flex; align-items:center; gap:12px;">
+          <span style="font-size:22px;">🪪</span>
+          <div style="flex:1;">
+            <div style="font-weight:700; font-size:14px;">RG (frente e verso) ou CNH</div>
+            <div style="color: var(--text-muted); font-size: 12px;">Documento de identificação com foto</div>
+          </div>
+          <span class="doc-status" id="docStatus-id">Aguardando</span>
+        </div>
+        <div style="margin-top: 10px; display:flex; gap: 8px; flex-wrap: wrap;">
+          <input type="file" id="docInput-id" accept="image/*,application/pdf" multiple style="display:none;">
+          <button class="btn" onclick="document.getElementById('docInput-id').click()" id="docBtn-id">📤 Selecionar arquivo(s)</button>
+          <div id="docPreview-id" style="display: flex; gap: 8px; flex-wrap: wrap; align-items:center;"></div>
+        </div>
+      </div>
+
+      <!-- Comprovante de endereço -->
+      <div class="doc-card" id="docCard-address">
+        <div style="display:flex; align-items:center; gap:12px;">
+          <span style="font-size:22px;">🏠</span>
+          <div style="flex:1;">
+            <div style="font-weight:700; font-size:14px;">Comprovante de endereço</div>
+            <div style="color: var(--text-muted); font-size: 12px;">Conta de luz, água, gás, internet ou extrato bancário · até 90 dias</div>
+          </div>
+          <span class="doc-status" id="docStatus-address">Aguardando</span>
+        </div>
+        <div style="margin-top: 10px; display:flex; gap: 8px; flex-wrap: wrap;">
+          <input type="file" id="docInput-address" accept="image/*,application/pdf" style="display:none;">
+          <button class="btn" onclick="document.getElementById('docInput-address').click()" id="docBtn-address">📤 Selecionar arquivo</button>
+          <div id="docPreview-address" style="display: flex; gap: 8px; flex-wrap: wrap; align-items:center;"></div>
+        </div>
+      </div>
+
+      <!-- Selfie com documento -->
+      <div class="doc-card" id="docCard-selfie">
+        <div style="display:flex; align-items:center; gap:12px;">
+          <span style="font-size:22px;">🤳</span>
+          <div style="flex:1;">
+            <div style="font-weight:700; font-size:14px;">Selfie segurando o documento</div>
+            <div style="color: var(--text-muted); font-size: 12px;">Você visível, segurando o RG/CNH ao lado do rosto · prevenção fraude</div>
+          </div>
+          <span class="doc-status" id="docStatus-selfie">Aguardando</span>
+        </div>
+        <div style="margin-top: 10px; display:flex; gap: 8px; flex-wrap: wrap;">
+          <input type="file" id="docInput-selfie" accept="image/*" style="display:none;">
+          <button class="btn" onclick="document.getElementById('docInput-selfie').click()" id="docBtn-selfie">📤 Selecionar foto</button>
+          <div id="docPreview-selfie" style="display: flex; gap: 8px; flex-wrap: wrap; align-items:center;"></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ── ACEITE ───────────────────────────────────────────────────────── -->
+    <div style="margin-top: 26px; padding: 14px 16px; background: rgba(139,92,246,.06); border: 1px solid rgba(139,92,246,.25); border-radius: 10px;">
+      <label style="display:flex; gap:10px; align-items:flex-start; cursor:pointer;">
+        <input type="checkbox" id="rfAceite" style="margin-top: 3px;">
+        <span style="font-size:13px; line-height:1.5; color: var(--text-secondary);">
+          Confirmo que os dados informados são verdadeiros e os documentos enviados são originais. Aceito os <a href="termos.html" target="_blank" style="color:var(--primary);">Termos de Uso</a> e a <a href="privacidade.html" target="_blank" style="color:var(--primary);">Política de Privacidade</a> da Gumax. Estou ciente que documentos falsos resultam em banimento permanente.
+        </span>
+      </label>
+    </div>
+
+    <div style="margin-top: 18px; display:flex; gap: 10px; flex-wrap: wrap;">
+      <button class="btn btn-primary" id="submitOnboardingBtn">✅ Enviar cadastro pra análise</button>
+      <button class="btn" id="cancelOnboardingBtn">Cancelar</button>
+    </div>
+    <div id="uploadProgress" style="display:none; margin-top:14px; padding: 10px 14px; background: rgba(139,92,246,.06); border-radius: 8px; font-size:13px;"></div>
   </div>
 
   <div class="panel" id="addSkinPanel" style="display:none;">
@@ -201,6 +505,7 @@
 <script src="https://www.gstatic.com/firebasejs/10.5.0/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.5.0/firebase-auth-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.5.0/firebase-firestore-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.5.0/firebase-storage-compat.js"></script>
 <script>
 const firebaseConfig = {
   apiKey: "AIzaSyCN0TV59kJNQMsaQ-5d9dSTowirxFcuHG0",
@@ -213,6 +518,7 @@ const firebaseConfig = {
 firebase.initializeApp(firebaseConfig);
 const auth = firebase.auth();
 const db = firebase.firestore();
+const storage = firebase.storage();
 
 function showToast(msg, type = 'info') {
   const t = document.getElementById('toast');
@@ -233,29 +539,261 @@ document.getElementById('goLoginBtn').addEventListener('click', () => {
   location.href = 'index.html';
 });
 
+// v1-reseller-onboarding: agora "Iniciar cadastro" mostra o formulário completo
+// (em vez de criar o doc resellers direto). Doc só é criado depois do submit
+// com todos os campos + uploads.
 document.getElementById('applyBtn').addEventListener('click', async () => {
   const u = auth.currentUser;
   if (!u) return showToast('Faça login primeiro', 'error');
+  // Pré-preenche email + telefone do perfil se já tiver
   try {
-    const userDoc = await db.collection('users').doc(u.uid).get();
-    const userData = userDoc.data() || {};
+    const userData = (await db.collection('users').doc(u.uid).get()).data() || {};
+    if (userData.email) document.getElementById('rfEmail').value = userData.email;
+    if (userData.whatsapp) document.getElementById('rfTelefone').value = userData.whatsapp;
+    if (userData.fullName) document.getElementById('rfNomeCompleto').value = userData.fullName;
+    else if (userData.steamName) document.getElementById('rfNomeCompleto').value = userData.steamName;
+  } catch {}
+  document.getElementById('applyPanel').style.display = 'none';
+  document.getElementById('onboardingPanel').style.display = 'block';
+  window.scrollTo({ top: 0, behavior: 'smooth' });
+});
+
+document.getElementById('cancelOnboardingBtn').addEventListener('click', () => {
+  if (!confirm('Cancelar cadastro? Os dados preenchidos serão perdidos.')) return;
+  document.getElementById('onboardingPanel').style.display = 'none';
+  document.getElementById('applyPanel').style.display = 'block';
+});
+
+// ── Estado dos uploads ─────────────────────────────────────────────────
+// _docFiles[type] = [File, File, ...] selecionados pelo user (ainda não upados)
+// Tipos: 'id' (RG/CNH — pode ser múltiplo), 'address', 'selfie'
+const _docFiles = { id: [], address: [], selfie: [] };
+
+function _renderDocPreview(type) {
+  const previewEl = document.getElementById('docPreview-' + type);
+  const card = document.getElementById('docCard-' + type);
+  const status = document.getElementById('docStatus-' + type);
+  const files = _docFiles[type];
+  previewEl.innerHTML = files.map((f, idx) => {
+    const isPdf = f.type === 'application/pdf';
+    const url = isPdf ? '' : URL.createObjectURL(f);
+    return `<div class="doc-thumb">
+      ${isPdf ? '<div class="pdf-icon">📄</div>' : `<img src="${url}" alt="">`}
+      <button class="remove-btn" data-doctype="${type}" data-idx="${idx}" title="Remover">×</button>
+      <div class="filename">${escHtml(f.name)}</div>
+    </div>`;
+  }).join('');
+  // Hookup remove buttons
+  previewEl.querySelectorAll('.remove-btn').forEach(b => {
+    b.addEventListener('click', () => {
+      _docFiles[type].splice(parseInt(b.dataset.idx, 10), 1);
+      _renderDocPreview(type);
+    });
+  });
+  if (files.length > 0) {
+    card.classList.add('uploaded');
+    status.classList.add('uploaded');
+    status.textContent = files.length + (files.length > 1 ? ' arquivos' : ' arquivo');
+  } else {
+    card.classList.remove('uploaded');
+    status.classList.remove('uploaded');
+    status.textContent = 'Aguardando';
+  }
+}
+
+['id', 'address', 'selfie'].forEach(type => {
+  const input = document.getElementById('docInput-' + type);
+  input.addEventListener('change', (e) => {
+    const files = Array.from(e.target.files || []);
+    if (files.length === 0) return;
+    // Validação: 10MB max e tipo aceito
+    for (const f of files) {
+      if (f.size > 10 * 1024 * 1024) {
+        return showToast(`${f.name}: maior que 10MB`, 'error');
+      }
+      if (!f.type.startsWith('image/') && f.type !== 'application/pdf') {
+        return showToast(`${f.name}: tipo inválido (use JPG/PNG/PDF)`, 'error');
+      }
+    }
+    if (type === 'id') {
+      // RG pode ser frente+verso (até 2 arquivos)
+      _docFiles.id = files.slice(0, 2);
+    } else {
+      _docFiles[type] = [files[0]];
+    }
+    input.value = ''; // permite re-selecionar mesmo arquivo
+    _renderDocPreview(type);
+  });
+});
+
+// ── Helpers de máscara ────────────────────────────────────────────────
+function maskCpf(v) {
+  return String(v || '').replace(/\D/g, '').slice(0, 11)
+    .replace(/(\d{3})(\d)/, '$1.$2')
+    .replace(/(\d{3})(\d)/, '$1.$2')
+    .replace(/(\d{3})(\d{1,2})$/, '$1-$2');
+}
+function maskCep(v) {
+  return String(v || '').replace(/\D/g, '').slice(0, 8).replace(/(\d{5})(\d)/, '$1-$2');
+}
+function maskPhone(v) {
+  const d = String(v || '').replace(/\D/g, '').slice(0, 11);
+  if (d.length <= 10) return d.replace(/(\d{2})(\d{4})(\d)/, '($1) $2-$3');
+  return d.replace(/(\d{2})(\d{5})(\d)/, '($1) $2-$3');
+}
+['rfCpf','rfCep','rfTelefone'].forEach(id => {
+  const el = document.getElementById(id);
+  if (!el) return;
+  const fn = id === 'rfCpf' ? maskCpf : id === 'rfCep' ? maskCep : maskPhone;
+  el.addEventListener('input', () => { el.value = fn(el.value); });
+});
+
+// Auto-preenchimento de endereço via CEP (ViaCEP)
+document.getElementById('rfCep').addEventListener('blur', async () => {
+  const cep = document.getElementById('rfCep').value.replace(/\D/g, '');
+  if (cep.length !== 8) return;
+  try {
+    const r = await fetch(`https://viacep.com.br/ws/${cep}/json/`);
+    const d = await r.json();
+    if (d.erro) return;
+    if (d.logradouro) document.getElementById('rfRua').value = d.logradouro;
+    if (d.bairro)     document.getElementById('rfBairro').value = d.bairro;
+    if (d.localidade) document.getElementById('rfCidade').value = d.localidade;
+    if (d.uf)         document.getElementById('rfUf').value = d.uf;
+  } catch {}
+});
+
+// ── Submit do cadastro ────────────────────────────────────────────────
+document.getElementById('submitOnboardingBtn').addEventListener('click', async (ev) => {
+  ev.preventDefault();
+  const u = auth.currentUser;
+  if (!u) return showToast('Faça login primeiro', 'error');
+
+  // Coleta tudo
+  const data = {
+    nomeCompleto: document.getElementById('rfNomeCompleto').value.trim(),
+    cpf: document.getElementById('rfCpf').value.trim(),
+    dataNasc: document.getElementById('rfDataNasc').value,
+    rg: document.getElementById('rfRg').value.trim(),
+    orgaoEmissor: document.getElementById('rfOrgaoEmissor').value.trim(),
+    telefone: document.getElementById('rfTelefone').value.trim(),
+    email: document.getElementById('rfEmail').value.trim(),
+    estadoCivil: document.getElementById('rfEstadoCivil').value,
+    profissao: document.getElementById('rfProfissao').value.trim(),
+    cep: document.getElementById('rfCep').value.trim(),
+    uf: document.getElementById('rfUf').value.trim().toUpperCase(),
+    rua: document.getElementById('rfRua').value.trim(),
+    numero: document.getElementById('rfNumero').value.trim(),
+    complemento: document.getElementById('rfComplemento').value.trim(),
+    bairro: document.getElementById('rfBairro').value.trim(),
+    cidade: document.getElementById('rfCidade').value.trim(),
+    experiencia: document.getElementById('rfExperiencia').value,
+    volume: document.getElementById('rfVolume').value,
+    origem: document.getElementById('rfOrigem').value,
+    plataformas: document.getElementById('rfPlataformas').value.trim(),
+    motivo: document.getElementById('rfMotivo').value.trim(),
+    pixTipo: document.getElementById('rfPixTipo').value,
+    pixChave: document.getElementById('rfPixChave').value.trim(),
+    banco: document.getElementById('rfBanco').value.trim(),
+  };
+
+  // Validação obrigatórios
+  const required = ['nomeCompleto','cpf','dataNasc','rg','telefone','email','profissao',
+                    'cep','uf','rua','numero','bairro','cidade',
+                    'experiencia','volume','origem','pixTipo','pixChave'];
+  for (const k of required) {
+    if (!data[k]) return showToast(`Preencha o campo: ${k}`, 'error');
+  }
+  if (data.cpf.replace(/\D/g, '').length !== 11) return showToast('CPF inválido', 'error');
+  if (!data.email.includes('@')) return showToast('E-mail inválido', 'error');
+  if (_docFiles.id.length === 0)      return showToast('Anexe RG ou CNH', 'error');
+  if (_docFiles.address.length === 0) return showToast('Anexe comprovante de endereço', 'error');
+  if (_docFiles.selfie.length === 0)  return showToast('Anexe selfie segurando o documento', 'error');
+  if (!document.getElementById('rfAceite').checked) return showToast('Marque o aceite dos termos', 'error');
+
+  // Bloqueia botão e mostra progresso
+  const btn = document.getElementById('submitOnboardingBtn');
+  const progressEl = document.getElementById('uploadProgress');
+  btn.disabled = true;
+  btn.textContent = '⏳ Enviando…';
+  progressEl.style.display = 'block';
+  progressEl.textContent = 'Iniciando upload de documentos…';
+
+  try {
+    // 1. Upload pra Firebase Storage
+    const uploadedDocs = { id: [], address: [], selfie: [] };
+    const allUploads = [];
+    for (const type of ['id', 'address', 'selfie']) {
+      for (let i = 0; i < _docFiles[type].length; i++) {
+        const f = _docFiles[type][i];
+        const ext = (f.name.split('.').pop() || 'bin').toLowerCase().slice(0, 6);
+        const filename = `${type}${i > 0 ? '_' + (i+1) : ''}.${ext}`;
+        allUploads.push({ type, file: f, filename });
+      }
+    }
+    let done = 0;
+    for (const u_ of allUploads) {
+      progressEl.textContent = `Enviando ${u_.filename} (${done + 1}/${allUploads.length})…`;
+      const ref = storage.ref(`resellers/${u.uid}/docs/${u_.filename}`);
+      const task = await ref.put(u_.file, {
+        contentType: u_.file.type,
+        customMetadata: { uploadedBy: u.uid, originalName: u_.file.name },
+      });
+      const url = await task.ref.getDownloadURL();
+      uploadedDocs[u_.type].push({ url, filename: u_.filename, size: u_.file.size, type: u_.file.type });
+      done++;
+    }
+
+    // 2. Salva o doc do revendedor no Firestore
+    progressEl.textContent = 'Salvando ficha cadastral…';
+    const userData = (await db.collection('users').doc(u.uid).get()).data() || {};
     await db.collection('resellers').doc(u.uid).set({
       uid: u.uid,
-      name: userData.steamName || userData.fullName || u.displayName || 'Reseller',
-      email: userData.email || u.email || '',
-      whatsapp: userData.whatsapp || '',
+      name: data.nomeCompleto,
+      email: data.email,
+      whatsapp: data.telefone,
       steamId: userData.steamId || '',
-      status: 'pending',
+      status: 'pending_review',         // novo status: aguardando análise dos docs
       balance: 0,
       totalSales: 0,
       isAdmin: false,
+      // Ficha cadastral completa
+      ficha: {
+        nomeCompleto: data.nomeCompleto,
+        cpf: data.cpf,
+        dataNasc: data.dataNasc,
+        rg: data.rg,
+        orgaoEmissor: data.orgaoEmissor,
+        telefone: data.telefone,
+        email: data.email,
+        estadoCivil: data.estadoCivil,
+        profissao: data.profissao,
+        endereco: {
+          cep: data.cep, uf: data.uf, rua: data.rua, numero: data.numero,
+          complemento: data.complemento, bairro: data.bairro, cidade: data.cidade,
+        },
+        comercial: {
+          experiencia: data.experiencia, volume: data.volume,
+          origem: data.origem, plataformas: data.plataformas, motivo: data.motivo,
+        },
+        pix: { tipo: data.pixTipo, chave: data.pixChave, banco: data.banco },
+      },
+      docs: uploadedDocs,                // URLs dos arquivos no Storage
+      submittedAt: new Date().toISOString(),
       createdAt: new Date().toISOString(),
     }, { merge: true });
-    showToast('Solicitação enviada! Aguarde aprovação.', 'success');
-    setTimeout(() => location.reload(), 1200);
+
+    progressEl.textContent = '✅ Cadastro enviado! Vamos avisar por WhatsApp em até 48h úteis.';
+    progressEl.style.color = 'var(--accent-green)';
+    showToast('Cadastro enviado pra análise!', 'success');
+    setTimeout(() => location.reload(), 2500);
   } catch (e) {
-    console.error(e);
-    showToast('Erro ao solicitar: ' + e.message, 'error');
+    console.error('[onboarding submit]', e);
+    progressEl.style.color = 'var(--accent-red)';
+    progressEl.textContent = '❌ Erro: ' + (e.message || 'falhou');
+    showToast('Erro: ' + e.message, 'error');
+    btn.disabled = false;
+    btn.textContent = '✅ Enviar cadastro pra análise';
   }
 });
 
@@ -392,8 +930,26 @@ auth.onAuthStateChanged(async (user) => {
   document.getElementById('statBalance').textContent = fmtR(reseller.balance || 0);
   document.getElementById('statSalesCount').textContent = reseller.totalSales || 0;
   const desc = document.getElementById('statusDescription');
+  // Resumo dos docs enviados (se tiver)
+  const docsSummaryHtml = reseller.docs ? `
+    <div class="docs-summary">
+      <div style="font-weight:700; font-size:13px; margin-bottom:6px;">📎 Documentos enviados:</div>
+      ${(reseller.docs.id || []).map(d => `<div>🪪 RG/CNH — <a href="${d.url}" target="_blank">${escHtml(d.filename)}</a></div>`).join('')}
+      ${(reseller.docs.address || []).map(d => `<div>🏠 Endereço — <a href="${d.url}" target="_blank">${escHtml(d.filename)}</a></div>`).join('')}
+      ${(reseller.docs.selfie || []).map(d => `<div>🤳 Selfie — <a href="${d.url}" target="_blank">${escHtml(d.filename)}</a></div>`).join('')}
+    </div>
+  ` : '';
   if (reseller.status === 'pending') {
-    desc.innerHTML = '<span class="badge badge-pending">PENDENTE</span> — Sua conta ainda não foi aprovada. Avise o admin Gumax pra revisar seu cadastro.';
+    // Legacy — cadastros antigos sem ficha. Pede pra completar.
+    desc.innerHTML = '<span class="badge badge-pending">CADASTRO INCOMPLETO</span> — Você solicitou acesso mas ainda não enviou os documentos. Clique pra completar:' +
+      '<div style="margin-top:12px;"><button class="btn btn-primary" onclick="document.getElementById(\'applyBtn\').click()">📋 Completar cadastro</button></div>';
+  } else if (reseller.status === 'pending_review') {
+    desc.innerHTML = '<span class="badge badge-pending">EM ANÁLISE</span> — Recebemos seu cadastro e os documentos. A equipe Gumax revisa em até <strong>48h úteis</strong> e te avisa por WhatsApp. Enquanto isso fica de boa.' + docsSummaryHtml;
+  } else if (reseller.status === 'rejected') {
+    desc.innerHTML = '<span class="badge badge-blocked">CADASTRO RECUSADO</span> — Infelizmente seu cadastro não foi aprovado.' +
+      (reseller.rejectionReason ? `<div style="margin-top:8px; padding:10px 12px; background: rgba(239,68,68,.06); border-left: 3px solid var(--accent-red); border-radius: 4px; font-size:13px;"><b>Motivo:</b> ${escHtml(reseller.rejectionReason)}</div>` : '') +
+      '<div style="margin-top:12px;"><button class="btn btn-primary" onclick="document.getElementById(\'applyBtn\').click()">📋 Reenviar cadastro</button></div>' +
+      docsSummaryHtml;
   } else if (reseller.status === 'active') {
     desc.innerHTML = '<span class="badge badge-active">ATIVA</span> — Você pode cadastrar skins abaixo. Cada item entra em revisão antes de aparecer no marketplace.';
     addSkinPanel.style.display = 'block';

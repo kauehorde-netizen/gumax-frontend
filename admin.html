@@ -13,6 +13,7 @@
 <script src="https://www.gstatic.com/firebasejs/10.5.0/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.5.0/firebase-auth-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.5.0/firebase-firestore-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.5.0/firebase-storage-compat.js"></script>
 
 <style>
 * { box-sizing: border-box; margin: 0; padding: 0; }
@@ -269,6 +270,8 @@ body {
 .badge-normal { background: rgba(139, 92, 246, .15); color: var(--primary-light); }
 .badge-active { background: rgba(34, 197, 94, .15); color: var(--success); }
 .badge-pending { background: rgba(245, 158, 11, .15); color: var(--warning); }
+.badge-pending_review { background: rgba(34, 211, 238, .15); color: #22d3ee; border: 1px solid rgba(34, 211, 238, .3); }
+.badge-rejected { background: rgba(251, 146, 60, .15); color: #fb923c; border: 1px solid rgba(251, 146, 60, .3); }
 .badge-blocked { background: rgba(239, 68, 68, .15); color: var(--danger); }
 
 /* MODAL */
@@ -2858,27 +2861,179 @@ function renderResellersTable() {
   const totalComm = allCommissions.reduce((sum, c) => sum + (c.commissionAmount || 0), 0);
   document.getElementById('totalCommission').textContent = fmtR(totalComm);
 
-  tbody.innerHTML = allResellers.map(r => `
+  tbody.innerHTML = allResellers.map(r => {
+    const hasFicha = !!(r.ficha && r.ficha.cpf);
+    const hasDocs = !!(r.docs && (r.docs.id?.length || r.docs.address?.length || r.docs.selfie?.length));
+    const reviewBadge = (r.status === 'pending_review') ? '<span style="font-size:9px; padding:2px 6px; background:rgba(251,191,36,.2); color:#fbbf24; border-radius:6px; margin-left:6px; font-weight:700;">⚠ REVISAR</span>' : '';
+    return `
     <tr>
       <td style="font-family: 'JetBrains Mono', monospace; font-size: 12px;">${r.steamId || '-'}</td>
-      <td><strong>${r.name || r.steamName || '-'}</strong></td>
+      <td><strong>${r.name || r.steamName || '-'}</strong>${reviewBadge}</td>
       <td>${r.skinsCount || 0}</td>
       <td>${r.salesCount || 0}</td>
       <td style="color: var(--accent-yellow);">${fmtR(r.balance || 0)}</td>
       <td style="color: var(--primary-light);">${fmtR((r.totalSales || 0) * COMMISSION_RATE)}</td>
       <td><span class="badge badge-${r.status || 'pending'}">${statusLabel(r.status)}</span></td>
       <td>
+        ${(hasFicha || hasDocs) ? `<button class="btn btn-small" onclick="openResellerDetails('${r.id}')" style="background: rgba(34,211,238,.12); border: 1px solid rgba(34,211,238,.4); color: var(--accent-cyan);">📋 Ver detalhes</button>` : ''}
         <button class="btn btn-success btn-small" onclick="approveReseller('${r.id}')" ${r.status === 'active' ? 'disabled style="opacity:.5"' : ''}>Aprovar</button>
+        ${r.status === 'pending_review' ? `<button class="btn btn-small" onclick="rejectReseller('${r.id}')" style="background: rgba(251,146,60,.12); border: 1px solid rgba(251,146,60,.4); color: #fb923c;">❌ Rejeitar</button>` : ''}
         <button class="btn btn-danger btn-small" onclick="blockReseller('${r.id}')">Bloquear</button>
       </td>
     </tr>
-  `).join('');
+  `;}).join('');
+}
+
+// v1-reseller-onboarding: modal de detalhes do revendedor — mostra ficha
+// cadastral completa + documentos clicáveis (abrem em nova aba o arquivo
+// no Firebase Storage, tem que estar logado como admin).
+function openResellerDetails(id) {
+  const r = allResellers.find(x => x.id === id);
+  if (!r) return showToast('Revendedor não encontrado', 'error');
+  closeResellerDetails();
+  const f = r.ficha || {};
+  const e = f.endereco || {};
+  const c = f.comercial || {};
+  const p = f.pix || {};
+  const docs = r.docs || {};
+
+  const docList = (arr, label, icon) => {
+    if (!arr || arr.length === 0) return `<div style="color:var(--text-muted); font-size:13px;">${icon} ${label}: <em>nenhum arquivo</em></div>`;
+    return `<div style="margin-bottom:6px;"><strong style="color:var(--accent-cyan);">${icon} ${label}:</strong></div>` +
+      arr.map(d => `
+        <a href="${d.url}" target="_blank" rel="noopener" style="display:flex; gap:8px; align-items:center; padding:8px 10px; background:rgba(0,0,0,.25); border:1px solid var(--border); border-radius:6px; margin-bottom:6px; text-decoration:none; color:var(--text-primary); font-size:13px;">
+          <span style="font-size:18px;">${(d.type && d.type.startsWith('image/')) ? '🖼️' : '📄'}</span>
+          <span style="flex:1;">${escapeHtml(d.filename)}</span>
+          <span style="font-size:11px; color:var(--text-muted);">${Math.round((d.size || 0) / 1024)} KB</span>
+          <span style="font-size:11px; color:var(--accent-cyan);">↗ Abrir</span>
+        </a>
+      `).join('');
+  };
+
+  const html = `
+    <div id="resellerDetailsOverlay" class="order-modal-overlay" onclick="if(event.target===this)closeResellerDetails()">
+      <div class="order-modal" style="max-width: 720px;">
+        <div class="order-modal-header">
+          <div>
+            <div style="font-size: 12px; color: var(--text-muted); font-family: 'JetBrains Mono', monospace;">${r.steamId || r.id}</div>
+            <h2 style="margin: 4px 0 0;">${escapeHtml(r.name || '?')}</h2>
+            <div style="margin-top: 6px;">
+              <span class="badge badge-${r.status}">${statusLabel(r.status)}</span>
+              ${r.submittedAt ? `<span style="font-size: 11px; color: var(--text-muted); margin-left: 8px;">Enviado em ${formatDate(r.submittedAt)}</span>` : ''}
+            </div>
+          </div>
+          <button class="order-modal-close" onclick="closeResellerDetails()" title="Fechar">×</button>
+        </div>
+
+        <div style="padding: 0 24px 24px;">
+
+          <!-- Ficha cadastral -->
+          <h3 style="font-size:13px; color:var(--accent-yellow); letter-spacing:.5px; text-transform:uppercase; margin: 12px 0 10px; padding-bottom: 6px; border-bottom: 1px solid var(--border);">📋 Ficha Cadastral</h3>
+          <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 8px 16px; font-size: 13px;">
+            <div><b>Nome:</b> ${escapeHtml(f.nomeCompleto || '-')}</div>
+            <div><b>CPF:</b> <code>${escapeHtml(f.cpf || '-')}</code></div>
+            <div><b>RG:</b> ${escapeHtml(f.rg || '-')}${f.orgaoEmissor ? ' (' + escapeHtml(f.orgaoEmissor) + ')' : ''}</div>
+            <div><b>Nascimento:</b> ${f.dataNasc ? new Date(f.dataNasc).toLocaleDateString('pt-BR') : '-'}</div>
+            <div><b>Telefone:</b> ${escapeHtml(f.telefone || '-')}</div>
+            <div><b>E-mail:</b> ${escapeHtml(f.email || '-')}</div>
+            <div><b>Estado civil:</b> ${escapeHtml(f.estadoCivil || '-')}</div>
+            <div><b>Profissão:</b> ${escapeHtml(f.profissao || '-')}</div>
+          </div>
+
+          <h3 style="font-size:13px; color:var(--accent-yellow); letter-spacing:.5px; text-transform:uppercase; margin: 18px 0 10px; padding-bottom: 6px; border-bottom: 1px solid var(--border);">🏠 Endereço</h3>
+          <div style="font-size: 13px;">
+            ${escapeHtml(e.rua || '-')}, ${escapeHtml(e.numero || '?')}${e.complemento ? ' - ' + escapeHtml(e.complemento) : ''}<br>
+            ${escapeHtml(e.bairro || '-')} · ${escapeHtml(e.cidade || '-')}/${escapeHtml(e.uf || '-')} · CEP ${escapeHtml(e.cep || '-')}
+          </div>
+
+          <h3 style="font-size:13px; color:var(--accent-yellow); letter-spacing:.5px; text-transform:uppercase; margin: 18px 0 10px; padding-bottom: 6px; border-bottom: 1px solid var(--border);">💼 Perfil Comercial</h3>
+          <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 8px 16px; font-size: 13px;">
+            <div><b>Experiência:</b> ${escapeHtml(c.experiencia || '-')}</div>
+            <div><b>Volume estimado:</b> ${escapeHtml(c.volume || '-')}</div>
+            <div><b>Origem das skins:</b> ${escapeHtml(c.origem || '-')}</div>
+            <div><b>Plataformas:</b> ${escapeHtml(c.plataformas || '-')}</div>
+          </div>
+          ${c.motivo ? `<div style="margin-top: 10px; padding: 10px 12px; background: rgba(0,0,0,.25); border-radius: 6px; font-size: 12px; color: var(--text-secondary);"><b>Motivo:</b> ${escapeHtml(c.motivo)}</div>` : ''}
+
+          <h3 style="font-size:13px; color:var(--accent-yellow); letter-spacing:.5px; text-transform:uppercase; margin: 18px 0 10px; padding-bottom: 6px; border-bottom: 1px solid var(--border);">💰 Dados PIX</h3>
+          <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 8px 16px; font-size: 13px;">
+            <div><b>Tipo:</b> ${escapeHtml(p.tipo || '-')}</div>
+            <div><b>Banco:</b> ${escapeHtml(p.banco || '-')}</div>
+          </div>
+          <div style="margin-top: 6px; padding: 10px 12px; background: rgba(0,0,0,.3); border-radius: 6px;">
+            <code style="font-size: 13px; user-select: all;">${escapeHtml(p.chave || '-')}</code>
+          </div>
+
+          <h3 style="font-size:13px; color:var(--accent-yellow); letter-spacing:.5px; text-transform:uppercase; margin: 18px 0 10px; padding-bottom: 6px; border-bottom: 1px solid var(--border);">📎 Documentos</h3>
+          ${docList(docs.id, 'RG / CNH', '🪪')}
+          ${docList(docs.address, 'Comprovante de endereço', '🏠')}
+          ${docList(docs.selfie, 'Selfie c/ documento', '🤳')}
+
+          <!-- Ações -->
+          <div style="display:flex; gap:10px; margin-top:20px; flex-wrap:wrap;">
+            ${r.status !== 'active' ? `<button class="btn btn-success" onclick="approveReseller('${r.id}'); closeResellerDetails();" style="flex:1; min-width: 160px;">✅ Aprovar revendedor</button>` : ''}
+            ${r.status === 'pending_review' ? `<button class="btn" onclick="rejectReseller('${r.id}'); closeResellerDetails();" style="flex:1; min-width: 160px; background: rgba(251,146,60,.12); border: 1px solid rgba(251,146,60,.4); color: #fb923c;">❌ Rejeitar com motivo</button>` : ''}
+            ${f.telefone ? `<a href="https://wa.me/55${String(f.telefone).replace(/\\D/g,'')}" target="_blank" class="btn btn-success" style="flex:1; min-width: 160px; text-align:center; text-decoration:none;">💬 Falar no WhatsApp</a>` : ''}
+          </div>
+          ${r.rejectionReason ? `<div style="margin-top: 14px; padding: 10px 12px; background: rgba(239,68,68,.06); border-left: 3px solid var(--accent-red); border-radius: 4px; font-size: 13px;"><b style="color:#fca5a5;">❌ Cadastro rejeitado:</b> ${escapeHtml(r.rejectionReason)}</div>` : ''}
+        </div>
+      </div>
+    </div>
+  `;
+  document.body.insertAdjacentHTML('beforeend', html);
+}
+
+function closeResellerDetails() {
+  const el = document.getElementById('resellerDetailsOverlay');
+  if (el) el.remove();
 }
 
 async function approveReseller(id) {
+  const r = allResellers.find(x => x.id === id);
+  // Se tem ficha mas ainda não foi revisada, pede confirmação
+  if (r && r.status === 'pending_review' && (!r.docs || !r.docs.id || !r.docs.id.length)) {
+    if (!confirm('Esse revendedor não enviou todos os documentos. Aprovar mesmo assim?')) return;
+  }
   try {
-    await db.collection('resellers').doc(id).update({ status: 'active', approvedAt: new Date().toISOString() });
-    showToast('Revendedor aprovado');
+    const adminUid = (firebase.auth().currentUser && firebase.auth().currentUser.uid) || 'admin';
+    await db.collection('resellers').doc(id).update({
+      status: 'active',
+      approvedAt: new Date().toISOString(),
+      approvedBy: adminUid,
+      // Limpa rejection se existia
+      rejectionReason: null,
+    });
+    showToast('Revendedor aprovado', 'success');
+    await loadResellers();
+  } catch (e) {
+    showToast('Erro: ' + e.message, 'error');
+  }
+}
+
+// v1-reseller-onboarding: rejeita cadastro com motivo. Revendedor vê o motivo
+// no painel dele e pode reenviar com correção.
+async function rejectReseller(id) {
+  const r = allResellers.find(x => x.id === id);
+  if (!r) return showToast('Revendedor não encontrado', 'error');
+  const reason = prompt(
+    'Motivo da rejeição?\n\n' +
+    'Esse texto vai aparecer pro revendedor pra ele saber o que corrigir.\n\n' +
+    'Ex: "Foto do RG ilegível, reenviar com mais luz", "CPF não confere com nome do RG", "Comprovante de endereço maior que 90 dias".',
+    ''
+  );
+  if (reason === null) return;
+  const reasonClean = String(reason || '').trim();
+  if (!reasonClean) return showToast('Motivo é obrigatório', 'error');
+  if (!confirm(`Rejeitar cadastro de ${r.name}?\n\nMotivo: "${reasonClean}"\n\nO revendedor poderá reenviar.`)) return;
+  try {
+    const adminUid = (firebase.auth().currentUser && firebase.auth().currentUser.uid) || 'admin';
+    await db.collection('resellers').doc(id).update({
+      status: 'rejected',
+      rejectedAt: new Date().toISOString(),
+      rejectedBy: adminUid,
+      rejectionReason: reasonClean,
+    });
+    showToast('Cadastro rejeitado.', 'success');
     await loadResellers();
   } catch (e) {
     showToast('Erro: ' + e.message, 'error');
@@ -3265,7 +3420,7 @@ function wearLabel(w) {
 }
 
 function statusLabel(s) {
-  const labels = {active:'Ativo',pending:'Pendente',blocked:'Bloqueado',paid:'Pago',delivered:'Entregue',cancelled:'Cancelado'};
+  const labels = {active:'Ativo',pending:'Pendente',pending_review:'Em análise',rejected:'Rejeitado',blocked:'Bloqueado',paid:'Pago',delivered:'Entregue',cancelled:'Cancelado'};
   return labels[s] || s || 'Pendente';
 }
 
