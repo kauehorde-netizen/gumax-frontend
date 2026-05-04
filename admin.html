@@ -1297,21 +1297,45 @@ select.form-control {
           <button class="btn btn-secondary" onclick="loadPricing(true)" style="margin-left: 6px;">Recarregar do servidor</button>
         </div>
 
-        <!-- Buyback: % do valor pago em compras de inventário do cliente -->
+        <!-- v2-liquidity: Buyback agora tem 2 markdowns por liquidez (líquidas vs ilíquidas) -->
         <hr style="margin:24px 0; border:none; border-top:1px solid var(--border);">
         <h4 style="margin: 0 0 8px 0;">🛒 Compra de inventário do cliente (Buyback)</h4>
-        <div style="color: var(--text-muted); font-size: 13px; margin-bottom: 14px;">
-          Quando o cliente vende skins pra Gumax na página <code>/vender</code>, paga-se uma <strong>% do preço de mercado</strong>. Quanto menor o %, maior a margem da Gumax na revenda. Padrão: <strong>70%</strong>.
+        <div style="color: var(--text-muted); font-size: 13px; margin-bottom: 14px; line-height: 1.5;">
+          Quando o cliente vende skin pra Gumax (<code>/vender</code>) ou faz upgrade/downgrade (<code>/trocar</code>), o desconto aplicado depende da <strong>liquidez da skin no YouPin</strong>.
+          Skins que vendem fácil sofrem desconto menor; skins encalhadas sofrem desconto maior pra cobrir o risco.
         </div>
-        <div class="form-group" style="max-width:280px;">
-          <label class="form-label">% pago ao cliente (0-100)</label>
-          <input type="number" class="form-control" id="buybackPct" step="1" min="0" max="100" placeholder="70" value="70">
-          <div style="color: var(--text-muted); font-size: 12px; margin-top: 6px;">
-            Ex: skin avaliada em R$ 100 → cliente recebe R$ <span id="buybackExample" style="color:var(--accent-yellow);font-weight:700;">70,00</span>.
+
+        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 14px; max-width: 720px;">
+          <div class="form-group">
+            <label class="form-label">📈 Skins LÍQUIDAS — desconto (%)</label>
+            <input type="number" class="form-control" id="buybackMarkdownLiquid" step="1" min="0" max="99" placeholder="15" value="15" oninput="updateBuybackPreview()">
+            <div style="color: var(--text-muted); font-size: 12px; margin-top: 6px;">
+              Skin de R$ 1.000 → cliente recebe R$ <span id="buybackPreviewLiquid" style="color:var(--accent-yellow);font-weight:700;">850,00</span>
+            </div>
+          </div>
+
+          <div class="form-group">
+            <label class="form-label">📉 Skins ILÍQUIDAS — desconto (%)</label>
+            <input type="number" class="form-control" id="buybackMarkdownIlliquid" step="1" min="0" max="99" placeholder="25" value="25" oninput="updateBuybackPreview()">
+            <div style="color: var(--text-muted); font-size: 12px; margin-top: 6px;">
+              Skin de R$ 1.000 → cliente recebe R$ <span id="buybackPreviewIlliquid" style="color:var(--accent-yellow);font-weight:700;">750,00</span>
+            </div>
           </div>
         </div>
-        <div style="margin-top: 12px;">
-          <button class="btn btn-primary" onclick="saveBuybackPct()">Salvar % buyback</button>
+
+        <div class="form-group" style="max-width: 720px; margin-top: 14px;">
+          <label class="form-label">⚖️ Corte de liquidez (YouPin score)</label>
+          <input type="number" class="form-control" id="buybackLiquidityThreshold" step="1" min="0" max="100" placeholder="50" value="50">
+          <div style="color: var(--text-muted); font-size: 12px; margin-top: 6px; line-height: 1.5;">
+            Score do YouPin (do CSPriceAPI) acima desse valor = LÍQUIDA. Abaixo = ILÍQUIDA.
+            Padrão: <strong>50</strong>. Quanto maior o corte, mais skins caem no tier "ilíquidas" (mais conservador).
+            Se a skin não tem score (não está no catálogo CSPriceAPI), trata como ilíquida por segurança.
+          </div>
+        </div>
+
+        <div style="margin-top: 16px;">
+          <button class="btn btn-primary" onclick="saveBuybackConfig()">Salvar configuração do buyback</button>
+          <button class="btn btn-secondary" onclick="loadBuybackConfig(true)" style="margin-left: 6px;">Recarregar</button>
         </div>
       </div>
 
@@ -1554,7 +1578,7 @@ function switchSection(name) {
 
   if (name === 'appearance') loadAppearance();
   if (name === 'inventory')  { loadInventoryPage(); loadStockPricing(); }
-  if (name === 'settings')   { loadPricing(); loadBuybackPct(); }
+  if (name === 'settings')   { loadPricing(); loadBuybackConfig(); }
   if (name === 'clientes')   loadClientes();
   if (name === 'raffles')    loadRafflesAdmin();
 }
@@ -2442,45 +2466,69 @@ async function loadPricing(forcePrompt = false) {
   }
 }
 
-// ═══ Buyback % — quanto a Gumax paga ao cliente quando ele vende skin ═══
-// Salva direto no Firestore: settings/buyback.percent (0-100)
-async function loadBuybackPct() {
+// ═══ Buyback config — v2-liquidity: 2 markdowns (líquidas vs ilíquidas) ═══
+// Bate em /api/admin/get-buyback-config e /api/admin/update-buyback-config.
+// O endpoint update salva em settings/buyback {markdownLiquidPct, markdownIlliquidPct, liquidityThreshold}.
+async function loadBuybackConfig(showToast) {
   try {
-    const doc = await firebase.firestore().collection('settings').doc('buyback').get();
-    const pct = (doc.exists && doc.data().percent != null) ? doc.data().percent : 70;
-    const input = document.getElementById('buybackPct');
-    if (input) input.value = pct;
-    updateBuybackExample();
-  } catch (e) { console.warn('[buyback] load:', e.message); }
-}
-
-async function saveBuybackPct() {
-  const pct = parseInt(document.getElementById('buybackPct').value, 10);
-  if (!Number.isFinite(pct) || pct < 0 || pct > 100) {
-    alert('Porcentagem precisa estar entre 0 e 100');
-    return;
-  }
-  try {
-    await firebase.firestore().collection('settings').doc('buyback').set({
-      percent: pct,
-      updatedAt: firebase.firestore.FieldValue.serverTimestamp(),
-    }, { merge: true });
-    alert('% buyback salva! Vai aplicar nas próximas avaliações da página /vender.');
+    const key = await getAdminKey();
+    if (!key) return;
+    const r = await fetch(`${API_BASE_ADMIN}/api/admin/get-buyback-config`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + key },
+      body: '{}',
+    });
+    const data = await r.json();
+    if (!r.ok) throw new Error(data.error || ('HTTP ' + r.status));
+    const cfg = data.config || {};
+    const fL = document.getElementById('buybackMarkdownLiquid');
+    const fI = document.getElementById('buybackMarkdownIlliquid');
+    const fT = document.getElementById('buybackLiquidityThreshold');
+    if (fL) fL.value = cfg.markdownLiquidPct ?? 15;
+    if (fI) fI.value = cfg.markdownIlliquidPct ?? 25;
+    if (fT) fT.value = cfg.liquidityThreshold ?? 50;
+    updateBuybackPreview();
+    if (showToast === true) alert('Config recarregada do servidor.');
   } catch (e) {
-    alert('Erro ao salvar: ' + e.message);
+    console.warn('[buyback config] load:', e.message);
   }
 }
 
-function updateBuybackExample() {
-  const pct = parseInt(document.getElementById('buybackPct')?.value, 10) || 70;
-  const ex = document.getElementById('buybackExample');
-  if (ex) ex.textContent = (pct).toFixed(0) + ',00';
+async function saveBuybackConfig() {
+  const liquid = parseFloat(document.getElementById('buybackMarkdownLiquid').value);
+  const illiquid = parseFloat(document.getElementById('buybackMarkdownIlliquid').value);
+  const threshold = parseFloat(document.getElementById('buybackLiquidityThreshold').value);
+  if (!(liquid >= 0 && liquid < 100))     return alert('Desconto líquidas deve estar entre 0 e 99');
+  if (!(illiquid >= 0 && illiquid < 100)) return alert('Desconto ilíquidas deve estar entre 0 e 99');
+  if (!(threshold >= 0))                   return alert('Threshold deve ser >= 0');
+  try {
+    const key = await getAdminKey();
+    if (!key) return;
+    const r = await fetch(`${API_BASE_ADMIN}/api/admin/update-buyback-config`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + key },
+      body: JSON.stringify({
+        markdownLiquidPct: liquid,
+        markdownIlliquidPct: illiquid,
+        liquidityThreshold: threshold,
+      }),
+    });
+    const data = await r.json();
+    if (!r.ok) throw new Error(data.error || ('HTTP ' + r.status));
+    alert('✅ Configuração de buyback salva!');
+  } catch (e) {
+    alert('Erro: ' + e.message);
+  }
 }
 
-document.addEventListener('DOMContentLoaded', () => {
-  const input = document.getElementById('buybackPct');
-  if (input) input.addEventListener('input', updateBuybackExample);
-});
+function updateBuybackPreview() {
+  const liquid = parseFloat(document.getElementById('buybackMarkdownLiquid')?.value);
+  const illiquid = parseFloat(document.getElementById('buybackMarkdownIlliquid')?.value);
+  const elL = document.getElementById('buybackPreviewLiquid');
+  const elI = document.getElementById('buybackPreviewIlliquid');
+  if (elL && Number.isFinite(liquid))   elL.textContent = (1000 * (1 - liquid/100)).toFixed(2).replace('.', ',');
+  if (elI && Number.isFinite(illiquid)) elI.textContent = (1000 * (1 - illiquid/100)).toFixed(2).replace('.', ',');
+}
 
 async function savePricing() {
   const key = await getAdminKey();
