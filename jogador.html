@@ -217,6 +217,7 @@ body::before {
       <video class="league-logo-video" src="logogu.mp4" autoplay loop muted playsinline preload="auto"></video>
     </div>
     <a class="nav-back" href="leaderboard.html" style="background:rgba(250,204,21,.15);border-color:rgba(250,204,21,.4);color:var(--accent-yellow);">🏆 Leaderboard</a>
+      <a class="nav-back" id="invLink" href="#" style="background:rgba(249,115,22,.15);border-color:rgba(249,115,22,.4);color:#fdba74;display:none;">🎁 Inventário</a>
   </div>
 </header>
 
@@ -255,6 +256,17 @@ const MAP_LABELS = {
   de_nuke: 'Nuke', de_anubis: 'Anubis', de_ancient: 'Ancient',
   de_cache: 'Cache', de_train: 'Train',
 };
+
+// v49-skins: link de inventario aponta pro mesmo steamId do perfil
+(function setInvLink(){
+  try {
+    const sid = new URLSearchParams(location.search).get('id');
+    if (sid) {
+      const el = document.getElementById('invLink');
+      if (el) { el.href = `inventario-gmax.html?id=${encodeURIComponent(sid)}`; el.style.display = ''; }
+    }
+  } catch {}
+})();
 
 async function loadProfile() {
   const params = new URLSearchParams(location.search);
