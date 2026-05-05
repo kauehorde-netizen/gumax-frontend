@@ -581,7 +581,11 @@ function showDebugError(msg) {
 async function loadInventory() {
   if (!steamId) return;
   try {
-    const r = await fetch(`${API_BASE}/api/steam-inventory?steamId=${steamId}`);
+    // v2-bot: passa tradeLink quando o user já preencheu — backend usa o
+    // Steam Bot pra ler inventário privado / pegar stickers + floats reais.
+    const tl = (currentUser && currentUser.tradeLink) || (_userData && _userData.tradeLink) || '';
+    const tradeLinkParam = tl ? `&tradeLink=${encodeURIComponent(tl)}` : '';
+    const r = await fetch(`${API_BASE}/api/steam-inventory?steamId=${steamId}${tradeLinkParam}`);
     if (!r.ok) {
       const err = await r.json().catch(() => ({}));
       if (r.status === 403) {

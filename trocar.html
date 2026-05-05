@@ -469,7 +469,11 @@ async function loadMyInventory() {
 
   let invItems = [];
   try {
-    const r = await fetch(`${API_BASE}/api/steam-inventory?steamId=${steamId}`);
+    // v2-bot: passa tradeLink → backend usa Steam Bot (lê inventário privado,
+    // traz stickers/floats que API pública esconde nas skins caras).
+    const tl = _userData?.tradeLink || '';
+    const tradeLinkParam = tl ? `&tradeLink=${encodeURIComponent(tl)}` : '';
+    const r = await fetch(`${API_BASE}/api/steam-inventory?steamId=${steamId}${tradeLinkParam}`);
     const data = await r.json();
     if (!r.ok) throw new Error(data.hint || data.error || `HTTP ${r.status}`);
     invItems = (data.items || []).filter(it => it.tradable && it.marketable);
