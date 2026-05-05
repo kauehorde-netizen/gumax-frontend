@@ -2750,8 +2750,11 @@ async function loadResellers() {
 
 async function loadOrders() {
   try {
-    const snapshot = await db.collection('orders').orderBy('createdAt', 'desc').limit(50).get();
-    allOrders = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+    // v5-hide-order: pega 100 (em vez de 50) e filtra hidden no client.
+    // Pedido oculto fica no DB (preserva histórico/audit) mas some da UI.
+    const snapshot = await db.collection('orders').orderBy('createdAt', 'desc').limit(100).get();
+    const all = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+    allOrders = all.filter(o => o.hidden !== true);
     renderOrdersTable();
   } catch (e) {
     console.error('Error loading orders:', e);
@@ -3183,11 +3186,38 @@ function _orderRowHTML(o) {
       <td style="color: var(--accent-yellow); font-weight: 600;">${fmtR(o.total || 0)}</td>
       <td><span class="badge ${o.delivery === 'full' ? 'badge-full' : 'badge-normal'}">${o.delivery === 'full' ? '⚡ Full' : 'Normal'}</span></td>
       <td><span class="badge badge-${o.status || 'pending'}">${statusLabel(o.status)}</span></td>
-      <td onclick="event.stopPropagation()">
+      <td onclick="event.stopPropagation()" style="white-space:nowrap;">
         <button class="btn btn-success btn-small" onclick="markDelivered('${o.id}')" ${o.status === 'delivered' ? 'disabled style="opacity:.5"' : ''}>Entregue</button>
+        <button onclick="hideOrder('${o.id}')" title="Ocultar pedido (não apaga, só some da lista)" style="margin-left:6px; width:28px; height:28px; padding:0; background:transparent; border:1px solid rgba(255,255,255,.1); border-radius:6px; color:var(--text-muted); cursor:pointer; font-size:14px; line-height:1;" onmouseover="this.style.borderColor='rgba(239,68,68,.5)'; this.style.color='#fca5a5';" onmouseout="this.style.borderColor='rgba(255,255,255,.1)'; this.style.color='var(--text-muted)';">×</button>
       </td>
     </tr>
   `;
+}
+
+// v5-hide-order: soft delete — marca o pedido como hidden=true no Firestore.
+// Não apaga nada, só esconde da lista do admin (e do auto-recheck). Usado quando
+// o cliente não pagou e o admin quer limpar a tela. Pra ver os escondidos, vai
+// no Firestore Console e remove o campo hidden manualmente.
+async function hideOrder(orderId) {
+  const o = allOrders.find(x => x.id === orderId);
+  if (!o) return showToast('Pedido não encontrado', 'error');
+  const buyer = _orderBuyerName(o);
+  const valor = fmtR(o.total || 0);
+  if (!confirm(`Ocultar pedido #${(orderId).slice(-8)}?\n\n${buyer} · ${valor}\n\nO pedido NÃO será apagado — fica preservado no banco pra histórico, só não aparece mais na lista. Pra reverter, precisa entrar no Firestore Console.`)) return;
+  try {
+    const adminUid = (firebase.auth().currentUser && firebase.auth().currentUser.uid) || 'admin';
+    await db.collection('orders').doc(orderId).update({
+      hidden: true,
+      hiddenAt: new Date().toISOString(),
+      hiddenBy: adminUid,
+    });
+    showToast('Pedido ocultado.', 'success');
+    await loadOrders();
+    updateOverviewStats();
+  } catch (e) {
+    console.error('[hideOrder]', e);
+    showToast('Erro: ' + e.message, 'error');
+  }
 }
 
 function renderOrdersTable() {
