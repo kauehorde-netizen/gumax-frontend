@@ -887,6 +887,7 @@ select.form-control {
           <input type="text" id="clientesSearch" placeholder="🔍 Buscar por nome ou SteamID…" oninput="renderClientes()"
             style="background:var(--bg-input); border:1px solid var(--border); border-radius:8px; padding:8px 12px; color:var(--text-primary); font-size:13px; min-width:280px;">
           <button class="btn btn-ghost" onclick="loadClientes()">↻ Atualizar</button>
+          <button class="btn btn-ghost" onclick="exportClientesCSV()" title="Baixar planilha com todos os clientes (abre no Excel/Google Sheets)">📥 Baixar planilha</button>
         </div>
       </div>
       <div style="display:grid; grid-template-columns: repeat(4, 1fr); gap:12px; margin-bottom:20px;">
@@ -1624,6 +1625,64 @@ async function loadClientes() {
     console.error('[clientes] load error', e);
     tbody.innerHTML = `<tr><td colspan="6" style="text-align:center; color:var(--accent-red); padding:30px;">Erro ao carregar: ${e.message}</td></tr>`;
   }
+}
+
+// v1-clientes-csv: exporta planilha CSV com todos os clientes (filtrados pela
+// busca atual). Abre no Excel/Google Sheets — coluna por coluna idêntica
+// à tabela. UTF-8 com BOM pra acentuação não quebrar.
+function exportClientesCSV() {
+  const search = (document.getElementById('clientesSearch')?.value || '').toLowerCase().trim();
+  const list = !search ? _clientesCache : _clientesCache.filter(c =>
+    String(c.steamName || c.fullName || '').toLowerCase().includes(search) ||
+    String(c.steamId || c.id || '').toLowerCase().includes(search)
+  );
+  if (!list || list.length === 0) {
+    showToast('Nenhum cliente pra exportar', 'error');
+    return;
+  }
+  // Escapa célula CSV: quote se tiver vírgula/aspas/quebra; aspas internas viram ""
+  const esc = (v) => {
+    const s = v == null ? '' : String(v);
+    if (/[",\r\n;]/.test(s)) return '"' + s.replace(/"/g, '""') + '"';
+    return s;
+  };
+  const fmtDate = (ts) => {
+    if (!ts) return '';
+    try { return new Date(ts).toLocaleString('pt-BR'); } catch { return String(ts); }
+  };
+  const fmtPhone = (p) => {
+    const d = String(p || '').replace(/\D/g, '');
+    if (!d) return '';
+    if (d.length === 11) return `(${d.slice(0,2)}) ${d.slice(2,7)}-${d.slice(7)}`;
+    if (d.length === 13 && d.startsWith('55')) return `(${d.slice(2,4)}) ${d.slice(4,9)}-${d.slice(9)}`;
+    return d;
+  };
+  const headers = ['Nome', 'Steam Username', 'SteamID', 'WhatsApp', 'Email', 'Trade Link', 'Cadastro', 'Status', 'Créditos', 'VIP'];
+  const rows = list.map(c => [
+    c.fullName || c.steamName || '',
+    c.steamName || '',
+    c.steamId || c.id || '',
+    fmtPhone(c.whatsapp),
+    c.email || '',
+    c.tradeLink || '',
+    fmtDate(c.createdAt || c.lastLogin),
+    c.profileComplete ? 'Completo' : 'Incompleto',
+    Number(c.credits || 0),
+    c.isVip ? 'Sim' : 'Não',
+  ]);
+  const csv = [headers.map(esc).join(','), ...rows.map(r => r.map(esc).join(','))].join('\r\n');
+  // BOM = "﻿" garante que Excel/Google Sheets abram em UTF-8 (acentuação certa)
+  const blob = new Blob(['﻿' + csv], { type: 'text/csv;charset=utf-8' });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  const dateStr = new Date().toISOString().slice(0, 10);
+  a.href = url;
+  a.download = `gumax-clientes-${dateStr}.csv`;
+  document.body.appendChild(a);
+  a.click();
+  document.body.removeChild(a);
+  setTimeout(() => URL.revokeObjectURL(url), 1000);
+  try { showToast(`✅ Planilha com ${list.length} cliente${list.length > 1 ? 's' : ''} baixada!`, 'success'); } catch {}
 }
 
 function renderClientes() {
