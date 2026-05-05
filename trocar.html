@@ -476,7 +476,10 @@ async function loadMyInventory() {
     const r = await fetch(`${API_BASE}/api/steam-inventory?steamId=${steamId}${tradeLinkParam}`);
     const data = await r.json();
     if (!r.ok) throw new Error(data.hint || data.error || `HTTP ${r.status}`);
-    invItems = (data.items || []).filter(it => it.tradable && it.marketable);
+    // v3-tradable-relax: NÃO filtra mais por tradable+marketable. Skin cara
+    // com trade hold (tradable=0 por 7 dias) ou com sticker crafted (marketable=0)
+    // é skin VÁLIDA pra cotação — backend valida no momento de executar a trade.
+    invItems = (data.items || []);
   } catch (e) {
     grid.innerHTML = `<div class="empty-state">Erro: ${escHtml(e.message)}<br><small>Confirma que seu inventário Steam tá público.</small></div>`;
     return;
