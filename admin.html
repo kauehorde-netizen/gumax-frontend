@@ -3203,7 +3203,13 @@ async function hideOrder(orderId) {
   if (!o) return showToast('Pedido não encontrado', 'error');
   const buyer = _orderBuyerName(o);
   const valor = fmtR(o.total || 0);
-  if (!confirm(`Ocultar pedido #${(orderId).slice(-8)}?\n\n${buyer} · ${valor}\n\nO pedido NÃO será apagado — fica preservado no banco pra histórico, só não aparece mais na lista. Pra reverter, precisa entrar no Firestore Console.`)) return;
+  // v6-stock-reserve: se o pedido era pendente/cancelado (não foi pago),
+  // restaurar as skins Full pro estoque ao ocultar — senão somem do site
+  // pra todo mundo permanentemente. Pedidos pagos/entregues mantêm a skin
+  // como vendida (não restaura).
+  const shouldRestore = (o.status === 'pending' || o.status === 'processing' || o.status === 'cancelled');
+  const extraMsg = shouldRestore ? '\n\nSkins Full reservadas voltam pro estoque (já que não foi pago).' : '';
+  if (!confirm(`Ocultar pedido #${(orderId).slice(-8)}?\n\n${buyer} · ${valor}\n\nO pedido NÃO será apagado — fica preservado no banco pra histórico, só não aparece mais na lista.${extraMsg}`)) return;
   try {
     const adminUid = (firebase.auth().currentUser && firebase.auth().currentUser.uid) || 'admin';
     await db.collection('orders').doc(orderId).update({
@@ -3211,7 +3217,11 @@ async function hideOrder(orderId) {
       hiddenAt: new Date().toISOString(),
       hiddenBy: adminUid,
     });
-    showToast('Pedido ocultado.', 'success');
+    let restored = 0;
+    if (shouldRestore) {
+      restored = await restoreReservedStock(o);
+    }
+    showToast(`Pedido ocultado.${restored > 0 ? ` ${restored} skin(s) Full voltaram pro estoque.` : ''}`, 'success');
     await loadOrders();
     updateOverviewStats();
   } catch (e) {
@@ -3430,6 +3440,35 @@ async function markDelivered(id) {
 // cliente já tiver pago e o webhook chegar depois, o pedido vira 'paid' de
 // novo (check-pix sobrescreve). Pra garantir, recomenda-se também estornar
 // no painel do MP se já tiver sido pago.
+// v6-stock-reserve: restaura skins Full ao stock quando pedido é cancelado/oculto
+// (sem ter sido pago). Skin volta a aparecer no marketplace pra outros comprarem.
+// Não roda pra pedidos já pagos/entregues — esses sumiram do estoque pra valer.
+async function restoreReservedStock(order) {
+  if (!order || !Array.isArray(order.items)) return 0;
+  const fullItems = order.items.filter(it =>
+    (it.delivery === 'full' || it.source === 'full') && it.id
+  );
+  if (fullItems.length === 0) return 0;
+  const batch = db.batch();
+  for (const it of fullItems) {
+    batch.update(db.collection('stock').doc(it.id), {
+      inStock: true,
+      active: true,
+      reservedByOrder: firebase.firestore.FieldValue.delete(),
+      reservedAt: firebase.firestore.FieldValue.delete(),
+      restoredAt: new Date().toISOString(),
+    });
+  }
+  try {
+    await batch.commit();
+    console.log(`[restoreStock] ${fullItems.length} skin(s) restaurada(s) de ${order.id}`);
+    return fullItems.length;
+  } catch (e) {
+    console.warn('[restoreStock] erro:', e?.message);
+    return 0;
+  }
+}
+
 async function cancelOrder(orderId) {
   const o = allOrders.find(x => x.id === orderId);
   if (!o) return showToast('Pedido não encontrado', 'error');
@@ -3447,7 +3486,7 @@ async function cancelOrder(orderId) {
   const reasonClean = String(reason || '').trim();
   if (!reasonClean) return showToast('Motivo é obrigatório', 'error');
   // Confirmação dupla pra evitar clique acidental
-  if (!confirm(`Cancelar pedido #${orderId.slice(-8)}?\n\nMotivo: "${reasonClean}"\n\nIsso é irreversível.`)) return;
+  if (!confirm(`Cancelar pedido #${orderId.slice(-8)}?\n\nMotivo: "${reasonClean}"\n\nSkins Full reservadas voltam pro estoque.`)) return;
   try {
     const adminUid = (firebase.auth().currentUser && firebase.auth().currentUser.uid) || 'admin';
     await db.collection('orders').doc(orderId).update({
@@ -3456,7 +3495,9 @@ async function cancelOrder(orderId) {
       cancelReason: reasonClean,
       cancelledBy: adminUid,
     });
-    showToast('Pedido cancelado.', 'success');
+    // v6: restaura stock das skins Full (volta pro marketplace)
+    const restored = await restoreReservedStock(o);
+    showToast(`Pedido cancelado.${restored > 0 ? ` ${restored} skin(s) Full voltaram pro estoque.` : ''}`, 'success');
     closeOrderDetails();
     await loadOrders();
     updateOverviewStats();
