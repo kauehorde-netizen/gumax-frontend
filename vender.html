@@ -764,7 +764,18 @@ function renderMain() {
 function renderInventory() {
   const grid = document.getElementById('inventoryGrid');
   if (!grid) return;
-  grid.innerHTML = inventory.map(item => {
+  // v3-sort: ordena do mais caro pro mais barato. Skins ainda sem cotação
+  // ('cotando...') ficam por último — quando a quote chegar, o re-render reordena.
+  // Sem cotação (Sem preço) também vai pro fim.
+  const sorted = [...inventory].sort((a, b) => {
+    const pa = priceMap[a.market_hash_name];
+    const pb = priceMap[b.market_hash_name];
+    const va = (pa && pa.offerBRL > 0) ? pa.offerBRL : -1;
+    const vb = (pb && pb.offerBRL > 0) ? pb.offerBRL : -1;
+    if (vb !== va) return vb - va;                              // caro primeiro
+    return String(a.market_hash_name).localeCompare(String(b.market_hash_name));
+  });
+  grid.innerHTML = sorted.map(item => {
     const price = priceMap[item.market_hash_name];
     const isSelected = selected.has(item.assetid);
     const priceHtml = price
