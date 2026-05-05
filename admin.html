@@ -1324,11 +1324,15 @@ select.form-control {
         </div>
 
         <div class="form-group" style="max-width: 720px; margin-top: 14px;">
-          <label class="form-label">⚖️ Corte de liquidez (YouPin score)</label>
+          <label class="form-label">⚖️ Score mínimo pra ser considerada LÍQUIDA</label>
           <input type="number" class="form-control" id="buybackLiquidityThreshold" step="1" min="0" max="100" placeholder="50" value="50">
           <div style="color: var(--text-muted); font-size: 12px; margin-top: 6px; line-height: 1.5;">
-            Score do YouPin (do CSPriceAPI) acima desse valor = LÍQUIDA. Abaixo = ILÍQUIDA.
-            Padrão: <strong>50</strong>. Quanto maior o corte, mais skins caem no tier "ilíquidas" (mais conservador).
+            Cada skin tem um <strong>score de popularidade</strong> no YouPin (0 = ninguém compra, 100 = vende rapidíssimo). Esse campo é o <strong>mínimo</strong> que a skin precisa atingir pra a Gumax considerar ela "líquida".
+            <br><br>
+            Exemplo com padrão <strong>50</strong>: AK Redline (score ~75) → vira <strong>LÍQUIDA</strong>, paga 15% off. Random com sticker craftado (score ~20) → vira <strong>ILÍQUIDA</strong>, paga 25% off.
+            <br><br>
+            <strong>Subir esse valor</strong> = ser mais exigente → menos skins viram líquidas (mais conservador).
+            <strong>Baixar</strong> = mais skins viram líquidas (paga 15% off pra mais coisa).
             Se a skin não tem score (não está no catálogo CSPriceAPI), trata como ilíquida por segurança.
           </div>
         </div>
