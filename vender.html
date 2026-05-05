@@ -583,7 +583,7 @@ async function loadInventory() {
   try {
     // v2-bot: passa tradeLink quando o user já preencheu — backend usa o
     // Steam Bot pra ler inventário privado / pegar stickers + floats reais.
-    const tl = (currentUser && currentUser.tradeLink) || (_userData && _userData.tradeLink) || '';
+    const tl = (userProfile && userProfile.tradeLink) || '';
     const tradeLinkParam = tl ? `&tradeLink=${encodeURIComponent(tl)}` : '';
     const r = await fetch(`${API_BASE}/api/steam-inventory?steamId=${steamId}${tradeLinkParam}`);
     if (!r.ok) {
