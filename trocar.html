@@ -692,41 +692,61 @@ async function searchStoreServerSide(query) {
   if (_storeSearchAbortCtrl) { try { _storeSearchAbortCtrl.abort(); } catch {} }
   _storeSearchAbortCtrl = new AbortController();
   _lastStoreSearchQuery = query;
+  console.log('[trocar v6-pricempire-search] busca:', query);
   try {
-    const r = await fetch(`${API_BASE}/api/catalog`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        search: query,
-        deliveryType: 'normal',  // catálogo Pricempire (Youpin)
-        limit: 100,
-        page: 1,
-      }),
-      signal: _storeSearchAbortCtrl.signal,
-    });
-    if (!r.ok) return;
+    // v6: usa /api/pricempire/search (mesmo endpoint que index.html usa) — bate
+    // direto no catálogo do CSPriceAPI por nome, retorna até 100 matches.
+    // /api/catalog era POST e iterava 36k items — esse aqui é GET otimizado.
+    const r = await fetch(
+      `${API_BASE}/api/pricempire/search?q=${encodeURIComponent(query)}&limit=100`,
+      { signal: _storeSearchAbortCtrl.signal }
+    );
+    console.log('[trocar v6-pricempire-search] HTTP', r.status);
+    if (!r.ok) {
+      const errBody = await r.text().catch(() => '');
+      console.warn('[trocar v6-pricempire-search] erro:', errBody.slice(0, 200));
+      return;
+    }
     const data = await r.json();
-    const found = (data.items || []).filter(it => it.name && (it.price || 0) > 0);
-    if (found.length === 0) return;
-    // Merge: descarta duplicados (mesmo nome) e adiciona os novos no _storeInventory
+    const items = data.items || [];
+    console.log('[trocar v6-pricempire-search] recebidos:', items.length, 'first 3:', items.slice(0,3).map(i => i.name || i.market_hash_name));
+    if (items.length === 0) return;
+
+    // O endpoint /api/pricempire/search retorna shape com market_hash_name +
+    // youpin price (CNY). Convertemos pra BRL usando a cotação do _userData
+    // ou um fallback. Como esse endpoint é usado pelo index.html sem conversão
+    // manual, o backend já manda saleBRL/originalBRL prontos.
+    const found = items.filter(it => {
+      const name = it.name || it.market_hash_name;
+      const price = parseFloat(it.saleBRL || it.priceBRL || 0);
+      return name && price > 0;
+    });
+    console.log('[trocar v6-pricempire-search] válidos:', found.length);
+    if (found.length === 0) {
+      document.getElementById('storeCounter').textContent = ` · 0 skins pra "${query}"`;
+      return;
+    }
+
     const existingNames = new Set(_storeInventory.map(s => s.name));
     const newItems = found
-      .filter(it => !existingNames.has(it.name))
       .map(it => ({
-        name: it.name,
-        priceBRL: parseFloat(it.price) || 0,
-        wear: it.wear || inferWear(it.name),
-        image: it.iconUrl || '',
-        category: categoryOf(it.name),
+        name: it.name || it.market_hash_name,
+        priceBRL: parseFloat(it.saleBRL || it.priceBRL || 0),
+        wear: it.wear || inferWear(it.name || it.market_hash_name),
+        image: it.iconUrl || it.icon_url || '',
+        category: categoryOf(it.name || it.market_hash_name),
         isFull: false,
-      }));
+      }))
+      .filter(it => !existingNames.has(it.name));
+
+    console.log('[trocar v6-pricempire-search] novos não-duplicados:', newItems.length);
     if (newItems.length === 0) return;
     _storeInventory = [..._storeInventory, ...newItems];
     document.getElementById('storeCounter').textContent =
       ` · ${_storeInventory.length} skins (filtrado: ${query})`;
     renderStoreGrid();
   } catch (e) {
-    if (e.name !== 'AbortError') console.warn('[storeSearch]', e.message);
+    if (e.name !== 'AbortError') console.warn('[trocar v6-pricempire-search] erro:', e.message, e);
   }
 }
 document.getElementById('mySort').addEventListener('change', e => { _mySort = e.target.value; renderMyGrid(); });
