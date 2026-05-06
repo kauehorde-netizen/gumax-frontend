@@ -669,7 +669,66 @@ document.addEventListener('click', (e) => {
 
 // Search inputs
 document.getElementById('myFilter').addEventListener('input', e => { _myFilter = e.target.value.trim(); renderMyGrid(); });
-document.getElementById('storeFilter').addEventListener('input', e => { _storeFilter = e.target.value.trim(); renderStoreGrid(); });
+// v4-server-search: estoque Gumax tem só top 200 do Youpin pré-carregados.
+// Quando user busca skin que não tá nos top (ex: "p2000"), o filtro local
+// não acha nada. Solução: ao digitar 2+ chars, faz fetch no /api/catalog
+// (que busca no catálogo completo de ~36k items) e mescla no _storeInventory.
+let _storeSearchTimer = null;
+let _storeSearchAbortCtrl = null;
+let _lastStoreSearchQuery = '';
+
+document.getElementById('storeFilter').addEventListener('input', e => {
+  _storeFilter = e.target.value.trim();
+  renderStoreGrid();                           // filtra local na hora pra resposta rápida
+  // Debounce 350ms antes de bater na API
+  if (_storeSearchTimer) clearTimeout(_storeSearchTimer);
+  if (_storeFilter.length < 2 || _storeFilter === _lastStoreSearchQuery) return;
+  _storeSearchTimer = setTimeout(() => searchStoreServerSide(_storeFilter), 350);
+});
+
+async function searchStoreServerSide(query) {
+  if (!query || query.length < 2) return;
+  // Cancela busca anterior se ainda em voo
+  if (_storeSearchAbortCtrl) { try { _storeSearchAbortCtrl.abort(); } catch {} }
+  _storeSearchAbortCtrl = new AbortController();
+  _lastStoreSearchQuery = query;
+  try {
+    const r = await fetch(`${API_BASE}/api/catalog`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        search: query,
+        deliveryType: 'normal',  // catálogo Pricempire (Youpin)
+        limit: 100,
+        page: 1,
+      }),
+      signal: _storeSearchAbortCtrl.signal,
+    });
+    if (!r.ok) return;
+    const data = await r.json();
+    const found = (data.items || []).filter(it => it.name && (it.price || 0) > 0);
+    if (found.length === 0) return;
+    // Merge: descarta duplicados (mesmo nome) e adiciona os novos no _storeInventory
+    const existingNames = new Set(_storeInventory.map(s => s.name));
+    const newItems = found
+      .filter(it => !existingNames.has(it.name))
+      .map(it => ({
+        name: it.name,
+        priceBRL: parseFloat(it.price) || 0,
+        wear: it.wear || inferWear(it.name),
+        image: it.iconUrl || '',
+        category: categoryOf(it.name),
+        isFull: false,
+      }));
+    if (newItems.length === 0) return;
+    _storeInventory = [..._storeInventory, ...newItems];
+    document.getElementById('storeCounter').textContent =
+      ` · ${_storeInventory.length} skins (filtrado: ${query})`;
+    renderStoreGrid();
+  } catch (e) {
+    if (e.name !== 'AbortError') console.warn('[storeSearch]', e.message);
+  }
+}
 document.getElementById('mySort').addEventListener('change', e => { _mySort = e.target.value; renderMyGrid(); });
 document.getElementById('storeSort').addEventListener('change', e => { _storeSort = e.target.value; renderStoreGrid(); });
 document.getElementById('myReload').addEventListener('click', loadMyInventory);
