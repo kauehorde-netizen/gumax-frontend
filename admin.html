@@ -1571,21 +1571,52 @@ async function adminLogout() {
 }
 
 // ============= NAVIGATION =============
+// v2-hard: switchSection robusta contra spam de cliques + race conditions.
+// O Gu reportou travamentos ao clicar em abas (especialmente Pedidos) durante
+// o carregamento inicial — quando vários loads paralelos competiam pelo render.
+// Mudanças:
+//   - guarda contra null no getElementById (target inexistente não derruba a UI)
+//   - early-return se já estamos na seção (evita reflow desnecessário)
+//   - debounce simples impede 10 cliques no mesmo menu enquanto carrega
+//   - try/catch envolve loads pesados — uma falha não congela mais nada
+//   - load adiado num setTimeout(0) pra liberar o paint antes de queries pesadas
+let _switchBusy = false;
+let _currentSection = 'overview';
 function switchSection(name) {
-  document.querySelectorAll('.section').forEach(s => s.classList.remove('active'));
-  document.querySelectorAll('.sidebar-nav li').forEach(li => li.classList.remove('active'));
-  document.getElementById('section-' + name).classList.add('active');
+  try {
+    if (_switchBusy) return;            // já trocando — descarta clique repetido
+    if (name === _currentSection) return; // já tá lá — não faz nada
+    const targetSec = document.getElementById('section-' + name);
+    if (!targetSec) { console.warn('[switchSection] seção não existe:', name); return; }
+    _switchBusy = true;
+    document.querySelectorAll('.section').forEach(s => s.classList.remove('active'));
+    document.querySelectorAll('.sidebar-nav li').forEach(li => li.classList.remove('active'));
+    targetSec.classList.add('active');
 
-  const items = document.querySelectorAll('.sidebar-nav li');
-  const names = ['overview', 'skins', 'resellers', 'orders', 'commissions', 'inventory', 'clientes', 'raffles', 'appearance', 'settings'];
-  const index = names.indexOf(name);
-  if (index >= 0 && items[index]) items[index].classList.add('active');
+    const items = document.querySelectorAll('.sidebar-nav li');
+    const names = ['overview', 'skins', 'resellers', 'orders', 'commissions', 'inventory', 'clientes', 'raffles', 'appearance', 'settings'];
+    const index = names.indexOf(name);
+    if (index >= 0 && items[index]) items[index].classList.add('active');
 
-  if (name === 'appearance') loadAppearance();
-  if (name === 'inventory')  { loadInventoryPage(); loadStockPricing(); }
-  if (name === 'settings')   { loadPricing(); loadBuybackConfig(); }
-  if (name === 'clientes')   loadClientes();
-  if (name === 'raffles')    loadRafflesAdmin();
+    // Loads adiados num macrotask pra liberar o frame primeiro (UX percebida fica
+    // instantânea — usuário vê a aba aparecer antes de qualquer query).
+    setTimeout(() => {
+      try {
+        if (name === 'appearance') loadAppearance();
+        if (name === 'inventory')  { loadInventoryPage(); loadStockPricing(); }
+        if (name === 'settings')   { loadPricing(); loadBuybackConfig(); }
+        if (name === 'clientes')   loadClientes();
+        if (name === 'raffles')    loadRafflesAdmin();
+      } catch (e) {
+        console.error('[switchSection] load err em', name, e);
+      }
+    }, 0);
+    _currentSection = name;
+  } catch (e) {
+    console.error('[switchSection] err:', e);
+  } finally {
+    setTimeout(() => { _switchBusy = false; }, 50);
+  }
 }
 
 // ============= CLIENTES (aba Dashboard) =============
@@ -2643,14 +2674,24 @@ document.addEventListener('input', (e) => {
 });
 
 // ============= DATA LOADING =============
+// v2-resilient: allSettled em vez de all — se loadSkins falhar (ex: rules do
+// Firestore bloqueando), as outras 3 ainda renderizam. Antes, qualquer falha
+// derrubava TUDO e a UI ficava em branco — era um dos sintomas que o Gu via.
 async function loadAllData() {
-  await Promise.all([
+  const t0 = performance.now();
+  const results = await Promise.allSettled([
     loadSkins(),
     loadResellers(),
     loadOrders(),
     loadCommissions()
   ]);
-  updateOverviewStats();
+  results.forEach((r, i) => {
+    if (r.status === 'rejected') {
+      console.warn('[loadAllData] falhou:', ['skins','resellers','orders','commissions'][i], r.reason);
+    }
+  });
+  try { updateOverviewStats(); } catch (e) { console.warn('[loadAllData] updateOverviewStats err:', e); }
+  console.log('[loadAllData] concluído em', Math.round(performance.now() - t0), 'ms');
   // v3-auto-recheck: depois do load inicial, dispara polling silencioso de
   // pendentes — evita ter que clicar "Verificar pagamento agora" pra tudo.
   startAutoRecheckPendingOrders();
@@ -2676,6 +2717,10 @@ function startAutoRecheckPendingOrders() {
   _autoRecheckTimer = setInterval(autoRecheckPendingOrdersTick, 30000);
 }
 async function autoRecheckPendingOrdersTick() {
+  // v4-visibility: aba escondida (admin minimizado / em outra tab) — pula tick
+  // pra não desperdiçar API quota e não interferir com outros renders quando
+  // o admin volta. Esse era um suspeito de causar contention no Chrome.
+  if (typeof document !== 'undefined' && document.visibilityState === 'hidden') return;
   if (_autoRecheckBusy) return;
   _autoRecheckBusy = true;
   try {
